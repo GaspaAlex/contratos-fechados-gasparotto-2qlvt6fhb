@@ -42,7 +42,7 @@ const printHtml = (title: string, dataHtml: string) => {
   window.open(url, '_blank')
 }
 
-export function PartnershipsSummary({ contratos }: { contratos: any[] }) {
+export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {
   const grouped = contratos.reduce(
     (acc, c) => {
       const nome = c.parceiro_nome || 'Sem Nome'

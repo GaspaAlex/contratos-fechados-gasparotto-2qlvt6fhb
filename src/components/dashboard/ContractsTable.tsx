@@ -32,7 +32,7 @@ const filters = [
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 const ATIVOS_STATUSES = ['R. Docs', 'L. Cálculos', 'OK', 'Ag. Perícia']
 
-export function ContractsTable({ contratos }: { contratos: any[] }) {
+export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
   const [activeFilter, setActiveFilter] = useState('Todos')
   const [search, setSearch] = useState('')
 
@@ -145,7 +145,7 @@ export function ContractsTable({ contratos }: { contratos: any[] }) {
                 className={cn(
                   'rounded-full font-medium transition-colors',
                   activeFilter === status
-                    ? 'bg-amber-500/15 text-amber-600 border-amber-300 hover:bg-amber-500/25 shadow-none dark:bg-amber-500/20 dark:text-amber-400'
+                    ? 'bg-amber-500/15 text-amber-700 border border-amber-400 hover:bg-amber-500/25 shadow-none dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/50'
                     : '',
                 )}
               >

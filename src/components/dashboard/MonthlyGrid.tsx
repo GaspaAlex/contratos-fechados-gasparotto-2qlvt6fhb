@@ -18,7 +18,7 @@ const MONTHS = [
 
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
-export function MonthlyGrid({ contratos, year }: { contratos: any[]; year: number }) {
+export function MonthlyGrid({ contratos = [], year }: { contratos: any[]; year: number }) {
   const isArchived = (c: any) => ARCHIVED_STATUSES.includes(c.status)
 
   const yearContratos = contratos.filter((c) => {
@@ -77,8 +77,8 @@ export function MonthlyGrid({ contratos, year }: { contratos: any[]; year: numbe
                     ? 'fechamento'
                     : month.count > 0
                       ? 'fechamentos'
-                      : 'Sem registro'}
-                </span>
+                      : 'sem registro'}
+                </span>{' '}
               </div>
             </CardContent>
             {month.count > 0 && (
@@ -88,7 +88,7 @@ export function MonthlyGrid({ contratos, year }: { contratos: any[]; year: numbe
         ))}
 
         <Card
-          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-amber-500/10 border-amber-500/30 border-t-amber-500 border-t-2 animate-fade-in-up"
+          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-amber-500/[.12] border-amber-500/30 border-t-amber-500 border-t-2 animate-fade-in-up"
           style={{ animationFillMode: 'both', animationDelay: '600ms' }}
         >
           <CardContent className="p-5">

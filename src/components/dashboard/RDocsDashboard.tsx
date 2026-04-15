@@ -27,7 +27,7 @@ const MONTHS = [
 ]
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
-export function RDocsDashboard({ contratos, year }: { contratos: any[]; year: number }) {
+export function RDocsDashboard({ contratos = [], year }: { contratos: any[]; year: number }) {
   const [selectedMonth, setSelectedMonth] = useState('MARÇO')
 
   const metrics = useMemo(() => {

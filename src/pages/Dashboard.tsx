@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { getContratos } from '@/services/contratos'
 import { useRealtime } from '@/hooks/use-realtime'
 import { LayoutDashboard } from 'lucide-react'
@@ -17,13 +18,17 @@ import { toast } from 'sonner'
 export default function Dashboard() {
   const [year, setYear] = useState(2026)
   const [contratos, setContratos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
     try {
+      setLoading(true)
       const data = await getContratos()
-      setContratos(data)
+      setContratos(data || [])
     } catch (e: any) {
       toast.error('Erro ao carregar contratos: ' + e.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -32,7 +37,10 @@ export default function Dashboard() {
   }, [])
 
   useRealtime('contratos_fechados', () => {
-    loadData()
+    // Only refresh data silently in the background
+    getContratos()
+      .then((data) => setContratos(data || []))
+      .catch((e) => console.error(e))
   })
 
   return (
@@ -59,9 +67,23 @@ export default function Dashboard() {
         </Select>
       </div>
 
-      <MonthlyGrid contratos={contratos} year={year} />
-      <RDocsDashboard contratos={contratos} year={year} />
-      <ContractsTable contratos={contratos} />
+      {loading ? (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 mb-4">
+            {Array.from({ length: 13 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-80 w-full rounded-xl" />
+          <Skeleton className="h-[500px] w-full rounded-xl" />
+        </div>
+      ) : (
+        <>
+          <MonthlyGrid contratos={contratos} year={year} />
+          <RDocsDashboard contratos={contratos} year={year} />
+          <ContractsTable contratos={contratos} />
+        </>
+      )}
     </div>
   )
 }
