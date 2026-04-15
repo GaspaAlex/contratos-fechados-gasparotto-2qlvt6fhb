@@ -32,7 +32,30 @@ const filters = [
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 const ATIVOS_STATUSES = ['R. Docs', 'L. Cálculos', 'OK', 'Ag. Perícia']
 
-export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
+const MONTHS = [
+  'JANEIRO',
+  'FEVEREIRO',
+  'MARÇO',
+  'ABRIL',
+  'MAIO',
+  'JUNHO',
+  'JULHO',
+  'AGOSTO',
+  'SETEMBRO',
+  'OUTUBRO',
+  'NOVEMBRO',
+  'DEZEMBRO',
+]
+
+export function ContractsTable({
+  contratos = [],
+  year,
+  month = 'Todos os meses',
+}: {
+  contratos: any[]
+  year: number
+  month?: string
+}) {
   const [activeFilter, setActiveFilter] = useState('Todos')
   const [search, setSearch] = useState('')
 
@@ -56,7 +79,17 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
   }
 
   const filtered = useMemo(() => {
-    let result = contratos
+    let result = contratos.filter((c) => c.dcontrato && c.dcontrato.startsWith(year.toString()))
+    if (month !== 'Todos os meses') {
+      const mIdx = MONTHS.indexOf(month)
+      const mStr = (mIdx + 1).toString().padStart(2, '0')
+      result = result.filter((c) => c.dcontrato.startsWith(`${year}-${mStr}`))
+    }
+
+    // Sort chronologically ascending
+    result = result.sort(
+      (a, b) => new Date(a.dcontrato).getTime() - new Date(b.dcontrato).getTime(),
+    )
 
     if (search.trim()) {
       const s = removeAccents(search.toLowerCase())
@@ -129,7 +162,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
             </div>
             <Button
               onClick={handleAdd}
-              className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-sm"
+              className="w-full md:w-auto bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-semibold shadow-sm"
             >
               <Plus className="mr-2 h-4 w-4" /> Adicionar
             </Button>
@@ -145,8 +178,8 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                 className={cn(
                   'rounded-full font-medium transition-colors',
                   activeFilter === status
-                    ? 'bg-amber-500/15 text-amber-700 border border-amber-400 hover:bg-amber-500/25 shadow-none dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/50'
-                    : '',
+                    ? 'bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A] hover:bg-[#C9922A]/25 shadow-none font-bold'
+                    : 'text-muted-foreground',
                 )}
               >
                 {status}
@@ -180,100 +213,129 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((contract) => (
-                    <TableRow key={contract.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-semibold">{contract.nome}</TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {contract.fone || '-'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {contract.beneficio || '-'}
-                      </TableCell>
-                      <TableCell>{contract.responsavel || '-'}</TableCell>
-                      <TableCell>
-                        {contract.fup ? (
-                          <span className="font-semibold text-amber-600">FUP</span>
-                        ) : (
-                          '-'
+                  filtered.map((contract) => {
+                    const isArchived = ARCHIVED_STATUSES.includes(contract.status)
+                    return (
+                      <TableRow
+                        key={contract.id}
+                        className={cn(
+                          'hover:bg-muted/30 transition-colors',
+                          isArchived && 'text-muted-foreground line-through opacity-70',
                         )}
-                      </TableCell>
-                      <TableCell>
-                        {contract.status === 'OK' ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                          >
-                            <CheckCircle2 className="h-3 w-3" /> OK
-                          </Badge>
-                        ) : contract.status === 'R. Docs' ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                          >
-                            <FileText className="h-3 w-3" /> R. Docs
-                          </Badge>
-                        ) : ARCHIVED_STATUSES.includes(contract.status) ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-stone-100 text-stone-600 border-stone-300 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                          >
-                            <AlertTriangle className="h-3 w-3" /> {contract.status}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="whitespace-nowrap px-2 py-0.5 border-amber-200 text-amber-700 bg-amber-50/50"
-                          >
-                            {contract.status || '-'}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {formatDate(contract.dcontrato)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {formatDate(contract.dcalculo)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {contract.prazo ? `${contract.prazo} dias` : '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {formatDate(contract.dprotocolo)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground whitespace-nowrap">
-                        {contract.parceria && contract.parceiro_nome ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                          >
-                            {contract.parceiro_nome}
-                          </Badge>
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-amber-500/10 hover:text-amber-600"
-                            onClick={() => handleEdit(contract)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDelete(contract)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                      >
+                        <TableCell className="font-semibold">{contract.nome}</TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                          {contract.fone || '-'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {contract.beneficio || '-'}
+                        </TableCell>
+                        <TableCell>{contract.responsavel || '-'}</TableCell>
+                        <TableCell>
+                          {contract.fup ? (
+                            <span className="font-bold text-[#C9922A]">FUP</span>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {contract.status === 'OK' ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                            >
+                              <CheckCircle2 className="h-3 w-3" /> OK
+                            </Badge>
+                          ) : contract.status === 'R. Docs' ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                            >
+                              <FileText className="h-3 w-3" /> R. Docs
+                            </Badge>
+                          ) : ARCHIVED_STATUSES.includes(contract.status) ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-stone-100 text-stone-600 border-stone-300 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                            >
+                              <AlertTriangle className="h-3 w-3" /> {contract.status}
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="whitespace-nowrap px-2 py-0.5 border-[#C9922A]/30 text-[#C9922A] bg-[#C9922A]/10 font-bold"
+                            >
+                              {contract.status || '-'}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            'whitespace-nowrap',
+                            isArchived ? 'text-muted-foreground' : 'text-foreground',
+                          )}
+                        >
+                          {formatDate(contract.dcontrato)}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            'whitespace-nowrap',
+                            isArchived ? 'text-muted-foreground' : 'text-foreground',
+                          )}
+                        >
+                          {formatDate(contract.dcalculo)}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            'whitespace-nowrap',
+                            isArchived ? 'text-muted-foreground' : 'text-foreground',
+                          )}
+                        >
+                          {contract.prazo ? `${contract.prazo} dias` : '-'}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            'whitespace-nowrap',
+                            isArchived ? 'text-muted-foreground' : 'text-foreground',
+                          )}
+                        >
+                          {formatDate(contract.dprotocolo)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                          {contract.parceria && contract.parceiro_nome ? (
+                            <Badge
+                              variant="secondary"
+                              className="bg-[#C9922A]/15 text-[#C9922A] font-bold border border-[#C9922A]/30"
+                            >
+                              {contract.parceiro_nome}
+                            </Badge>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right no-underline">
+                          <div className="flex justify-end gap-1 no-underline">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-[#C9922A]/10 hover:text-[#C9922A] no-underline"
+                              onClick={() => handleEdit(contract)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:bg-destructive/10 no-underline"
+                              onClick={() => handleDelete(contract)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 )}
               </TableBody>
             </Table>

@@ -1,5 +1,16 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FileText, CheckSquare, Gavel, Users } from 'lucide-react'
+import {
+  LayoutDashboard,
+  FileText,
+  CheckSquare,
+  Gavel,
+  Users,
+  Scale,
+  Moon,
+  Sun,
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -14,25 +25,33 @@ import {
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Contratos Fechados', path: '/dashboard', icon: CheckSquare },
   { name: 'Protocolo', path: '/protocolo', icon: FileText },
-  { name: 'Contratos Fechados', path: '/', icon: CheckSquare },
   { name: 'Perícias', path: '/pericias', icon: Gavel },
   { name: 'Leads Campanha', path: '/leads', icon: Users },
 ]
 
 export default function Layout() {
   const location = useLocation()
+  const { theme, setTheme } = useTheme()
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar variant="inset" className="border-r">
-          <SidebarHeader className="p-6">
-            <Link to="/" className="flex items-center gap-2">
-              <h1 className="font-serif text-2xl font-bold tracking-widest text-primary">
-                GASPAROTTO
-              </h1>
+          <SidebarHeader className="p-6 pb-2">
+            <Link to="/dashboard" className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-lg bg-[#C9922A]/10 flex items-center justify-center border-2 border-transparent shadow-[0_0_0_2px_rgba(201,146,42,0.35)]">
+                <Scale className="w-6 h-6 text-[#C9922A]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] text-muted-foreground uppercase leading-tight tracking-wider">
+                  Advocacia
+                </span>
+                <span className="text-[14px] font-bold text-[#C9922A] leading-tight">
+                  Gasparotto
+                </span>
+              </div>
             </Link>
           </SidebarHeader>
           <SidebarContent className="px-4 py-2">
@@ -45,10 +64,10 @@ export default function Layout() {
                       asChild
                       isActive={isActive}
                       className={cn(
-                        'w-full py-5 text-base font-medium transition-colors',
+                        'w-full py-5 text-base transition-colors border-l-4 rounded-none h-12',
                         isActive
-                          ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                          ? 'bg-[#C9922A]/15 border-[#C9922A] text-[#C9922A] font-bold hover:bg-[#C9922A]/20 hover:text-[#C9922A]'
+                          : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium',
                       )}
                     >
                       <Link to={item.path}>
@@ -64,13 +83,44 @@ export default function Layout() {
         </Sidebar>
 
         <SidebarInset className="flex w-full flex-col overflow-hidden bg-background">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-card px-6 lg:hidden">
-            <SidebarTrigger className="-ml-2" />
-            <h1 className="font-serif text-xl font-bold tracking-widest text-primary">
-              GASPAROTTO
-            </h1>
+          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-card px-6">
+            <div className="flex items-center gap-2 lg:hidden">
+              <SidebarTrigger className="-ml-2" />
+              <div className="w-8 h-8 rounded bg-[#C9922A]/10 flex items-center justify-center border-2 border-transparent shadow-[0_0_0_2px_rgba(201,146,42,0.35)]">
+                <Scale className="w-4 h-4 text-[#C9922A]" />
+              </div>
+            </div>
+            <div className="flex-1" />
+            <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-full border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-full transition-all',
+                  theme === 'light'
+                    ? 'bg-[#C9922A] text-white shadow-sm hover:bg-[#C9922A] hover:text-white'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+                onClick={() => setTheme('light')}
+              >
+                <Sun className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-full transition-all',
+                  theme === 'dark'
+                    ? 'bg-[#C9922A] text-white shadow-sm hover:bg-[#C9922A] hover:text-white'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+                onClick={() => setTheme('dark')}
+              >
+                <Moon className="h-4 w-4" />
+              </Button>
+            </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-background">
             <Outlet />
           </main>
         </SidebarInset>

@@ -23,6 +23,22 @@ export const toYMD = (dateString?: string) => {
   return dateString.split(' ')[0]
 }
 
+export const getTiposAcao = async () => pb.collection('tipos_acao').getFullList({ sort: 'nome' })
+export const createTipoAcao = async (data: any) => pb.collection('tipos_acao').create(data)
+export const deleteTipoAcao = async (id: string) => pb.collection('tipos_acao').delete(id)
+
+export const getStatusContrato = async () =>
+  pb.collection('status_contrato').getFullList({ sort: 'nome' })
+export const createStatusContrato = async (data: any) =>
+  pb.collection('status_contrato').create(data)
+export const deleteStatusContrato = async (id: string) =>
+  pb.collection('status_contrato').delete(id)
+
+export const getResponsaveis = async () =>
+  pb.collection('responsaveis').getFullList({ sort: 'nome' })
+export const createResponsavel = async (data: any) => pb.collection('responsaveis').create(data)
+export const deleteResponsavel = async (id: string) => pb.collection('responsaveis').delete(id)
+
 export const toPBDate = (ymd?: string) => {
   if (!ymd) return ''
   return `${ymd} 12:00:00.000Z`

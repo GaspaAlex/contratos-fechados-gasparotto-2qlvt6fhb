@@ -17,14 +17,27 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { AlertTriangle, Plus } from 'lucide-react'
-import { createContrato, updateContrato, toPBDate, toYMD } from '@/services/contratos'
+import { AlertTriangle } from 'lucide-react'
+import {
+  createContrato,
+  updateContrato,
+  toPBDate,
+  toYMD,
+  getTiposAcao,
+  createTipoAcao,
+  deleteTipoAcao,
+  getStatusContrato,
+  createStatusContrato,
+  deleteStatusContrato,
+  getResponsaveis,
+  createResponsavel,
+  deleteResponsavel,
+} from '@/services/contratos'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { DynamicSelect } from './DynamicSelect'
 
-const BENEFICIOS = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
-const RESPONSAVEIS = ['João', 'Maria', 'Pedro', 'Juliana', 'Ana', 'Carlos', 'Paulo']
-const STATUSES = [
+const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
+const STATUS_PADRAO = [
   'R. Docs',
   'L. Cálculos',
   'OK',
@@ -46,7 +59,9 @@ export function ContractModal({
 }) {
   const isEdit = !!contract
   const [loading, setLoading] = useState(false)
-  const [customBeneficio, setCustomBeneficio] = useState(false)
+  const [beneficios, setBeneficios] = useState<any[]>([])
+  const [statusList, setStatusList] = useState<any[]>([])
+  const [responsaveis, setResponsaveis] = useState<any[]>([])
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -66,6 +81,7 @@ export function ContractModal({
 
   useEffect(() => {
     if (isOpen) {
+      loadDependencies()
       if (contract) {
         setFormData({
           nome: contract.nome || '',
@@ -82,7 +98,6 @@ export function ContractModal({
           parceiro_nome: contract.parceiro_nome || '',
           parceiro_comissao: contract.parceiro_comissao || 0,
         })
-        setCustomBeneficio(!BENEFICIOS.includes(contract.beneficio || '') && !!contract.beneficio)
       } else {
         setFormData({
           nome: '',
@@ -99,18 +114,91 @@ export function ContractModal({
           parceiro_nome: '',
           parceiro_comissao: 0,
         })
-        setCustomBeneficio(false)
       }
     }
   }, [isOpen, contract])
 
+  const loadDependencies = async () => {
+    try {
+      const [bRes, sRes, rRes] = await Promise.all([
+        getTiposAcao(),
+        getStatusContrato(),
+        getResponsaveis(),
+      ])
+      const loadedB = bRes.map((x) => ({ id: x.id, nome: x.nome }))
+      const loadedS = sRes.map((x) => ({ id: x.id, nome: x.nome }))
+      setBeneficios([
+        ...BENEFICIOS_PADRAO.map((n) => ({ id: n, nome: n })),
+        ...loadedB.filter((x) => !BENEFICIOS_PADRAO.includes(x.nome)),
+      ])
+      setStatusList([
+        ...STATUS_PADRAO.map((n) => ({ id: n, nome: n })),
+        ...loadedS.filter((x) => !STATUS_PADRAO.includes(x.nome)),
+      ])
+      setResponsaveis(rRes)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleAddBeneficio = async (nome: string) => {
+    try {
+      await createTipoAcao({ nome })
+      await loadDependencies()
+      setFormData((f) => ({ ...f, beneficio: nome }))
+    } catch (e) {
+      toast.error('Erro ao adicionar')
+    }
+  }
+  const handleDelBeneficio = async (id: string) => {
+    try {
+      await deleteTipoAcao(id)
+      await loadDependencies()
+    } catch (e) {
+      toast.error('Erro ao deletar')
+    }
+  }
+
+  const handleAddStatus = async (nome: string) => {
+    try {
+      await createStatusContrato({ nome })
+      await loadDependencies()
+      setFormData((f) => ({ ...f, status: nome }))
+    } catch (e) {
+      toast.error('Erro ao adicionar')
+    }
+  }
+  const handleDelStatus = async (id: string) => {
+    try {
+      await deleteStatusContrato(id)
+      await loadDependencies()
+    } catch (e) {
+      toast.error('Erro ao deletar')
+    }
+  }
+
+  const handleAddResp = async (nome: string) => {
+    try {
+      await createResponsavel({ nome })
+      await loadDependencies()
+      setFormData((f) => ({ ...f, responsavel: nome }))
+    } catch (e) {
+      toast.error('Erro ao adicionar')
+    }
+  }
+  const handleDelResp = async (id: string) => {
+    try {
+      await deleteResponsavel(id)
+      await loadDependencies()
+    } catch (e) {
+      toast.error('Erro ao deletar')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.nome || !formData.dcontrato) {
-      toast.error('Preencha os campos obrigatórios (Nome e Data do Contrato).')
-      return
-    }
-
+    if (!formData.nome || !formData.dcontrato)
+      return toast.error('Preencha Nome e Data do Contrato.')
     try {
       setLoading(true)
       const payload = {
@@ -119,17 +207,12 @@ export function ContractModal({
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
       }
-
-      if (isEdit) {
-        await updateContrato(contract.id, payload)
-        toast.success('Contrato atualizado com sucesso!')
-      } else {
-        await createContrato(payload)
-        toast.success('Contrato adicionado com sucesso!')
-      }
+      if (isEdit) await updateContrato(contract.id, payload)
+      else await createContrato(payload)
+      toast.success(isEdit ? 'Atualizado!' : 'Adicionado!')
       onClose()
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao salvar contrato')
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -141,90 +224,55 @@ export function ContractModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+          <DialogTitle className="text-xl font-bold text-[#C9922A]">
             {isEdit ? 'Editar Contrato' : 'Adicionar Contrato'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="nome">
+              <Label>
                 Nome <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="nome"
-                placeholder="Nome completo do cliente"
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fone">Telefone</Label>
+              <Label>Telefone</Label>
               <Input
-                id="fone"
-                placeholder="(00) 00000-0000"
                 value={formData.fone}
                 onChange={(e) => setFormData({ ...formData, fone: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
               />
             </div>
 
             <div className="space-y-2">
               <Label>Benefício</Label>
-              <div className="flex gap-2">
-                {customBeneficio ? (
-                  <Input
-                    placeholder="Digite o benefício"
-                    value={formData.beneficio}
-                    onChange={(e) => setFormData({ ...formData, beneficio: e.target.value })}
-                    className="flex-1"
-                  />
-                ) : (
-                  <Select
-                    value={formData.beneficio}
-                    onValueChange={(v) => setFormData({ ...formData, beneficio: v })}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BENEFICIOS.map((b) => (
-                        <SelectItem key={b} value={b}>
-                          {b}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCustomBeneficio(!customBeneficio)}
-                >
-                  <Plus
-                    className={cn('h-4 w-4 transition-transform', customBeneficio && 'rotate-45')}
-                  />
-                </Button>
-              </div>
+              <DynamicSelect
+                value={formData.beneficio}
+                onChange={(v) => setFormData({ ...formData, beneficio: v })}
+                items={beneficios}
+                onAdd={handleAddBeneficio}
+                onDelete={handleDelBeneficio}
+                placeholder="Selecione..."
+                defaultItems={BENEFICIOS_PADRAO}
+              />
             </div>
 
             <div className="space-y-2">
               <Label>Responsável</Label>
-              <Select
+              <DynamicSelect
                 value={formData.responsavel}
-                onValueChange={(v) => setFormData({ ...formData, responsavel: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {RESPONSAVEIS.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(v) => setFormData({ ...formData, responsavel: v })}
+                items={responsaveis}
+                onAdd={handleAddResp}
+                onDelete={handleDelResp}
+                placeholder="Selecione..."
+                defaultItems={[]}
+              />
             </div>
 
             <div className="space-y-2">
@@ -233,7 +281,7 @@ export function ContractModal({
                 value={formData.fup ? 'FUP' : 'empty'}
                 onValueChange={(v) => setFormData({ ...formData, fup: v === 'FUP' })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Sem FUP" />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,67 +292,60 @@ export function ContractModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Status inicial</Label>
-              <Select
-                disabled={!isEdit}
+              <Label>Status</Label>
+              <DynamicSelect
                 value={formData.status}
-                onValueChange={(v) => setFormData({ ...formData, status: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(v) => setFormData({ ...formData, status: v })}
+                items={statusList}
+                onAdd={handleAddStatus}
+                onDelete={handleDelStatus}
+                placeholder="Status..."
+                defaultItems={STATUS_PADRAO}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dcontrato">
+              <Label>
                 Data do Contrato <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="dcontrato"
                 type="date"
                 value={formData.dcontrato}
                 onChange={(e) => setFormData({ ...formData, dcontrato: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
               />
             </div>
 
             {isEdit && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="dcalculo">Data do Cálculo</Label>
+                  <Label>Data do Cálculo</Label>
                   <Input
-                    id="dcalculo"
                     type="date"
                     value={formData.dcalculo}
                     onChange={(e) => setFormData({ ...formData, dcalculo: e.target.value })}
+                    className="focus-visible:ring-[#C9922A]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="prazo">Prazo (dias)</Label>
+                  <Label>Prazo (dias)</Label>
                   <Input
-                    id="prazo"
                     type="number"
                     min="0"
                     value={formData.prazo}
                     onChange={(e) =>
                       setFormData({ ...formData, prazo: parseInt(e.target.value) || 0 })
                     }
+                    className="focus-visible:ring-[#C9922A]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dprotocolo">Data do Protocolo</Label>
+                  <Label>Data do Protocolo</Label>
                   <Input
-                    id="dprotocolo"
                     type="date"
                     value={formData.dprotocolo}
                     onChange={(e) => setFormData({ ...formData, dprotocolo: e.target.value })}
+                    className="focus-visible:ring-[#C9922A]"
                   />
                 </div>
               </>
@@ -312,11 +353,10 @@ export function ContractModal({
           </div>
 
           {isArchived && (
-            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex gap-3 text-amber-700 dark:text-amber-400">
+            <div className="p-4 bg-[#C9922A]/10 border border-[#C9922A]/30 rounded-lg flex gap-3 text-[#C9922A]">
               <AlertTriangle className="h-5 w-5 shrink-0" />
-              <p className="text-sm font-medium leading-relaxed">
-                ⚠️ Este caso será arquivado. Não será contabilizado nos fechamentos ativos. O
-                registro permanece para consulta histórica.
+              <p className="text-sm font-bold">
+                ⚠️ Este caso será arquivado. Não será contabilizado nos fechamentos ativos.
               </p>
             </div>
           )}
@@ -328,31 +368,23 @@ export function ContractModal({
                 checked={formData.parceria}
                 onCheckedChange={(c) => setFormData({ ...formData, parceria: !!c })}
               />
-              <Label
-                htmlFor="parceria"
-                className="text-amber-600 dark:text-amber-500 font-bold cursor-pointer"
-              >
+              <Label htmlFor="parceria" className="text-[#C9922A] font-bold cursor-pointer">
                 Caso de Parceria
               </Label>
             </div>
-
             {formData.parceria && (
-              <div
-                className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-down"
-                style={{ animationDuration: '200ms' }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="parceiro_nome">Nome do Parceiro</Label>
+                  <Label>Nome do Parceiro</Label>
                   <Input
-                    id="parceiro_nome"
                     value={formData.parceiro_nome}
                     onChange={(e) => setFormData({ ...formData, parceiro_nome: e.target.value })}
+                    className="focus-visible:ring-[#C9922A]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="parceiro_comissao">Comissão (R$)</Label>
+                  <Label>Comissão (R$)</Label>
                   <Input
-                    id="parceiro_comissao"
                     type="number"
                     step="0.01"
                     min="0"
@@ -363,6 +395,7 @@ export function ContractModal({
                         parceiro_comissao: parseFloat(e.target.value) || 0,
                       })
                     }
+                    className="focus-visible:ring-[#C9922A]"
                   />
                 </div>
               </div>
@@ -376,7 +409,7 @@ export function ContractModal({
             <Button
               type="submit"
               disabled={loading}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-semibold"
+              className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-bold"
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>

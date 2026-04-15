@@ -18,7 +18,15 @@ const MONTHS = [
 
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
-export function MonthlyGrid({ contratos = [], year }: { contratos: any[]; year: number }) {
+export function MonthlyGrid({
+  contratos = [],
+  year,
+  month = 'Todos os meses',
+}: {
+  contratos: any[]
+  year: number
+  month?: string
+}) {
   const isArchived = (c: any) => ARCHIVED_STATUSES.includes(c.status)
 
   const yearContratos = contratos.filter((c) => {
@@ -33,7 +41,7 @@ export function MonthlyGrid({ contratos = [], year }: { contratos: any[]; year: 
     )
     const activeCount = monthContratos.filter((c) => !isArchived(c)).length
     return { name, count: activeCount }
-  })
+  }).filter((m) => month === 'Todos os meses' || m.name === month)
 
   const totalActive = yearContratos.filter((c) => !isArchived(c)).length
   const totalArchived = yearContratos.filter((c) => isArchived(c)).length
@@ -48,21 +56,19 @@ export function MonthlyGrid({ contratos = [], year }: { contratos: any[]; year: 
             className={cn(
               'group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60',
               'animate-fade-in-up',
-              month.count > 0 ? 'bg-amber-500/5 border-amber-500/20' : 'bg-card/50 opacity-80',
+              month.count > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
             )}
             style={{ animationFillMode: 'both', animationDelay: `${index * 50}ms` }}
           >
             <CardContent className="p-5">
-              <h3 className="mb-2 text-lg font-semibold tracking-wider text-muted-foreground">
+              <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground">
                 {month.name}
               </h3>
               <div className="flex items-baseline gap-2">
                 <span
                   className={cn(
-                    'text-4xl font-bold',
-                    month.count > 0
-                      ? 'text-amber-600 dark:text-amber-500'
-                      : 'text-muted-foreground/40',
+                    'text-4xl font-black',
+                    month.count > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
                   )}
                 >
                   {month.count}
@@ -82,28 +88,22 @@ export function MonthlyGrid({ contratos = [], year }: { contratos: any[]; year: 
               </div>
             </CardContent>
             {month.count > 0 && (
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-amber-500/60 transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
             )}
           </Card>
         ))}
 
         <Card
-          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-amber-500/[.12] border-amber-500/30 border-t-amber-500 border-t-2 animate-fade-in-up"
+          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-[#C9922A]/10 border-[#C9922A]/30 border-t-[#C9922A] border-t-2 animate-fade-in-up"
           style={{ animationFillMode: 'both', animationDelay: '600ms' }}
         >
           <CardContent className="p-5">
-            <h3 className="mb-2 text-lg font-bold tracking-wider text-amber-700 dark:text-amber-400">
-              TOTAL {year}
-            </h3>
+            <h3 className="mb-2 text-lg font-bold tracking-wider text-[#C9922A]">TOTAL {year}</h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-amber-700 dark:text-amber-500">
-                {totalActive}
-              </span>
-              <span className="text-sm font-semibold text-amber-600/80 dark:text-amber-400/80">
-                ativos
-              </span>
+              <span className="text-4xl font-black text-[#C9922A]">{totalActive}</span>
+              <span className="text-sm font-semibold text-[#C9922A]/80">ativos</span>
             </div>
-            <p className="mt-2 text-xs font-medium text-amber-700/60 dark:text-amber-400/60">
+            <p className="mt-2 text-xs font-medium text-[#C9922A]/60">
               {totalArchived} arquivados excluídos
             </p>
           </CardContent>

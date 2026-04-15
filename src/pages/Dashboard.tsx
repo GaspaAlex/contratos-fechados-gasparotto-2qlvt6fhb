@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { MonthlyGrid } from '@/components/dashboard/MonthlyGrid'
 import { RDocsDashboard } from '@/components/dashboard/RDocsDashboard'
 import { ContractsTable } from '@/components/dashboard/ContractsTable'
@@ -15,10 +15,45 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { LayoutDashboard } from 'lucide-react'
 import { toast } from 'sonner'
 
+const MONTHS = [
+  'JANEIRO',
+  'FEVEREIRO',
+  'MARÇO',
+  'ABRIL',
+  'MAIO',
+  'JUNHO',
+  'JULHO',
+  'AGOSTO',
+  'SETEMBRO',
+  'OUTUBRO',
+  'NOVEMBRO',
+  'DEZEMBRO',
+]
+
 export default function Dashboard() {
-  const [year, setYear] = useState(2026)
+  const [year, setYear] = useState(new Date().getFullYear())
+  const [month, setMonth] = useState('Todos os meses')
   const [contratos, setContratos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  const years = useMemo(() => {
+    const ySet = new Set<number>()
+    contratos.forEach((c) => {
+      if (c.dcontrato) {
+        const y = parseInt(c.dcontrato.split('-')[0])
+        if (!isNaN(y)) ySet.add(y)
+      }
+    })
+    const arr = Array.from(ySet).sort((a, b) => b - a)
+    if (arr.length === 0) return [new Date().getFullYear()]
+    return arr
+  }, [contratos])
+
+  useEffect(() => {
+    if (years.length > 0 && !years.includes(year)) {
+      setYear(years[0])
+    }
+  }, [years, year])
 
   const loadData = async () => {
     try {
@@ -48,23 +83,41 @@ export default function Dashboard() {
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <LayoutDashboard className="h-8 w-8 text-amber-500" />
+            <LayoutDashboard className="h-8 w-8 text-[#C9922A]" />
             Contratos Fechados
           </h1>
           <p className="text-muted-foreground mt-1">
             Gestão de fechamentos e acompanhamento R. Docs
           </p>
         </div>
-        <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-          <SelectTrigger className="w-[120px] bg-background border-amber-200 focus:ring-amber-500 font-semibold">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2025">2025</SelectItem>
-            <SelectItem value="2026">2026</SelectItem>
-            <SelectItem value="2027">2027</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={month} onValueChange={setMonth}>
+            <SelectTrigger className="w-[160px] bg-background border-[#C9922A]/30 focus:ring-[#C9922A] font-semibold text-[#C9922A]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos os meses">Todos os meses</SelectItem>
+              {MONTHS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
+            <SelectTrigger className="w-[120px] bg-background border-[#C9922A]/30 focus:ring-[#C9922A] font-semibold text-[#C9922A]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((y) => (
+                <SelectItem key={y} value={y.toString()}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {loading ? (
@@ -79,9 +132,9 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <MonthlyGrid contratos={contratos} year={year} />
-          <RDocsDashboard contratos={contratos} year={year} />
-          <ContractsTable contratos={contratos} />
+          <MonthlyGrid contratos={contratos} year={year} month={month} />
+          <RDocsDashboard contratos={contratos} year={year} month={month} />
+          <ContractsTable contratos={contratos} year={year} month={month} />
         </>
       )}
     </div>
