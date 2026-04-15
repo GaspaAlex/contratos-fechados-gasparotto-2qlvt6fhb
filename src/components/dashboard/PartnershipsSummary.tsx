@@ -13,9 +13,10 @@ import { FileText, Printer } from 'lucide-react'
 import { toYMD } from '@/services/contratos'
 
 const printHtml = (title: string, dataHtml: string) => {
-  const html = `
+  const html = `<!DOCTYPE html>
     <html>
       <head>
+        <meta charset="UTF-8">
         <title>${title}</title>
         <style>
           body { font-family: system-ui, sans-serif; padding: 20px; color: #333; }
@@ -38,9 +39,15 @@ const printHtml = (title: string, dataHtml: string) => {
       </body>
     </html>
   `
-  const blob = new Blob([html], { type: 'text/html' })
+  const blob = new Blob([html], { type: 'text/html; charset=utf-8' })
   const url = URL.createObjectURL(blob)
-  window.open(url, '_blank')
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${title}.html`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,11 +86,6 @@ export function ContractsTable({
       result = result.filter((c) => c.dcontrato.startsWith(`${year}-${mStr}`))
     }
 
-    // Sort chronologically ascending
-    result = result.sort(
-      (a, b) => new Date(a.dcontrato).getTime() - new Date(b.dcontrato).getTime(),
-    )
-
     if (search.trim()) {
       const s = removeAccents(search.toLowerCase())
       result = result.filter(
@@ -126,7 +121,35 @@ export function ContractsTable({
     }
 
     return result
-  }, [contratos, activeFilter, search])
+  }, [contratos, activeFilter, search, year, month])
+
+  const groupedFiltered = useMemo(() => {
+    const groups = new Map<string, any[]>()
+    filtered.forEach((c) => {
+      const [y, mStr] = c.dcontrato.split(' ')[0].split('-')
+      if (!y || !mStr) return
+      const key = `${y}-${mStr}`
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(c)
+    })
+
+    const sortedKeys = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b))
+
+    return sortedKeys.map((k) => {
+      const [y, mStr] = k.split('-')
+      const mIdx = parseInt(mStr, 10) - 1
+      const monthName = MONTHS[mIdx]
+      const sortedItems = groups
+        .get(k)!
+        .sort((a, b) => new Date(a.dcontrato).getTime() - new Date(b.dcontrato).getTime())
+      return {
+        key: k,
+        monthName,
+        year: y,
+        items: sortedItems,
+      }
+    })
+  }, [filtered])
 
   const formatDate = (d: string) => {
     if (!d) return '-'
@@ -206,134 +229,156 @@ export function ContractsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.length === 0 ? (
+                {groupedFiltered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                       Nenhum contrato encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((contract) => {
-                    const isArchived = ARCHIVED_STATUSES.includes(contract.status)
+                  groupedFiltered.map((group) => {
+                    const activeCount = group.items.filter(
+                      (c: any) => !ARCHIVED_STATUSES.includes(c.status),
+                    ).length
                     return (
-                      <TableRow
-                        key={contract.id}
-                        className={cn(
-                          'hover:bg-muted/30 transition-colors',
-                          isArchived && 'text-muted-foreground line-through opacity-70',
-                        )}
-                      >
-                        <TableCell className="font-semibold">{contract.nome}</TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {contract.fone || '-'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {contract.beneficio || '-'}
-                        </TableCell>
-                        <TableCell>{contract.responsavel || '-'}</TableCell>
-                        <TableCell>
-                          {contract.fup ? (
-                            <span className="font-bold text-[#C9922A]">FUP</span>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {contract.status === 'OK' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                      <React.Fragment key={group.key}>
+                        <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                          <TableCell
+                            colSpan={12}
+                            className="py-2 px-4 font-bold text-xs text-muted-foreground tracking-wider uppercase"
+                          >
+                            {group.monthName} {group.year} &mdash; {activeCount} CONTRATOS FECHADOS
+                            CONTABILIZADOS
+                          </TableCell>
+                        </TableRow>
+                        {group.items.map((contract: any) => {
+                          const isArchived = ARCHIVED_STATUSES.includes(contract.status)
+                          const isRDocs = contract.status === 'R. Docs'
+                          return (
+                            <TableRow
+                              key={contract.id}
+                              className={cn(
+                                'transition-colors',
+                                isArchived &&
+                                  'text-muted-foreground line-through opacity-70 hover:bg-muted/30',
+                                !isArchived && isRDocs && 'bg-[#E84040]/10 hover:bg-[#E84040]/20',
+                                !isArchived && !isRDocs && 'hover:bg-muted/30',
+                              )}
                             >
-                              <CheckCircle2 className="h-3 w-3" /> OK
-                            </Badge>
-                          ) : contract.status === 'R. Docs' ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                            >
-                              <FileText className="h-3 w-3" /> R. Docs
-                            </Badge>
-                          ) : ARCHIVED_STATUSES.includes(contract.status) ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-stone-100 text-stone-600 border-stone-300 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                            >
-                              <AlertTriangle className="h-3 w-3" /> {contract.status}
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="whitespace-nowrap px-2 py-0.5 border-[#C9922A]/30 text-[#C9922A] bg-[#C9922A]/10 font-bold"
-                            >
-                              {contract.status || '-'}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            'whitespace-nowrap',
-                            isArchived ? 'text-muted-foreground' : 'text-foreground',
-                          )}
-                        >
-                          {formatDate(contract.dcontrato)}
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            'whitespace-nowrap',
-                            isArchived ? 'text-muted-foreground' : 'text-foreground',
-                          )}
-                        >
-                          {formatDate(contract.dcalculo)}
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            'whitespace-nowrap',
-                            isArchived ? 'text-muted-foreground' : 'text-foreground',
-                          )}
-                        >
-                          {contract.prazo ? `${contract.prazo} dias` : '-'}
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            'whitespace-nowrap',
-                            isArchived ? 'text-muted-foreground' : 'text-foreground',
-                          )}
-                        >
-                          {formatDate(contract.dprotocolo)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {contract.parceria && contract.parceiro_nome ? (
-                            <Badge
-                              variant="secondary"
-                              className="bg-[#C9922A]/15 text-[#C9922A] font-bold border border-[#C9922A]/30"
-                            >
-                              {contract.parceiro_nome}
-                            </Badge>
-                          ) : (
-                            '-'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right no-underline">
-                          <div className="flex justify-end gap-1 no-underline">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:bg-[#C9922A]/10 hover:text-[#C9922A] no-underline"
-                              onClick={() => handleEdit(contract)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:bg-destructive/10 no-underline"
-                              onClick={() => handleDelete(contract)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                              <TableCell className="font-semibold">{contract.nome}</TableCell>
+                              <TableCell className="text-muted-foreground whitespace-nowrap">
+                                {contract.fone || '-'}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap">
+                                {contract.beneficio || '-'}
+                              </TableCell>
+                              <TableCell>{contract.responsavel || '-'}</TableCell>
+                              <TableCell>
+                                {contract.fup ? (
+                                  <span className="font-bold text-[#C9922A]">FUP</span>
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {contract.status === 'OK' ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" /> OK
+                                  </Badge>
+                                ) : contract.status === 'R. Docs' ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                                  >
+                                    <FileText className="h-3 w-3" /> R. Docs
+                                  </Badge>
+                                ) : ARCHIVED_STATUSES.includes(contract.status) ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-stone-100 text-stone-600 border-stone-300 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                                  >
+                                    <AlertTriangle className="h-3 w-3" /> {contract.status}
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="whitespace-nowrap px-2 py-0.5 border-[#C9922A]/30 text-[#C9922A] bg-[#C9922A]/10 font-bold"
+                                  >
+                                    {contract.status || '-'}
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'whitespace-nowrap',
+                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                )}
+                              >
+                                {formatDate(contract.dcontrato)}
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'whitespace-nowrap',
+                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                )}
+                              >
+                                {formatDate(contract.dcalculo)}
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'whitespace-nowrap',
+                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                )}
+                              >
+                                {contract.prazo ? `${contract.prazo} dias` : '-'}
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'whitespace-nowrap',
+                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                )}
+                              >
+                                {formatDate(contract.dprotocolo)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground whitespace-nowrap">
+                                {contract.parceria && contract.parceiro_nome ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-[#C9922A]/15 text-[#C9922A] font-bold border border-[#C9922A]/30"
+                                  >
+                                    {contract.parceiro_nome}
+                                  </Badge>
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right no-underline">
+                                <div className="flex justify-end gap-1 no-underline">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-[#C9922A]/10 hover:text-[#C9922A] no-underline"
+                                    onClick={() => handleEdit(contract)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 no-underline"
+                                    onClick={() => handleDelete(contract)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </React.Fragment>
                     )
                   })
                 )}

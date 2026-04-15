@@ -8,13 +8,14 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Pencil, Check } from 'lucide-react'
 
 export function DynamicSelect({
   value,
   onChange,
   items,
   onAdd,
+  onEdit,
   onDelete,
   placeholder,
   defaultItems = [],
@@ -23,18 +24,30 @@ export function DynamicSelect({
   onChange: (v: string) => void
   items: any[]
   onAdd: (name: string) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onEdit?: (id: string, oldName: string, newName: string) => Promise<void>
+  onDelete: (id: string, name: string) => Promise<void>
   placeholder: string
   defaultItems?: string[]
 }) {
   const [isAdding, setIsAdding] = useState(false)
   const [newItem, setNewItem] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
 
   const handleAdd = async () => {
     if (!newItem.trim()) return
     await onAdd(newItem.trim())
     setNewItem('')
     setIsAdding(false)
+  }
+
+  const handleEditSave = async (id: string, oldName: string) => {
+    if (!editValue.trim() || editValue.trim() === oldName) {
+      setEditingId(null)
+      return
+    }
+    if (onEdit) await onEdit(id, oldName, editValue.trim())
+    setEditingId(null)
   }
 
   return (
@@ -77,6 +90,43 @@ export function DynamicSelect({
             <SelectContent>
               {items.map((item) => {
                 const isDefault = defaultItems.includes(item.nome)
+
+                if (editingId === item.id) {
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-1 p-1"
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      <Input
+                        autoFocus
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="h-8 text-sm focus-visible:ring-[#C9922A]"
+                        onKeyDown={(e) => e.key === 'Enter' && handleEditSave(item.id, item.nome)}
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700"
+                        onClick={() => handleEditSave(item.id, item.nome)}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-red-600 hover:bg-red-100 hover:text-red-700"
+                        onClick={() => setEditingId(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                }
+
                 return (
                   <div
                     key={item.id}
@@ -84,27 +134,44 @@ export function DynamicSelect({
                   >
                     <SelectItem
                       value={item.nome}
-                      className="flex-1 cursor-pointer pr-8 border-none focus:bg-transparent"
+                      className="flex-1 cursor-pointer pr-16 border-none focus:bg-transparent"
                     >
                       {item.nome}
                     </SelectItem>
                     {!isDefault && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 absolute right-2 z-10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          onDelete(item.id)
-                        }}
-                        onPointerDown={(e) => {
-                          e.stopPropagation()
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <div className="absolute right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onEdit && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setEditingId(item.id)
+                              setEditValue(item.nome)
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            onDelete(item.id, item.nome)
+                          }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )

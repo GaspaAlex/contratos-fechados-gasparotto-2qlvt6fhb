@@ -31,8 +31,20 @@ export const getStatusContrato = async () =>
   pb.collection('status_contrato').getFullList({ sort: 'nome' })
 export const createStatusContrato = async (data: any) =>
   pb.collection('status_contrato').create(data)
+export const updateStatusContrato = async (id: string, data: any) =>
+  pb.collection('status_contrato').update(id, data)
 export const deleteStatusContrato = async (id: string) =>
   pb.collection('status_contrato').delete(id)
+
+export const getContratosByStatus = async (status: string) =>
+  pb
+    .collection('contratos_fechados')
+    .getFullList({ filter: `status = '${status.replace(/'/g, "\\'")}'` })
+
+export const getContratosByBeneficio = async (beneficio: string) =>
+  pb
+    .collection('contratos_fechados')
+    .getFullList({ filter: `beneficio = '${beneficio.replace(/'/g, "\\'")}'` })
 
 export const getResponsaveis = async () =>
   pb.collection('responsaveis').getFullList({ sort: 'nome' })

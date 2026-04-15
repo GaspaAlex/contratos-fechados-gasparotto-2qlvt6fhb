@@ -28,10 +28,12 @@ import {
   deleteTipoAcao,
   getStatusContrato,
   createStatusContrato,
+  updateStatusContrato,
   deleteStatusContrato,
   getResponsaveis,
   createResponsavel,
   deleteResponsavel,
+  getContratosByStatus,
 } from '@/services/contratos'
 import { toast } from 'sonner'
 import { DynamicSelect } from './DynamicSelect'
@@ -141,6 +143,17 @@ export function ContractModal({
     }
   }
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, '')
+    if (v.length > 11) v = v.slice(0, 11)
+    let formatted = v
+    if (v.length > 10) formatted = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3')
+    else if (v.length > 5) formatted = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3')
+    else if (v.length > 2) formatted = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2')
+    else if (v.length > 0) formatted = v.replace(/^(\d{0,2})/, '($1')
+    setFormData({ ...formData, fone: formatted })
+  }
+
   const handleAddBeneficio = async (nome: string) => {
     try {
       await createTipoAcao({ nome })
@@ -150,10 +163,14 @@ export function ContractModal({
       toast.error('Erro ao adicionar')
     }
   }
-  const handleDelBeneficio = async (id: string) => {
+
+  const handleDelBeneficio = async (id: string, nome: string) => {
     try {
+      if (!window.confirm(`Deseja excluir o tipo '${nome}'? Esta ação não pode ser desfeita.`))
+        return
       await deleteTipoAcao(id)
       await loadDependencies()
+      if (formData.beneficio === nome) setFormData((f) => ({ ...f, beneficio: '' }))
     } catch (e) {
       toast.error('Erro ao deletar')
     }
@@ -168,10 +185,41 @@ export function ContractModal({
       toast.error('Erro ao adicionar')
     }
   }
-  const handleDelStatus = async (id: string) => {
+
+  const handleEditStatus = async (id: string, oldName: string, newName: string) => {
     try {
+      const linked = await getContratosByStatus(oldName)
+      for (const c of linked) {
+        await updateContrato(c.id, { status: newName })
+      }
+      await updateStatusContrato(id, { nome: newName })
+      await loadDependencies()
+      if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
+    } catch (e) {
+      toast.error('Erro ao editar status')
+    }
+  }
+
+  const handleDelStatus = async (id: string, nome: string) => {
+    try {
+      const linked = await getContratosByStatus(nome)
+      if (linked.length > 0) {
+        if (
+          !window.confirm(
+            `Existem contratos com este status. Ao excluir, esses contratos ficarão com status 'R. Docs'. Deseja continuar?`,
+          )
+        )
+          return
+        for (const c of linked) {
+          await updateContrato(c.id, { status: 'R. Docs' })
+        }
+      } else {
+        if (!window.confirm(`Deseja excluir o status '${nome}'? Esta ação não pode ser desfeita.`))
+          return
+      }
       await deleteStatusContrato(id)
       await loadDependencies()
+      if (formData.status === nome) setFormData((f) => ({ ...f, status: 'R. Docs' }))
     } catch (e) {
       toast.error('Erro ao deletar')
     }
@@ -186,10 +234,13 @@ export function ContractModal({
       toast.error('Erro ao adicionar')
     }
   }
-  const handleDelResp = async (id: string) => {
+
+  const handleDelResp = async (id: string, nome: string) => {
     try {
+      if (!window.confirm(`Deseja excluir o responsável '${nome}'?`)) return
       await deleteResponsavel(id)
       await loadDependencies()
+      if (formData.responsavel === nome) setFormData((f) => ({ ...f, responsavel: '' }))
     } catch (e) {
       toast.error('Erro ao deletar')
     }
@@ -244,7 +295,8 @@ export function ContractModal({
               <Label>Telefone</Label>
               <Input
                 value={formData.fone}
-                onChange={(e) => setFormData({ ...formData, fone: e.target.value })}
+                onChange={handlePhoneChange}
+                placeholder="(00) 00000-0000"
                 className="focus-visible:ring-[#C9922A]"
               />
             </div>
@@ -298,6 +350,7 @@ export function ContractModal({
                 onChange={(v) => setFormData({ ...formData, status: v })}
                 items={statusList}
                 onAdd={handleAddStatus}
+                onEdit={handleEditStatus}
                 onDelete={handleDelStatus}
                 placeholder="Status..."
                 defaultItems={STATUS_PADRAO}
