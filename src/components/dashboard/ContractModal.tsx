@@ -181,8 +181,7 @@ export function ContractModal({
 
   const handleDelBeneficio = async (id: string, nome: string) => {
     try {
-      if (!window.confirm(`Deseja excluir o tipo '${nome}'? Esta ação não pode ser desfeita.`))
-        return
+      if (!window.confirm(`Excluir o benefício '${nome}'? Esta ação não pode ser desfeita.`)) return
       await deleteTipoAcao(id)
       await loadDependencies()
       if (formData.beneficio === nome) setFormData((f) => ({ ...f, beneficio: '' }))
@@ -221,7 +220,7 @@ export function ContractModal({
       if (linked.length > 0) {
         if (
           !window.confirm(
-            `Existem contratos com este status. Ao excluir, esses contratos ficarão com status 'R. Docs'. Deseja continuar?`,
+            `Existem ${linked.length} contratos com o status '${nome}'. Eles serão alterados automaticamente para R. Docs. Confirmar?`,
           )
         )
           return

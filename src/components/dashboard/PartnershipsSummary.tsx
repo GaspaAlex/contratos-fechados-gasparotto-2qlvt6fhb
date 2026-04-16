@@ -19,7 +19,6 @@ const printHtml = (title: string, dataHtml: string) => {
         <meta charset="UTF-8">
         <title>${title}</title>
         <style>
-          body { font-family: system-ui, sans-serif; padding: 20px; color: #333; }
           body { font-family: system-ui, sans-serif; padding: 20px; color: #1A1A0E; background: #ffffff; }
           h1 { color: #C9922A; border-bottom: 2px solid #C9922A; padding-bottom: 10px; }
           .date { color: #666; margin-bottom: 20px; }
@@ -30,6 +29,9 @@ const printHtml = (title: string, dataHtml: string) => {
           @media print { .no-print { display: none; } }
           .print-btn { background: #C9922A; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
         </style>
+        <script>
+          window.onload = () => window.print();
+        </script>
       </head>
       <body>
         <button class="no-print print-btn" onclick="window.print()">🖨️ Imprimir Relatório</button>
@@ -39,15 +41,12 @@ const printHtml = (title: string, dataHtml: string) => {
       </body>
     </html>
   `
-  const blob = new Blob([html], { type: 'text/html; charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${title}.html`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+  }
 }
 
 export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {

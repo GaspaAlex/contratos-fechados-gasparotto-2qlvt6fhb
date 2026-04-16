@@ -109,7 +109,7 @@ export function DynamicSelect({
                         type="button"
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700"
+                        className="h-8 w-8 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
                         onClick={() => handleEditSave(item.id, item.nome)}
                       >
                         <Check className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function DynamicSelect({
                         type="button"
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-red-600 hover:bg-red-100 hover:text-red-700"
+                        className="h-8 w-8 text-muted-foreground hover:bg-muted"
                         onClick={() => setEditingId(null)}
                       >
                         <X className="h-4 w-4" />
