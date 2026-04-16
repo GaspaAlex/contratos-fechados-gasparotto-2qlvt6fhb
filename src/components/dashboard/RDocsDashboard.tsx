@@ -47,7 +47,9 @@ export function RDocsDashboard({
     }
 
     if (beneficio && beneficio !== 'Todos os benefícios') {
-      periodContratos = periodContratos.filter((c) => c.beneficio === beneficio)
+      periodContratos = periodContratos.filter(
+        (c) => (c.beneficio || '').trim().toLowerCase() === beneficio.trim().toLowerCase(),
+      )
     }
 
     const total = periodContratos.length

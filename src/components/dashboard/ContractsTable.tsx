@@ -70,14 +70,17 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
       try {
         const bRes = await getTiposAcao()
         const loadedB = bRes.map((x: any) => x.nome)
-        const combined = Array.from(new Set([...BENEFICIOS_PADRAO, ...loadedB]))
-        setBeneficiosList(combined)
+        const contractBenefits = contratos.map((c) => c.beneficio).filter(Boolean)
+        const combined = Array.from(
+          new Set([...BENEFICIOS_PADRAO, ...loadedB, ...contractBenefits]),
+        )
+        setBeneficiosList(combined.sort((a, b) => a.localeCompare(b)))
       } catch (e) {
         console.error(e)
       }
     }
     loadBeneficios()
-  }, [])
+  }, [contratos])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -136,17 +139,21 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
     }
 
     if (tableBeneficio !== 'Todos os benefícios') {
-      result = result.filter((c) => c.beneficio === tableBeneficio)
+      result = result.filter(
+        (c) => (c.beneficio || '').trim().toLowerCase() === tableBeneficio.trim().toLowerCase(),
+      )
     }
 
-    if (activeFilter === 'Ativos') {
+    if (activeFilter === 'Todos') {
+      result = result.filter((c) => !ARCHIVED_STATUSES.includes(c.status))
+    } else if (activeFilter === 'Ativos') {
       result = result.filter(
         (c) =>
           ATIVOS_STATUSES.includes(c.status) ||
           (!ARCHIVED_STATUSES.includes(c.status) && c.status !== ''),
       )
     } else if (activeFilter === 'FUP') {
-      result = result.filter((c) => c.fup === true)
+      result = result.filter((c) => c.fup === true && !ARCHIVED_STATUSES.includes(c.status))
     } else if (activeFilter === 'R. Docs') {
       result = result.filter((c) => c.status === 'R. Docs')
     } else if (activeFilter === 'L. Cálculos') {
@@ -158,11 +165,11 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
     } else if (activeFilter === 'Arquivados') {
       result = result.filter((c) => ARCHIVED_STATUSES.includes(c.status))
     } else if (activeFilter === 'Parceria') {
-      result = result.filter((c) => c.parceria === true)
+      result = result.filter((c) => c.parceria === true && !ARCHIVED_STATUSES.includes(c.status))
     }
 
     return result
-  }, [contratos, activeFilter, search, tableYear, tableMonth])
+  }, [contratos, activeFilter, search, tableYear, tableMonth, tableBeneficio])
 
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
