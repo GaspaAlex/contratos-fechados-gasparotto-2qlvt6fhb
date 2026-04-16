@@ -126,18 +126,12 @@ export function DynamicSelect({
                 }
 
                 return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between px-2 py-1.5 hover:bg-muted rounded-sm group relative"
-                  >
-                    <SelectItem
-                      value={item.nome}
-                      className="flex-1 cursor-pointer pr-16 border-none focus:bg-transparent"
-                    >
+                  <div key={item.id} className="relative group">
+                    <SelectItem value={item.nome} className="pr-16 cursor-pointer">
                       {item.nome}
                     </SelectItem>
                     {!isDefault && (
-                      <div className="absolute right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {onEdit && (
                           <Button
                             type="button"
