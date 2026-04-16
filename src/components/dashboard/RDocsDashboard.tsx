@@ -53,7 +53,8 @@ export function RDocsDashboard({
   }, [contratos, month, year])
 
   const isSuccess = metrics.rate >= 50
-  const label = month === 'Todos os meses' ? `Em ${year}` : `Em ${month} ${year}`
+  const formattedMonth = month !== 'Todos os meses' ? month.toLowerCase() : ''
+  const label = month === 'Todos os meses' ? `Em ${year}` : `Em ${formattedMonth}/${year}`
   const message = isSuccess
     ? `${label}, ${metrics.rate}% dos contratos foram liberados — acima da média aceitável de 50%.`
     : `${label}, ${metrics.rate}% dos contratos foram liberados — abaixo da meta de 50%.`

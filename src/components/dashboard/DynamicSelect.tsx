@@ -145,7 +145,7 @@ export function DynamicSelect({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
+                            className="h-6 w-6 text-[#5A9FD4] hover:bg-[#5A9FD4]/10 hover:text-[#5A9FD4]"
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
@@ -161,7 +161,7 @@ export function DynamicSelect({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                          className="h-6 w-6 text-[#E84040] hover:bg-[#E84040]/10"
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()

@@ -25,6 +25,7 @@ import {
   toYMD,
   getTiposAcao,
   createTipoAcao,
+  updateTipoAcao,
   deleteTipoAcao,
   getStatusContrato,
   createStatusContrato,
@@ -161,6 +162,20 @@ export function ContractModal({
       setFormData((f) => ({ ...f, beneficio: nome }))
     } catch (e) {
       toast.error('Erro ao adicionar')
+    }
+  }
+
+  const handleEditBeneficio = async (id: string, oldName: string, newName: string) => {
+    try {
+      const linked = await getContratosByBeneficio(oldName)
+      for (const c of linked) {
+        await updateContrato(c.id, { beneficio: newName })
+      }
+      await updateTipoAcao(id, { nome: newName })
+      await loadDependencies()
+      if (formData.beneficio === oldName) setFormData((f) => ({ ...f, beneficio: newName }))
+    } catch (e) {
+      toast.error('Erro ao editar benefício')
     }
   }
 
@@ -308,6 +323,7 @@ export function ContractModal({
                 onChange={(v) => setFormData({ ...formData, beneficio: v })}
                 items={beneficios}
                 onAdd={handleAddBeneficio}
+                onEdit={handleEditBeneficio}
                 onDelete={handleDelBeneficio}
                 placeholder="Selecione..."
                 defaultItems={BENEFICIOS_PADRAO}

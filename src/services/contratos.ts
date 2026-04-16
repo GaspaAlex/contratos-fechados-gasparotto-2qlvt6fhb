@@ -25,6 +25,8 @@ export const toYMD = (dateString?: string) => {
 
 export const getTiposAcao = async () => pb.collection('tipos_acao').getFullList({ sort: 'nome' })
 export const createTipoAcao = async (data: any) => pb.collection('tipos_acao').create(data)
+export const updateTipoAcao = async (id: string, data: any) =>
+  pb.collection('tipos_acao').update(id, data)
 export const deleteTipoAcao = async (id: string) => pb.collection('tipos_acao').delete(id)
 
 export const getStatusContrato = async () =>

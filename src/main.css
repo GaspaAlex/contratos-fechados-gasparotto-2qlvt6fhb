@@ -89,3 +89,22 @@
       0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 }
+
+@layer base {
+  [data-radix-popper-content-wrapper] [role='option'],
+  [data-radix-popper-content-wrapper] [role='menuitem'],
+  .radix-select-content {
+    color: #1a1a0e !important;
+  }
+  .dark [data-radix-popper-content-wrapper] [role='option'],
+  .dark [data-radix-popper-content-wrapper] [role='menuitem'],
+  .dark .radix-select-content {
+    color: #eceee8 !important;
+  }
+  [data-radix-popper-content-wrapper] {
+    background-color: #ffffff !important;
+  }
+  .dark [data-radix-popper-content-wrapper] {
+    background-color: #1b1f17 !important;
+  }
+}

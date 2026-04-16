@@ -91,7 +91,6 @@ export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {
           <th>Telefone</th>
           <th>Tipo de Benefício</th>
           <th>Responsável</th>
-          <th>Status</th>
           <th>D. Contrato</th>
           <th>D. Protocolo</th>
           <th style="text-align: right;">Comissão R$</th>
@@ -106,7 +105,6 @@ export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {
             <td>${c.fone || '-'}</td>
             <td>${c.beneficio || '-'}</td>
             <td>${c.responsavel || '-'}</td>
-            <td>${c.status || '-'}</td>
             <td>${formatDate(c.dcontrato)}</td>
             <td>${formatDate(c.dprotocolo)}</td>
             <td class="money">${formatMoney(c.parceiro_comissao || 0)}</td>

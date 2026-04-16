@@ -40,15 +40,12 @@ export default function Layout() {
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar variant="inset" className="border-r">
           <SidebarHeader className="p-6 pb-2">
-            <Link to="/dashboard" className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-lg bg-[#C9922A]/10 flex items-center justify-center border-2 border-transparent shadow-[0_0_0_2px_rgba(201,146,42,0.35)]">
-                <Scale className="w-6 h-6 text-[#C9922A]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] text-muted-foreground uppercase leading-tight tracking-wider">
+            <Link to="/dashboard" className="flex items-center justify-center py-2">
+              <div className="flex flex-col text-center">
+                <span className="text-[16px] font-bold text-foreground leading-tight">
                   Advocacia
                 </span>
-                <span className="text-[14px] font-bold text-[#C9922A] leading-tight">
+                <span className="text-[20px] font-bold text-[#C9922A] leading-tight">
                   Gasparotto
                 </span>
               </div>
@@ -86,8 +83,9 @@ export default function Layout() {
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-card px-6">
             <div className="flex items-center gap-2 lg:hidden">
               <SidebarTrigger className="-ml-2" />
-              <div className="w-8 h-8 rounded bg-[#C9922A]/10 flex items-center justify-center border-2 border-transparent shadow-[0_0_0_2px_rgba(201,146,42,0.35)]">
-                <Scale className="w-4 h-4 text-[#C9922A]" />
+              <div className="flex flex-col text-left leading-none">
+                <span className="text-[12px] font-bold text-foreground">Advocacia</span>
+                <span className="text-[14px] font-bold text-[#C9922A]">Gasparotto</span>
               </div>
             </div>
             <div className="flex-1" />

@@ -13,9 +13,17 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle2, FileText, Pencil, Trash2, Search, Plus, AlertTriangle } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { PartnershipsSummary } from './PartnershipsSummary'
 import { ContractModal } from './ContractModal'
 import { DeleteModal } from './DeleteModal'
+import { RDocsDashboard } from './RDocsDashboard'
 import { toYMD } from '@/services/contratos'
 
 const filters = [
@@ -47,17 +55,26 @@ const MONTHS = [
   'DEZEMBRO',
 ]
 
-export function ContractsTable({
-  contratos = [],
-  year,
-  month = 'Todos os meses',
-}: {
-  contratos: any[]
-  year: number
-  month?: string
-}) {
+export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
   const [activeFilter, setActiveFilter] = useState('Todos')
   const [search, setSearch] = useState('')
+  const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
+  const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>()
+    contratos.forEach((c) => {
+      if (c.dcontrato) {
+        const y = parseInt(c.dcontrato.split('-')[0], 10)
+        if (!isNaN(y)) years.add(y)
+      }
+    })
+    const sorted = Array.from(years).sort((a, b) => b - a)
+    if (!sorted.includes(new Date().getFullYear())) {
+      sorted.unshift(new Date().getFullYear())
+    }
+    return sorted
+  }, [contratos])
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -79,11 +96,13 @@ export function ContractsTable({
   }
 
   const filtered = useMemo(() => {
-    let result = contratos.filter((c) => c.dcontrato && c.dcontrato.startsWith(year.toString()))
-    if (month !== 'Todos os meses') {
-      const mIdx = MONTHS.indexOf(month)
+    let result = contratos.filter(
+      (c) => c.dcontrato && c.dcontrato.startsWith(tableYear.toString()),
+    )
+    if (tableMonth !== 'Todos os meses') {
+      const mIdx = MONTHS.indexOf(tableMonth)
       const mStr = (mIdx + 1).toString().padStart(2, '0')
-      result = result.filter((c) => c.dcontrato.startsWith(`${year}-${mStr}`))
+      result = result.filter((c) => c.dcontrato.startsWith(`${tableYear}-${mStr}`))
     }
 
     if (search.trim()) {
@@ -121,7 +140,7 @@ export function ContractsTable({
     }
 
     return result
-  }, [contratos, activeFilter, search, year, month])
+  }, [contratos, activeFilter, search, tableYear, tableMonth])
 
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
@@ -161,6 +180,8 @@ export function ContractsTable({
 
   return (
     <>
+      <RDocsDashboard contratos={contratos} year={tableYear} month={tableMonth} />
+
       {activeFilter === 'Parceria' && <PartnershipsSummary contratos={filtered} />}
 
       <Card
@@ -171,9 +192,9 @@ export function ContractsTable({
           <CardTitle className="text-xl font-bold">Registro de Contratos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <div className="relative w-full sm:w-80">
+          <div className="flex flex-col xl:flex-row justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 w-full xl:flex-1">
+              <div className="relative w-full sm:w-80 shrink-0">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar cliente, benefício, resp..."
@@ -182,10 +203,38 @@ export function ContractsTable({
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Select value={tableMonth} onValueChange={setTableMonth}>
+                <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todos os meses">Todos os meses</SelectItem>
+                  {MONTHS.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={tableYear.toString()}
+                onValueChange={(v) => setTableYear(parseInt(v, 10))}
+              >
+                <SelectTrigger className="w-full sm:w-32 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears.map((y) => (
+                    <SelectItem key={y} value={y.toString()}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button
               onClick={handleAdd}
-              className="w-full md:w-auto bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-semibold shadow-sm"
+              className="w-full xl:w-auto bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-semibold shadow-sm shrink-0"
             >
               <Plus className="mr-2 h-4 w-4" /> Adicionar
             </Button>
