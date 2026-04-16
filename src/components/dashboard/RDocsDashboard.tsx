@@ -34,7 +34,8 @@ export function RDocsDashboard({
       (c) =>
         c.dcontrato &&
         c.dcontrato.startsWith(year.toString()) &&
-        !ARCHIVED_STATUSES.includes(c.status),
+        !ARCHIVED_STATUSES.includes(c.status) &&
+        c.beneficio === 'Aux. Acidente',
     )
 
     if (month !== 'Todos os meses') {

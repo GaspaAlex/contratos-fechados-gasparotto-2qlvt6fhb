@@ -24,7 +24,9 @@ import { PartnershipsSummary } from './PartnershipsSummary'
 import { ContractModal } from './ContractModal'
 import { DeleteModal } from './DeleteModal'
 import { RDocsDashboard } from './RDocsDashboard'
-import { toYMD } from '@/services/contratos'
+import { toYMD, getTiposAcao } from '@/services/contratos'
+
+const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 
 const filters = [
   'Todos',
@@ -60,6 +62,22 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
   const [search, setSearch] = useState('')
   const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
+  const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
+  const [beneficiosList, setBeneficiosList] = useState<string[]>([])
+
+  React.useEffect(() => {
+    const loadBeneficios = async () => {
+      try {
+        const bRes = await getTiposAcao()
+        const loadedB = bRes.map((x: any) => x.nome)
+        const combined = Array.from(new Set([...BENEFICIOS_PADRAO, ...loadedB]))
+        setBeneficiosList(combined)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    loadBeneficios()
+  }, [])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -115,6 +133,10 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
           removeAccents((c.responsavel || '').toLowerCase()).includes(s) ||
           removeAccents((c.parceiro_nome || '').toLowerCase()).includes(s),
       )
+    }
+
+    if (tableBeneficio !== 'Todos os benefícios') {
+      result = result.filter((c) => c.beneficio === tableBeneficio)
     }
 
     if (activeFilter === 'Ativos') {
@@ -203,10 +225,23 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <Select value={tableBeneficio} onValueChange={setTableBeneficio}>
+                <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Benefício" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todos os benefícios">Todos os benefícios</SelectItem>
+                  {beneficiosList.map((b) => (
+                    <SelectItem key={b} value={b}>
+                      {b}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={tableMonth} onValueChange={setTableMonth}>
                 <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Mês" />
-                </SelectTrigger>
+                </SelectTrigger>{' '}
                 <SelectContent>
                   <SelectItem value="Todos os meses">Todos os meses</SelectItem>
                   {MONTHS.map((m) => (

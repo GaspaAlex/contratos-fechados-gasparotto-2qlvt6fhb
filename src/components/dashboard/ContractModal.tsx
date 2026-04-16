@@ -220,7 +220,7 @@ export function ContractModal({
       if (linked.length > 0) {
         if (
           !window.confirm(
-            `Existem ${linked.length} contratos com o status '${nome}'. Eles serão alterados automaticamente para R. Docs. Confirmar?`,
+            `Existem ${linked.length} contratos com este status. Ao excluir, serão alterados automaticamente para R. Docs. Confirmar?`,
           )
         )
           return
