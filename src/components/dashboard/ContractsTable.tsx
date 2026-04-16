@@ -202,7 +202,12 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
 
   return (
     <>
-      <RDocsDashboard contratos={contratos} year={tableYear} month={tableMonth} />
+      <RDocsDashboard
+        contratos={contratos}
+        year={tableYear}
+        month={tableMonth}
+        beneficio={tableBeneficio}
+      />
 
       {activeFilter === 'Parceria' && <PartnershipsSummary contratos={filtered} />}
 
@@ -321,9 +326,6 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                   </TableRow>
                 ) : (
                   groupedFiltered.map((group) => {
-                    const activeCount = group.items.filter(
-                      (c: any) => !ARCHIVED_STATUSES.includes(c.status),
-                    ).length
                     return (
                       <React.Fragment key={group.key}>
                         <TableRow className="bg-secondary/50 hover:bg-secondary/50">
@@ -331,8 +333,8 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                             colSpan={12}
                             className="py-2 px-4 font-bold text-xs text-muted-foreground tracking-wider uppercase"
                           >
-                            {group.monthName} {group.year} &mdash; {activeCount} CONTRATOS FECHADOS
-                            CONTABILIZADOS
+                            {group.monthName} {group.year} &mdash; {group.items.length} CONTRATOS
+                            FECHADOS CONTABILIZADOS
                           </TableCell>
                         </TableRow>
                         {group.items.map((contract: any) => {

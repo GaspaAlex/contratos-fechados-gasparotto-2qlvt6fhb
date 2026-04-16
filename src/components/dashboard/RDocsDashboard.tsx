@@ -24,18 +24,19 @@ export function RDocsDashboard({
   contratos = [],
   year,
   month,
+  beneficio = 'Todos os benefícios',
 }: {
   contratos: any[]
   year: number
   month: string
+  beneficio?: string
 }) {
   const metrics = useMemo(() => {
     let periodContratos = contratos.filter(
       (c) =>
         c.dcontrato &&
         c.dcontrato.startsWith(year.toString()) &&
-        !ARCHIVED_STATUSES.includes(c.status) &&
-        c.beneficio === 'Aux. Acidente',
+        !ARCHIVED_STATUSES.includes(c.status),
     )
 
     if (month !== 'Todos os meses') {
@@ -45,13 +46,17 @@ export function RDocsDashboard({
       periodContratos = periodContratos.filter((c) => c.dcontrato.startsWith(prefix))
     }
 
+    if (beneficio && beneficio !== 'Todos os benefícios') {
+      periodContratos = periodContratos.filter((c) => c.beneficio === beneficio)
+    }
+
     const total = periodContratos.length
-    const liberados = periodContratos.filter((c) => c.status !== 'R. Docs').length
+    const liberados = periodContratos.filter((c) => c.status === 'OK').length
     const pendentes = periodContratos.filter((c) => c.status === 'R. Docs').length
     const rate = total > 0 ? Math.round((liberados / total) * 100) : 0
 
     return { total, liberados, pendentes, rate }
-  }, [contratos, month, year])
+  }, [contratos, month, year, beneficio])
 
   const isSuccess = metrics.rate >= 50
   const formattedMonth = month !== 'Todos os meses' ? month.toLowerCase() : ''
