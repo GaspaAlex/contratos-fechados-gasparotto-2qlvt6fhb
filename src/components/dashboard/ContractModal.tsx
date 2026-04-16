@@ -29,7 +29,6 @@ import {
   deleteTipoAcao,
   getStatusContrato,
   createStatusContrato,
-  updateStatusContrato,
   deleteStatusContrato,
   getResponsaveis,
   createResponsavel,
@@ -38,6 +37,7 @@ import {
 } from '@/services/contratos'
 import { toast } from 'sonner'
 import { DynamicSelect } from './DynamicSelect'
+import pb from '@/lib/pocketbase/client'
 
 const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 const STATUS_PADRAO = [
@@ -128,14 +128,14 @@ export function ContractModal({
         getStatusContrato(),
         getResponsaveis(),
       ])
-      const loadedB = bRes.map((x) => ({ id: x.id, nome: x.nome }))
-      const loadedS = sRes.map((x) => ({ id: x.id, nome: x.nome }))
+      const loadedB = bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default }))
+      const loadedS = sRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default }))
       setBeneficios([
-        ...BENEFICIOS_PADRAO.map((n) => ({ id: n, nome: n })),
+        ...BENEFICIOS_PADRAO.map((n) => ({ id: n, nome: n, is_default: true })),
         ...loadedB.filter((x) => !BENEFICIOS_PADRAO.includes(x.nome)),
       ])
       setStatusList([
-        ...STATUS_PADRAO.map((n) => ({ id: n, nome: n })),
+        ...STATUS_PADRAO.map((n) => ({ id: n, nome: n, is_default: true })),
         ...loadedS.filter((x) => !STATUS_PADRAO.includes(x.nome)),
       ])
       setResponsaveis(rRes)
@@ -167,7 +167,9 @@ export function ContractModal({
 
   const handleEditBeneficio = async (id: string, oldName: string, newName: string) => {
     try {
-      const linked = await getContratosByBeneficio(oldName)
+      const linked = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('beneficio = {:oldName}', { oldName }),
+      })
       for (const c of linked) {
         await updateContrato(c.id, { beneficio: newName })
       }
@@ -200,27 +202,13 @@ export function ContractModal({
     }
   }
 
-  const handleEditStatus = async (id: string, oldName: string, newName: string) => {
-    try {
-      const linked = await getContratosByStatus(oldName)
-      for (const c of linked) {
-        await updateContrato(c.id, { status: newName })
-      }
-      await updateStatusContrato(id, { nome: newName })
-      await loadDependencies()
-      if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
-    } catch (e) {
-      toast.error('Erro ao editar status')
-    }
-  }
-
   const handleDelStatus = async (id: string, nome: string) => {
     try {
       const linked = await getContratosByStatus(nome)
       if (linked.length > 0) {
         if (
           !window.confirm(
-            `Existem ${linked.length} contratos com este status. Eles serão alterados automaticamente para R. Docs ao excluir. Confirmar?`,
+            `Existem ${linked.length} contratos com este status. Ao excluir, serão alterados automaticamente para R. Docs. Confirmar?`,
           )
         )
           return
@@ -365,7 +353,6 @@ export function ContractModal({
                 onChange={(v) => setFormData({ ...formData, status: v })}
                 items={statusList}
                 onAdd={handleAddStatus}
-                onEdit={handleEditStatus}
                 onDelete={handleDelStatus}
                 placeholder="Status..."
                 defaultItems={STATUS_PADRAO}

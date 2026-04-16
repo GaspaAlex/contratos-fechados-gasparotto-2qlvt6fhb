@@ -89,7 +89,7 @@ export function DynamicSelect({
             </SelectTrigger>
             <SelectContent>
               {items.map((item) => {
-                const isDefault = defaultItems.includes(item.nome)
+                const isDefault = item.is_default || defaultItems.includes(item.nome)
 
                 if (editingId === item.id) {
                   return (
