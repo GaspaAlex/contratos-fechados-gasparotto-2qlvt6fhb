@@ -39,16 +39,6 @@ import { toast } from 'sonner'
 import { DynamicSelect } from './DynamicSelect'
 import pb from '@/lib/pocketbase/client'
 
-const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
-const STATUS_PADRAO = [
-  'R. Docs',
-  'L. Cálculos',
-  'OK',
-  'Ag. Perícia',
-  'Sem Qualidade de Segurado',
-  'Tem Advogado',
-  'Litispendência',
-]
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
 export function ContractModal({
@@ -128,16 +118,8 @@ export function ContractModal({
         getStatusContrato(),
         getResponsaveis(),
       ])
-      const loadedB = bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default }))
-      const loadedS = sRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default }))
-      setBeneficios([
-        ...BENEFICIOS_PADRAO.map((n) => ({ id: n, nome: n, is_default: true })),
-        ...loadedB.filter((x) => !BENEFICIOS_PADRAO.includes(x.nome)),
-      ])
-      setStatusList([
-        ...STATUS_PADRAO.map((n) => ({ id: n, nome: n, is_default: true })),
-        ...loadedS.filter((x) => !STATUS_PADRAO.includes(x.nome)),
-      ])
+      setBeneficios(bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
+      setStatusList(sRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
       setResponsaveis(rRes)
     } catch (e) {
       console.error(e)
@@ -202,6 +184,20 @@ export function ContractModal({
     }
   }
 
+  const handleEditStatus = async (id: string, oldName: string, newName: string) => {
+    try {
+      const linked = await getContratosByStatus(oldName)
+      for (const c of linked) {
+        await updateContrato(c.id, { status: newName })
+      }
+      await pb.collection('status_contrato').update(id, { nome: newName })
+      await loadDependencies()
+      if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
+    } catch (e) {
+      toast.error('Erro ao editar status')
+    }
+  }
+
   const handleDelStatus = async (id: string, nome: string) => {
     try {
       const linked = await getContratosByStatus(nome)
@@ -234,6 +230,22 @@ export function ContractModal({
       setFormData((f) => ({ ...f, responsavel: nome }))
     } catch (e) {
       toast.error('Erro ao adicionar')
+    }
+  }
+
+  const handleEditResp = async (id: string, oldName: string, newName: string) => {
+    try {
+      const linked = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('responsavel = {:oldName}', { oldName }),
+      })
+      for (const c of linked) {
+        await updateContrato(c.id, { responsavel: newName })
+      }
+      await pb.collection('responsaveis').update(id, { nome: newName })
+      await loadDependencies()
+      if (formData.responsavel === oldName) setFormData((f) => ({ ...f, responsavel: newName }))
+    } catch (e) {
+      toast.error('Erro ao editar responsável')
     }
   }
 
@@ -313,7 +325,6 @@ export function ContractModal({
                 onEdit={handleEditBeneficio}
                 onDelete={handleDelBeneficio}
                 placeholder="Selecione..."
-                defaultItems={BENEFICIOS_PADRAO}
               />
             </div>
 
@@ -324,9 +335,9 @@ export function ContractModal({
                 onChange={(v) => setFormData({ ...formData, responsavel: v })}
                 items={responsaveis}
                 onAdd={handleAddResp}
+                onEdit={handleEditResp}
                 onDelete={handleDelResp}
                 placeholder="Selecione..."
-                defaultItems={[]}
               />
             </div>
 
@@ -353,9 +364,9 @@ export function ContractModal({
                 onChange={(v) => setFormData({ ...formData, status: v })}
                 items={statusList}
                 onAdd={handleAddStatus}
+                onEdit={handleEditStatus}
                 onDelete={handleDelStatus}
                 placeholder="Status..."
-                defaultItems={STATUS_PADRAO}
               />
             </div>
 

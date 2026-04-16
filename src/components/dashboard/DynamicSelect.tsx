@@ -18,7 +18,6 @@ export function DynamicSelect({
   onEdit,
   onDelete,
   placeholder,
-  defaultItems = [],
 }: {
   value: string
   onChange: (v: string) => void
@@ -27,7 +26,6 @@ export function DynamicSelect({
   onEdit?: (id: string, oldName: string, newName: string) => Promise<void>
   onDelete: (id: string, name: string) => Promise<void>
   placeholder: string
-  defaultItems?: string[]
 }) {
   const [isAdding, setIsAdding] = useState(false)
   const [newItem, setNewItem] = useState('')
@@ -89,7 +87,7 @@ export function DynamicSelect({
             </SelectTrigger>
             <SelectContent>
               {items.map((item) => {
-                const isDefault = item.is_default || defaultItems.includes(item.nome)
+                const isDefault = item.is_default
 
                 if (editingId === item.id) {
                   return (
