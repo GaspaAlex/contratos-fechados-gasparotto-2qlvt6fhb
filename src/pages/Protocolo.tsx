@@ -1,25 +1,77 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { getProtocolos } from '@/services/protocolo'
+import { getTiposAcao, getResponsaveis } from '@/services/lookups'
+import { useRealtime } from '@/hooks/use-realtime'
+import { ProtocoloDashboard } from '@/components/protocolo/ProtocoloDashboard'
+import { ProtocoloTable } from '@/components/protocolo/ProtocoloTable'
+import { ProtocoloDialog, ProtocoloDeleteDialog } from '@/components/protocolo/ProtocoloDialogs'
 
 export default function Protocolo() {
+  const [data, setData] = useState<any[]>([])
+  const [tipos, setTipos] = useState<any[]>([])
+  const [responsaveis, setResponsaveis] = useState<any[]>([])
+  const [selected, setSelected] = useState(null)
+  const [open, setOpen] = useState(false)
+  const [delOpen, setDelOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadData = async () => {
+    try {
+      const [p, t, r] = await Promise.all([getProtocolos(), getTiposAcao(), getResponsaveis()])
+      setData(p)
+      setTipos(t)
+      setResponsaveis(r)
+    } catch (e) {
+      console.error('Failed to load data', e)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+  useRealtime('protocolo', loadData)
+
   return (
-    <div className="animate-fade-in-up">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Protocolo</h1>
-        <p className="text-muted-foreground mt-1">Gestão de protocolos e documentos</p>
+    <div className="space-y-6 animate-fade-in-up pb-10">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Protocolo</h1>
+          <p className="text-muted-foreground mt-1">Gestão de processos em fase de protocolo</p>
+        </div>
       </div>
 
-      <Card className="bg-card text-card-foreground shadow-sm">
-        <CardHeader className="border-b pb-4">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <FileText className="h-5 w-5 text-primary" />
-            Em desenvolvimento
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground">Esta página estará disponível em breve.</p>
-        </CardContent>
-      </Card>
+      <ProtocoloDashboard data={data} />
+      <ProtocoloTable
+        data={data}
+        tipos={tipos}
+        onAdd={() => {
+          setSelected(null)
+          setOpen(true)
+        }}
+        onEdit={(item: any) => {
+          setSelected(item)
+          setOpen(true)
+        }}
+        onDelete={(item: any) => {
+          setItemToDelete(item)
+          setDelOpen(true)
+        }}
+      />
+
+      <ProtocoloDialog
+        open={open}
+        onOpenChange={setOpen}
+        item={selected}
+        tipos={tipos}
+        responsaveis={responsaveis}
+        onSaved={loadData}
+      />
+      <ProtocoloDeleteDialog
+        open={delOpen}
+        onOpenChange={setDelOpen}
+        item={itemToDelete}
+        onDeleted={loadData}
+      />
     </div>
   )
 }
