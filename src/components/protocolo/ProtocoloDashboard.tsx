@@ -143,11 +143,17 @@ export function ProtocoloDashboard({ data }: { data: any[] }) {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>MÊS/ANO</TableHead>
-                <TableHead className="text-right">QUANTIDADE DE AÇÕES</TableHead>
-                <TableHead className="text-right">HONORÁRIOS (30%)</TableHead>
+            <TableHeader className="bg-muted/50 border-b">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  MÊS/ANO
+                </TableHead>
+                <TableHead className="text-right text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  QUANTIDADE DE AÇÕES
+                </TableHead>
+                <TableHead className="text-right text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  HONORÁRIOS (30%)
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

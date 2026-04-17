@@ -343,8 +343,12 @@ export function ProtocoloDeleteDialog({ open, onOpenChange, item, onDeleted }: a
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Excluir
+          <Button
+            variant="destructive"
+            className="bg-[#E84040] hover:bg-[#d63838]"
+            onClick={onConfirm}
+          >
+            Excluir permanentemente
           </Button>
         </DialogFooter>
       </DialogContent>
