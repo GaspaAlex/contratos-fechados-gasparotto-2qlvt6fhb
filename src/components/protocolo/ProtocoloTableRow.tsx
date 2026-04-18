@@ -37,7 +37,7 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
 
   return (
     <TableRow
-      className={`group transition-colors ${overdue ? 'bg-rose-50/40 hover:bg-rose-50/60 dark:bg-rose-950/10 dark:hover:bg-rose-950/20' : ''}`}
+      className={`group transition-colors ${overdue ? 'bg-amber-50/40 hover:bg-amber-50/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20' : ''}`}
     >
       <TableCell className={`w-10 font-medium ${overdue ? 'border-l-2 border-l-rose-500' : ''}`}>
         {index}

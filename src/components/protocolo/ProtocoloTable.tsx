@@ -122,7 +122,7 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
   const cDocs = filtered.filter((d: any) => d.status === 'R. Docs').length
 
   const headerClass =
-    'text-[10px] uppercase tracking-wider text-muted-foreground font-semibold whitespace-nowrap'
+    'text-[10px] uppercase tracking-wider text-muted-foreground font-bold whitespace-nowrap'
 
   return (
     <div className="space-y-4">
@@ -277,12 +277,13 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
                   : 'SEM DATA'
               return (
                 <React.Fragment key={monthStr}>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30 border-b">
+                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-b">
                     <TableCell
                       colSpan={13}
-                      className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-2 px-4"
+                      className="text-[10px] uppercase tracking-wider text-muted-foreground py-3 px-4"
                     >
-                      {label} • {projCount} CASO(S) NA PROJEÇÃO
+                      <strong className="font-bold text-foreground">{label}</strong> • {projCount}{' '}
+                      CASO(S) NA PROJEÇÃO
                     </TableCell>
                   </TableRow>
                   {items.map((item, idx) => (

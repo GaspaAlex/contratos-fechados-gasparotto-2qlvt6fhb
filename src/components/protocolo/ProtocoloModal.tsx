@@ -16,11 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
 import { AlertTriangle } from 'lucide-react'
+import { createProtocolo, updateProtocolo } from '@/services/protocolo'
 import {
-  createContrato,
-  updateContrato,
   toPBDate,
   toYMD,
   getTiposAcao,
@@ -33,13 +31,10 @@ import {
   getResponsaveis,
   createResponsavel,
   deleteResponsavel,
-  getContratosByStatus,
 } from '@/services/contratos'
 import { toast } from 'sonner'
-import { DynamicSelect } from './DynamicSelect'
+import { DynamicSelect } from '@/components/dashboard/DynamicSelect'
 import pb from '@/lib/pocketbase/client'
-
-const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
 const normalizeText = (text: string) => {
   if (!text) return ''
@@ -49,16 +44,8 @@ const normalizeText = (text: string) => {
     .toLowerCase()
 }
 
-export function ContractModal({
-  isOpen,
-  onClose,
-  contract,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  contract: any
-}) {
-  const isEdit = !!contract
+export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
+  const isEdit = !!protocolo
   const [loading, setLoading] = useState(false)
   const [beneficios, setBeneficios] = useState<any[]>([])
   const [statusList, setStatusList] = useState<any[]>([])
@@ -68,59 +55,53 @@ export function ContractModal({
   const [formData, setFormData] = useState({
     nome: '',
     fone: '',
-    beneficio: '',
+    tipo_acao: '',
     responsavel: '',
-    fup: false,
-    status: 'R. Docs',
-    dcontrato: '',
+    status: 'Protocolado',
     dcalculo: '',
-    prazo: 15,
     dprotocolo: '',
-    parceria: false,
-    parceiro_nome: '',
-    parceiro_comissao: 0,
+    prazo: 15,
+    nautos: '',
+    valor: 0,
+    decisao: 'Aguardando',
   })
 
   useEffect(() => {
     if (isOpen) {
       loadDependencies()
       const today = new Date().toISOString().split('T')[0]
-      if (contract) {
+      if (protocolo) {
         setFormData({
-          nome: contract.nome || '',
-          fone: contract.fone || '',
-          beneficio: contract.beneficio || '',
-          responsavel: contract.responsavel || '',
-          fup: contract.fup || false,
-          status: contract.status || 'R. Docs',
-          dcontrato: toYMD(contract.dcontrato) || '',
-          dcalculo: toYMD(contract.dcalculo) || '',
-          prazo: contract.prazo || 15,
-          dprotocolo: toYMD(contract.dprotocolo) || '',
-          parceria: contract.parceria || false,
-          parceiro_nome: contract.parceiro_nome || '',
-          parceiro_comissao: contract.parceiro_comissao || 0,
+          nome: protocolo.nome || '',
+          fone: protocolo.fone || '',
+          tipo_acao: protocolo.expand?.tipo_acao?.nome || '',
+          responsavel: protocolo.expand?.responsavel?.nome || '',
+          status: protocolo.status || 'Protocolado',
+          dcalculo: toYMD(protocolo.dcalculo) || '',
+          dprotocolo: toYMD(protocolo.dprotocolo) || '',
+          prazo: protocolo.prazo || 15,
+          nautos: protocolo.nautos || '',
+          valor: protocolo.valor || 0,
+          decisao: protocolo.decisao || 'Aguardando',
         })
       } else {
         setFormData({
           nome: '',
           fone: '',
-          beneficio: '',
+          tipo_acao: '',
           responsavel: '',
-          fup: false,
-          status: 'R. Docs',
-          dcontrato: today,
+          status: 'Protocolado',
           dcalculo: today,
-          prazo: 15,
           dprotocolo: today,
-          parceria: false,
-          parceiro_nome: '',
-          parceiro_comissao: 0,
+          prazo: 15,
+          nautos: '',
+          valor: 0,
+          decisao: 'Aguardando',
         })
       }
       setDuplicateWarning(null)
     }
-  }, [isOpen, contract])
+  }, [isOpen, protocolo])
 
   const loadDependencies = async () => {
     try {
@@ -152,7 +133,7 @@ export function ContractModal({
     try {
       await createTipoAcao({ nome })
       await loadDependencies()
-      setFormData((f) => ({ ...f, beneficio: nome }))
+      setFormData((f) => ({ ...f, tipo_acao: nome }))
     } catch (e) {
       toast.error('Erro ao adicionar')
     }
@@ -160,15 +141,9 @@ export function ContractModal({
 
   const handleEditBeneficio = async (id: string, oldName: string, newName: string) => {
     try {
-      const linked = await pb.collection('contratos_fechados').getFullList({
-        filter: pb.filter('beneficio = {:oldName}', { oldName }),
-      })
-      for (const c of linked) {
-        await updateContrato(c.id, { beneficio: newName })
-      }
       await updateTipoAcao(id, { nome: newName })
       await loadDependencies()
-      if (formData.beneficio === oldName) setFormData((f) => ({ ...f, beneficio: newName }))
+      if (formData.tipo_acao === oldName) setFormData((f) => ({ ...f, tipo_acao: newName }))
     } catch (e) {
       toast.error('Erro ao editar benefício')
     }
@@ -176,10 +151,10 @@ export function ContractModal({
 
   const handleDelBeneficio = async (id: string, nome: string) => {
     try {
-      if (!window.confirm(`Excluir o benefício '${nome}'? Esta ação não pode ser desfeita.`)) return
+      if (!window.confirm(`Excluir o benefício '${nome}'?`)) return
       await deleteTipoAcao(id)
       await loadDependencies()
-      if (formData.beneficio === nome) setFormData((f) => ({ ...f, beneficio: '' }))
+      if (formData.tipo_acao === nome) setFormData((f) => ({ ...f, tipo_acao: '' }))
     } catch (e) {
       toast.error('Erro ao deletar')
     }
@@ -197,10 +172,6 @@ export function ContractModal({
 
   const handleEditStatus = async (id: string, oldName: string, newName: string) => {
     try {
-      const linked = await getContratosByStatus(oldName)
-      for (const c of linked) {
-        await updateContrato(c.id, { status: newName })
-      }
       await pb.collection('status_contrato').update(id, { nome: newName })
       await loadDependencies()
       if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
@@ -211,24 +182,10 @@ export function ContractModal({
 
   const handleDelStatus = async (id: string, nome: string) => {
     try {
-      const linked = await getContratosByStatus(nome)
-      if (linked.length > 0) {
-        if (
-          !window.confirm(
-            `Existem ${linked.length} contratos com este status. Ao excluir, serão alterados automaticamente para R. Docs. Confirmar?`,
-          )
-        )
-          return
-        for (const c of linked) {
-          await updateContrato(c.id, { status: 'R. Docs' })
-        }
-      } else {
-        if (!window.confirm(`Deseja excluir o status '${nome}'? Esta ação não pode ser desfeita.`))
-          return
-      }
+      if (!window.confirm(`Deseja excluir o status '${nome}'?`)) return
       await deleteStatusContrato(id)
       await loadDependencies()
-      if (formData.status === nome) setFormData((f) => ({ ...f, status: 'R. Docs' }))
+      if (formData.status === nome) setFormData((f) => ({ ...f, status: 'Protocolado' }))
     } catch (e) {
       toast.error('Erro ao deletar')
     }
@@ -246,12 +203,6 @@ export function ContractModal({
 
   const handleEditResp = async (id: string, oldName: string, newName: string) => {
     try {
-      const linked = await pb.collection('contratos_fechados').getFullList({
-        filter: pb.filter('responsavel = {:oldName}', { oldName }),
-      })
-      for (const c of linked) {
-        await updateContrato(c.id, { responsavel: newName })
-      }
       await pb.collection('responsaveis').update(id, { nome: newName })
       await loadDependencies()
       if (formData.responsavel === oldName) setFormData((f) => ({ ...f, responsavel: newName }))
@@ -274,15 +225,20 @@ export function ContractModal({
   const executeSave = async () => {
     try {
       setLoading(true)
+      const tipo_acao_id = beneficios.find((b) => b.nome === formData.tipo_acao)?.id || ''
+      const responsavel_id = responsaveis.find((r) => r.nome === formData.responsavel)?.id || ''
+
       const payload = {
         ...formData,
-        dcontrato: toPBDate(formData.dcontrato),
+        tipo_acao: tipo_acao_id,
+        responsavel: responsavel_id,
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
       }
-      if (isEdit) await updateContrato(contract.id, payload)
-      else await createContrato(payload)
+      if (isEdit) await updateProtocolo(protocolo.id, payload)
+      else await createProtocolo(payload)
       toast.success(isEdit ? 'Atualizado!' : 'Adicionado!')
+      if (onSave) onSave()
       onClose()
     } catch (err: any) {
       toast.error(err.message)
@@ -293,15 +249,14 @@ export function ContractModal({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (!formData.nome || !formData.dcontrato)
-      return toast.error('Preencha Nome e Data do Contrato.')
+    if (!formData.nome) return toast.error('Preencha o Nome.')
 
     try {
       setLoading(true)
       const normalizedName = normalizeText(formData.nome)
-      const existing = await pb.collection('contratos_fechados').getFullList({ fields: 'id,nome' })
+      const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
       const duplicate = existing.find(
-        (c: any) => c.id !== contract?.id && normalizeText(c.nome) === normalizedName,
+        (c: any) => c.id !== protocolo?.id && normalizeText(c.nome) === normalizedName,
       )
 
       if (duplicate) {
@@ -317,14 +272,12 @@ export function ContractModal({
     }
   }
 
-  const isArchived = ARCHIVED_STATUSES.includes(formData.status)
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-[#C9922A]">
-            {isEdit ? 'Editar Contrato' : 'Adicionar Contrato'}
+            {isEdit ? 'Editar Protocolo' : 'Adicionar Protocolo'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
@@ -350,10 +303,10 @@ export function ContractModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Benefício</Label>
+              <Label>Tipo de Ação</Label>
               <DynamicSelect
-                value={formData.beneficio}
-                onChange={(v) => setFormData({ ...formData, beneficio: v })}
+                value={formData.tipo_acao}
+                onChange={(v) => setFormData({ ...formData, tipo_acao: v })}
                 items={beneficios}
                 onAdd={handleAddBeneficio}
                 onEdit={handleEditBeneficio}
@@ -376,22 +329,6 @@ export function ContractModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Acompanhamento (FUP)</Label>
-              <Select
-                value={formData.fup ? 'FUP' : 'empty'}
-                onValueChange={(v) => setFormData({ ...formData, fup: v === 'FUP' })}
-              >
-                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Sem FUP" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="empty">Sem FUP</SelectItem>
-                  <SelectItem value="FUP">FUP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label>Status</Label>
               <DynamicSelect
                 value={formData.status}
@@ -405,101 +342,75 @@ export function ContractModal({
             </div>
 
             <div className="space-y-2">
-              <Label>
-                Data do Contrato <span className="text-red-500">*</span>
-              </Label>
+              <Label>Data do Protocolo</Label>
               <Input
                 type="date"
-                value={formData.dcontrato}
-                onChange={(e) => setFormData({ ...formData, dcontrato: e.target.value })}
+                value={formData.dprotocolo}
+                onChange={(e) => setFormData({ ...formData, dprotocolo: e.target.value })}
                 className="focus-visible:ring-[#C9922A]"
               />
             </div>
 
-            {isEdit && (
-              <>
-                <div className="space-y-2">
-                  <Label>Data do Cálculo</Label>
-                  <Input
-                    type="date"
-                    value={formData.dcalculo}
-                    onChange={(e) => setFormData({ ...formData, dcalculo: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Prazo (dias)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.prazo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, prazo: parseInt(e.target.value) || 0 })
-                    }
-                    className="focus-visible:ring-[#C9922A]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Data do Protocolo</Label>
-                  <Input
-                    type="date"
-                    value={formData.dprotocolo}
-                    onChange={(e) => setFormData({ ...formData, dprotocolo: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {isArchived && (
-            <div className="p-4 bg-[#C9922A]/10 border border-[#C9922A]/30 rounded-lg flex gap-3 text-[#C9922A]">
-              <AlertTriangle className="h-5 w-5 shrink-0" />
-              <p className="text-sm font-bold">
-                ⚠️ Este caso será arquivado. Não será contabilizado nos fechamentos ativos.
-              </p>
-            </div>
-          )}
-
-          <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="parceria"
-                checked={formData.parceria}
-                onCheckedChange={(c) => setFormData({ ...formData, parceria: !!c })}
+            <div className="space-y-2">
+              <Label>Data do Cálculo</Label>
+              <Input
+                type="date"
+                value={formData.dcalculo}
+                onChange={(e) => setFormData({ ...formData, dcalculo: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
               />
-              <Label htmlFor="parceria" className="text-[#C9922A] font-bold cursor-pointer">
-                Caso de Parceria
-              </Label>
             </div>
-            {formData.parceria && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Nome do Parceiro</Label>
-                  <Input
-                    value={formData.parceiro_nome}
-                    onChange={(e) => setFormData({ ...formData, parceiro_nome: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Comissão (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.parceiro_comissao || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        parceiro_comissao: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="focus-visible:ring-[#C9922A]"
-                  />
-                </div>
-              </div>
-            )}
+
+            <div className="space-y-2">
+              <Label>Prazo (dias)</Label>
+              <Input
+                type="number"
+                min="0"
+                value={formData.prazo}
+                onChange={(e) => setFormData({ ...formData, prazo: parseInt(e.target.value) || 0 })}
+                className="focus-visible:ring-[#C9922A]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Nº Autos</Label>
+              <Input
+                value={formData.nautos}
+                onChange={(e) => setFormData({ ...formData, nautos: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Valor</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.valor || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, valor: parseFloat(e.target.value) || 0 })
+                }
+                className="focus-visible:ring-[#C9922A]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Decisão</Label>
+              <Select
+                value={formData.decisao}
+                onValueChange={(v) => setFormData({ ...formData, decisao: v })}
+              >
+                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Aguardando">Aguardando</SelectItem>
+                  <SelectItem value="Procedente">Procedente</SelectItem>
+                  <SelectItem value="Improcedente">Improcedente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {duplicateWarning && (
@@ -507,7 +418,7 @@ export function ContractModal({
               <div className="flex gap-3 text-amber-800">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
                 <p className="text-sm font-semibold">
-                  Atenção: já existe um contrato cadastrado para <strong>{duplicateWarning}</strong>
+                  Atenção: já existe um processo cadastrado para <strong>{duplicateWarning}</strong>
                   . Deseja continuar mesmo assim?
                 </p>
               </div>
