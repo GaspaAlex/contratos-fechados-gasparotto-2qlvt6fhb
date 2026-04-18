@@ -90,12 +90,12 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
     return true
   })
 
-  // Chronological Sorting: descending
+  // Chronological Sorting: ascending
   const sortedFiltered = useMemo(() => {
     return [...filtered].sort((a, b) => {
       const dateA = a.dprotocolo ? new Date(a.dprotocolo).getTime() : 0
       const dateB = b.dprotocolo ? new Date(b.dprotocolo).getTime() : 0
-      return dateB - dateA
+      return dateA - dateB
     })
   }, [filtered])
 
@@ -114,7 +114,7 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
       if (!groups[m]) groups[m] = []
       groups[m].push(d)
     })
-    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
+    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
   }, [sortedFiltered])
 
   const cProt = filtered.filter((d: any) => d.status === 'Protocolado').length

@@ -178,6 +178,14 @@ export function ContractModal({
     try {
       if (!window.confirm(`Excluir o benefício '${nome}'? Esta ação não pode ser desfeita.`)) return
       await deleteTipoAcao(id)
+
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('beneficio = {:nome}', { nome }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { beneficio: '' })
+      }
+
       await loadDependencies()
       if (formData.beneficio === nome) setFormData((f) => ({ ...f, beneficio: '' }))
     } catch (e) {
@@ -201,6 +209,12 @@ export function ContractModal({
       for (const c of linked) {
         await updateContrato(c.id, { status: newName })
       }
+      const linkedProtocolos = await pb.collection('protocolo').getFullList({
+        filter: pb.filter('status = {:oldName}', { oldName }),
+      })
+      for (const p of linkedProtocolos) {
+        await pb.collection('protocolo').update(p.id, { status: newName })
+      }
       await pb.collection('status_contrato').update(id, { nome: newName })
       await loadDependencies()
       if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
@@ -212,15 +226,23 @@ export function ContractModal({
   const handleDelStatus = async (id: string, nome: string) => {
     try {
       const linked = await getContratosByStatus(nome)
-      if (linked.length > 0) {
+      const linkedProtocolos = await pb.collection('protocolo').getFullList({
+        filter: pb.filter('status = {:nome}', { nome }),
+      })
+      const totalLinked = linked.length + linkedProtocolos.length
+
+      if (totalLinked > 0) {
         if (
           !window.confirm(
-            `Existem ${linked.length} contratos com este status. Ao excluir, serão alterados automaticamente para R. Docs. Confirmar?`,
+            `Existem ${totalLinked} registros com este status. Ao excluir, serão alterados automaticamente para R. Docs. Confirmar?`,
           )
         )
           return
         for (const c of linked) {
           await updateContrato(c.id, { status: 'R. Docs' })
+        }
+        for (const p of linkedProtocolos) {
+          await pb.collection('protocolo').update(p.id, { status: 'R. Docs' })
         }
       } else {
         if (!window.confirm(`Deseja excluir o status '${nome}'? Esta ação não pode ser desfeita.`))
@@ -262,8 +284,19 @@ export function ContractModal({
 
   const handleDelResp = async (id: string, nome: string) => {
     try {
-      if (!window.confirm(`Deseja excluir o responsável '${nome}'?`)) return
+      if (
+        !window.confirm(`Deseja excluir o responsável '${nome}'? Esta ação não pode ser desfeita.`)
+      )
+        return
       await deleteResponsavel(id)
+
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('responsavel = {:nome}', { nome }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { responsavel: '' })
+      }
+
       await loadDependencies()
       if (formData.responsavel === nome) setFormData((f) => ({ ...f, responsavel: '' }))
     } catch (e) {

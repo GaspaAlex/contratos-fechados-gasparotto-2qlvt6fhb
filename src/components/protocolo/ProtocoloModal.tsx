@@ -141,6 +141,12 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleEditBeneficio = async (id: string, oldName: string, newName: string) => {
     try {
+      const linked = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('beneficio = {:oldName}', { oldName }),
+      })
+      for (const c of linked) {
+        await pb.collection('contratos_fechados').update(c.id, { beneficio: newName })
+      }
       await updateTipoAcao(id, { nome: newName })
       await loadDependencies()
       if (formData.tipo_acao === oldName) setFormData((f) => ({ ...f, tipo_acao: newName }))
@@ -151,8 +157,16 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleDelBeneficio = async (id: string, nome: string) => {
     try {
-      if (!window.confirm(`Excluir o benefício '${nome}'?`)) return
+      if (!window.confirm(`Excluir o benefício '${nome}'? Esta ação não pode ser desfeita.`)) return
       await deleteTipoAcao(id)
+
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('beneficio = {:nome}', { nome }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { beneficio: '' })
+      }
+
       await loadDependencies()
       if (formData.tipo_acao === nome) setFormData((f) => ({ ...f, tipo_acao: '' }))
     } catch (e) {
@@ -172,6 +186,18 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleEditStatus = async (id: string, oldName: string, newName: string) => {
     try {
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('status = {:oldName}', { oldName }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { status: newName })
+      }
+      const linkedProtocolos = await pb.collection('protocolo').getFullList({
+        filter: pb.filter('status = {:oldName}', { oldName }),
+      })
+      for (const p of linkedProtocolos) {
+        await pb.collection('protocolo').update(p.id, { status: newName })
+      }
       await pb.collection('status_contrato').update(id, { nome: newName })
       await loadDependencies()
       if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
@@ -182,7 +208,31 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleDelStatus = async (id: string, nome: string) => {
     try {
-      if (!window.confirm(`Deseja excluir o status '${nome}'?`)) return
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('status = {:nome}', { nome }),
+      })
+      const linkedProtocolos = await pb.collection('protocolo').getFullList({
+        filter: pb.filter('status = {:nome}', { nome }),
+      })
+      const totalLinked = linkedContratos.length + linkedProtocolos.length
+
+      if (totalLinked > 0) {
+        if (
+          !window.confirm(
+            `Existem ${totalLinked} registros com este status. Ao excluir, serão alterados automaticamente para Protocolado. Confirmar?`,
+          )
+        )
+          return
+        for (const c of linkedContratos) {
+          await pb.collection('contratos_fechados').update(c.id, { status: 'Protocolado' })
+        }
+        for (const p of linkedProtocolos) {
+          await pb.collection('protocolo').update(p.id, { status: 'Protocolado' })
+        }
+      } else {
+        if (!window.confirm(`Deseja excluir o status '${nome}'? Esta ação não pode ser desfeita.`))
+          return
+      }
       await deleteStatusContrato(id)
       await loadDependencies()
       if (formData.status === nome) setFormData((f) => ({ ...f, status: 'Protocolado' }))
@@ -203,6 +253,12 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleEditResp = async (id: string, oldName: string, newName: string) => {
     try {
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('responsavel = {:oldName}', { oldName }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { responsavel: newName })
+      }
       await pb.collection('responsaveis').update(id, { nome: newName })
       await loadDependencies()
       if (formData.responsavel === oldName) setFormData((f) => ({ ...f, responsavel: newName }))
@@ -213,8 +269,19 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleDelResp = async (id: string, nome: string) => {
     try {
-      if (!window.confirm(`Deseja excluir o responsável '${nome}'?`)) return
+      if (
+        !window.confirm(`Deseja excluir o responsável '${nome}'? Esta ação não pode ser desfeita.`)
+      )
+        return
       await deleteResponsavel(id)
+
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('responsavel = {:nome}', { nome }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { responsavel: '' })
+      }
+
       await loadDependencies()
       if (formData.responsavel === nome) setFormData((f) => ({ ...f, responsavel: '' }))
     } catch (e) {
