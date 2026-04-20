@@ -5,7 +5,7 @@ import {
   CheckSquare,
   Gavel,
   Users,
-  Scale,
+  LineChart,
   Moon,
   Sun,
 } from 'lucide-react'
@@ -28,7 +28,7 @@ const navItems = [
   { name: 'Contratos Fechados', path: '/dashboard', icon: CheckSquare },
   { name: 'Protocolo', path: '/protocolo', icon: FileText },
   { name: 'Perícias', path: '/pericias', icon: Gavel },
-  { name: 'Leads Campanha', path: '/leads', icon: Users },
+  { name: 'Leads Campanha', path: '/leads', icon: LineChart },
 ]
 
 export default function Layout() {

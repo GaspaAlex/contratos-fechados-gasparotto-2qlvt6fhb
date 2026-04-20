@@ -1,0 +1,279 @@
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { calculateLeadRow, fmtMon, fmtPct } from '@/lib/leads-calc'
+import { createLeadDiario, updateLeadDiario } from '@/services/leads'
+import { useToast } from '@/hooks/use-toast'
+import { extractFieldErrors } from '@/lib/pocketbase/errors'
+
+const schema = z.object({
+  id: z.string().optional(),
+  mes: z.string().min(1),
+  dia: z.number().min(1).max(31),
+  meta: z.number().default(0),
+  google: z.number().default(0),
+  particular: z.number().default(0),
+  em_qualif: z.number().default(0),
+  sem_qualidade: z.number().default(0),
+  aposentado: z.number().default(0),
+  contribuinte_carne: z.number().default(0),
+  outros: z.number().default(0),
+  fechado_direto: z.number().default(0),
+  fechado_fup: z.number().default(0),
+  fup_ativo: z.number().default(0),
+  investimento: z.number().default(0),
+  observacoes: z.string().optional(),
+})
+
+export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuccess }: any) {
+  const { toast } = useToast()
+
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      mes: `${selectedMonth} ${year}`,
+      dia: 1,
+      meta: 0,
+      google: 0,
+      particular: 0,
+      em_qualif: 0,
+      sem_qualidade: 0,
+      aposentado: 0,
+      contribuinte_carne: 0,
+      outros: 0,
+      fechado_direto: 0,
+      fechado_fup: 0,
+      fup_ativo: 0,
+      investimento: 0,
+      observacoes: '',
+    },
+  })
+
+  useEffect(() => {
+    if (open) {
+      if (data) {
+        form.reset({ ...data })
+      } else {
+        form.reset({
+          mes: `${selectedMonth} ${year}`,
+          dia: new Date().getDate(),
+          meta: 0,
+          google: 0,
+          particular: 0,
+          em_qualif: 0,
+          sem_qualidade: 0,
+          aposentado: 0,
+          contribuinte_carne: 0,
+          outros: 0,
+          fechado_direto: 0,
+          fechado_fup: 0,
+          fup_ativo: 0,
+          investimento: 0,
+          observacoes: '',
+        })
+      }
+    }
+  }, [open, data, selectedMonth, year, form])
+
+  const vals = form.watch()
+  const calc = calculateLeadRow(vals)
+  const isEdit = !!data?.id
+
+  const onSubmit = async (values: any) => {
+    try {
+      if (isEdit) await updateLeadDiario(data.id, values)
+      else await createLeadDiario(values)
+      toast({ title: 'Sucesso', description: 'Registro salvo com sucesso.' })
+      onSuccess()
+      onOpenChange(false)
+    } catch (err) {
+      const errs = extractFieldErrors(err)
+      if (errs.mes)
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Já existe um registro para este dia.',
+        })
+      else toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar.' })
+    }
+  }
+
+  const NumInput = ({ name, label, cl }: any) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="text-[10px] uppercase text-muted-foreground">{label}</FormLabel>
+          <FormControl>
+            <Input
+              type="number"
+              {...field}
+              onChange={(e) => field.onChange(Number(e.target.value))}
+              className={`h-8 text-sm border-amber-300 bg-amber-50 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+  )
+
+  const CalcBox = ({ label, val }: any) => (
+    <div>
+      <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+      <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border">
+        {val}
+      </div>
+    </div>
+  )
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl">
+            {isEdit ? `Editar: Dia ${vals.dia} — ${vals.mes}` : 'Registrar Dia'}
+          </DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-3 gap-4 pb-4 border-b">
+              <FormField
+                control={form.control}
+                name="mes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Mês/Ano</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Dia do Mês</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="meta"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Meta do Dia</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900">
+                  <h4 className="text-xs font-bold text-blue-700 mb-2">LEADS RECEBIDOS</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumInput name="google" label="Google Ads" />
+                    <NumInput name="particular" label="Particular" />
+                    <CalcBox label="Total Leads" val={calc.total_leads} />
+                  </div>
+                </div>
+                <div className="p-3 rounded-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900">
+                  <h4 className="text-xs font-bold text-amber-700 mb-2">EM QUALIFICAÇÃO</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumInput name="em_qualif" label="Em Qualificação" />
+                  </div>
+                </div>
+                <div className="p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900">
+                  <h4 className="text-xs font-bold text-red-700 mb-2">DESQUALIFICADOS</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumInput name="sem_qualidade" label="Sem Qualidade" />
+                    <NumInput name="aposentado" label="Aposentado" />
+                    <NumInput name="contribuinte_carne" label="Contrib. Carnê" />
+                    <NumInput name="outros" label="Outros" />
+                    <CalcBox label="Total Desqualif." val={calc.total_desq} />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="p-3 rounded-md bg-green-50/50 dark:bg-green-900/10 border border-green-100 dark:border-green-900">
+                  <h4 className="text-xs font-bold text-green-700 mb-2">QUALIFICADOS</h4>
+                  <CalcBox label="Total Qualificados" val={calc.qualificados} />
+                </div>
+                <div className="p-3 rounded-md bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900">
+                  <h4 className="text-xs font-bold text-orange-700 mb-2">CONTRATOS FECHADOS</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumInput name="fechado_direto" label="Fechado Direto" />
+                    <NumInput name="fechado_fup" label="Fechado FUP" />
+                    <NumInput name="fup_ativo" label="FUP Ativo" />
+                    <CalcBox label="Total Fechados" val={calc.total_fechados} />
+                  </div>
+                </div>
+                <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900">
+                  <h4 className="text-xs font-bold text-purple-700 mb-2">INVESTIMENTO</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    <NumInput name="investimento" label="Valor Investido (R$)" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/30 p-3 rounded-md border grid grid-cols-4 gap-2 text-center">
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase">Conv. Geral</div>
+                <div className="font-bold text-purple-700">{fmtPct(calc.conv_geral)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase">Conv. Qualif</div>
+                <div className="font-bold text-purple-700">{fmtPct(calc.conv_qualif)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase">Desqualificação</div>
+                <div className="font-bold text-red-600">{fmtPct(calc.desqual_pct)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase">CAC</div>
+                <div className="font-bold text-blue-700">{fmtMon(calc.cac)}</div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-[#C9922A] hover:bg-[#a67721] text-white">
+                Salvar Registro
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  )
+}
