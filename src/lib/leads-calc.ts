@@ -18,6 +18,7 @@ export const MONTHS = [
 export function calculateLeadRow(raw: any) {
   const v = (k: string) => Number(raw[k] || 0)
   const google = v('google'),
+    meta_ads = v('meta_ads'),
     particular = v('particular'),
     meta = v('meta')
   const em_qualif = v('em_qualif'),
@@ -30,7 +31,7 @@ export function calculateLeadRow(raw: any) {
     fup_ativo = v('fup_ativo')
   const investimento = v('investimento')
 
-  const total_leads = google + particular
+  const total_leads = google + meta_ads + particular
   const denom_leads = total_leads > 0 ? total_leads : meta
   const total_desq = sem_qualidade + aposentado + contribuinte_carne + outros
   const qualificados = total_leads - em_qualif - total_desq
@@ -69,6 +70,7 @@ export function aggregateLeads(leads: any[]) {
     (acc, l) => {
       acc.meta += l.meta || 0
       acc.google += l.google || 0
+      acc.meta_ads += l.meta_ads || 0
       acc.particular += l.particular || 0
       acc.em_qualif += l.em_qualif || 0
       acc.sem_qualidade += l.sem_qualidade || 0
@@ -84,6 +86,7 @@ export function aggregateLeads(leads: any[]) {
     {
       meta: 0,
       google: 0,
+      meta_ads: 0,
       particular: 0,
       em_qualif: 0,
       sem_qualidade: 0,
@@ -107,6 +110,8 @@ export const colorConvQualif = (v: number | null) =>
   v === null ? '' : v >= 0.12 ? 'text-green-600' : v >= 0.1 ? 'text-amber-600' : 'text-red-600'
 export const colorDesq = (v: number | null) =>
   v === null ? '' : v <= 0.15 ? 'text-green-600' : v <= 0.3 ? 'text-amber-600' : 'text-red-600'
+export const colorFechFup = (v: number | null) =>
+  v === null ? '' : v >= 0.4 ? 'text-green-600' : v >= 0.2 ? 'text-amber-600' : 'text-red-600'
 export const colorCac = (v: number | null) =>
   v === null ? '' : v <= 150 ? 'text-green-600' : v <= 250 ? 'text-amber-600' : 'text-red-600'
 

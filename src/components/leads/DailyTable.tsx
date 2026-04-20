@@ -20,11 +20,10 @@ import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import {
   aggregateLeads,
   calculateLeadRow,
-  colorCac,
   colorConvGeral,
   colorConvQualif,
   colorDesq,
-  fmtMon,
+  colorFechFup,
   fmtPct,
   useDraggableScroll,
   MONTHS,
@@ -74,6 +73,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
         </TableCell>
         <TableCell className="text-center bg-blue-50/30">{c(calc.meta)}</TableCell>
         <TableCell className="text-center bg-blue-50/30">{c(calc.google)}</TableCell>
+        <TableCell className="text-center bg-blue-50/30">{c(calc.meta_ads)}</TableCell>
         <TableCell className="text-center bg-blue-50/30">{c(calc.particular)}</TableCell>
         <TableCell className="text-center font-bold bg-blue-100/40 border-r">
           {c(calc.total_leads)}
@@ -87,14 +87,8 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
         <TableCell className="text-center bg-red-50/30">{c(calc.aposentado)}</TableCell>
         <TableCell className="text-center bg-red-50/30">{c(calc.contribuinte_carne)}</TableCell>
         <TableCell className="text-center bg-red-50/30">{c(calc.outros)}</TableCell>
-        <TableCell className="text-center font-bold bg-red-100/40">{c(calc.total_desq)}</TableCell>
-        <TableCell
-          className={cn(
-            'text-center font-bold bg-red-100/40 border-r',
-            colorDesq(calc.desqual_pct),
-          )}
-        >
-          {fmtPct(calc.desqual_pct)}
+        <TableCell className="text-center font-bold bg-red-100/40 border-r">
+          {c(calc.total_desq)}
         </TableCell>
 
         <TableCell className="text-center font-bold bg-green-100/40 border-r text-green-800">
@@ -118,13 +112,25 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
         >
           {fmtPct(calc.conv_qualif)}
         </TableCell>
-        <TableCell className="text-center font-bold bg-purple-50/30 text-purple-700">
-          {fmtPct(calc.conv_fup_pct)}
+        <TableCell
+          className={cn('text-center font-bold bg-purple-50/30', colorDesq(calc.desqual_pct))}
+        >
+          {fmtPct(calc.desqual_pct)}
         </TableCell>
         <TableCell
-          className={cn('text-center font-bold bg-purple-50/30 border-r', colorCac(calc.cac))}
+          className={cn(
+            'text-center font-bold bg-purple-50/30 border-r',
+            colorFechFup(calc.pct_fech_via_fup),
+          )}
         >
-          {fmtMon(calc.cac)}
+          {fmtPct(calc.pct_fech_via_fup)}
+        </TableCell>
+
+        <TableCell
+          className="text-center bg-muted/10 truncate max-w-[150px]"
+          title={calc.observacoes}
+        >
+          {calc.observacoes}
         </TableCell>
 
         <TableCell className="text-center whitespace-nowrap bg-muted/10">
@@ -147,7 +153,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                 className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
                 onClick={(e) => {
                   e.stopPropagation()
-                  onDelete(row.id)
+                  onDelete(row)
                 }}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -204,12 +210,12 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
           style={style}
           className="overflow-x-auto select-none"
         >
-          <Table className="w-[2200px] text-xs relative">
+          <Table className="w-[2400px] text-xs relative">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-center border-r bg-muted/30 w-16">BASE</TableHead>
                 <TableHead
-                  colSpan={4}
+                  colSpan={5}
                   className="text-center border-r bg-blue-100/50 text-blue-800 font-bold"
                 >
                   LEADS RECEBIDOS
@@ -221,7 +227,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                   EM QUALIF.
                 </TableHead>
                 <TableHead
-                  colSpan={6}
+                  colSpan={5}
                   className="text-center border-r bg-red-100/50 text-red-800 font-bold"
                 >
                   DESQUALIFICADOS
@@ -239,18 +245,18 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                   CONTRATOS
                 </TableHead>
                 <TableHead
-                  colSpan={4}
-                  className="text-center border-r bg-purple-100/50 text-purple-800 font-bold"
+                  colSpan={6}
+                  className="text-center bg-purple-100/50 text-purple-800 font-bold"
                 >
                   INDICADORES E $
                 </TableHead>
-                <TableHead className="text-center bg-muted/30 w-24">AÇÕES</TableHead>
               </TableRow>
               <TableRow className="bg-muted/10 hover:bg-muted/10">
                 <TableHead className="text-center border-r w-16">Dia</TableHead>
 
                 <TableHead className="text-center w-20">Meta</TableHead>
                 <TableHead className="text-center w-20">Google</TableHead>
+                <TableHead className="text-center w-20">Meta Ads</TableHead>
                 <TableHead className="text-center w-20">Partic.</TableHead>
                 <TableHead className="text-center border-r w-20 font-bold">Total</TableHead>
 
@@ -260,8 +266,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                 <TableHead className="text-center w-24">Aposentado</TableHead>
                 <TableHead className="text-center w-24">Carnê</TableHead>
                 <TableHead className="text-center w-20">Outros</TableHead>
-                <TableHead className="text-center w-24 font-bold">Total Desq.</TableHead>
-                <TableHead className="text-center border-r w-20 font-bold">Desq %</TableHead>
+                <TableHead className="text-center border-r w-24 font-bold">Total Desq.</TableHead>
 
                 <TableHead className="text-center border-r w-24 font-bold">Qualificados</TableHead>
 
@@ -272,9 +277,10 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
 
                 <TableHead className="text-center w-24">Conv Geral</TableHead>
                 <TableHead className="text-center w-24">Conv Qualif</TableHead>
-                <TableHead className="text-center w-24">Conv FUP</TableHead>
-                <TableHead className="text-center border-r w-24">CAC</TableHead>
+                <TableHead className="text-center w-24">Desqual. %</TableHead>
+                <TableHead className="text-center border-r w-24">Fech. via FUP %</TableHead>
 
+                <TableHead className="text-center w-32">Obs.</TableHead>
                 <TableHead className="text-center w-24">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -283,7 +289,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                 <React.Fragment key={m}>
                   <TableRow className="bg-muted/60 hover:bg-muted/60">
                     <TableCell
-                      colSpan={22}
+                      colSpan={25}
                       className="py-2 px-4 font-bold text-muted-foreground uppercase text-sm tracking-wider"
                     >
                       {m}
@@ -296,7 +302,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
               {sortedMonths.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={22}
+                    colSpan={25}
                     className="text-center py-12 text-muted-foreground bg-muted/5"
                   >
                     Nenhum registro encontrado.

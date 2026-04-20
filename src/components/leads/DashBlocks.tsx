@@ -20,82 +20,179 @@ import {
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function SummaryCards({ leads }: any) {
-  const anoLeads = aggregateLeads(leads)
+export function SummaryCards({ leads, month, year }: any) {
+  const filteredLeads =
+    month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  const anoLeads = aggregateLeads(filteredLeads)
   const agg = calculateLeadRow(anoLeads)
+
+  const getConvGeralStatus = (v: number | null) => {
+    if (v === null || isNaN(v)) return null
+    if (v > 0.08) return { text: 'Excelente', color: 'text-green-600' }
+    if (v >= 0.06) return { text: 'Na meta', color: 'text-amber-600' }
+    return { text: 'Abaixo da meta', color: 'text-red-600' }
+  }
+
+  const getConvQualifStatus = (v: number | null) => {
+    if (v === null || isNaN(v)) return null
+    if (v > 0.12) return { text: 'Excelente', color: 'text-green-600' }
+    if (v >= 0.1) return { text: 'Na meta', color: 'text-amber-600' }
+    return { text: 'Abaixo da meta', color: 'text-red-600' }
+  }
+
+  const getDesqStatus = (v: number | null) => {
+    if (v === null || isNaN(v)) return null
+    if (v <= 0.15) return { text: 'Excelente', color: 'text-green-600' }
+    if (v <= 0.3) return { text: 'Na meta', color: 'text-amber-600' }
+    return { text: 'Acima do limite', color: 'text-red-600' }
+  }
+
+  const getFupStatus = (v: number | null) => {
+    if (v === null || isNaN(v)) return null
+    if (v >= 0.4) return { text: 'Na meta', color: 'text-green-600' }
+    if (v >= 0.2) return { text: 'Em desenvolvimento', color: 'text-amber-600' }
+    return { text: 'Abaixo da meta', color: 'text-red-600' }
+  }
+
+  const cGeral = getConvGeralStatus(agg.conv_geral)
+  const cQualif = getConvQualifStatus(agg.conv_qualif)
+  const cDesq = getDesqStatus(agg.desqual_pct)
+  const cFup = getFupStatus(agg.pct_fech_via_fup)
+
+  const monthLabel = month === 'Todos' ? `Ano ${year}` : `${month} ${year}`
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <Card className="border-t-4 border-t-blue-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Total Leads
           </div>
-          <div className="text-3xl font-black mt-2">{agg.total_leads}</div>
+          <div className="text-3xl font-black mt-1 mb-1">{agg.total_leads || '—'}</div>
+          <div className="text-[11px] text-muted-foreground font-medium">{monthLabel}</div>
         </CardContent>
       </Card>
       <Card className="border-t-4 border-t-green-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Qualificados
           </div>
-          <div className="text-3xl font-black mt-2">{agg.qualificados}</div>
+          <div className="text-3xl font-black mt-1 mb-1">{agg.qualificados || '—'}</div>
+          <div className="text-[11px] text-muted-foreground font-medium">leads válidos</div>
         </CardContent>
       </Card>
       <Card className="border-t-4 border-t-red-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Desqualificados
           </div>
-          <div className="text-3xl font-black mt-2 text-red-600">{agg.total_desq}</div>
+          <div className="text-3xl font-black mt-1 mb-1 text-red-600">{agg.total_desq || '—'}</div>
+          <div className="text-[11px] text-muted-foreground font-medium">fora do perfil</div>
         </CardContent>
       </Card>
       <Card className="border-t-4 border-t-amber-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Total Fechamentos
           </div>
-          <div className="text-3xl font-black mt-2">{agg.total_fechados}</div>
+          <div className="text-3xl font-black mt-1 mb-1 text-amber-600">
+            {agg.total_fechados || '—'}
+          </div>
+          <div className="text-[11px] text-muted-foreground font-medium">direto + FUP</div>
         </CardContent>
       </Card>
 
       <Card className="border-t-2 border-t-purple-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Conv. Geral
           </div>
-          <div className={cn('text-2xl font-black mt-2', colorConvGeral(agg.conv_geral))}>
+          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvGeral(agg.conv_geral))}>
             {fmtPct(agg.conv_geral)}
+          </div>
+          <div className="flex justify-between items-center mt-auto">
+            <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 6%</span>
+            {cGeral && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
+                  cGeral.color,
+                )}
+              >
+                {cGeral.text}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
       <Card className="border-t-2 border-t-purple-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Conv. Qualif.
           </div>
-          <div className={cn('text-2xl font-black mt-2', colorConvQualif(agg.conv_qualif))}>
+          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvQualif(agg.conv_qualif))}>
             {fmtPct(agg.conv_qualif)}
+          </div>
+          <div className="flex justify-between items-center mt-auto">
+            <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 10%</span>
+            {cQualif && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
+                  cQualif.color,
+                )}
+              >
+                {cQualif.text}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
       <Card className="border-t-2 border-t-red-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Desqualificação %
           </div>
-          <div className={cn('text-2xl font-black mt-2', colorDesq(agg.desqual_pct))}>
+          <div className={cn('text-2xl font-black mt-1 mb-1', colorDesq(agg.desqual_pct))}>
             {fmtPct(agg.desqual_pct)}
+          </div>
+          <div className="flex justify-between items-center mt-auto">
+            <span className="text-[11px] text-muted-foreground font-medium">Limite ≤ 30%</span>
+            {cDesq && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
+                  cDesq.color,
+                )}
+              >
+                {cDesq.text}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
       <Card className="border-t-2 border-t-amber-500 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Fech. via FUP %
           </div>
-          <div className="text-2xl font-black mt-2 text-amber-600">
+          <div
+            className={cn('text-2xl font-black mt-1 mb-1', cFup ? cFup.color : 'text-amber-600')}
+          >
             {fmtPct(agg.pct_fech_via_fup)}
+          </div>
+          <div className="flex justify-between items-center mt-auto">
+            <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 40%</span>
+            {cFup && (
+              <span
+                className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
+                  cFup.color,
+                )}
+              >
+                {cFup.text}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>

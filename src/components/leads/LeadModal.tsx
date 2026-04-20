@@ -24,6 +24,7 @@ const schema = z.object({
   dia: z.number().min(1).max(31),
   meta: z.number().default(0),
   google: z.number().default(0),
+  meta_ads: z.number().default(0),
   particular: z.number().default(0),
   em_qualif: z.number().default(0),
   sem_qualidade: z.number().default(0),
@@ -37,6 +38,42 @@ const schema = z.object({
   observacoes: z.string().optional(),
 })
 
+const NumInput = ({ control, name, label, cl }: any) => (
+  <FormField
+    control={control}
+    name={name}
+    render={({ field }) => {
+      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value
+        field.onChange(val === '' ? 0 : Number(val))
+      }
+      return (
+        <FormItem>
+          <FormLabel className="text-[10px] uppercase text-muted-foreground">{label}</FormLabel>
+          <FormControl>
+            <Input
+              type="number"
+              {...field}
+              value={field.value === 0 ? '' : field.value}
+              onChange={handleChange}
+              className={`h-8 text-sm border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
+            />
+          </FormControl>
+        </FormItem>
+      )
+    }}
+  />
+)
+
+const CalcBox = ({ label, val }: any) => (
+  <div>
+    <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+    <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border shadow-inner">
+      {val}
+    </div>
+  </div>
+)
+
 export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
   const { toast } = useToast()
 
@@ -49,6 +86,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
       dia: 1,
       meta: 0,
       google: 0,
+      meta_ads: 0,
       particular: 0,
       em_qualif: 0,
       sem_qualidade: 0,
@@ -73,6 +111,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
           dia: new Date().getDate(),
           meta: 0,
           google: 0,
+          meta_ads: 0,
           particular: 0,
           em_qualif: 0,
           sem_qualidade: 0,
@@ -111,35 +150,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
       else toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar.' })
     }
   }
-
-  const NumInput = ({ name, label, cl }: any) => (
-    <FormField
-      control={form.control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className="text-[10px] uppercase text-muted-foreground">{label}</FormLabel>
-          <FormControl>
-            <Input
-              type="number"
-              {...field}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              className={`h-8 text-sm border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
-            />
-          </FormControl>
-        </FormItem>
-      )}
-    />
-  )
-
-  const CalcBox = ({ label, val }: any) => (
-    <div>
-      <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-      <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border shadow-inner">
-        {val}
-      </div>
-    </div>
-  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -217,24 +227,29 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
                 <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 shadow-sm">
                   <h4 className="text-xs font-bold text-blue-700 mb-2">LEADS RECEBIDOS</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <NumInput name="google" label="Google Ads" />
-                    <NumInput name="particular" label="Particular" />
+                    <NumInput control={form.control} name="google" label="Google Ads" />
+                    <NumInput control={form.control} name="meta_ads" label="Meta Ads" />
+                    <NumInput control={form.control} name="particular" label="Particular" />
                     <CalcBox label="Total Leads" val={calc.total_leads} />
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900 shadow-sm">
                   <h4 className="text-xs font-bold text-amber-700 mb-2">EM QUALIFICAÇÃO</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <NumInput name="em_qualif" label="Em Qualificação" />
+                    <NumInput control={form.control} name="em_qualif" label="Em Qualificação" />
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900 shadow-sm">
                   <h4 className="text-xs font-bold text-red-700 mb-2">DESQUALIFICADOS</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <NumInput name="sem_qualidade" label="Sem Qualidade" />
-                    <NumInput name="aposentado" label="Aposentado" />
-                    <NumInput name="contribuinte_carne" label="Contrib. Carnê" />
-                    <NumInput name="outros" label="Outros" />
+                    <NumInput control={form.control} name="sem_qualidade" label="Sem Qualidade" />
+                    <NumInput control={form.control} name="aposentado" label="Aposentado" />
+                    <NumInput
+                      control={form.control}
+                      name="contribuinte_carne"
+                      label="Contrib. Carnê"
+                    />
+                    <NumInput control={form.control} name="outros" label="Outros" />
                     <CalcBox label="Total Desqualif." val={calc.total_desq} />
                   </div>
                 </div>
@@ -247,16 +262,37 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
                 <div className="p-3 rounded-md bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900 shadow-sm">
                   <h4 className="text-xs font-bold text-orange-700 mb-2">CONTRATOS FECHADOS</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <NumInput name="fechado_direto" label="Fechado Direto" />
-                    <NumInput name="fechado_fup" label="Fechado FUP" />
-                    <NumInput name="fup_ativo" label="FUP Ativo" />
+                    <NumInput control={form.control} name="fechado_direto" label="Fechado Direto" />
+                    <NumInput control={form.control} name="fechado_fup" label="Fechado FUP" />
+                    <NumInput control={form.control} name="fup_ativo" label="FUP Ativo" />
                     <CalcBox label="Total Fechados" val={calc.total_fechados} />
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900 shadow-sm">
-                  <h4 className="text-xs font-bold text-purple-700 mb-2">INVESTIMENTO</h4>
+                  <h4 className="text-xs font-bold text-purple-700 mb-2">INVESTIMENTO & OBS</h4>
                   <div className="grid grid-cols-1 gap-2">
-                    <NumInput name="investimento" label="Valor Investido (R$)" />
+                    <NumInput
+                      control={form.control}
+                      name="investimento"
+                      label="Valor Investido (R$)"
+                    />
+                    <FormField
+                      control={form.control}
+                      name="observacoes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                            Observações
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="h-8 text-sm border-purple-300 bg-purple-50/80 focus-visible:ring-purple-500 dark:bg-purple-950/20 dark:border-purple-800"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
               </div>
