@@ -29,28 +29,26 @@ export function SummaryCards({ leads, month, year }: any) {
   const getConvGeralStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
     if (v > 0.08) return { text: 'Excelente', color: 'text-green-600' }
-    if (v >= 0.06) return { text: 'Na meta', color: 'text-amber-600' }
+    if (v >= 0.06) return { text: 'Na meta', color: 'text-green-600' }
     return { text: 'Abaixo da meta', color: 'text-red-600' }
   }
 
   const getConvQualifStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
     if (v > 0.12) return { text: 'Excelente', color: 'text-green-600' }
-    if (v >= 0.1) return { text: 'Na meta', color: 'text-amber-600' }
+    if (v >= 0.1) return { text: 'Na meta', color: 'text-green-600' }
     return { text: 'Abaixo da meta', color: 'text-red-600' }
   }
 
   const getDesqStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v <= 0.15) return { text: 'Excelente', color: 'text-green-600' }
-    if (v <= 0.3) return { text: 'Na meta', color: 'text-amber-600' }
+    if (v <= 0.3) return { text: 'Na meta', color: 'text-green-600' }
     return { text: 'Acima do limite', color: 'text-red-600' }
   }
 
   const getFupStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
     if (v >= 0.4) return { text: 'Na meta', color: 'text-green-600' }
-    if (v >= 0.2) return { text: 'Em desenvolvimento', color: 'text-amber-600' }
     return { text: 'Abaixo da meta', color: 'text-red-600' }
   }
 
@@ -174,7 +172,7 @@ export function SummaryCards({ leads, month, year }: any) {
       <Card className="border-t-2 border-t-amber-500 shadow-sm">
         <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Fech. via FUP %
+            FECH. FUP
           </div>
           <div
             className={cn('text-2xl font-black mt-1 mb-1', cFup ? cFup.color : 'text-amber-600')}

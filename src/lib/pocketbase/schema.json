@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T15:08:41.501Z",
+  "generatedAt": "2026-04-20T17:02:30.919Z",
   "collections": [
     {
       "name": "users",
@@ -382,12 +382,6 @@
           "name": "dia",
           "type": "number",
           "required": true,
-          "system": false
-        },
-        {
-          "name": "meta",
-          "type": "number",
-          "required": false,
           "system": false
         },
         {

@@ -71,7 +71,6 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
         <TableCell className="text-center font-bold border-r">
           {isTotal ? 'TOTAL MÊS' : row.dia}
         </TableCell>
-        <TableCell className="text-center bg-blue-50/30">{c(calc.meta)}</TableCell>
         <TableCell className="text-center bg-blue-50/30">{c(calc.google)}</TableCell>
         <TableCell className="text-center bg-blue-50/30">{c(calc.meta_ads)}</TableCell>
         <TableCell className="text-center bg-blue-50/30">{c(calc.particular)}</TableCell>
@@ -215,7 +214,7 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-center border-r bg-muted/30 w-16">BASE</TableHead>
                 <TableHead
-                  colSpan={5}
+                  colSpan={4}
                   className="text-center border-r bg-blue-100/50 text-blue-800 font-bold"
                 >
                   LEADS RECEBIDOS
@@ -248,14 +247,13 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                   colSpan={6}
                   className="text-center bg-purple-100/50 text-purple-800 font-bold"
                 >
-                  INDICADORES E $
+                  INDICADORES
                 </TableHead>
               </TableRow>
               <TableRow className="bg-muted/10 hover:bg-muted/10">
                 <TableHead className="text-center border-r w-16">Dia</TableHead>
 
-                <TableHead className="text-center w-20">Meta</TableHead>
-                <TableHead className="text-center w-20">Google</TableHead>
+                <TableHead className="text-center w-20">Google Ads</TableHead>
                 <TableHead className="text-center w-20">Meta Ads</TableHead>
                 <TableHead className="text-center w-20">Partic.</TableHead>
                 <TableHead className="text-center border-r w-20 font-bold">Total</TableHead>
@@ -275,10 +273,10 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
                 <TableHead className="text-center w-24">FUP Ativo</TableHead>
                 <TableHead className="text-center border-r w-24 font-bold">Total</TableHead>
 
-                <TableHead className="text-center w-24">Conv Geral</TableHead>
-                <TableHead className="text-center w-24">Conv Qualif</TableHead>
+                <TableHead className="text-center w-24">Conv. Geral %</TableHead>
+                <TableHead className="text-center w-24">Conv. Qualif. %</TableHead>
                 <TableHead className="text-center w-24">Desqual. %</TableHead>
-                <TableHead className="text-center border-r w-24">Fech. via FUP %</TableHead>
+                <TableHead className="text-center border-r w-24">Fech. FUP %</TableHead>
 
                 <TableHead className="text-center w-32">Obs.</TableHead>
                 <TableHead className="text-center w-24">Ações</TableHead>

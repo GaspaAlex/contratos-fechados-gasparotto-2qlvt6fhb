@@ -18,23 +18,27 @@ import { createLeadDiario, updateLeadDiario } from '@/services/leads'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
 
+const numSchema = z.union([z.number(), z.string()]).transform((v) => Number(v) || 0)
+
 const schema = z.object({
   id: z.string().optional(),
   mes: z.string().min(1),
-  dia: z.number().min(1).max(31),
-  meta: z.number().default(0),
-  google: z.number().default(0),
-  meta_ads: z.number().default(0),
-  particular: z.number().default(0),
-  em_qualif: z.number().default(0),
-  sem_qualidade: z.number().default(0),
-  aposentado: z.number().default(0),
-  contribuinte_carne: z.number().default(0),
-  outros: z.number().default(0),
-  fechado_direto: z.number().default(0),
-  fechado_fup: z.number().default(0),
-  fup_ativo: z.number().default(0),
-  investimento: z.number().default(0),
+  dia: z
+    .union([z.number(), z.string()])
+    .transform((v) => Number(v) || 0)
+    .pipe(z.number().min(1).max(31)),
+  google: numSchema,
+  meta_ads: numSchema,
+  particular: numSchema,
+  em_qualif: numSchema,
+  sem_qualidade: numSchema,
+  aposentado: numSchema,
+  contribuinte_carne: numSchema,
+  outros: numSchema,
+  fechado_direto: numSchema,
+  fechado_fup: numSchema,
+  fup_ativo: numSchema,
+  investimento: numSchema,
   observacoes: z.string().optional(),
 })
 
@@ -43,10 +47,6 @@ const NumInput = ({ control, name, label, cl }: any) => (
     control={control}
     name={name}
     render={({ field }) => {
-      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value
-        field.onChange(val === '' ? 0 : Number(val))
-      }
       return (
         <FormItem>
           <FormLabel className="text-[10px] uppercase text-muted-foreground">{label}</FormLabel>
@@ -54,8 +54,11 @@ const NumInput = ({ control, name, label, cl }: any) => (
             <Input
               type="number"
               {...field}
-              value={field.value === 0 ? '' : field.value}
-              onChange={handleChange}
+              value={field.value ?? ''}
+              onChange={(e) => {
+                const val = e.target.value
+                field.onChange(val === '' ? '' : Number(val))
+              }}
               className={`h-8 text-sm border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
             />
           </FormControl>
@@ -84,7 +87,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
     defaultValues: {
       mes: defaultMonth,
       dia: 1,
-      meta: 0,
       google: 0,
       meta_ads: 0,
       particular: 0,
@@ -109,7 +111,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
         form.reset({
           mes: defaultMonth,
           dia: new Date().getDate(),
-          meta: 0,
           google: 0,
           meta_ads: 0,
           particular: 0,
@@ -161,7 +162,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-3 gap-4 pb-4 border-b">
+            <div className="grid grid-cols-2 gap-4 pb-4 border-b">
               <FormField
                 control={form.control}
                 name="mes"
@@ -196,24 +197,11 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="meta"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Meta do Dia</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          field.onChange(val === '' ? '' : Number(val))
+                        }}
                         className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
                       />
                     </FormControl>
@@ -300,11 +288,11 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
 
             <div className="bg-muted/30 p-3 rounded-md border grid grid-cols-4 gap-2 text-center shadow-sm">
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Conv. Geral</div>
+                <div className="text-[10px] text-muted-foreground uppercase">Conv. Geral %</div>
                 <div className="font-bold text-purple-700">{fmtPct(calc.conv_geral)}</div>
               </div>
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Conv. Qualif</div>
+                <div className="text-[10px] text-muted-foreground uppercase">Conv. Qualif. %</div>
                 <div className="font-bold text-purple-700">{fmtPct(calc.conv_qualif)}</div>
               </div>
               <div>

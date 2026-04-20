@@ -4,7 +4,6 @@ export interface LeadDiario {
   id?: string
   mes: string
   dia: number
-  meta: number
   google: number
   meta_ads: number
   particular: number

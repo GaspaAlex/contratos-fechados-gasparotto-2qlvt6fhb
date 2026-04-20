@@ -19,8 +19,7 @@ export function calculateLeadRow(raw: any) {
   const v = (k: string) => Number(raw[k] || 0)
   const google = v('google'),
     meta_ads = v('meta_ads'),
-    particular = v('particular'),
-    meta = v('meta')
+    particular = v('particular')
   const em_qualif = v('em_qualif'),
     sem_qualidade = v('sem_qualidade')
   const aposentado = v('aposentado'),
@@ -32,15 +31,15 @@ export function calculateLeadRow(raw: any) {
   const investimento = v('investimento')
 
   const total_leads = google + meta_ads + particular
-  const denom_leads = total_leads > 0 ? total_leads : meta
+  const denom_leads = total_leads > 0 ? total_leads : 0
   const total_desq = sem_qualidade + aposentado + contribuinte_carne + outros
   const qualificados = total_leads - em_qualif - total_desq
   const total_fechados = fechado_direto + fechado_fup
 
   return {
     google,
+    meta_ads,
     particular,
-    meta,
     em_qualif,
     sem_qualidade,
     aposentado,
@@ -68,7 +67,6 @@ export function calculateLeadRow(raw: any) {
 export function aggregateLeads(leads: any[]) {
   return leads.reduce(
     (acc, l) => {
-      acc.meta += l.meta || 0
       acc.google += l.google || 0
       acc.meta_ads += l.meta_ads || 0
       acc.particular += l.particular || 0
@@ -84,7 +82,6 @@ export function aggregateLeads(leads: any[]) {
       return acc
     },
     {
-      meta: 0,
       google: 0,
       meta_ads: 0,
       particular: 0,
@@ -105,13 +102,13 @@ export const fmtPct = (v: number | null) => (v !== null ? `${(v * 100).toFixed(1
 export const fmtMon = (v: number | null) => (v !== null ? `R$ ${v.toFixed(2)}` : '—')
 
 export const colorConvGeral = (v: number | null) =>
-  v === null ? '' : v >= 0.08 ? 'text-green-600' : v >= 0.06 ? 'text-amber-600' : 'text-red-600'
+  v === null ? '' : v >= 0.06 ? 'text-green-600' : 'text-red-600'
 export const colorConvQualif = (v: number | null) =>
-  v === null ? '' : v >= 0.12 ? 'text-green-600' : v >= 0.1 ? 'text-amber-600' : 'text-red-600'
+  v === null ? '' : v >= 0.1 ? 'text-green-600' : 'text-red-600'
 export const colorDesq = (v: number | null) =>
-  v === null ? '' : v <= 0.15 ? 'text-green-600' : v <= 0.3 ? 'text-amber-600' : 'text-red-600'
+  v === null ? '' : v <= 0.3 ? 'text-green-600' : 'text-red-600'
 export const colorFechFup = (v: number | null) =>
-  v === null ? '' : v >= 0.4 ? 'text-green-600' : v >= 0.2 ? 'text-amber-600' : 'text-red-600'
+  v === null ? '' : v >= 0.4 ? 'text-green-600' : 'text-red-600'
 export const colorCac = (v: number | null) =>
   v === null ? '' : v <= 150 ? 'text-green-600' : v <= 250 ? 'text-amber-600' : 'text-red-600'
 
