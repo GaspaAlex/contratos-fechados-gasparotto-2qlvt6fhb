@@ -1,3 +1,4 @@
+import React, { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -7,7 +8,15 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import {
   aggregateLeads,
   calculateLeadRow,
@@ -18,71 +27,87 @@ import {
   fmtMon,
   fmtPct,
   useDraggableScroll,
+  MONTHS,
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function DailyTable({ monthLeads, onEdit, onAdd }: any) {
+export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
   const { ref, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, style } = useDraggableScroll()
-  const totalCalc = calculateLeadRow(aggregateLeads(monthLeads))
+  const [searchTerm, setSearchTerm] = useState('')
+  const [monthFilter, setMonthFilter] = useState('Todos')
 
-  const renderRow = (row: any, isTotal: boolean = false) => {
-    const calc = isTotal ? totalCalc : calculateLeadRow(row)
+  let filtered = leads || []
+  if (monthFilter !== 'Todos') {
+    filtered = filtered.filter((l: any) => l.mes.startsWith(monthFilter))
+  }
+  if (searchTerm) {
+    const s = searchTerm.toLowerCase()
+    filtered = filtered.filter(
+      (l: any) => l.observacoes?.toLowerCase().includes(s) || l.mes.toLowerCase().includes(s),
+    )
+  }
+
+  const groups: Record<string, any[]> = {}
+  filtered.forEach((l: any) => {
+    const m = l.mes
+    if (!groups[m]) groups[m] = []
+    groups[m].push(l)
+  })
+
+  const sortedMonths = Object.keys(groups).sort((a, b) => {
+    const m1 = MONTHS.indexOf(a.split(' ')[0])
+    const m2 = MONTHS.indexOf(b.split(' ')[0])
+    return m1 - m2
+  })
+
+  const renderRow = (row: any, isTotal: boolean = false, groupLeads?: any[]) => {
+    const calc = isTotal ? calculateLeadRow(aggregateLeads(groupLeads!)) : calculateLeadRow(row)
     const baseClass = isTotal
       ? 'bg-muted/80 font-bold hover:bg-muted/80'
-      : 'cursor-pointer hover:bg-muted/50 transition-colors'
+      : 'hover:bg-muted/50 transition-colors bg-background'
     const c = (v: any) => v
 
     return (
-      <TableRow
-        key={isTotal ? 'total' : row.id}
-        onClick={() => !isTotal && onEdit(row)}
-        className={baseClass}
-      >
-        <TableCell className="text-center font-bold">{isTotal ? 'TOTAL' : row.dia}</TableCell>
-        <TableCell className="text-center">{c(calc.meta)}</TableCell>
-        <TableCell className="text-center text-blue-700 bg-blue-50/30">{c(calc.google)}</TableCell>
-        <TableCell className="text-center text-blue-700 bg-blue-50/30">
-          {c(calc.particular)}
+      <TableRow key={isTotal ? 'total' : row.id} className={baseClass}>
+        <TableCell className="text-center font-bold border-r">
+          {isTotal ? 'TOTAL MÊS' : row.dia}
         </TableCell>
-        <TableCell className="text-center font-bold text-blue-800 bg-blue-100/30">
+        <TableCell className="text-center bg-blue-50/30">{c(calc.meta)}</TableCell>
+        <TableCell className="text-center bg-blue-50/30">{c(calc.google)}</TableCell>
+        <TableCell className="text-center bg-blue-50/30">{c(calc.particular)}</TableCell>
+        <TableCell className="text-center font-bold bg-blue-100/40 border-r">
           {c(calc.total_leads)}
         </TableCell>
-        <TableCell className="text-center text-amber-700 bg-amber-50/30">
+
+        <TableCell className="text-center bg-amber-50/30 border-r font-medium">
           {c(calc.em_qualif)}
         </TableCell>
-        <TableCell className="text-center text-red-700 bg-red-50/30">
-          {c(calc.sem_qualidade)}
-        </TableCell>
-        <TableCell className="text-center text-red-700 bg-red-50/30">
-          {c(calc.aposentado)}
-        </TableCell>
-        <TableCell className="text-center text-red-700 bg-red-50/30">
-          {c(calc.contribuinte_carne)}
-        </TableCell>
-        <TableCell className="text-center text-red-700 bg-red-50/30">{c(calc.outros)}</TableCell>
-        <TableCell className="text-center font-bold text-red-800 bg-red-100/30">
-          {c(calc.total_desq)}
-        </TableCell>
+
+        <TableCell className="text-center bg-red-50/30">{c(calc.sem_qualidade)}</TableCell>
+        <TableCell className="text-center bg-red-50/30">{c(calc.aposentado)}</TableCell>
+        <TableCell className="text-center bg-red-50/30">{c(calc.contribuinte_carne)}</TableCell>
+        <TableCell className="text-center bg-red-50/30">{c(calc.outros)}</TableCell>
+        <TableCell className="text-center font-bold bg-red-100/40">{c(calc.total_desq)}</TableCell>
         <TableCell
-          className={cn('text-center font-bold bg-red-50/30', colorDesq(calc.desqual_pct))}
+          className={cn(
+            'text-center font-bold bg-red-100/40 border-r',
+            colorDesq(calc.desqual_pct),
+          )}
         >
           {fmtPct(calc.desqual_pct)}
         </TableCell>
-        <TableCell className="text-center font-bold text-green-700 bg-green-50/30">
+
+        <TableCell className="text-center font-bold bg-green-100/40 border-r text-green-800">
           {c(calc.qualificados)}
         </TableCell>
-        <TableCell className="text-center text-orange-700 bg-orange-50/30">
-          {c(calc.fechado_direto)}
-        </TableCell>
-        <TableCell className="text-center text-orange-700 bg-orange-50/30">
-          {c(calc.fechado_fup)}
-        </TableCell>
-        <TableCell className="text-center text-orange-700 bg-orange-50/30">
-          {c(calc.fup_ativo)}
-        </TableCell>
-        <TableCell className="text-center font-bold text-orange-800 bg-orange-100/30">
+
+        <TableCell className="text-center bg-amber-50/30">{c(calc.fechado_direto)}</TableCell>
+        <TableCell className="text-center bg-amber-50/30">{c(calc.fechado_fup)}</TableCell>
+        <TableCell className="text-center bg-amber-50/30">{c(calc.fup_ativo)}</TableCell>
+        <TableCell className="text-center font-bold bg-amber-100/40 border-r">
           {c(calc.total_fechados)}
         </TableCell>
+
         <TableCell
           className={cn('text-center font-bold bg-purple-50/30', colorConvGeral(calc.conv_geral))}
         >
@@ -93,14 +118,42 @@ export function DailyTable({ monthLeads, onEdit, onAdd }: any) {
         >
           {fmtPct(calc.conv_qualif)}
         </TableCell>
-        <TableCell className="text-center font-bold text-purple-700 bg-purple-50/30">
+        <TableCell className="text-center font-bold bg-purple-50/30 text-purple-700">
           {fmtPct(calc.conv_fup_pct)}
         </TableCell>
-        <TableCell className={cn('text-center font-bold bg-purple-50/30', colorCac(calc.cac))}>
+        <TableCell
+          className={cn('text-center font-bold bg-purple-50/30 border-r', colorCac(calc.cac))}
+        >
           {fmtMon(calc.cac)}
         </TableCell>
-        <TableCell className="text-center font-bold bg-purple-50/30">
-          {fmtMon(calc.investimento)}
+
+        <TableCell className="text-center whitespace-nowrap bg-muted/10">
+          {!isTotal ? (
+            <div className="flex items-center justify-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(row)
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(row.id)
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : null}
         </TableCell>
       </TableRow>
     )
@@ -108,16 +161,40 @@ export function DailyTable({ monthLeads, onEdit, onAdd }: any) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold">Registros Diários</h3>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar registros..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 bg-background h-9"
+            />
+          </div>
+          <Select value={monthFilter} onValueChange={setMonthFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-background h-9">
+              <SelectValue placeholder="Filtrar por Mês" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todos os meses</SelectItem>
+              {MONTHS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Button
           onClick={onAdd}
-          className="bg-[#C9922A] hover:bg-[#a67721] text-white h-9 shadow-sm"
+          className="bg-[#C9922A] hover:bg-[#a67721] text-white shadow-sm h-9"
         >
           <Plus className="mr-2 h-4 w-4" /> Registrar Dia
         </Button>
       </div>
-      <div className="border rounded-md shadow-sm bg-card">
+
+      <div className="border rounded-lg shadow-sm bg-card overflow-hidden">
         <div
           ref={ref}
           onMouseDown={onMouseDown}
@@ -127,14 +204,12 @@ export function DailyTable({ monthLeads, onEdit, onAdd }: any) {
           style={style}
           className="overflow-x-auto select-none"
         >
-          <Table className="w-[1800px] text-xs">
+          <Table className="w-[2200px] text-xs relative">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead colSpan={2} className="text-center border-r bg-muted/30">
-                  BASE
-                </TableHead>
+                <TableHead className="text-center border-r bg-muted/30 w-16">BASE</TableHead>
                 <TableHead
-                  colSpan={3}
+                  colSpan={4}
                   className="text-center border-r bg-blue-100/50 text-blue-800 font-bold"
                 >
                   LEADS RECEBIDOS
@@ -159,49 +234,72 @@ export function DailyTable({ monthLeads, onEdit, onAdd }: any) {
                 </TableHead>
                 <TableHead
                   colSpan={4}
-                  className="text-center border-r bg-orange-100/50 text-orange-800 font-bold"
+                  className="text-center border-r bg-amber-100/50 text-amber-800 font-bold"
                 >
                   CONTRATOS
                 </TableHead>
                 <TableHead
-                  colSpan={5}
-                  className="text-center bg-purple-100/50 text-purple-800 font-bold"
+                  colSpan={4}
+                  className="text-center border-r bg-purple-100/50 text-purple-800 font-bold"
                 >
                   INDICADORES E $
                 </TableHead>
+                <TableHead className="text-center bg-muted/30 w-24">AÇÕES</TableHead>
               </TableRow>
               <TableRow className="bg-muted/10 hover:bg-muted/10">
-                <TableHead className="text-center w-12">Dia</TableHead>
-                <TableHead className="text-center border-r w-16">Meta</TableHead>
-                <TableHead className="text-center w-16">Google</TableHead>
-                <TableHead className="text-center w-16">Partic.</TableHead>
-                <TableHead className="text-center border-r w-16 font-bold">Total</TableHead>
-                <TableHead className="text-center border-r w-20">Em Qualif</TableHead>
-                <TableHead className="text-center w-20">S/ Qualid</TableHead>
-                <TableHead className="text-center w-20">Aposent.</TableHead>
-                <TableHead className="text-center w-20">Carnê</TableHead>
-                <TableHead className="text-center w-16">Outros</TableHead>
-                <TableHead className="text-center w-16 font-bold">Total</TableHead>
-                <TableHead className="text-center border-r w-20 font-bold">Desq %</TableHead>
-                <TableHead className="text-center border-r w-20 font-bold">Qualificados</TableHead>
-                <TableHead className="text-center w-20">Direto</TableHead>
-                <TableHead className="text-center w-20">FUP</TableHead>
-                <TableHead className="text-center w-20">FUP Ativo</TableHead>
+                <TableHead className="text-center border-r w-16">Dia</TableHead>
+
+                <TableHead className="text-center w-20">Meta</TableHead>
+                <TableHead className="text-center w-20">Google</TableHead>
+                <TableHead className="text-center w-20">Partic.</TableHead>
                 <TableHead className="text-center border-r w-20 font-bold">Total</TableHead>
-                <TableHead className="text-center w-20">Conv Geral</TableHead>
-                <TableHead className="text-center w-20">Conv Qualif</TableHead>
-                <TableHead className="text-center w-20">Conv FUP</TableHead>
-                <TableHead className="text-center w-20">CAC</TableHead>
-                <TableHead className="text-center w-24">Investimento</TableHead>
+
+                <TableHead className="text-center border-r w-24">Em Qualif</TableHead>
+
+                <TableHead className="text-center w-24">S/ Qual Seg.</TableHead>
+                <TableHead className="text-center w-24">Aposentado</TableHead>
+                <TableHead className="text-center w-24">Carnê</TableHead>
+                <TableHead className="text-center w-20">Outros</TableHead>
+                <TableHead className="text-center w-24 font-bold">Total Desq.</TableHead>
+                <TableHead className="text-center border-r w-20 font-bold">Desq %</TableHead>
+
+                <TableHead className="text-center border-r w-24 font-bold">Qualificados</TableHead>
+
+                <TableHead className="text-center w-24">Direto</TableHead>
+                <TableHead className="text-center w-24">FUP</TableHead>
+                <TableHead className="text-center w-24">FUP Ativo</TableHead>
+                <TableHead className="text-center border-r w-24 font-bold">Total</TableHead>
+
+                <TableHead className="text-center w-24">Conv Geral</TableHead>
+                <TableHead className="text-center w-24">Conv Qualif</TableHead>
+                <TableHead className="text-center w-24">Conv FUP</TableHead>
+                <TableHead className="text-center border-r w-24">CAC</TableHead>
+
+                <TableHead className="text-center w-24">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {monthLeads.map((row: any) => renderRow(row))}
-              {monthLeads.length > 0 && renderRow(null, true)}
-              {monthLeads.length === 0 && (
+              {sortedMonths.map((m) => (
+                <React.Fragment key={m}>
+                  <TableRow className="bg-muted/60 hover:bg-muted/60">
+                    <TableCell
+                      colSpan={22}
+                      className="py-2 px-4 font-bold text-muted-foreground uppercase text-sm tracking-wider"
+                    >
+                      {m}
+                    </TableCell>
+                  </TableRow>
+                  {groups[m].map((row: any) => renderRow(row, false))}
+                  {groups[m].length > 0 && renderRow(null, true, groups[m])}
+                </React.Fragment>
+              ))}
+              {sortedMonths.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={22} className="text-center py-8 text-muted-foreground">
-                    Nenhum registro encontrado para este mês.
+                  <TableCell
+                    colSpan={22}
+                    className="text-center py-12 text-muted-foreground bg-muted/5"
+                  >
+                    Nenhum registro encontrado.
                   </TableCell>
                 </TableRow>
               )}

@@ -108,7 +108,16 @@ export const colorConvQualif = (v: number | null) =>
 export const colorDesq = (v: number | null) =>
   v === null ? '' : v <= 0.15 ? 'text-green-600' : v <= 0.3 ? 'text-amber-600' : 'text-red-600'
 export const colorCac = (v: number | null) =>
-  v === null ? '' : v <= 80 ? 'text-green-600' : v <= 150 ? 'text-amber-600' : 'text-red-600'
+  v === null ? '' : v <= 150 ? 'text-green-600' : v <= 250 ? 'text-amber-600' : 'text-red-600'
+
+export function getCacStatus(v: number | null) {
+  if (v === null || isNaN(v))
+    return { text: '—', color: 'text-muted-foreground bg-muted/50 border-muted' }
+  if (v <= 150)
+    return { text: '✓ Meta atingida', color: 'text-green-800 bg-green-100 border-green-200' }
+  if (v <= 250) return { text: '⚠ Atenção', color: 'text-amber-800 bg-amber-100 border-amber-200' }
+  return { text: '✗ Acima do limite', color: 'text-red-800 bg-red-100 border-red-200' }
+}
 
 export function useDraggableScroll() {
   const ref = useRef<HTMLDivElement>(null)

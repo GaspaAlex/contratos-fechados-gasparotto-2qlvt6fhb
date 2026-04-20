@@ -6,7 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { calculateLeadRow, fmtMon, fmtPct } from '@/lib/leads-calc'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { calculateLeadRow, fmtMon, fmtPct, MONTHS } from '@/lib/leads-calc'
 import { createLeadDiario, updateLeadDiario } from '@/services/leads'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
@@ -30,13 +37,15 @@ const schema = z.object({
   observacoes: z.string().optional(),
 })
 
-export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuccess }: any) {
+export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
   const { toast } = useToast()
+
+  const defaultMonth = `${MONTHS[new Date().getMonth()]} ${year}`
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      mes: `${selectedMonth} ${year}`,
+      mes: defaultMonth,
       dia: 1,
       meta: 0,
       google: 0,
@@ -60,7 +69,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
         form.reset({ ...data })
       } else {
         form.reset({
-          mes: `${selectedMonth} ${year}`,
+          mes: defaultMonth,
           dia: new Date().getDate(),
           meta: 0,
           google: 0,
@@ -78,7 +87,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
         })
       }
     }
-  }, [open, data, selectedMonth, year, form])
+  }, [open, data, year, form, defaultMonth])
 
   const vals = form.watch()
   const calc = calculateLeadRow(vals)
@@ -115,7 +124,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
               type="number"
               {...field}
               onChange={(e) => field.onChange(Number(e.target.value))}
-              className={`h-8 text-sm border-amber-300 bg-amber-50 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
+              className={`h-8 text-sm border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
             />
           </FormControl>
         </FormItem>
@@ -126,7 +135,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
   const CalcBox = ({ label, val }: any) => (
     <div>
       <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-      <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border">
+      <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border shadow-inner">
         {val}
       </div>
     </div>
@@ -149,12 +158,21 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Mês/Ano</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
-                      />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {MONTHS.map((m) => (
+                          <SelectItem
+                            key={`${m} ${year}`}
+                            value={`${m} ${year}`}
+                          >{`${m} ${year}`}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />
@@ -196,7 +214,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900">
+                <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 shadow-sm">
                   <h4 className="text-xs font-bold text-blue-700 mb-2">LEADS RECEBIDOS</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <NumInput name="google" label="Google Ads" />
@@ -204,13 +222,13 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
                     <CalcBox label="Total Leads" val={calc.total_leads} />
                   </div>
                 </div>
-                <div className="p-3 rounded-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900">
+                <div className="p-3 rounded-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900 shadow-sm">
                   <h4 className="text-xs font-bold text-amber-700 mb-2">EM QUALIFICAÇÃO</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <NumInput name="em_qualif" label="Em Qualificação" />
                   </div>
                 </div>
-                <div className="p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900">
+                <div className="p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900 shadow-sm">
                   <h4 className="text-xs font-bold text-red-700 mb-2">DESQUALIFICADOS</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <NumInput name="sem_qualidade" label="Sem Qualidade" />
@@ -222,11 +240,11 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="p-3 rounded-md bg-green-50/50 dark:bg-green-900/10 border border-green-100 dark:border-green-900">
+                <div className="p-3 rounded-md bg-green-50/50 dark:bg-green-900/10 border border-green-100 dark:border-green-900 shadow-sm">
                   <h4 className="text-xs font-bold text-green-700 mb-2">QUALIFICADOS</h4>
                   <CalcBox label="Total Qualificados" val={calc.qualificados} />
                 </div>
-                <div className="p-3 rounded-md bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900">
+                <div className="p-3 rounded-md bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900 shadow-sm">
                   <h4 className="text-xs font-bold text-orange-700 mb-2">CONTRATOS FECHADOS</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <NumInput name="fechado_direto" label="Fechado Direto" />
@@ -235,7 +253,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
                     <CalcBox label="Total Fechados" val={calc.total_fechados} />
                   </div>
                 </div>
-                <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900">
+                <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900 shadow-sm">
                   <h4 className="text-xs font-bold text-purple-700 mb-2">INVESTIMENTO</h4>
                   <div className="grid grid-cols-1 gap-2">
                     <NumInput name="investimento" label="Valor Investido (R$)" />
@@ -244,7 +262,7 @@ export function LeadModal({ open, onOpenChange, data, selectedMonth, year, onSuc
               </div>
             </div>
 
-            <div className="bg-muted/30 p-3 rounded-md border grid grid-cols-4 gap-2 text-center">
+            <div className="bg-muted/30 p-3 rounded-md border grid grid-cols-4 gap-2 text-center shadow-sm">
               <div>
                 <div className="text-[10px] text-muted-foreground uppercase">Conv. Geral</div>
                 <div className="font-bold text-purple-700">{fmtPct(calc.conv_geral)}</div>

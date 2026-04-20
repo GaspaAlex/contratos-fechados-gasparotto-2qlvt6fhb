@@ -7,73 +7,125 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { aggregateLeads, calculateLeadRow, fmtMon, fmtPct, MONTHS } from '@/lib/leads-calc'
+import {
+  aggregateLeads,
+  calculateLeadRow,
+  fmtMon,
+  fmtPct,
+  MONTHS,
+  colorConvGeral,
+  colorConvQualif,
+  colorDesq,
+  getCacStatus,
+} from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function MonthlyCards({ leads, selectedMonth, onSelectMonth }: any) {
+export function SummaryCards({ leads }: any) {
   const anoLeads = aggregateLeads(leads)
-  const calcAno = calculateLeadRow(anoLeads)
+  const agg = calculateLeadRow(anoLeads)
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-6">
-      <Card className="bg-[#C9922A] text-white border-none cursor-default shadow-sm">
-        <div className="p-3 text-center">
-          <div className="text-sm font-semibold opacity-90">Ano Todo</div>
-          <div className="text-2xl font-bold">{calcAno.total_leads}</div>
-          <div className="text-[10px] opacity-80">Leads Totais</div>
-        </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <Card className="border-t-4 border-t-blue-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Total Leads
+          </div>
+          <div className="text-3xl font-black mt-2">{agg.total_leads}</div>
+        </CardContent>
       </Card>
-      {MONTHS.map((m) => {
-        const mLeads = leads.filter((l: any) => l.mes.startsWith(m))
-        const mAgg = aggregateLeads(mLeads)
-        const calc = calculateLeadRow(mAgg)
-        const isActive = selectedMonth === m
-        return (
-          <Card
-            key={m}
-            onClick={() => onSelectMonth(m)}
-            className={cn(
-              'cursor-pointer transition-all border shadow-sm',
-              isActive ? 'border-amber-500 bg-amber-500/10' : 'hover:bg-muted/60',
-            )}
-          >
-            <div className="p-3 text-center">
-              <div
-                className={cn(
-                  'text-sm font-semibold',
-                  isActive ? 'text-amber-700 dark:text-amber-500' : '',
-                )}
-              >
-                {m.slice(0, 3)}
-              </div>
-              <div className="text-2xl font-bold">{calc.total_leads}</div>
-              <div className="text-[10px] text-muted-foreground">Leads</div>
-            </div>
-          </Card>
-        )
-      })}
+      <Card className="border-t-4 border-t-green-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Qualificados
+          </div>
+          <div className="text-3xl font-black mt-2">{agg.qualificados}</div>
+        </CardContent>
+      </Card>
+      <Card className="border-t-4 border-t-red-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Desqualificados
+          </div>
+          <div className="text-3xl font-black mt-2 text-red-600">{agg.total_desq}</div>
+        </CardContent>
+      </Card>
+      <Card className="border-t-4 border-t-amber-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Total Fechamentos
+          </div>
+          <div className="text-3xl font-black mt-2">{agg.total_fechados}</div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-t-2 border-t-purple-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Conv. Geral
+          </div>
+          <div className={cn('text-2xl font-black mt-2', colorConvGeral(agg.conv_geral))}>
+            {fmtPct(agg.conv_geral)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="border-t-2 border-t-purple-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Conv. Qualif.
+          </div>
+          <div className={cn('text-2xl font-black mt-2', colorConvQualif(agg.conv_qualif))}>
+            {fmtPct(agg.conv_qualif)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="border-t-2 border-t-red-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Desqualificação %
+          </div>
+          <div className={cn('text-2xl font-black mt-2', colorDesq(agg.desqual_pct))}>
+            {fmtPct(agg.desqual_pct)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="border-t-2 border-t-amber-500 shadow-sm">
+        <CardContent className="p-4">
+          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Fech. via FUP %
+          </div>
+          <div className="text-2xl font-black mt-2 text-amber-600">
+            {fmtPct(agg.pct_fech_via_fup)}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
 
-export function DisqualificationTable({ leads }: any) {
+export function CACCPLTable({ leads }: any) {
+  const anoLeads = aggregateLeads(leads)
+  const aggAno = calculateLeadRow(anoLeads)
+
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm h-full flex flex-col">
       <CardHeader className="pb-3 border-b">
-        <CardTitle className="text-base font-bold text-red-700 dark:text-red-400">
-          Análise de Desqualificação
-        </CardTitle>
+        <CardTitle className="text-base font-bold text-foreground">CAC & CPL por Mês</CardTitle>
+        <div className="text-xs text-muted-foreground mt-1">
+          CPL = Investimento / Total Leads | CAC = Investimento / Fechamentos
+        </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table className="text-xs">
-          <TableHeader>
+      <CardContent className="p-0 flex-1 overflow-x-auto">
+        <Table className="text-sm min-w-[600px]">
+          <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead>Mês</TableHead>
-              <TableHead className="text-right">Sem Qualid.</TableHead>
-              <TableHead className="text-right">Aposentado</TableHead>
-              <TableHead className="text-right">Carne</TableHead>
-              <TableHead className="text-right">Outros</TableHead>
-              <TableHead className="text-right font-bold">Total</TableHead>
+              <TableHead className="w-24">MÊS</TableHead>
+              <TableHead className="text-right">INVESTIMENTO</TableHead>
+              <TableHead className="text-right">TOTAL LEADS</TableHead>
+              <TableHead className="text-right">FECHAMENTOS</TableHead>
+              <TableHead className="text-right">CPL (R$)</TableHead>
+              <TableHead className="text-right">CAC (R$)</TableHead>
+              <TableHead className="text-center w-36">STATUS CAC</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,19 +133,67 @@ export function DisqualificationTable({ leads }: any) {
               const mLeads = leads.filter((l: any) => l.mes.startsWith(m))
               if (mLeads.length === 0) return null
               const agg = calculateLeadRow(aggregateLeads(mLeads))
+              const cacSt = getCacStatus(agg.cac)
               return (
                 <TableRow key={m}>
-                  <TableCell className="font-medium">{m}</TableCell>
-                  <TableCell className="text-right">{agg.sem_qualidade}</TableCell>
-                  <TableCell className="text-right">{agg.aposentado}</TableCell>
-                  <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
-                  <TableCell className="text-right">{agg.outros}</TableCell>
-                  <TableCell className="text-right font-bold text-red-600">
-                    {agg.total_desq}
+                  <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                    {m.substring(0, 3)}
+                  </TableCell>
+                  <TableCell className="text-right">{fmtMon(agg.investimento)}</TableCell>
+                  <TableCell className="text-right">{agg.total_leads}</TableCell>
+                  <TableCell className="text-right">{agg.total_fechados}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {fmtMon(agg.cpl)}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">{fmtMon(agg.cac)}</TableCell>
+                  <TableCell className="text-center">
+                    {agg.cac !== null && (
+                      <div
+                        className={cn(
+                          'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                          cacSt.color,
+                        )}
+                      >
+                        {cacSt.text}
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               )
             })}
+            {leads.length > 0 &&
+              (() => {
+                const cacSt = getCacStatus(aggAno.cac)
+                return (
+                  <TableRow className="bg-amber-50 hover:bg-amber-50/80 font-bold border-t-2 border-t-amber-200">
+                    <TableCell>TOTAL</TableCell>
+                    <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
+                    <TableCell className="text-right">{aggAno.total_leads}</TableCell>
+                    <TableCell className="text-right">{aggAno.total_fechados}</TableCell>
+                    <TableCell className="text-right">{fmtMon(aggAno.cpl)}</TableCell>
+                    <TableCell className="text-right">{fmtMon(aggAno.cac)}</TableCell>
+                    <TableCell className="text-center">
+                      {aggAno.cac !== null && (
+                        <div
+                          className={cn(
+                            'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap font-bold',
+                            cacSt.color,
+                          )}
+                        >
+                          {cacSt.text}
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })()}
+            {leads.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                  Nenhum dado encontrado
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
@@ -101,40 +201,103 @@ export function DisqualificationTable({ leads }: any) {
   )
 }
 
-export function ChannelPerformance({ leads }: any) {
-  const agg = calculateLeadRow(aggregateLeads(leads))
-  const googlePct = agg.total_leads > 0 ? agg.google / agg.total_leads : 0
-  const partPct = agg.total_leads > 0 ? agg.particular / agg.total_leads : 0
+export function DisqualificationAnalysis({ leads }: any) {
+  const anoLeads = aggregateLeads(leads)
+  const aggAno = calculateLeadRow(anoLeads)
+
+  const reasons = [
+    { label: 'Sem Qualidade', value: aggAno.sem_qualidade },
+    { label: 'Aposentado', value: aggAno.aposentado },
+    { label: 'Contrib. Carnê', value: aggAno.contribuinte_carne },
+    { label: 'Outros', value: aggAno.outros },
+  ]
+  const maxReason = Math.max(...reasons.map((r) => r.value), 1)
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm h-full flex flex-col">
       <CardHeader className="pb-3 border-b">
-        <CardTitle className="text-base font-bold text-blue-700 dark:text-blue-400">
-          Canais & Investimento Anual
+        <CardTitle className="text-base font-bold text-foreground">
+          Motivos de Desqualificação
         </CardTitle>
+        <div className="text-xs text-muted-foreground mt-1">
+          Análise de proporção e quebra mensal
+        </div>
       </CardHeader>
-      <CardContent className="p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-md border text-center">
-            <div className="text-xs text-muted-foreground mb-1">Google Ads</div>
-            <div className="text-xl font-bold">{agg.google}</div>
-            <div className="text-[10px] text-blue-600 mt-1">{fmtPct(googlePct)}</div>
-          </div>
-          <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-md border text-center">
-            <div className="text-xs text-muted-foreground mb-1">Particular</div>
-            <div className="text-xl font-bold">{agg.particular}</div>
-            <div className="text-[10px] text-indigo-600 mt-1">{fmtPct(partPct)}</div>
+      <CardContent className="p-0 flex-1 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x">
+        <div className="p-4 space-y-5 md:w-1/3 flex flex-col justify-center">
+          {reasons.map((r) => (
+            <div key={r.label}>
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="font-semibold text-muted-foreground uppercase tracking-wider">
+                  {r.label}
+                </span>
+                <span className="font-bold">
+                  {r.value}{' '}
+                  <span className="text-muted-foreground font-normal ml-1">
+                    ({aggAno.total_desq > 0 ? ((r.value / aggAno.total_desq) * 100).toFixed(1) : 0}
+                    %)
+                  </span>
+                </span>
+              </div>
+              <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(r.value / maxReason) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+          <div className="pt-4 border-t mt-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-bold uppercase text-muted-foreground">Total Ano</span>
+              <span className="text-xl font-black text-red-600">{aggAno.total_desq}</span>
+            </div>
           </div>
         </div>
-        <div className="flex justify-between items-center p-3 border rounded-md bg-muted/20">
-          <div>
-            <div className="text-xs text-muted-foreground">Investimento Total</div>
-            <div className="text-lg font-bold">{fmtMon(agg.investimento)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">CPL Médio</div>
-            <div className="text-lg font-bold text-purple-600">{fmtMon(agg.cpl)}</div>
-          </div>
+        <div className="p-0 flex-1 overflow-x-auto">
+          <Table className="text-xs min-w-[400px]">
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="w-20">MÊS</TableHead>
+                <TableHead className="text-right">S/QUAL</TableHead>
+                <TableHead className="text-right">APOSEN.</TableHead>
+                <TableHead className="text-right">CARNÊ</TableHead>
+                <TableHead className="text-right">OUTROS</TableHead>
+                <TableHead className="text-right font-bold">TOTAL</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {MONTHS.map((m) => {
+                const mLeads = leads.filter((l: any) => l.mes.startsWith(m))
+                if (mLeads.length === 0) return null
+                const agg = calculateLeadRow(aggregateLeads(mLeads))
+                return (
+                  <TableRow key={m}>
+                    <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                      {m.substring(0, 3)}
+                    </TableCell>
+                    <TableCell className="text-right">{agg.sem_qualidade}</TableCell>
+                    <TableCell className="text-right">{agg.aposentado}</TableCell>
+                    <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
+                    <TableCell className="text-right">{agg.outros}</TableCell>
+                    <TableCell className="text-right font-bold text-red-600">
+                      {agg.total_desq}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+              {leads.length > 0 && (
+                <TableRow className="bg-muted/20 font-bold border-t">
+                  <TableCell>TOTAL</TableCell>
+                  <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
+                  <TableCell className="text-right">{aggAno.aposentado}</TableCell>
+                  <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
+                  <TableCell className="text-right">{aggAno.outros}</TableCell>
+                  <TableCell className="text-right text-red-600">{aggAno.total_desq}</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>
