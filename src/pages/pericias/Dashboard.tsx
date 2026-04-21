@@ -4,18 +4,18 @@ import { Pericia } from '@/services/pericias'
 
 export function Dashboard({ data, year }: { data: Pericia[]; year: number }) {
   const months = [
-    'JAN',
-    'FEV',
-    'MAR',
-    'ABR',
-    'MAI',
-    'JUN',
-    'JUL',
-    'AGO',
-    'SET',
-    'OUT',
-    'NOV',
-    'DEZ',
+    'JANEIRO',
+    'FEVEREIRO',
+    'MARÇO',
+    'ABRIL',
+    'MAIO',
+    'JUNHO',
+    'JULHO',
+    'AGOSTO',
+    'SETEMBRO',
+    'OUTUBRO',
+    'NOVEMBRO',
+    'DEZEMBRO',
   ]
 
   const currentMonth = new Date().getMonth()
@@ -38,53 +38,60 @@ export function Dashboard({ data, year }: { data: Pericia[]; year: number }) {
           <Card
             key={m}
             className={cn(
-              'border bg-card transition-colors',
-              isCurrent && 'border-amber-400 bg-amber-500/5 shadow-sm',
+              'border transition-colors shadow-sm',
+              count > 0
+                ? 'bg-[#FAF7F2] border-[#E8DFD1] dark:bg-amber-500/5 dark:border-amber-500/20'
+                : 'bg-card border-border/50',
+              isCurrent && 'ring-1 ring-amber-400',
             )}
           >
-            <CardContent className="p-4 flex flex-col justify-between h-[100px]">
-              <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase text-left">
+            <CardContent className="p-5 flex flex-col justify-between h-[110px]">
+              <span
+                className={cn(
+                  'text-[13px] font-bold tracking-wide uppercase text-left',
+                  count > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
+                )}
+              >
                 {m}
               </span>
               <div className="flex items-baseline gap-1.5 mt-auto text-left">
-                {count > 0 ? (
-                  <>
-                    <span className="text-2xl font-bold leading-none text-foreground">{count}</span>
-                    <span className="text-[11px] text-muted-foreground uppercase font-medium">
-                      perícias
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-2xl font-bold leading-none text-muted-foreground/40">
-                      —
-                    </span>
-                    <span className="text-[11px] text-muted-foreground/40 uppercase font-medium">
-                      sem registro
-                    </span>
-                  </>
-                )}
+                <span
+                  className={cn(
+                    'text-[28px] font-bold leading-none',
+                    count > 0 ? 'text-[#D99A29] dark:text-amber-500' : 'text-muted-foreground/30',
+                  )}
+                >
+                  {count > 0 ? count : '0'}
+                </span>
+                <span
+                  className={cn(
+                    'text-[12px] font-medium',
+                    count > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
+                  )}
+                >
+                  {count > 0 ? 'perícias' : 'sem registro'}
+                </span>
               </div>
             </CardContent>
           </Card>
         )
       })}
 
-      <Card className="bg-amber-500/10 border-amber-500/30 transition-colors">
-        <CardContent className="p-4 flex flex-col justify-between h-[100px]">
-          <span className="text-[11px] font-semibold text-amber-700/80 dark:text-amber-500/80 tracking-wider uppercase text-left">
+      <Card className="bg-[#FAF7F2] border-[#D99A29] dark:bg-amber-500/10 dark:border-amber-500/50 transition-colors shadow-sm">
+        <CardContent className="p-5 flex flex-col justify-between h-[110px]">
+          <span className="text-[13px] font-bold text-[#D99A29] dark:text-amber-500 tracking-wide uppercase text-left">
             TOTAL {year}
           </span>
           <div className="flex flex-col mt-auto text-left">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold leading-none text-amber-700 dark:text-amber-500">
+              <span className="text-[32px] font-bold leading-none text-[#D99A29] dark:text-amber-500">
                 {total}
               </span>
-              <span className="text-[11px] text-amber-700/80 dark:text-amber-500/80 uppercase font-medium">
+              <span className="text-[12px] text-[#D99A29] dark:text-amber-500 font-medium">
                 perícias
               </span>
             </div>
-            <span className="text-[10px] text-amber-700/60 dark:text-amber-500/60 mt-0.5 font-medium">
+            <span className="text-[11px] text-[#D99A29]/70 dark:text-amber-500/70 mt-1 font-medium">
               {laudosRegistrados} laudos registrados
             </span>
           </div>
