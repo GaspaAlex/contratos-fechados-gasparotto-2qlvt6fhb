@@ -44,7 +44,7 @@ export default function Pericias() {
   )
 
   return (
-    <div className="animate-fade-in-up space-y-8 max-w-[1200px] mx-auto pb-10">
+    <div className="animate-fade-in-up space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Perícias</h1>

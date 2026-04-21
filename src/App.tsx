@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { ThemeProvider } from './components/ThemeProvider'
 import Layout from './components/Layout'
 import NotFound from './pages/NotFound'
+import Index from './pages/Index'
 import Dashboard from './pages/Dashboard'
 import Protocolo from './pages/Protocolo'
 import Pericias from './pages/Pericias'
@@ -18,7 +19,7 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/protocolo" element={<Protocolo />} />
             <Route path="/pericias" element={<Pericias />} />
