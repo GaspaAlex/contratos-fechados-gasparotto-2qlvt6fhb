@@ -74,11 +74,11 @@ export function ContractModal({
     status: string
     dcontrato: string
     dcalculo: string
-    prazo: number | string
     dprotocolo: string
     parceria: boolean
     parceiro_nome: string
     parceiro_comissao: number
+    origem: string
   }>({
     nome: '',
     fone: '',
@@ -88,11 +88,11 @@ export function ContractModal({
     status: 'R. Docs',
     dcontrato: '',
     dcalculo: '',
-    prazo: '',
     dprotocolo: '',
     parceria: false,
     parceiro_nome: '',
     parceiro_comissao: 0,
+    origem: '',
   })
 
   useEffect(() => {
@@ -109,11 +109,11 @@ export function ContractModal({
           status: contract.status || 'R. Docs',
           dcontrato: toYMD(contract.dcontrato) || '',
           dcalculo: toYMD(contract.dcalculo) || '',
-          prazo: contract.prazo !== undefined && contract.prazo !== null ? contract.prazo : '',
           dprotocolo: toYMD(contract.dprotocolo) || '',
           parceria: contract.parceria || false,
           parceiro_nome: contract.parceiro_nome || '',
           parceiro_comissao: contract.parceiro_comissao || 0,
+          origem: contract.origem || 'Não classificado',
         })
       } else {
         setFormData({
@@ -125,11 +125,11 @@ export function ContractModal({
           status: 'R. Docs',
           dcontrato: today,
           dcalculo: '',
-          prazo: '',
           dprotocolo: '',
           parceria: false,
           parceiro_nome: '',
           parceiro_comissao: 0,
+          origem: '',
         })
       }
       setDuplicateWarning(null)
@@ -323,7 +323,6 @@ export function ContractModal({
       setLoading(true)
       const payload = {
         ...formData,
-        prazo: formData.prazo === '' ? null : formData.prazo,
         dcontrato: toPBDate(formData.dcontrato),
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
@@ -343,6 +342,7 @@ export function ContractModal({
     if (e) e.preventDefault()
     if (!formData.nome || !formData.dcontrato)
       return toast.error('Preencha Nome e Data do Contrato.')
+    if (!isEdit && !formData.origem) return toast.error('Selecione a origem do caso')
 
     try {
       setLoading(true)
@@ -424,6 +424,25 @@ export function ContractModal({
             </div>
 
             <div className="space-y-2">
+              <Label className="text-[#C9922A] font-bold">
+                ORIGEM {!isEdit && <span className="text-red-500">*</span>}
+              </Label>
+              <Select
+                value={formData.origem || (isEdit ? 'Não classificado' : '')}
+                onValueChange={(v) => setFormData({ ...formData, origem: v })}
+              >
+                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Campanha">Campanha</SelectItem>
+                  <SelectItem value="Particular">Particular</SelectItem>
+                  <SelectItem value="Não classificado">Não classificado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Acompanhamento (FUP)</Label>
               <Select
                 value={formData.fup ? 'FUP' : 'empty'}
@@ -472,21 +491,6 @@ export function ContractModal({
                     type="date"
                     value={formData.dcalculo}
                     onChange={(e) => setFormData({ ...formData, dcalculo: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Prazo (dias)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={formData.prazo}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        prazo: e.target.value === '' ? '' : parseInt(e.target.value) || 0,
-                      })
-                    }
                     className="focus-visible:ring-[#C9922A]"
                   />
                 </div>

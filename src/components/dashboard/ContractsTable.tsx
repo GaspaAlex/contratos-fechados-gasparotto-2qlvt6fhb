@@ -63,6 +63,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
   const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
+  const [tableOrigem, setTableOrigem] = useState<string>('Todas as origens')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
 
   React.useEffect(() => {
@@ -144,6 +145,10 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
       )
     }
 
+    if (tableOrigem !== 'Todas as origens') {
+      result = result.filter((c) => (c.origem || 'Não classificado') === tableOrigem)
+    }
+
     if (activeFilter === 'Todos') {
       // no-op, include all
     } else if (activeFilter === 'Ativos') {
@@ -169,7 +174,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
     }
 
     return result
-  }, [contratos, activeFilter, search, tableYear, tableMonth, tableBeneficio])
+  }, [contratos, activeFilter, search, tableYear, tableMonth, tableBeneficio, tableOrigem])
 
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
@@ -278,6 +283,17 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={tableOrigem} onValueChange={setTableOrigem}>
+                <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todas as origens">Todas as origens</SelectItem>
+                  <SelectItem value="Campanha">Campanha</SelectItem>
+                  <SelectItem value="Particular">Particular</SelectItem>
+                  <SelectItem value="Não classificado">Não classificado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button
               onClick={handleAdd}
@@ -318,7 +334,6 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                   <TableHead className="whitespace-nowrap">STATUS</TableHead>
                   <TableHead className="whitespace-nowrap">D. CONTRATO</TableHead>
                   <TableHead className="whitespace-nowrap">D. CÁLCULO</TableHead>
-                  <TableHead className="whitespace-nowrap">PRAZO</TableHead>
                   <TableHead className="whitespace-nowrap">D. PROTOCOLO</TableHead>
                   <TableHead className="whitespace-nowrap">PARCERIA</TableHead>
                   <TableHead className="whitespace-nowrap text-right">AÇÕES</TableHead>
@@ -419,14 +434,6 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                                 )}
                               >
                                 {formatDate(contract.dcalculo)}
-                              </TableCell>
-                              <TableCell
-                                className={cn(
-                                  'whitespace-nowrap',
-                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
-                                )}
-                              >
-                                {contract.prazo ? `${contract.prazo} dias` : '-'}
                               </TableCell>
                               <TableCell
                                 className={cn(

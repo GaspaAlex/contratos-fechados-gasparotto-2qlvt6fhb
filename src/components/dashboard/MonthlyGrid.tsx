@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { Megaphone } from 'lucide-react'
 
 const MONTHS = [
   'JANEIRO',
@@ -39,13 +40,27 @@ export function MonthlyGrid({
     const monthContratos = yearContratos.filter((c) =>
       c.dcontrato.startsWith(`${year}-${monthStr}`),
     )
-    const activeCount = monthContratos.filter((c) => !isArchived(c)).length
-    return { name, count: activeCount }
+    const activeContratos = monthContratos.filter((c) => !isArchived(c))
+    const activeCount = activeContratos.length
+    const campanhaCount = activeContratos.filter((c) => c.origem === 'Campanha').length
+    const particularCount = activeContratos.filter((c) => c.origem === 'Particular').length
+
+    return { name, count: activeCount, campanhaCount, particularCount }
   }).filter((m) => month === 'Todos os meses' || m.name === month)
 
   const totalActive = yearContratos.filter((c) => !isArchived(c)).length
   const totalArchived = yearContratos.filter((c) => isArchived(c)).length
   const totalRegistrado = yearContratos.length
+
+  const totalCampanha = yearContratos.filter(
+    (c) => !isArchived(c) && c.origem === 'Campanha',
+  ).length
+  const totalParticular = yearContratos.filter(
+    (c) => !isArchived(c) && c.origem === 'Particular',
+  ).length
+  const totalNaoClassificado = yearContratos.filter(
+    (c) => !isArchived(c) && (!c.origem || c.origem === 'Não classificado'),
+  ).length
 
   return (
     <div>
@@ -86,6 +101,20 @@ export function MonthlyGrid({
                       : 'sem registro'}
                 </span>{' '}
               </div>
+              {month.count > 0 && (month.campanhaCount > 0 || month.particularCount > 0) && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {month.campanhaCount > 0 && (
+                    <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                      <Megaphone className="w-3 h-3" /> {month.campanhaCount} campanha
+                    </span>
+                  )}
+                  {month.particularCount > 0 && (
+                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                      {month.particularCount} particular
+                    </span>
+                  )}
+                </div>
+              )}
             </CardContent>
             {month.count > 0 && (
               <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
@@ -103,7 +132,11 @@ export function MonthlyGrid({
               <span className="text-4xl font-black text-[#C9922A]">{totalActive}</span>
               <span className="text-sm font-semibold text-[#C9922A]/80">ativos</span>
             </div>
-            <p className="mt-2 text-xs font-medium text-[#C9922A]/60">
+            <p className="mt-2 text-[11px] font-medium text-[#C9922A]/60">
+              {totalCampanha} campanha / {totalParticular} particular / {totalNaoClassificado} não
+              classificado
+            </p>
+            <p className="mt-1 text-xs font-medium text-[#C9922A]/80">
               {totalArchived} arquivados excluídos
             </p>
           </CardContent>

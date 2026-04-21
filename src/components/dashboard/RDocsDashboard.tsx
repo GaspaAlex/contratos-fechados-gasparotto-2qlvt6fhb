@@ -1,7 +1,14 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 const MONTHS = [
@@ -31,6 +38,8 @@ export function RDocsDashboard({
   month: string
   beneficio?: string
 }) {
+  const [origemFilter, setOrigemFilter] = useState('Todos')
+
   const metrics = useMemo(() => {
     let periodContratos = contratos.filter(
       (c) =>
@@ -52,17 +61,25 @@ export function RDocsDashboard({
       )
     }
 
+    if (origemFilter !== 'Todos') {
+      periodContratos = periodContratos.filter((c) => c.origem === origemFilter)
+    }
+
     const total = periodContratos.length
     const liberados = periodContratos.filter((c) => c.status === 'OK').length
     const pendentes = periodContratos.filter((c) => c.status === 'R. Docs').length
     const rate = total > 0 ? Math.round((liberados / total) * 100) : 0
 
     return { total, liberados, pendentes, rate }
-  }, [contratos, month, year, beneficio])
+  }, [contratos, month, year, beneficio, origemFilter])
 
   const isSuccess = metrics.rate >= 50
   const formattedMonth = month !== 'Todos os meses' ? month.toLowerCase() : ''
-  const label = month === 'Todos os meses' ? `Em ${year}` : `Em ${formattedMonth}/${year}`
+  const labelSuffix = origemFilter !== 'Todos' ? ` (${origemFilter.toLowerCase()})` : ''
+  const label =
+    month === 'Todos os meses'
+      ? `Em ${year}${labelSuffix}`
+      : `Em ${formattedMonth}/${year}${labelSuffix}`
   const message = isSuccess
     ? `${label}, ${metrics.rate}% dos contratos foram liberados — acima da média aceitável de 50%.`
     : `${label}, ${metrics.rate}% dos contratos foram liberados — abaixo da meta de 50%.`
@@ -77,6 +94,16 @@ export function RDocsDashboard({
           Acompanhamento R. Docs{' '}
           <span className="text-muted-foreground text-sm font-normal">({month})</span>
         </CardTitle>
+        <Select value={origemFilter} onValueChange={setOrigemFilter}>
+          <SelectTrigger className="w-[140px] h-9 text-xs border-[#C9922A]/30 focus:ring-[#C9922A]">
+            <SelectValue placeholder="Origem" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos">Todos</SelectItem>
+            <SelectItem value="Campanha">Campanha</SelectItem>
+            <SelectItem value="Particular">Particular</SelectItem>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-4">
