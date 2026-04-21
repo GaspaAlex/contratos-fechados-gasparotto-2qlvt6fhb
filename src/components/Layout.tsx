@@ -8,6 +8,8 @@ import {
   LineChart,
   Moon,
   Sun,
+  Folder,
+  Clock,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -24,11 +26,23 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
-const navItems = [
-  { name: 'Contratos Fechados', path: '/dashboard', icon: CheckSquare },
-  { name: 'Protocolo', path: '/protocolo', icon: FileText },
-  { name: 'Perícias', path: '/pericias', icon: Gavel },
-  { name: 'Leads Campanha', path: '/leads', icon: LineChart },
+const navSections = [
+  {
+    label: 'VISÃO GERAL',
+    items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }],
+  },
+  {
+    label: 'GESTÃO DE CASOS',
+    items: [
+      { name: 'Protocolo', path: '/protocolo', icon: FileText },
+      { name: 'Contratos Fechados', path: '/dashboard', icon: Folder },
+      { name: 'Perícias', path: '/pericias', icon: Clock },
+    ],
+  },
+  {
+    label: 'CAPTAÇÃO DE LEADS',
+    items: [{ name: 'Leads Campanha', path: '/leads', icon: LineChart }],
+  },
 ]
 
 export default function Layout() {
@@ -52,30 +66,42 @@ export default function Layout() {
             </Link>
           </SidebarHeader>
           <SidebarContent className="px-4 py-2">
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      className={cn(
-                        'w-full py-5 text-base transition-colors border-l-4 rounded-none h-12',
-                        isActive
-                          ? 'bg-[#C9922A]/15 border-[#C9922A] text-[#C9922A] font-bold hover:bg-[#C9922A]/20 hover:text-[#C9922A]'
-                          : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium',
-                      )}
-                    >
-                      <Link to={item.path}>
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.name}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
+            <div className="flex flex-col">
+              {navSections.map((section, index) => (
+                <div key={section.label} className={cn(index > 0 && 'mt-4')}>
+                  <div
+                    className="px-2 mb-2 text-[10px] uppercase font-semibold tracking-[1px]"
+                    style={{ color: 'var(--text3, hsl(var(--muted-foreground)))' }}
+                  >
+                    {section.label}
+                  </div>
+                  <SidebarMenu>
+                    {section.items.map((item) => {
+                      const isActive = location.pathname === item.path
+                      return (
+                        <SidebarMenuItem key={item.path}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                            className={cn(
+                              'w-full py-5 text-base transition-colors border-l-4 rounded-none h-12',
+                              isActive
+                                ? 'bg-[#C9922A]/15 border-[#C9922A] text-[#C9922A] font-bold hover:bg-[#C9922A]/20 hover:text-[#C9922A]'
+                                : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium',
+                            )}
+                          >
+                            <Link to={item.path}>
+                              <item.icon className="h-5 w-5" />
+                              <span>{item.name}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  </SidebarMenu>
+                </div>
+              ))}
+            </div>
           </SidebarContent>
         </Sidebar>
 
