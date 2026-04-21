@@ -65,7 +65,21 @@ export function ContractModal({
   const [responsaveis, setResponsaveis] = useState<any[]>([])
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nome: string
+    fone: string
+    beneficio: string
+    responsavel: string
+    fup: boolean
+    status: string
+    dcontrato: string
+    dcalculo: string
+    prazo: number | string
+    dprotocolo: string
+    parceria: boolean
+    parceiro_nome: string
+    parceiro_comissao: number
+  }>({
     nome: '',
     fone: '',
     beneficio: '',
@@ -74,7 +88,7 @@ export function ContractModal({
     status: 'R. Docs',
     dcontrato: '',
     dcalculo: '',
-    prazo: 15,
+    prazo: '',
     dprotocolo: '',
     parceria: false,
     parceiro_nome: '',
@@ -95,7 +109,7 @@ export function ContractModal({
           status: contract.status || 'R. Docs',
           dcontrato: toYMD(contract.dcontrato) || '',
           dcalculo: toYMD(contract.dcalculo) || '',
-          prazo: contract.prazo || 15,
+          prazo: contract.prazo !== undefined && contract.prazo !== null ? contract.prazo : '',
           dprotocolo: toYMD(contract.dprotocolo) || '',
           parceria: contract.parceria || false,
           parceiro_nome: contract.parceiro_nome || '',
@@ -110,9 +124,9 @@ export function ContractModal({
           fup: false,
           status: 'R. Docs',
           dcontrato: today,
-          dcalculo: today,
-          prazo: 15,
-          dprotocolo: today,
+          dcalculo: '',
+          prazo: '',
+          dprotocolo: '',
           parceria: false,
           parceiro_nome: '',
           parceiro_comissao: 0,
@@ -309,6 +323,7 @@ export function ContractModal({
       setLoading(true)
       const payload = {
         ...formData,
+        prazo: formData.prazo === '' ? null : formData.prazo,
         dcontrato: toPBDate(formData.dcontrato),
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
@@ -467,7 +482,10 @@ export function ContractModal({
                     min="0"
                     value={formData.prazo}
                     onChange={(e) =>
-                      setFormData({ ...formData, prazo: parseInt(e.target.value) || 0 })
+                      setFormData({
+                        ...formData,
+                        prazo: e.target.value === '' ? '' : parseInt(e.target.value) || 0,
+                      })
                     }
                     className="focus-visible:ring-[#C9922A]"
                   />

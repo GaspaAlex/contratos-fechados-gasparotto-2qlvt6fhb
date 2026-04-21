@@ -145,7 +145,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
     }
 
     if (activeFilter === 'Todos') {
-      result = result.filter((c) => !ARCHIVED_STATUSES.includes(c.status))
+      // no-op, include all
     } else if (activeFilter === 'Ativos') {
       result = result.filter(
         (c) =>
