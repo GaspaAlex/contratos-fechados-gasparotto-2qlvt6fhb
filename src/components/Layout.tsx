@@ -54,7 +54,7 @@ export default function Layout() {
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar variant="inset" className="border-r">
           <SidebarHeader className="p-6 pb-2">
-            <Link to="/dashboard" className="flex items-center justify-center py-2">
+            <Link to="/" className="flex items-center justify-center py-2">
               <div className="flex flex-col text-center">
                 <span className="text-[16px] font-bold text-foreground leading-tight">
                   Advocacia
