@@ -1,11 +1,28 @@
+import { useState, useEffect } from 'react'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
+import { useRealtime } from '@/hooks/use-realtime'
 import { OverviewStats } from '@/components/dashboard/OverviewStats'
 import { OverviewCharts } from '@/components/dashboard/OverviewCharts'
 import { OverviewTeamAlerts } from '@/components/dashboard/OverviewTeamAlerts'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Index() {
-  const { protocolos, contratos, loading } = useDashboardData()
+  const { protocolos: initialProtocolos, contratos, loading } = useDashboardData()
+  const [protocolos, setProtocolos] = useState(initialProtocolos)
+
+  useEffect(() => {
+    setProtocolos(initialProtocolos)
+  }, [initialProtocolos])
+
+  useRealtime('protocolo', (e) => {
+    if (e.action === 'create') {
+      setProtocolos((prev) => [...prev, e.record as any])
+    } else if (e.action === 'update') {
+      setProtocolos((prev) => prev.map((p) => (p.id === e.record.id ? (e.record as any) : p)))
+    } else if (e.action === 'delete') {
+      setProtocolos((prev) => prev.filter((p) => p.id !== e.record.id))
+    }
+  })
 
   if (loading) {
     return (
