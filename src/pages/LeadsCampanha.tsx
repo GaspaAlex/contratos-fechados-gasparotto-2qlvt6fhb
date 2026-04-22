@@ -28,7 +28,15 @@ export default function LeadsCampanha() {
   const currentYear = new Date().getFullYear().toString()
   const [year, setYear] = useState(currentYear)
   const [summaryMonth, setSummaryMonth] = useState('Todos')
+  const [summaryDay, setSummaryDay] = useState('Todos')
   const [leads, setLeads] = useState<any[]>([])
+
+  const handleMonthChange = (val: string) => {
+    setSummaryMonth(val)
+    if (val === 'Todos') {
+      setSummaryDay('Todos')
+    }
+  }
 
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<any>(null)
@@ -118,7 +126,7 @@ export default function LeadsCampanha() {
           </Badge>
         </div>
         <div className="flex w-full md:w-auto gap-2">
-          <Select value={summaryMonth} onValueChange={setSummaryMonth}>
+          <Select value={summaryMonth} onValueChange={handleMonthChange}>
             <SelectTrigger className="h-9 bg-background w-full md:w-40">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
@@ -127,6 +135,23 @@ export default function LeadsCampanha() {
               {MONTHS.map((m) => (
                 <SelectItem key={m} value={m}>
                   {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={summaryDay}
+            onValueChange={setSummaryDay}
+            disabled={summaryMonth === 'Todos'}
+          >
+            <SelectTrigger className="h-9 bg-background w-full md:w-36">
+              <SelectValue placeholder="Dia" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todos os dias</SelectItem>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                <SelectItem key={d} value={d.toString()}>
+                  Dia {d}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -150,19 +175,21 @@ export default function LeadsCampanha() {
         </div>
       </div>
 
-      <SummaryCards leads={leads} month={summaryMonth} year={year} />
+      <SummaryCards leads={leads} month={summaryMonth} year={year} day={summaryDay} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-6 2xl:col-span-5">
-          <CACCPLTable leads={leads} month={summaryMonth} />
+          <CACCPLTable leads={leads} month={summaryMonth} day={summaryDay} year={year} />
         </div>
         <div className="xl:col-span-6 2xl:col-span-7">
-          <DisqualificationAnalysis leads={leads} month={summaryMonth} />
+          <DisqualificationAnalysis leads={leads} month={summaryMonth} day={summaryDay} />
         </div>
       </div>
 
       <DailyTable
         leads={leads}
+        month={summaryMonth}
+        day={summaryDay}
         onEdit={handleEdit}
         onAdd={handleAdd}
         onDelete={handleDeleteRequest}

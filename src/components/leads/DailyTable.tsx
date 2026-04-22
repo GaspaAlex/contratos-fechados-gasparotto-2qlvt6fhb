@@ -30,14 +30,16 @@ import {
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
+export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) {
   const { ref, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, style } = useDraggableScroll()
   const [searchTerm, setSearchTerm] = useState('')
-  const [monthFilter, setMonthFilter] = useState('Todos')
 
   let filtered = leads || []
-  if (monthFilter !== 'Todos') {
-    filtered = filtered.filter((l: any) => l.mes.startsWith(monthFilter))
+  if (month !== 'Todos') {
+    filtered = filtered.filter((l: any) => l.mes.startsWith(month))
+  }
+  if (month !== 'Todos' && day !== 'Todos') {
+    filtered = filtered.filter((l: any) => l.dia === parseInt(day))
   }
   if (searchTerm) {
     const s = searchTerm.toLowerCase()
@@ -177,19 +179,6 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
               className="pl-9 bg-background h-9"
             />
           </div>
-          <Select value={monthFilter} onValueChange={setMonthFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background h-9">
-              <SelectValue placeholder="Filtrar por Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os meses</SelectItem>
-              {MONTHS.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
         <Button
           onClick={onAdd}
@@ -285,16 +274,18 @@ export function DailyTable({ leads, onEdit, onAdd, onDelete }: any) {
             <TableBody>
               {sortedMonths.map((m) => (
                 <React.Fragment key={m}>
-                  <TableRow className="bg-muted/60 hover:bg-muted/60">
-                    <TableCell
-                      colSpan={25}
-                      className="py-2 px-4 font-bold text-muted-foreground uppercase text-sm tracking-wider"
-                    >
-                      {m}
-                    </TableCell>
-                  </TableRow>
+                  {month === 'Todos' && (
+                    <TableRow className="bg-muted/60 hover:bg-muted/60">
+                      <TableCell
+                        colSpan={25}
+                        className="py-2 px-4 font-bold text-muted-foreground uppercase text-sm tracking-wider"
+                      >
+                        {m}
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {groups[m].map((row: any) => renderRow(row, false))}
-                  {groups[m].length > 0 && renderRow(null, true, groups[m])}
+                  {groups[m].length > 0 && day === 'Todos' && renderRow(null, true, groups[m])}
                 </React.Fragment>
               ))}
               {sortedMonths.length === 0 && (

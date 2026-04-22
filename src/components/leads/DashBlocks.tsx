@@ -19,9 +19,11 @@ import {
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function SummaryCards({ leads, month, year }: any) {
-  const filteredLeads =
-    month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+export function SummaryCards({ leads, month, year, day }: any) {
+  let filteredLeads = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  if (month !== 'Todos' && day !== 'Todos') {
+    filteredLeads = filteredLeads.filter((l: any) => l.dia === parseInt(day))
+  }
   const anoLeads = aggregateLeads(filteredLeads)
   const agg = calculateLeadRow(anoLeads)
 
@@ -56,7 +58,12 @@ export function SummaryCards({ leads, month, year }: any) {
   const cDesq = getDesqStatus(agg.desqual_pct)
   const cFup = getFupStatus(agg.pct_fech_via_fup)
 
-  const monthLabel = month === 'Todos' ? `Ano ${year}` : `${month} ${year}`
+  const monthLabel =
+    month === 'Todos'
+      ? `Ano ${year}`
+      : day === 'Todos'
+        ? `${month} ${year}`
+        : `Dia ${day} de ${month} ${year}`
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -205,9 +212,11 @@ const getLocalCacStatus = (v: number | null) => {
   return { text: '✗ Acima do ideal', color: 'text-red-700 bg-red-50 border-red-200' }
 }
 
-export function CACCPLTable({ leads, month }: any) {
-  const filteredLeads =
-    month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+export function CACCPLTable({ leads, month, day, year }: any) {
+  let filteredLeads = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  if (month !== 'Todos' && day !== 'Todos') {
+    filteredLeads = filteredLeads.filter((l: any) => l.dia === parseInt(day))
+  }
   const anoLeads = aggregateLeads(filteredLeads)
   const aggAno = calculateLeadRow(anoLeads)
   const displayMonths = month === 'Todos' ? MONTHS : MONTHS.filter((m: string) => m === month)
@@ -234,39 +243,106 @@ export function CACCPLTable({ leads, month }: any) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayMonths.map((m) => {
-              const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
-              if (mLeads.length === 0) return null
-              const agg = calculateLeadRow(aggregateLeads(mLeads))
-              const cacSt = getLocalCacStatus(agg.cac)
-              return (
-                <TableRow key={m}>
-                  <TableCell className="font-medium text-xs uppercase text-muted-foreground">
-                    {m.substring(0, 3)}
-                  </TableCell>
-                  <TableCell className="text-right">{fmtMon(agg.investimento)}</TableCell>
-                  <TableCell className="text-right">{agg.total_leads}</TableCell>
-                  <TableCell className="text-right">{agg.total_fechados}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {fmtMon(agg.cpl)}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">{fmtMon(agg.cac)}</TableCell>
-                  <TableCell className="text-center">
-                    {agg.cac !== null && (
-                      <div
-                        className={cn(
-                          'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
-                          cacSt.color,
+            {month === 'Todos'
+              ? displayMonths.map((m) => {
+                  const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
+                  if (mLeads.length === 0) return null
+                  const agg = calculateLeadRow(aggregateLeads(mLeads))
+                  const cacSt = getLocalCacStatus(agg.cac)
+                  return (
+                    <TableRow key={m}>
+                      <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                        {m.substring(0, 3)}
+                      </TableCell>
+                      <TableCell className="text-right">{fmtMon(agg.investimento)}</TableCell>
+                      <TableCell className="text-right">{agg.total_leads}</TableCell>
+                      <TableCell className="text-right">{agg.total_fechados}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {fmtMon(agg.cpl)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">{fmtMon(agg.cac)}</TableCell>
+                      <TableCell className="text-center">
+                        {agg.cac !== null && (
+                          <div
+                            className={cn(
+                              'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                              cacSt.color,
+                            )}
+                          >
+                            {cacSt.text}
+                          </div>
                         )}
-                      >
-                        {cacSt.text}
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-            {filteredLeads.length > 0 &&
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              : day === 'Todos'
+                ? filteredLeads.length > 0 &&
+                  (() => {
+                    const cacSt = getLocalCacStatus(aggAno.cac)
+                    return (
+                      <TableRow>
+                        <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                          {month.substring(0, 3)}
+                        </TableCell>
+                        <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
+                        <TableCell className="text-right">{aggAno.total_leads}</TableCell>
+                        <TableCell className="text-right">{aggAno.total_fechados}</TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {fmtMon(aggAno.cpl)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {fmtMon(aggAno.cac)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {aggAno.cac !== null && (
+                            <div
+                              className={cn(
+                                'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                                cacSt.color,
+                              )}
+                            >
+                              {cacSt.text}
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })()
+                : filteredLeads.length > 0 &&
+                  (() => {
+                    const cacSt = getLocalCacStatus(aggAno.cac)
+                    return (
+                      <TableRow>
+                        <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                          Dia {day} de {month.substring(0, 3)} {year}
+                        </TableCell>
+                        <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
+                        <TableCell className="text-right">{aggAno.total_leads}</TableCell>
+                        <TableCell className="text-right">{aggAno.total_fechados}</TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {fmtMon(aggAno.cpl)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {fmtMon(aggAno.cac)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {aggAno.cac !== null && (
+                            <div
+                              className={cn(
+                                'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                                cacSt.color,
+                              )}
+                            >
+                              {cacSt.text}
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })()}
+            {month === 'Todos' &&
+              filteredLeads.length > 0 &&
               (() => {
                 const cacSt = getLocalCacStatus(aggAno.cac)
                 return (
@@ -306,9 +382,11 @@ export function CACCPLTable({ leads, month }: any) {
   )
 }
 
-export function DisqualificationAnalysis({ leads, month }: any) {
-  const filteredLeads =
-    month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+export function DisqualificationAnalysis({ leads, month, day }: any) {
+  let filteredLeads = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  if (month !== 'Todos' && day !== 'Todos') {
+    filteredLeads = filteredLeads.filter((l: any) => l.dia === parseInt(day))
+  }
   const anoLeads = aggregateLeads(filteredLeads)
   const aggAno = calculateLeadRow(anoLeads)
   const displayMonths = month === 'Todos' ? MONTHS : MONTHS.filter((m: string) => m === month)
@@ -357,7 +435,9 @@ export function DisqualificationAnalysis({ leads, month }: any) {
           ))}
           <div className="pt-4 border-t mt-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-bold uppercase text-muted-foreground">Total Ano</span>
+              <span className="text-sm font-bold uppercase text-muted-foreground">
+                TOTAL DESQUALIFICADOS
+              </span>
               <span className="text-xl font-black text-red-600">{aggAno.total_desq}</span>
             </div>
           </div>
@@ -375,26 +455,56 @@ export function DisqualificationAnalysis({ leads, month }: any) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayMonths.map((m) => {
-                const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
-                if (mLeads.length === 0) return null
-                const agg = calculateLeadRow(aggregateLeads(mLeads))
-                return (
-                  <TableRow key={m}>
-                    <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
-                      {m.substring(0, 3)}
-                    </TableCell>
-                    <TableCell className="text-right">{agg.sem_qualidade}</TableCell>
-                    <TableCell className="text-right">{agg.aposentado}</TableCell>
-                    <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
-                    <TableCell className="text-right">{agg.outros}</TableCell>
-                    <TableCell className="text-right font-bold text-red-600">
-                      {agg.total_desq}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-              {filteredLeads.length > 0 && (
+              {month === 'Todos'
+                ? displayMonths.map((m) => {
+                    const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
+                    if (mLeads.length === 0) return null
+                    const agg = calculateLeadRow(aggregateLeads(mLeads))
+                    return (
+                      <TableRow key={m}>
+                        <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                          {m.substring(0, 3)}
+                        </TableCell>
+                        <TableCell className="text-right">{agg.sem_qualidade}</TableCell>
+                        <TableCell className="text-right">{agg.aposentado}</TableCell>
+                        <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
+                        <TableCell className="text-right">{agg.outros}</TableCell>
+                        <TableCell className="text-right font-bold text-red-600">
+                          {agg.total_desq}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                : day === 'Todos'
+                  ? filteredLeads.length > 0 && (
+                      <TableRow>
+                        <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                          {month.substring(0, 3)}
+                        </TableCell>
+                        <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
+                        <TableCell className="text-right">{aggAno.aposentado}</TableCell>
+                        <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
+                        <TableCell className="text-right">{aggAno.outros}</TableCell>
+                        <TableCell className="text-right font-bold text-red-600">
+                          {aggAno.total_desq}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  : filteredLeads.length > 0 && (
+                      <TableRow>
+                        <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                          Dia {day}
+                        </TableCell>
+                        <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
+                        <TableCell className="text-right">{aggAno.aposentado}</TableCell>
+                        <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
+                        <TableCell className="text-right">{aggAno.outros}</TableCell>
+                        <TableCell className="text-right font-bold text-red-600">
+                          {aggAno.total_desq}
+                        </TableCell>
+                      </TableRow>
+                    )}
+              {month === 'Todos' && filteredLeads.length > 0 && (
                 <TableRow className="bg-muted/20 font-bold border-t">
                   <TableCell>TOTAL</TableCell>
                   <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
