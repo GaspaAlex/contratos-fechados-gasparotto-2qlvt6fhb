@@ -12,10 +12,7 @@ const getTeamColor = (name: string) => {
   const n = name.toLowerCase()
   if (n.includes('nataly')) return '#5A9FD4' // Blue
   if (n.includes('giulianna')) return '#52B86E' // Green
-  if (n.includes('ia')) return '#C9922A' // Amber
-  if (n.includes('caio')) return '#A07820' // Dark Amber
-  if (n.includes('alex')) return '#9A9070' // Gray
-  return '#C9922A' // Default Amber
+  return '#C9922A' // Default Amber for new/others
 }
 
 export function OverviewTeamAlerts({ protocolos }: Props) {
@@ -33,8 +30,16 @@ export function OverviewTeamAlerts({ protocolos }: Props) {
     const counts: Record<string, number> = {}
     protocolos.forEach((p) => {
       const name = p.expand?.responsavel?.nome || 'Sem responsável'
+      const nLower = name.trim().toLowerCase()
+
+      // Exclude IA, Caio and Alex from the team metrics
+      if (nLower === 'ia' || nLower.includes('caio') || nLower.includes('alex')) {
+        return
+      }
+
       counts[name] = (counts[name] || 0) + 1
     })
+
     return Object.entries(counts)
       .map(([name, count]) => ({ name, count, color: getTeamColor(name) }))
       .sort((a, b) => b.count - a.count)
@@ -86,7 +91,7 @@ export function OverviewTeamAlerts({ protocolos }: Props) {
           <div className="space-y-4">
             {teamData.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum dado de equipe.
+                Nenhum dado de equipe encontrado.
               </p>
             ) : (
               teamData.map((member) => (
