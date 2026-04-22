@@ -429,17 +429,6 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
             </div>
 
             <div className="space-y-2">
-              <Label>Prazo (dias)</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.prazo}
-                onChange={(e) => setFormData({ ...formData, prazo: parseInt(e.target.value) || 0 })}
-                className="focus-visible:ring-[#C9922A]"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label>Nº Autos</Label>
               <Input
                 value={formData.nautos}

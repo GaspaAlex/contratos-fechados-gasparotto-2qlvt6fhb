@@ -3,11 +3,20 @@ import { format, parseISO } from 'date-fns'
 import { Edit, Trash, AlertTriangle, CheckCircle2, ClipboardList, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/formatters'
-import { isOverdue } from '@/lib/date-utils'
+
+const isOverdue = (dateStr: string) => {
+  if (!dateStr) return false
+  const dStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr.split(' ')[0]
+  const [y, m, d] = dStr.split('-').map(Number)
+  const itemDate = new Date(y, m - 1, d)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return itemDate.getTime() < today.getTime()
+}
 
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
   // Highlight strictly if status is "Prov. Inicial" and it's overdue
-  const overdue = item.status === 'Prov. Inicial' && isOverdue(item.dprotocolo, item.prazo)
+  const overdue = item.status === 'Prov. Inicial' && isOverdue(item.dprotocolo)
 
   const statusConfig: any = {
     Protocolado: {
@@ -37,7 +46,7 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
 
   return (
     <TableRow
-      className={`group transition-colors ${overdue ? 'bg-amber-50/40 hover:bg-amber-50/60 dark:bg-amber-950/10 dark:hover:bg-amber-950/20' : ''}`}
+      className={`group transition-colors ${overdue ? 'bg-rose-50/60 hover:bg-rose-50/80 dark:bg-rose-950/20 dark:hover:bg-rose-950/30' : ''}`}
     >
       <TableCell className={`w-10 font-medium ${overdue ? 'border-l-2 border-l-rose-500' : ''}`}>
         {index}
@@ -67,9 +76,6 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
             {item.dprotocolo ? format(parseISO(item.dprotocolo), 'dd/MM/yy') : '—'}
           </span>
         </div>
-      </TableCell>
-      <TableCell className="whitespace-nowrap text-muted-foreground font-medium">
-        {item.prazo || 15} d
       </TableCell>
       <TableCell className="whitespace-nowrap">
         {item.nautos ? (
