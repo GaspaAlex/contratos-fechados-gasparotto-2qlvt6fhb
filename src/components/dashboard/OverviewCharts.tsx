@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import {
   Table,
@@ -17,7 +16,21 @@ interface Props {
   protocolos: DashboardProtocolo[]
 }
 
-const monthNames = [
+const chartMonthNames = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+]
+const tableMonthNames = [
   'JAN',
   'FEV',
   'MAR',
@@ -44,13 +57,16 @@ export function OverviewCharts({ protocolos }: Props) {
     const counts = Array(12).fill(0)
     protocolos.forEach((p) => {
       if (p.status === 'Protocolado' && p.dprotocolo) {
-        const d = new Date(p.dprotocolo)
-        if (selectedYear === 'all' || d.getFullYear() === selectedYear) {
-          counts[d.getMonth()]++
+        const y = parseInt(p.dprotocolo.substring(0, 4), 10)
+        const m = parseInt(p.dprotocolo.substring(5, 7), 10) - 1
+        if (selectedYear === 'all' || y === selectedYear) {
+          if (m >= 0 && m < 12) {
+            counts[m]++
+          }
         }
       }
     })
-    return monthNames.map((name, i) => ({ name, acoes: counts[i] }))
+    return chartMonthNames.map((name, i) => ({ name, acoes: counts[i] }))
   }, [protocolos, selectedYear])
 
   const allTableData = useMemo(() => {
@@ -60,18 +76,19 @@ export function OverviewCharts({ protocolos }: Props) {
     > = {}
     protocolos.forEach((p) => {
       if (p.status === 'Protocolado' && p.decisao !== 'Improcedente' && p.dprotocolo) {
-        const d = new Date(p.dprotocolo)
-        const y = d.getFullYear()
-        const m = d.getMonth()
-        if (!byYear[y]) {
-          byYear[y] = { year: y, months: Array(12).fill(0), acoes: 0, honorarios: 0 }
+        const y = parseInt(p.dprotocolo.substring(0, 4), 10)
+        const m = parseInt(p.dprotocolo.substring(5, 7), 10) - 1
+        if (m >= 0 && m < 12) {
+          if (!byYear[y]) {
+            byYear[y] = { year: y, months: Array(12).fill(0), acoes: 0, honorarios: 0 }
+          }
+          byYear[y].months[m]++
+          byYear[y].acoes++
+          byYear[y].honorarios += (p.valor || 0) * 0.3
         }
-        byYear[y].months[m]++
-        byYear[y].acoes++
-        byYear[y].honorarios += (p.valor || 0) * 0.3
       }
     })
-    return Object.values(byYear).sort((a, b) => b.year - a.year)
+    return Object.values(byYear).sort((a, b) => a.year - b.year)
   }, [protocolos])
 
   const tableData = useMemo(() => {
@@ -80,51 +97,118 @@ export function OverviewCharts({ protocolos }: Props) {
   }, [allTableData, selectedYear])
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Produtividade e Histórico</h2>
-        <select
-          className="h-8 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          value={selectedYear}
-          onChange={(e) =>
-            setSelectedYear(e.target.value === 'all' ? 'all' : Number(e.target.value))
-          }
-        >
-          <option value="all">Todos os anos</option>
-          {years.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="flex flex-col gap-8 w-full">
+      {/* Chart Section */}
+      <section>
+        <div className="flex items-start justify-between mb-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-foreground">Ações Distribuídas por Mês</h2>
+            <p className="text-sm text-muted-foreground">
+              {selectedYear === 'all' ? 'Todos os anos' : selectedYear} · baseado em lançamentos da
+              aba Protocolo
+            </p>
+          </div>
+          <select
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            value={selectedYear}
+            onChange={(e) =>
+              setSelectedYear(e.target.value === 'all' ? 'all' : Number(e.target.value))
+            }
+          >
+            <option value="all">Todos os anos</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <Card className="shadow-sm border rounded-md">
-        <CardHeader className="pb-3 border-b bg-muted/20">
-          <CardTitle className="text-base font-semibold text-foreground/80 uppercase text-[11px] tracking-wider">
-            Histórico Anual
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 overflow-hidden">
+        <div className="border rounded-xl bg-card p-6 pb-2 pt-8 shadow-sm">
+          <ChartContainer config={{ acoes: { color: '#C9922A' } }} className="h-[280px] w-full">
+            <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 40 }}>
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+                tick={(props: any) => {
+                  const { x, y, payload } = props
+                  const monthIndex = chartMonthNames.indexOf(payload.value)
+                  const value = chartData[monthIndex]?.acoes || 0
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <line
+                        x1={-24}
+                        y1={0}
+                        x2={24}
+                        y2={0}
+                        stroke="#E5E7EB"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
+                      <text x={0} y={0} dy={20} textAnchor="middle" fill="#888" fontSize={11}>
+                        {payload.value}
+                      </text>
+                      <text
+                        x={0}
+                        y={0}
+                        dy={40}
+                        textAnchor="middle"
+                        fill={value > 0 ? '#C9922A' : '#888'}
+                        fontSize={11}
+                        fontWeight={value > 0 ? 'bold' : 'normal'}
+                      >
+                        {value > 0 ? value : '—'}
+                      </text>
+                    </g>
+                  )
+                }}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Bar
+                dataKey="acoes"
+                fill="var(--color-acoes)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={64}
+              />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </section>
+
+      {/* Table Section */}
+      <section>
+        <div className="mb-4 space-y-1">
+          <h2 className="text-lg font-semibold text-foreground">Histórico Anual</h2>
+          <p className="text-sm text-muted-foreground">
+            Ações distribuídas e honorários por ano · dados da aba Protocolo
+          </p>
+        </div>
+
+        <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <Table className="text-xs whitespace-nowrap">
-              <TableHeader className="bg-muted/50">
-                <TableRow className="hover:bg-transparent border-b">
-                  <TableHead className="w-16 font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
+            <Table className="text-sm whitespace-nowrap">
+              <TableHeader className="bg-[#FAF8F5]">
+                <TableRow className="hover:bg-[#FAF8F5] border-b">
+                  <TableHead className="w-20 font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase pl-6 py-4">
                     ANO
                   </TableHead>
-                  {monthNames.map((m) => (
+                  {tableMonthNames.map((m) => (
                     <TableHead
                       key={m}
-                      className="px-1 text-center min-w-[32px] font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase"
+                      className="px-2 text-center min-w-[40px] font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase"
                     >
                       {m}
                     </TableHead>
                   ))}
-                  <TableHead className="text-right font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
+                  <TableHead className="text-center px-4 font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
                     TOTAL AÇÕES
                   </TableHead>
-                  <TableHead className="text-right font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
+                  <TableHead className="text-left pr-6 font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
                     TOTAL HONORÁRIOS
                   </TableHead>
                 </TableRow>
@@ -143,14 +227,14 @@ export function OverviewCharts({ protocolos }: Props) {
                       <TableRow
                         key={row.year}
                         className={cn(
-                          'hover:bg-muted/50 transition-colors border-b',
-                          isCurrentYear && 'bg-[#C9922A]/[0.05] hover:bg-[#C9922A]/10',
+                          'hover:bg-muted/30 transition-colors border-b',
+                          isCurrentYear && 'bg-[#C9922A]/[0.05] hover:bg-[#C9922A]/[0.08]',
                         )}
                       >
-                        <TableCell className="py-3">
+                        <TableCell className="py-4 pl-6">
                           <span
                             className={cn(
-                              'px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center justify-center',
+                              'px-3 py-1 rounded-full text-[11px] font-semibold inline-flex items-center justify-center',
                               isCurrentYear
                                 ? 'bg-[#C9922A]/15 text-[#C9922A]'
                                 : 'bg-muted text-muted-foreground',
@@ -162,34 +246,33 @@ export function OverviewCharts({ protocolos }: Props) {
                         {row.months.map((m, i) => (
                           <TableCell
                             key={i}
-                            className="px-1 text-center text-muted-foreground py-3"
+                            className={cn(
+                              'px-2 text-center py-4',
+                              m > 0 ? 'text-foreground font-medium' : 'text-muted-foreground',
+                            )}
                           >
-                            {m > 0 ? m : <span className="opacity-40">—</span>}
+                            {m > 0 ? m : '—'}
                           </TableCell>
                         ))}
                         <TableCell
                           className={cn(
-                            'text-right py-3',
+                            'text-center px-4 py-4',
                             isCurrentYear
                               ? 'font-bold text-foreground'
-                              : 'font-medium text-muted-foreground',
+                              : 'font-medium text-foreground',
                           )}
                         >
-                          {row.acoes > 0 ? row.acoes : <span className="opacity-40">—</span>}
+                          {row.acoes > 0 ? row.acoes : '—'}
                         </TableCell>
                         <TableCell
                           className={cn(
-                            'text-right py-3',
+                            'text-left pr-6 py-4',
                             isCurrentYear
                               ? 'font-bold text-foreground'
-                              : 'font-medium text-muted-foreground',
+                              : 'font-medium text-foreground',
                           )}
                         >
-                          {row.honorarios > 0 ? (
-                            formatCurrency(row.honorarios)
-                          ) : (
-                            <span className="opacity-40">—</span>
-                          )}
+                          {row.honorarios > 0 ? formatCurrency(row.honorarios) : '—'}
                         </TableCell>
                       </TableRow>
                     )
@@ -198,68 +281,8 @@ export function OverviewCharts({ protocolos }: Props) {
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-sm border rounded-md flex flex-col">
-        <CardHeader className="pb-4 border-b bg-muted/20">
-          <CardTitle className="text-base font-semibold text-foreground/80 uppercase text-[11px] tracking-wider">
-            Ações Distribuídas por Mês
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 pt-6 pb-2">
-          <ChartContainer config={{ acoes: { color: '#C9922A' } }} className="h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 20 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  interval={0}
-                  tick={(props: any) => {
-                    const { x, y, payload } = props
-                    const monthIndex = monthNames.indexOf(payload.value)
-                    const value = chartData[monthIndex]?.acoes || 0
-                    return (
-                      <g transform={`translate(${x},${y})`}>
-                        <text x={0} y={0} dy={16} textAnchor="middle" fill="#888" fontSize={11}>
-                          {payload.value}
-                        </text>
-                        <text
-                          x={0}
-                          y={0}
-                          dy={34}
-                          textAnchor="middle"
-                          fill={value > 0 ? '#C9922A' : '#888'}
-                          fontSize={11}
-                          fontWeight={value > 0 ? 'bold' : 'normal'}
-                          opacity={value > 0 ? 1 : 0.5}
-                        >
-                          {value > 0 ? value : '—'}
-                        </text>
-                      </g>
-                    )
-                  }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11 }}
-                  domain={[0, (max: number) => (max === 0 ? 10 : Math.ceil(max * 1.3))]}
-                />
-                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} content={<ChartTooltipContent />} />
-                <Bar
-                  dataKey="acoes"
-                  fill="var(--color-acoes)"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={48}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   )
 }
