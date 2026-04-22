@@ -62,6 +62,12 @@ export function MonthlyGrid({
     (c) => !isArchived(c) && (!c.origem || c.origem === 'Não classificado'),
   ).length
 
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const todayActive = yearContratos.filter(
+    (c) => !isArchived(c) && c.dcontrato.startsWith(todayStr),
+  ).length
+
   return (
     <div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 mb-4">
@@ -123,6 +129,30 @@ export function MonthlyGrid({
         ))}
 
         <Card
+          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-[#C9922A]/[0.08] border-[#C9922A]/25 border-t-[#C9922A] border-t-2 animate-fade-in-up"
+          style={{ animationFillMode: 'both', animationDelay: '550ms' }}
+        >
+          <CardContent className="p-5">
+            <h3 className="mb-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+              HOJE
+            </h3>
+            <div className="flex items-baseline gap-2">
+              <span
+                className={cn(
+                  'text-4xl font-black',
+                  todayActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
+                )}
+              >
+                {todayActive}
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                contratos fechados hoje
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
           className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-[#C9922A]/10 border-[#C9922A]/30 border-t-[#C9922A] border-t-2 animate-fade-in-up"
           style={{ animationFillMode: 'both', animationDelay: '600ms' }}
         >
@@ -132,11 +162,11 @@ export function MonthlyGrid({
               <span className="text-4xl font-black text-[#C9922A]">{totalActive}</span>
               <span className="text-sm font-semibold text-[#C9922A]/80">ativos</span>
             </div>
-            <p className="mt-2 text-[11px] font-medium text-[#C9922A]/60">
+            <p className="mt-2 text-[10px] font-normal text-muted-foreground">
               {totalCampanha} campanha / {totalParticular} particular / {totalNaoClassificado} não
               classificado
             </p>
-            <p className="mt-1 text-xs font-medium text-[#C9922A]/80">
+            <p className="mt-1 text-[12px] font-medium text-[#C9922A]">
               {totalArchived} arquivados excluídos
             </p>
           </CardContent>

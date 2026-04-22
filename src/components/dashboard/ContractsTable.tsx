@@ -332,6 +332,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                   <TableHead className="whitespace-nowrap">RESP.</TableHead>
                   <TableHead className="whitespace-nowrap">FUP</TableHead>
                   <TableHead className="whitespace-nowrap">STATUS</TableHead>
+                  <TableHead className="whitespace-nowrap">ORIGEM</TableHead>
                   <TableHead className="whitespace-nowrap">D. CONTRATO</TableHead>
                   <TableHead className="whitespace-nowrap">D. CÁLCULO</TableHead>
                   <TableHead className="whitespace-nowrap">D. PROTOCOLO</TableHead>
@@ -342,7 +343,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
               <TableBody>
                 {groupedFiltered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                       Nenhum contrato encontrado.
                     </TableCell>
                   </TableRow>
@@ -352,7 +353,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                       <React.Fragment key={group.key}>
                         <TableRow className="bg-secondary/50 hover:bg-secondary/50">
                           <TableCell
-                            colSpan={12}
+                            colSpan={13}
                             className="py-2 px-4 font-bold text-xs text-muted-foreground tracking-wider uppercase"
                           >
                             {group.monthName} {group.year} &mdash; {group.items.length} CONTRATOS
@@ -417,6 +418,21 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                                   >
                                     {contract.status || '-'}
                                   </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {contract.origem === 'Campanha' ? (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#52B86E] bg-[#52B86E]/[0.13] text-xs whitespace-nowrap">
+                                    Campanha
+                                  </span>
+                                ) : contract.origem === 'Particular' ? (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#5A9FD4] bg-[#5A9FD4]/[0.13] text-xs whitespace-nowrap">
+                                    Particular
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-muted-foreground bg-gray-500/[0.08] text-[10px] italic whitespace-nowrap">
+                                    Não classificado
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell
