@@ -114,7 +114,7 @@ export default function LeadsCampanha() {
             variant="outline"
             className="bg-background text-muted-foreground border-muted-foreground/30 font-medium rounded-full px-3"
           >
-            CAC R$ 80–R$ 150
+            CAC R$ 80–R$ 250
           </Badge>
         </div>
         <div className="flex w-full md:w-auto gap-2">
@@ -154,10 +154,10 @@ export default function LeadsCampanha() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-6 2xl:col-span-5">
-          <CACCPLTable leads={leads} />
+          <CACCPLTable leads={leads} month={summaryMonth} />
         </div>
         <div className="xl:col-span-6 2xl:col-span-7">
-          <DisqualificationAnalysis leads={leads} />
+          <DisqualificationAnalysis leads={leads} month={summaryMonth} />
         </div>
       </div>
 

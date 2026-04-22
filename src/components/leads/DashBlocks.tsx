@@ -16,7 +16,6 @@ import {
   colorConvGeral,
   colorConvQualif,
   colorDesq,
-  getCacStatus,
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
@@ -198,9 +197,20 @@ export function SummaryCards({ leads, month, year }: any) {
   )
 }
 
-export function CACCPLTable({ leads }: any) {
-  const anoLeads = aggregateLeads(leads)
+const getLocalCacStatus = (v: number | null) => {
+  if (v === null || isNaN(v))
+    return { text: '-', color: 'text-muted-foreground border-transparent' }
+  if (v <= 250)
+    return { text: '✓ Meta atingida', color: 'text-green-700 bg-green-50 border-green-200' }
+  return { text: '✗ Acima do ideal', color: 'text-red-700 bg-red-50 border-red-200' }
+}
+
+export function CACCPLTable({ leads, month }: any) {
+  const filteredLeads =
+    month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  const anoLeads = aggregateLeads(filteredLeads)
   const aggAno = calculateLeadRow(anoLeads)
+  const displayMonths = month === 'Todos' ? MONTHS : MONTHS.filter((m: string) => m === month)
 
   return (
     <Card className="shadow-sm h-full flex flex-col">
@@ -224,11 +234,11 @@ export function CACCPLTable({ leads }: any) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {MONTHS.map((m) => {
-              const mLeads = leads.filter((l: any) => l.mes.startsWith(m))
+            {displayMonths.map((m) => {
+              const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
               if (mLeads.length === 0) return null
               const agg = calculateLeadRow(aggregateLeads(mLeads))
-              const cacSt = getCacStatus(agg.cac)
+              const cacSt = getLocalCacStatus(agg.cac)
               return (
                 <TableRow key={m}>
                   <TableCell className="font-medium text-xs uppercase text-muted-foreground">
@@ -256,9 +266,9 @@ export function CACCPLTable({ leads }: any) {
                 </TableRow>
               )
             })}
-            {leads.length > 0 &&
+            {filteredLeads.length > 0 &&
               (() => {
-                const cacSt = getCacStatus(aggAno.cac)
+                const cacSt = getLocalCacStatus(aggAno.cac)
                 return (
                   <TableRow className="bg-amber-50 hover:bg-amber-50/80 font-bold border-t-2 border-t-amber-200">
                     <TableCell>TOTAL</TableCell>
@@ -282,7 +292,7 @@ export function CACCPLTable({ leads }: any) {
                   </TableRow>
                 )
               })()}
-            {leads.length === 0 && (
+            {filteredLeads.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                   Nenhum dado encontrado
@@ -296,9 +306,12 @@ export function CACCPLTable({ leads }: any) {
   )
 }
 
-export function DisqualificationAnalysis({ leads }: any) {
-  const anoLeads = aggregateLeads(leads)
+export function DisqualificationAnalysis({ leads, month }: any) {
+  const filteredLeads =
+    month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  const anoLeads = aggregateLeads(filteredLeads)
   const aggAno = calculateLeadRow(anoLeads)
+  const displayMonths = month === 'Todos' ? MONTHS : MONTHS.filter((m: string) => m === month)
 
   const reasons = [
     { label: 'Sem Qualidade', value: aggAno.sem_qualidade },
@@ -362,8 +375,8 @@ export function DisqualificationAnalysis({ leads }: any) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MONTHS.map((m) => {
-                const mLeads = leads.filter((l: any) => l.mes.startsWith(m))
+              {displayMonths.map((m) => {
+                const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                 if (mLeads.length === 0) return null
                 const agg = calculateLeadRow(aggregateLeads(mLeads))
                 return (
@@ -381,7 +394,7 @@ export function DisqualificationAnalysis({ leads }: any) {
                   </TableRow>
                 )
               })}
-              {leads.length > 0 && (
+              {filteredLeads.length > 0 && (
                 <TableRow className="bg-muted/20 font-bold border-t">
                   <TableCell>TOTAL</TableCell>
                   <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
