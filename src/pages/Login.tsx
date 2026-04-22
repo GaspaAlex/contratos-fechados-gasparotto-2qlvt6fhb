@@ -1,21 +1,32 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError(false)
 
-    if (email === 'escritorio@advocaciagasparotto.com.br' && password === 'Capatcha*200!') {
-      localStorage.setItem('gasparotto_auth', 'true')
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
+    if (email.trim() === 'escritorio@advocaciagasparotto.com.br' && password === 'Capatcha*200!') {
+      const sessionData = {
+        isAuthenticated: true,
+        createdAt: Date.now(),
+      }
+      localStorage.setItem('gasparotto_auth', JSON.stringify(sessionData))
       navigate('/')
     } else {
       setError(true)
     }
+    setIsLoading(false)
   }
 
   return (
@@ -60,9 +71,10 @@ export default function Login() {
           <div className="pt-2">
             <button
               type="submit"
-              className="bg-[#C9922A] text-white font-bold w-full rounded-[6px] py-[11px] text-[14px] hover:opacity-[0.88] transition-opacity"
+              disabled={isLoading}
+              className="bg-[#C9922A] text-white font-bold w-full rounded-[6px] py-[11px] text-[14px] hover:opacity-[0.88] transition-opacity flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Entrar
+              {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Entrar'}
             </button>
             {error && (
               <p className="text-[#E84040] text-[12px] mt-[8px] text-center">
