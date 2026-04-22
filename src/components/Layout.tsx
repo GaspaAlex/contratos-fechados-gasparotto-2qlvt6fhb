@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   FileText,
@@ -10,6 +10,7 @@ import {
   Sun,
   Folder,
   Clock,
+  LogOut,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -24,6 +26,17 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from '@/components/ui/sidebar'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 
 const navSections = [
@@ -48,6 +61,12 @@ const navSections = [
 export default function Layout() {
   const location = useLocation()
   const { theme, setTheme } = useTheme()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('gasparotto_auth')
+    navigate('/login')
+  }
 
   return (
     <SidebarProvider>
@@ -103,6 +122,34 @@ export default function Layout() {
               ))}
             </div>
           </SidebarContent>
+          <SidebarFooter className="p-4 border-t">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair do sistema
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sair do sistema</AlertDialogTitle>
+                  <AlertDialogDescription>Deseja sair do sistema?</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleLogout}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Sair
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </SidebarFooter>
         </Sidebar>
 
         <SidebarInset className="flex w-full flex-col overflow-hidden bg-background">

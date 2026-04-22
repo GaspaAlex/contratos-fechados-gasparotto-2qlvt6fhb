@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard'
 import Protocolo from './pages/Protocolo'
 import Pericias from './pages/Pericias'
 import LeadsCampanha from './pages/LeadsCampanha'
+import Login from './pages/Login'
+import { ProtectedRoute } from './components/ProtectedRoute'
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -18,12 +20,15 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/protocolo" element={<Protocolo />} />
-            <Route path="/pericias" element={<Pericias />} />
-            <Route path="/leads" element={<LeadsCampanha />} />
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/protocolo" element={<Protocolo />} />
+              <Route path="/pericias" element={<Pericias />} />
+              <Route path="/leads" element={<LeadsCampanha />} />
+            </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
