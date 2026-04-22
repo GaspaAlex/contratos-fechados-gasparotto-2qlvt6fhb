@@ -11,8 +11,13 @@ import {
   Folder,
   Clock,
   LogOut,
+  Scale,
+  Camera,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useState, useRef, useEffect } from 'react'
+import { toast } from 'sonner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import {
   Sidebar,
@@ -63,6 +68,45 @@ export default function Layout() {
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
 
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('gasparotto_logo')
+    if (savedLogo) {
+      setLogoUrl(savedLogo)
+    }
+  }, [])
+
+  const handleLogoClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Imagem muito grande. Use até 2MB.')
+      return
+    }
+
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Formato inválido. Use PNG, JPG ou WEBP.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result as string
+      setLogoUrl(base64)
+      localStorage.setItem('gasparotto_logo', base64)
+      toast.success('Logo atualizado com sucesso!')
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('gasparotto_auth')
     navigate('/login')
@@ -72,17 +116,65 @@ export default function Layout() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar variant="inset" className="border-r">
-          <SidebarHeader className="p-6 pb-2">
-            <Link to="/" className="flex items-center justify-center py-2">
-              <div className="flex flex-col text-center">
-                <span className="text-[16px] font-bold text-foreground leading-tight">
-                  Advocacia
+          <SidebarHeader className="p-0 border-b border-border">
+            <div className="flex flex-row items-center gap-[10px] px-[16px] py-[12px] w-full">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className="relative w-[52px] h-[52px] rounded-[10px] overflow-hidden bg-[#FFFFFF] cursor-pointer group shrink-0"
+                    style={{ border: '2px solid rgba(201, 146, 42, 0.35)' }}
+                    onClick={handleLogoClick}
+                  >
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Logo Gasparotto"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Scale className="w-6 h-6" style={{ color: '#C9922A' }} />
+                      </div>
+                    )}
+
+                    <div
+                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
+                    >
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept=".png,.jpg,.jpeg,.webp"
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="font-semibold">Clique para alterar logo</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG ou JPG quadrado · recomendado 200×200px
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              <div className="flex flex-col text-left">
+                <span
+                  className="font-bold text-[15px] leading-tight"
+                  style={{ color: 'var(--text, hsl(var(--foreground)))' }}
+                >
+                  Advocacia Gasparotto
                 </span>
-                <span className="text-[20px] font-bold text-[#C9922A] leading-tight">
-                  Gasparotto
+                <span
+                  className="text-[12px] leading-tight"
+                  style={{ color: 'var(--text3, hsl(var(--muted-foreground)))' }}
+                >
+                  Sistema de Gestão
                 </span>
               </div>
-            </Link>
+            </div>
           </SidebarHeader>
           <SidebarContent className="px-4 py-2">
             <div className="flex flex-col">
