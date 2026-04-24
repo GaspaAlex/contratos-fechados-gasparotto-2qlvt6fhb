@@ -1,14 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { formatCurrency } from '@/lib/formatters'
 import {
   Table,
@@ -19,61 +12,79 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-export function ProtocoloDashboard({ data }: { data: any[] }) {
-  const currentYear = new Date().getFullYear().toString()
-  const [year1, setYear1] = useState(currentYear)
-  const [year2, setYear2] = useState(currentYear)
+export function ProtocoloDashboard({
+  data,
+  tipo,
+  month,
+  year,
+}: {
+  data: any[]
+  tipo: string
+  month: string
+  year: string
+}) {
+  const filteredData = useMemo(() => {
+    return data.filter((d) => {
+      if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
+      if (year !== 'Todos') {
+        if (!d.dprotocolo || d.dprotocolo.substring(0, 4) !== year) return false
+      }
+      if (month !== 'Todos') {
+        const dMonth = d.dprotocolo
+          ? (parseInt(d.dprotocolo.substring(5, 7), 10) - 1).toString()
+          : ''
+        if (dMonth !== month) return false
+      }
+      return true
+    })
+  }, [data, tipo, year, month])
 
-  const years = useMemo(() => {
-    const y = new Set(
-      data.map((d) => (d.dprotocolo ? new Date(d.dprotocolo).getFullYear().toString() : '')),
-    )
-    y.delete('')
-    y.add(currentYear)
-    return Array.from(y).sort().reverse()
-  }, [data, currentYear])
-
-  // Block 1 data
-  const block1Data = useMemo(
-    () =>
-      data.filter((d) => d.dprotocolo && new Date(d.dprotocolo).getFullYear().toString() === year1),
-    [data, year1],
-  )
-  const totalAcoes = block1Data.filter((d) =>
-    ['Protocolado', 'Prov. Inicial'].includes(d.status),
+  const totalAcoes = filteredData.filter((d) =>
+    ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status),
   ).length
-  const projHonorarios = block1Data
+
+  const projHonorarios = filteredData
     .filter(
-      (d) => ['Protocolado', 'Prov. Inicial'].includes(d.status) && d.decisao !== 'Improcedente',
+      (d) =>
+        ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status) &&
+        d.decisao !== 'Improcedente',
     )
     .reduce((sum, d) => sum + (d.valor || 0) * 0.3, 0)
-  const cProt = block1Data.filter((d) => d.status === 'Protocolado').length
-  const cProv = block1Data.filter((d) => d.status === 'Prov. Inicial').length
-  const cDocs = block1Data.filter((d) => d.status === 'R. Docs').length
 
-  // Block 2 data
-  const block2Data = useMemo(
-    () =>
-      data.filter((d) => d.dprotocolo && new Date(d.dprotocolo).getFullYear().toString() === year2),
-    [data, year2],
-  )
+  const cProtJud = filteredData.filter((d) => d.status === 'Protocolado Judicial').length
+  const cReqAdm = filteredData.filter((d) => d.status === 'Requerimento Adm.').length
+  const cProv = filteredData.filter((d) => d.status === 'Prov. Inicial').length
+  const cDocs = filteredData.filter((d) => d.status === 'R. Docs').length
+
   const monthlyData = useMemo(() => {
-    const months = Array.from({ length: 12 }, (_, i) => i)
-    return months
-      .map((m) => {
-        const items = block2Data.filter(
-          (d) =>
-            new Date(d.dprotocolo).getMonth() === m &&
-            ['Protocolado', 'Prov. Inicial'].includes(d.status),
-        )
-        const count = items.length
-        const val = items
-          .filter((d) => d.decisao !== 'Improcedente')
-          .reduce((sum, d) => sum + (d.valor || 0) * 0.3, 0)
-        return { month: m, count, val }
+    const groups: Record<string, { count: number; val: number }> = {}
+
+    filteredData.forEach((d) => {
+      if (!d.dprotocolo) return
+      if (!['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status)) return
+
+      const ym = d.dprotocolo.substring(0, 7) // "YYYY-MM"
+      if (!groups[ym]) {
+        groups[ym] = { count: 0, val: 0 }
+      }
+      groups[ym].count += 1
+      if (d.decisao !== 'Improcedente') {
+        groups[ym].val += (d.valor || 0) * 0.3
+      }
+    })
+
+    return Object.entries(groups)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([ym, item]) => {
+        const [yStr, mStr] = ym.split('-')
+        return {
+          month: parseInt(mStr, 10) - 1,
+          year: parseInt(yStr, 10),
+          count: item.count,
+          val: item.val,
+        }
       })
-      .filter((m) => m.count > 0 || m.val > 0)
-  }, [block2Data])
+  }, [filteredData])
 
   const tCount = monthlyData.reduce((s, m) => s + m.count, 0)
   const tVal = monthlyData.reduce((s, m) => s + m.val, 0)
@@ -81,25 +92,11 @@ export function ProtocoloDashboard({ data }: { data: any[] }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 mb-8">
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between pb-2">
-          <div>
-            <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
-            <CardDescription>
-              Casos com status Protocolado ou Prov. Inicial · R. Docs excluído
-            </CardDescription>
-          </div>
-          <Select value={year1} onValueChange={setYear1}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
+          <CardDescription>
+            Casos com status Protocolado Judicial, Req. Adm. ou Prov. Inicial · R. Docs excluído
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-8 mt-4">
@@ -113,7 +110,8 @@ export function ProtocoloDashboard({ data }: { data: any[] }) {
             </div>
           </div>
           <div className="flex flex-wrap gap-4 mt-6 text-sm">
-            <span className="font-medium text-emerald-600">Protocolados: {cProt}</span>
+            <span className="font-medium text-emerald-600">Prot. Judicial: {cProtJud}</span>
+            <span className="font-medium text-teal-600">Req. Adm.: {cReqAdm}</span>
             <span className="font-medium text-blue-600">Prov. Inicial: {cProv}</span>
             <span className="font-medium text-red-600">R. Docs: {cDocs}</span>
           </div>
@@ -121,25 +119,11 @@ export function ProtocoloDashboard({ data }: { data: any[] }) {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between pb-2">
-          <div>
-            <CardTitle className="text-xl font-bold">Projeção de Ações e Honorários</CardTitle>
-            <CardDescription>
-              Protocolado + Prov. Inicial · R. Docs excluído · ano corrente por padrão
-            </CardDescription>
-          </div>
-          <Select value={year2} onValueChange={setYear2}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl font-bold">Projeção de Ações e Honorários</CardTitle>
+          <CardDescription>
+            Protocolado Judicial, Req. Adm. + Prov. Inicial · R. Docs excluído
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -157,10 +141,10 @@ export function ProtocoloDashboard({ data }: { data: any[] }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {monthlyData.map((r) => (
-                <TableRow key={r.month}>
+              {monthlyData.map((r, i) => (
+                <TableRow key={i}>
                   <TableCell className="capitalize">
-                    {format(new Date(2020, r.month, 1), 'MMMM/yy', { locale: ptBR })}
+                    {format(new Date(r.year, r.month, 1), 'MMMM/yy', { locale: ptBR })}
                   </TableCell>
                   <TableCell className="text-right">{r.count}</TableCell>
                   <TableCell className="text-right">{formatCurrency(r.val)}</TableCell>

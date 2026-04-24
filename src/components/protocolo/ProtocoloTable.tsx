@@ -45,16 +45,28 @@ const monthsArray = [
   'Dezembro',
 ]
 
-export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('Todos')
-  const [tipo, setTipo] = useState('Todos')
-  const [month, setMonth] = useState('Todos')
-  const [year, setYear] = useState('Todos')
-
+export function ProtocoloTable({
+  data,
+  tipos,
+  search,
+  setSearch,
+  status,
+  setStatus,
+  tipo,
+  setTipo,
+  month,
+  setMonth,
+  year,
+  setYear,
+  onAdd,
+  onEdit,
+  onDelete,
+}: any) {
   const availableYears = useMemo(() => {
     const years = new Set(data.map((d: any) => (d.dprotocolo ? d.dprotocolo.substring(0, 4) : '')))
     years.delete('')
+    const currentYear = new Date().getFullYear().toString()
+    years.add(currentYear)
     return Array.from(years).sort().reverse()
   }, [data])
 

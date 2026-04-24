@@ -15,6 +15,13 @@ export default function Protocolo() {
   const [delOpen, setDelOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
 
+  // Filters State
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('Todos')
+  const [tipo, setTipo] = useState('Todos')
+  const [month, setMonth] = useState('Todos')
+  const [year, setYear] = useState(new Date().getFullYear().toString())
+
   const loadData = async () => {
     try {
       const [p, t, r] = await Promise.all([getProtocolos(), getTiposAcao(), getResponsaveis()])
@@ -40,10 +47,21 @@ export default function Protocolo() {
         </div>
       </div>
 
-      <ProtocoloDashboard data={data} />
+      <ProtocoloDashboard data={data} tipo={tipo} month={month} year={year} />
+
       <ProtocoloTable
         data={data}
         tipos={tipos}
+        search={search}
+        setSearch={setSearch}
+        status={status}
+        setStatus={setStatus}
+        tipo={tipo}
+        setTipo={setTipo}
+        month={month}
+        setMonth={setMonth}
+        year={year}
+        setYear={setYear}
         onAdd={() => {
           setSelected(null)
           setOpen(true)
