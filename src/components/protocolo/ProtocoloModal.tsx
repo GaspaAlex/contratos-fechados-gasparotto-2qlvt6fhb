@@ -423,9 +423,19 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                 <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Judicial">Judicial</SelectItem>
-                  <SelectItem value="Administrativo">Administrativo</SelectItem>
+                <SelectContent className="bg-white text-gray-900 dark:bg-[#1b1f17] dark:text-[#eceee8]">
+                  <SelectItem
+                    value="Judicial"
+                    className="text-gray-900 dark:text-[#eceee8] hover:bg-gray-100 dark:hover:bg-[#22271d] focus:bg-gray-100 dark:focus:bg-[#22271d]"
+                  >
+                    Judicial
+                  </SelectItem>
+                  <SelectItem
+                    value="Administrativo"
+                    className="text-gray-900 dark:text-[#eceee8] hover:bg-gray-100 dark:hover:bg-[#22271d] focus:bg-gray-100 dark:focus:bg-[#22271d]"
+                  >
+                    Administrativo
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
