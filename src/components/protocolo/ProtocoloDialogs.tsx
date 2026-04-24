@@ -206,7 +206,8 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Protocolado">Protocolado</SelectItem>
+                        <SelectItem value="Protocolado Judicial">Protocolado Judicial</SelectItem>
+                        <SelectItem value="Requerimento Adm.">Requerimento Adm.</SelectItem>
                         <SelectItem value="Prov. Inicial">Prov. Inicial</SelectItem>
                         <SelectItem value="R. Docs">R. Docs</SelectItem>
                       </SelectContent>
