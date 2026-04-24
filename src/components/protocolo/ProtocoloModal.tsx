@@ -25,9 +25,6 @@ import {
   createTipoAcao,
   updateTipoAcao,
   deleteTipoAcao,
-  getStatusContrato,
-  createStatusContrato,
-  deleteStatusContrato,
   getResponsaveis,
   createResponsavel,
   deleteResponsavel,
@@ -48,7 +45,6 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
   const isEdit = !!protocolo
   const [loading, setLoading] = useState(false)
   const [beneficios, setBeneficios] = useState<any[]>([])
-  const [statusList, setStatusList] = useState<any[]>([])
   const [responsaveis, setResponsaveis] = useState<any[]>([])
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
 
@@ -57,8 +53,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     fone: '',
     tipo_acao: '',
     responsavel: '',
-    status: 'Protocolado',
-    pedido: '',
+    status: 'Protocolado Judicial',
     dcalculo: '',
     dprotocolo: '',
     prazo: 15,
@@ -77,8 +72,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           fone: protocolo.fone || '',
           tipo_acao: protocolo.expand?.tipo_acao?.nome || '',
           responsavel: protocolo.expand?.responsavel?.nome || '',
-          status: protocolo.status || 'Protocolado',
-          pedido: protocolo.pedido || '',
+          status: protocolo.status || 'Protocolado Judicial',
           dcalculo: toYMD(protocolo.dcalculo) || '',
           dprotocolo: toYMD(protocolo.dprotocolo) || '',
           prazo: protocolo.prazo || 15,
@@ -92,8 +86,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           fone: '',
           tipo_acao: '',
           responsavel: '',
-          status: 'Protocolado',
-          pedido: '',
+          status: 'Protocolado Judicial',
           dcalculo: today,
           dprotocolo: today,
           prazo: 15,
@@ -108,13 +101,8 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const loadDependencies = async () => {
     try {
-      const [bRes, sRes, rRes] = await Promise.all([
-        getTiposAcao(),
-        getStatusContrato(),
-        getResponsaveis(),
-      ])
+      const [bRes, rRes] = await Promise.all([getTiposAcao(), getResponsaveis()])
       setBeneficios(bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
-      setStatusList(sRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
       setResponsaveis(rRes)
     } catch (e) {
       console.error(e)
@@ -172,73 +160,6 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
       await loadDependencies()
       if (formData.tipo_acao === nome) setFormData((f) => ({ ...f, tipo_acao: '' }))
-    } catch (e) {
-      toast.error('Erro ao deletar')
-    }
-  }
-
-  const handleAddStatus = async (nome: string) => {
-    try {
-      await createStatusContrato({ nome })
-      await loadDependencies()
-      setFormData((f) => ({ ...f, status: nome }))
-    } catch (e) {
-      toast.error('Erro ao adicionar')
-    }
-  }
-
-  const handleEditStatus = async (id: string, oldName: string, newName: string) => {
-    try {
-      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
-        filter: pb.filter('status = {:oldName}', { oldName }),
-      })
-      for (const c of linkedContratos) {
-        await pb.collection('contratos_fechados').update(c.id, { status: newName })
-      }
-      const linkedProtocolos = await pb.collection('protocolo').getFullList({
-        filter: pb.filter('status = {:oldName}', { oldName }),
-      })
-      for (const p of linkedProtocolos) {
-        await pb.collection('protocolo').update(p.id, { status: newName })
-      }
-      await pb.collection('status_contrato').update(id, { nome: newName })
-      await loadDependencies()
-      if (formData.status === oldName) setFormData((f) => ({ ...f, status: newName }))
-    } catch (e) {
-      toast.error('Erro ao editar status')
-    }
-  }
-
-  const handleDelStatus = async (id: string, nome: string) => {
-    try {
-      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
-        filter: pb.filter('status = {:nome}', { nome }),
-      })
-      const linkedProtocolos = await pb.collection('protocolo').getFullList({
-        filter: pb.filter('status = {:nome}', { nome }),
-      })
-      const totalLinked = linkedContratos.length + linkedProtocolos.length
-
-      if (totalLinked > 0) {
-        if (
-          !window.confirm(
-            `Existem ${totalLinked} registros com este status. Ao excluir, serão alterados automaticamente para Protocolado. Confirmar?`,
-          )
-        )
-          return
-        for (const c of linkedContratos) {
-          await pb.collection('contratos_fechados').update(c.id, { status: 'Protocolado' })
-        }
-        for (const p of linkedProtocolos) {
-          await pb.collection('protocolo').update(p.id, { status: 'Protocolado' })
-        }
-      } else {
-        if (!window.confirm(`Deseja excluir o status '${nome}'? Esta ação não pode ser desfeita.`))
-          return
-      }
-      await deleteStatusContrato(id)
-      await loadDependencies()
-      if (formData.status === nome) setFormData((f) => ({ ...f, status: 'Protocolado' }))
     } catch (e) {
       toast.error('Erro ao deletar')
     }
@@ -320,7 +241,6 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!formData.nome) return toast.error('Preencha o Nome.')
-    if (!formData.pedido) return toast.error('Preencha o Pedido.')
 
     try {
       setLoading(true)
@@ -401,41 +321,18 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
             <div className="space-y-2">
               <Label>Status</Label>
-              <DynamicSelect
-                value={formData.status}
-                onChange={(v) => setFormData({ ...formData, status: v })}
-                items={statusList}
-                onAdd={handleAddStatus}
-                onEdit={handleEditStatus}
-                onDelete={handleDelStatus}
-                placeholder="Status..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                Pedido <span className="text-red-500">*</span>
-              </Label>
               <Select
-                value={formData.pedido}
-                onValueChange={(v) => setFormData({ ...formData, pedido: v })}
+                value={formData.status}
+                onValueChange={(v) => setFormData({ ...formData, status: v })}
               >
                 <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent className="bg-white text-gray-900 dark:bg-[#1b1f17] dark:text-[#eceee8]">
-                  <SelectItem
-                    value="Judicial"
-                    className="text-gray-900 dark:text-[#eceee8] hover:bg-gray-100 dark:hover:bg-[#22271d] focus:bg-gray-100 dark:focus:bg-[#22271d]"
-                  >
-                    Judicial
-                  </SelectItem>
-                  <SelectItem
-                    value="Administrativo"
-                    className="text-gray-900 dark:text-[#eceee8] hover:bg-gray-100 dark:hover:bg-[#22271d] focus:bg-gray-100 dark:focus:bg-[#22271d]"
-                  >
-                    Administrativo
-                  </SelectItem>
+                  <SelectItem value="Protocolado Judicial">Protocolado Judicial</SelectItem>
+                  <SelectItem value="Requerimento Adm.">Requerimento Adm.</SelectItem>
+                  <SelectItem value="Prov. Inicial">Prov. Inicial</SelectItem>
+                  <SelectItem value="R. Docs">R. Docs</SelectItem>
                 </SelectContent>
               </Select>
             </div>

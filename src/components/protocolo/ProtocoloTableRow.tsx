@@ -19,17 +19,21 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
   const overdue = item.status === 'Prov. Inicial' && isOverdue(item.dprotocolo)
 
   const statusConfig: any = {
-    Protocolado: {
+    'Protocolado Judicial': {
       color: 'text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400',
       icon: CheckCircle2,
+    },
+    'Requerimento Adm.': {
+      color: 'text-[#B07FD4] bg-[#B07FD4]/[0.13]',
+      icon: ClipboardList,
     },
     'Prov. Inicial': {
       color: 'text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-400',
       icon: FileText,
     },
     'R. Docs': {
-      color: 'text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-400',
-      icon: ClipboardList,
+      color: 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-400',
+      icon: AlertTriangle,
     },
   }
   const st = statusConfig[item.status] || { color: 'text-gray-700 bg-gray-100', icon: FileText }

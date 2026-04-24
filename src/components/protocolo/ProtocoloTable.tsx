@@ -117,7 +117,8 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
     return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
   }, [sortedFiltered])
 
-  const cProt = filtered.filter((d: any) => d.status === 'Protocolado').length
+  const cProtJud = filtered.filter((d: any) => d.status === 'Protocolado Judicial').length
+  const cReqAdm = filtered.filter((d: any) => d.status === 'Requerimento Adm.').length
   const cProv = filtered.filter((d: any) => d.status === 'Prov. Inicial').length
   const cDocs = filtered.filter((d: any) => d.status === 'R. Docs').length
 
@@ -128,8 +129,8 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
     <div className="space-y-4">
       <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
         <p>
-          Protocolados: {cProt} | Prov. Inicial: {cProv} | R. Docs: {cDocs} | Total:{' '}
-          {filtered.length}
+          Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial: {cProv} | R. Docs:{' '}
+          {cDocs} | Total: {filtered.length}
         </p>
       </div>
 
@@ -225,16 +226,18 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
           </Select>
         </div>
         <div className="flex gap-3 w-full xl:w-auto justify-end items-center">
-          <div className="flex p-1 bg-muted rounded-md overflow-hidden">
-            {['Todos', 'Protocolado', 'Prov. Inicial', 'R. Docs'].map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatus(s)}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors ${status === s ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
-              >
-                {s}
-              </button>
-            ))}
+          <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap">
+            {['Todos', 'Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'R. Docs'].map(
+              (s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatus(s)}
+                  className={`px-3 py-1 text-xs rounded-sm transition-colors ${status === s ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
+                >
+                  {s}
+                </button>
+              ),
+            )}
           </div>
           <Button
             onClick={onAdd}
@@ -267,8 +270,9 @@ export function ProtocoloTable({ data, tipos, onAdd, onEdit, onDelete }: any) {
             {grouped.map(([monthStr, items]) => {
               const projCount = items.filter(
                 (i) =>
-                  ['Protocolado', 'Prov. Inicial'].includes(i.status) &&
-                  i.decisao !== 'Improcedente',
+                  ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(
+                    i.status,
+                  ) && i.decisao !== 'Improcedente',
               ).length
               const label =
                 monthStr !== '0000-00'
