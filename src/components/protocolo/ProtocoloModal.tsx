@@ -534,21 +534,4 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           )}
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
-              Cancelar
-            </Button>
-            {!duplicateWarning && (
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-bold"
-              >
-                {loading ? 'Salvando...' : 'Salvar'}
-              </Button>
-            )}
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
+  
