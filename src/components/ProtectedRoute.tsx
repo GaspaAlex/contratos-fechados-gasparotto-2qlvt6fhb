@@ -1,37 +1,19 @@
 import { Navigate, Outlet } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
+import { Loader2 } from 'lucide-react'
 
 export function ProtectedRoute() {
-  const checkAuth = () => {
-    try {
-      const authDataString = localStorage.getItem('gasparotto_auth')
-      if (!authDataString) return false
+  const { user, loading } = useAuth()
 
-      if (authDataString === 'true') {
-        localStorage.removeItem('gasparotto_auth')
-        return false
-      }
-
-      const authData = JSON.parse(authDataString)
-      if (!authData.isAuthenticated || !authData.createdAt) return false
-
-      const now = Date.now()
-      const isExpired = now - authData.createdAt > 24 * 60 * 60 * 1000
-
-      if (isExpired) {
-        localStorage.removeItem('gasparotto_auth')
-        return false
-      }
-
-      return true
-    } catch (e) {
-      localStorage.removeItem('gasparotto_auth')
-      return false
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#0D0F0C]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#C9922A]" />
+      </div>
+    )
   }
 
-  const isAuthenticated = checkAuth()
-
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" replace />
   }
 

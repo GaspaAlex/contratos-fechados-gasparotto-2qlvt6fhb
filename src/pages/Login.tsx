@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -8,20 +9,16 @@ export default function Login() {
   const [error, setError] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { signIn } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(false)
 
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    const { error: authError } = await signIn(email, password)
 
-    if (email.trim() === 'escritorio@advocaciagasparotto.com.br' && password === 'Capatcha*200!') {
-      const sessionData = {
-        isAuthenticated: true,
-        createdAt: Date.now(),
-      }
-      localStorage.setItem('gasparotto_auth', JSON.stringify(sessionData))
+    if (!authError) {
       navigate('/')
     } else {
       setError(true)
