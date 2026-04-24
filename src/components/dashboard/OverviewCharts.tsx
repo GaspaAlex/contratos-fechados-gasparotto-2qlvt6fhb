@@ -70,7 +70,11 @@ export function OverviewCharts({ protocolos }: Props) {
   const chartData = useMemo(() => {
     const counts = Array(12).fill(0)
     protocolos.forEach((p) => {
-      if (p.status === 'Protocolado' && p.decisao !== 'Improcedente' && p.dprotocolo) {
+      const isProtocolado =
+        p.status === 'Protocolado' ||
+        p.status === 'Protocolado Judicial' ||
+        p.status === 'Requerimento Adm.'
+      if (isProtocolado && p.decisao !== 'Improcedente' && p.dprotocolo) {
         const y = parseInt(p.dprotocolo.substring(0, 4), 10)
         const m = parseInt(p.dprotocolo.substring(5, 7), 10) - 1
         if (filteredYear === 'all' || y === filteredYear) {
@@ -99,7 +103,11 @@ export function OverviewCharts({ protocolos }: Props) {
     })
 
     protocolos.forEach((p) => {
-      if (p.status === 'Protocolado' && p.decisao !== 'Improcedente' && p.dprotocolo) {
+      const isProtocolado =
+        p.status === 'Protocolado' ||
+        p.status === 'Protocolado Judicial' ||
+        p.status === 'Requerimento Adm.'
+      if (isProtocolado && p.decisao !== 'Improcedente' && p.dprotocolo) {
         const y = parseInt(p.dprotocolo.substring(0, 4), 10)
         const m = parseInt(p.dprotocolo.substring(5, 7), 10) - 1
         if (m >= 0 && m < 12) {
