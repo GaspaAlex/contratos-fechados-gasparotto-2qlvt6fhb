@@ -297,4 +297,16 @@ export function OverviewCharts({ protocolos }: Props) {
                           isCurrentYear ? 'font-bold text-foreground' : 'text-foreground',
                         )}
                       >
-   
+                        {row.honorarios > 0 ? formatCurrency(row.honorarios) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  )
+}
