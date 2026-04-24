@@ -58,6 +58,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     tipo_acao: '',
     responsavel: '',
     status: 'Protocolado',
+    pedido: '',
     dcalculo: '',
     dprotocolo: '',
     prazo: 15,
@@ -77,6 +78,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           tipo_acao: protocolo.expand?.tipo_acao?.nome || '',
           responsavel: protocolo.expand?.responsavel?.nome || '',
           status: protocolo.status || 'Protocolado',
+          pedido: protocolo.pedido || '',
           dcalculo: toYMD(protocolo.dcalculo) || '',
           dprotocolo: toYMD(protocolo.dprotocolo) || '',
           prazo: protocolo.prazo || 15,
@@ -91,6 +93,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           tipo_acao: '',
           responsavel: '',
           status: 'Protocolado',
+          pedido: '',
           dcalculo: today,
           dprotocolo: today,
           prazo: 15,
@@ -317,6 +320,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!formData.nome) return toast.error('Preencha o Nome.')
+    if (!formData.pedido) return toast.error('Preencha o Pedido.')
 
     try {
       setLoading(true)
@@ -406,6 +410,24 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                 onDelete={handleDelStatus}
                 placeholder="Status..."
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                Pedido <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.pedido}
+                onValueChange={(v) => setFormData({ ...formData, pedido: v })}
+              >
+                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Judicial">Judicial</SelectItem>
+                  <SelectItem value="Administrativo">Administrativo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
