@@ -349,10 +349,4 @@ export function ProtocoloDeleteDialog({ open, onOpenChange, item, onDeleted }: a
             className="bg-[#E84040] hover:bg-[#d63838]"
             onClick={onConfirm}
           >
-            Excluir permanentemente
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
+            
