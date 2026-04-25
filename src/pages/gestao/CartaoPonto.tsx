@@ -14,6 +14,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
   getFuncionario,
   getRegistrosMes,
   getOrCreateSaldoMensal,
@@ -36,6 +43,7 @@ export default function CartaoPonto() {
   const [saldoMensal, setSaldoMensal] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [editingRow, setEditingRow] = useState<any>(null)
+  const [exportModalOpen, setExportModalOpen] = useState(false)
 
   useEffect(() => {
     if (!funcionarioId) return
@@ -124,6 +132,94 @@ export default function CartaoPonto() {
     }
   }
 
+  const handleExportPDF = () => {
+    if (!funcionario) return
+    setExportModalOpen(false)
+    setTimeout(() => {
+      const originalTitle = document.title
+      document.title = `CartaoPonto_${funcionario.nome.replace(/\s+/g, '_')}_${month}_${year}`
+      window.print()
+      document.title = originalTitle
+    }, 150)
+  }
+
+  const handleExportExcel = () => {
+    if (!funcionario || !tableRows.length) return
+    const monthName = format(new Date(year, month - 1), 'MMMM', { locale: ptBR })
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <h2>Advocacia Gasparotto - Cartão de Ponto</h2>
+        <p><strong>Funcionário:</strong> ${funcionario.nome}</p>
+        <p><strong>Mês/Ano:</strong> ${monthName} / ${year}</p>
+        <p><strong>Gerado em:</strong> ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Dia</th>
+              <th>Entrada 1</th>
+              <th>Saída 1</th>
+              <th>Entrada 2</th>
+              <th>Saída 2</th>
+              <th>H. Trab.</th>
+              <th>Saldo Dia</th>
+              <th>Justificativa</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows
+              .map(
+                (row: any) => `
+              <tr>
+                <td>${format(row.date, 'dd/MM/yyyy')}</td>
+                <td>${format(row.date, 'EEEE', { locale: ptBR })}</td>
+                <td>${row.entrada1 || ''}</td>
+                <td>${row.saida1 || ''}</td>
+                <td>${row.entrada2 || ''}</td>
+                <td>${row.saida2 || ''}</td>
+                <td>${formatMinutesToHHMM(row.horas_trabalhadas || 0)}</td>
+                <td>${formatBalance(row.saldo_dia, formatMinutesToHHMM)}</td>
+                <td>${row.justificativa || ''}</td>
+              </tr>
+            `,
+              )
+              .join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6"><strong>Totais do Mês</strong></td>
+              <td><strong>${formatMinutesToHHMM(monthlyTotals.hTrab)}</strong></td>
+              <td><strong>${formatBalance(monthlyTotals.saldoMes, formatMinutesToHHMM)}</strong></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="7"><strong>Saldo Anterior</strong></td>
+              <td><strong>${formatBalance(saldoMensal?.saldo_anterior, formatMinutesToHHMM)}</strong></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="7"><strong>Saldo Total Acumulado</strong></td>
+              <td><strong>${formatBalance(saldoMensal?.saldo_total, formatMinutesToHHMM)}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </body>
+      </html>
+    `
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `CartaoPonto_${funcionario.nome.replace(/\s+/g, '_')}_${month}_${year}.xls`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setExportModalOpen(false)
+  }
+
   const getRowStyle = (tipo: string, isReal: boolean) => {
     if (!isReal && tipo === 'falta') return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80'
     if (tipo === 'feriado') return 'bg-[#FFF8E1] hover:bg-[#FFF8E1]/80 text-yellow-900'
@@ -136,17 +232,49 @@ export default function CartaoPonto() {
     return <div className="p-8 text-center text-gray-500">Carregando cartão de ponto...</div>
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <CartaoHeader
-          funcionario={funcionario}
-          month={month}
-          year={year}
-          setMonth={setMonth}
-          setYear={setYear}
-        />
+    <div className="min-h-screen bg-[#F5F0E8] p-4 md:p-8 print:bg-white print:p-0">
+      <style>{`
+        @media print {
+          body { background-color: white !important; }
+          .print-hide { display: none !important; }
+          .print-show { display: block !important; }
+          @page { margin: 15mm; size: landscape; }
+        }
+      `}</style>
 
-        <Card className="border-none shadow-sm overflow-hidden">
+      {/* Print Header */}
+      <div className="hidden print:block mb-6 text-center">
+        <h1 className="text-2xl font-bold uppercase tracking-wider text-gray-800">
+          Advocacia Gasparotto
+        </h1>
+        <h2 className="text-xl font-semibold text-gray-700 mt-2">Relatório de Cartão de Ponto</h2>
+        <div className="mt-4 flex justify-between text-sm text-gray-600 border-b border-gray-300 pb-4">
+          <div>
+            <strong>Funcionário(a):</strong> {funcionario?.nome}
+          </div>
+          <div>
+            <strong>Período:</strong> {format(new Date(year, month - 1), 'MMMM', { locale: ptBR })}{' '}
+            / {year}
+          </div>
+          <div>
+            <strong>Gerado em:</strong> {format(new Date(), 'dd/MM/yyyy HH:mm')}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto space-y-6 print:space-y-4">
+        <div className="print-hide">
+          <CartaoHeader
+            funcionario={funcionario}
+            month={month}
+            year={year}
+            setMonth={setMonth}
+            setYear={setYear}
+            onExportClick={() => setExportModalOpen(true)}
+          />
+        </div>
+
+        <Card className="border-none shadow-sm overflow-hidden print:shadow-none print:border print:border-gray-200">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="bg-gray-50">
@@ -160,7 +288,7 @@ export default function CartaoPonto() {
                   <TableHead>H. Trab.</TableHead>
                   <TableHead>Saldo do Dia</TableHead>
                   <TableHead>Justificativa</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="print-hide"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -204,10 +332,13 @@ export default function CartaoPonto() {
                     >
                       {formatBalance(row.saldo_dia, formatMinutesToHHMM)}
                     </TableCell>
-                    <TableCell className="max-w-[150px] truncate" title={row.justificativa}>
+                    <TableCell
+                      className="max-w-[150px] truncate print:max-w-none print:whitespace-normal"
+                      title={row.justificativa}
+                    >
                       {row.justificativa || '-'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="print-hide">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -259,12 +390,14 @@ export default function CartaoPonto() {
               </p>
             </CardContent>
           </Card>
-          <Card className="border-[#C8922A] border-2">
+          <Card className="border-[#C8922A] border-2 print:border-gray-200 print:border">
             <CardContent className="p-4 text-center">
-              <p className="text-sm font-semibold text-[#C8922A] mb-1">Saldo Acumulado</p>
+              <p className="text-sm font-semibold text-[#C8922A] print:text-gray-800 mb-1">
+                Saldo Acumulado
+              </p>
               <p
                 className={cn(
-                  'text-3xl font-black',
+                  'text-3xl font-black print:text-black',
                   saldoMensal?.saldo_total >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]',
                 )}
               >
@@ -281,6 +414,40 @@ export default function CartaoPonto() {
         funcionario={funcionario}
         onSave={handleSaveRegistro}
       />
+
+      <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
+        <DialogContent className="sm:max-w-md bg-[#F5F0E8] border-[#C8922A]/20 print-hide">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-800 text-center">
+              Exportar Relatório
+            </DialogTitle>
+            <DialogDescription className="text-center text-gray-600">
+              Escolha o formato desejado para exportar o cartão de ponto de {funcionario?.nome}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-6">
+            <Button
+              onClick={handleExportPDF}
+              className="w-full h-14 text-lg bg-[#C8922A] hover:bg-[#b08020] text-white shadow-sm transition-all"
+            >
+              Exportar PDF
+            </Button>
+            <Button
+              onClick={handleExportExcel}
+              className="w-full h-14 text-lg bg-[#C8922A] hover:bg-[#b08020] text-white shadow-sm transition-all"
+            >
+              Exportar Excel
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setExportModalOpen(false)}
+              className="w-full text-gray-500 hover:text-gray-800 mt-2"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -32,6 +32,7 @@ import {
   getActiveFuncionariosCount,
   getSaldosMensais,
   getFuncionarioPhotoUrl,
+  ensureTodosSaldosMes,
 } from '@/services/ponto'
 import { useRealtime } from '@/hooks/use-realtime'
 
@@ -81,6 +82,9 @@ export default function DashboardPonto() {
   const loadData = async () => {
     setLoading(true)
     try {
+      // Silent background verification for monthly rollovers
+      ensureTodosSaldosMes(month, year).catch(() => {})
+
       const count = await getActiveFuncionariosCount()
       setActiveCount(count || 5) // Fallback for mock
 

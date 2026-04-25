@@ -32,9 +32,17 @@ interface HeaderProps {
   year: number
   setMonth: (m: number) => void
   setYear: (y: number) => void
+  onExportClick?: () => void
 }
 
-export function CartaoHeader({ funcionario, month, year, setMonth, setYear }: HeaderProps) {
+export function CartaoHeader({
+  funcionario,
+  month,
+  year,
+  setMonth,
+  setYear,
+  onExportClick,
+}: HeaderProps) {
   const navigate = useNavigate()
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i)
 
@@ -94,6 +102,7 @@ export function CartaoHeader({ funcionario, month, year, setMonth, setYear }: He
           </Button>
           <Button
             variant="outline"
+            onClick={onExportClick}
             className="flex-1 sm:flex-none text-[#C8922A] border-[#C8922A] hover:bg-[#C8922A]/10"
           >
             <Download className="mr-2 h-4 w-4" /> Exportar

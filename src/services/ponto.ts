@@ -55,6 +55,25 @@ export const createSaldoMensal = async (data: any) => pb.collection('saldos_mens
 export const updateSaldoMensal = async (id: string, data: any) =>
   pb.collection('saldos_mensais').update(id, data)
 
+export const ensureTodosSaldosMes = async (mes: number, ano: number) => {
+  try {
+    const ativos = await pb.collection('funcionarios').getFullList({ filter: 'ativo = true' })
+    const saldos = await pb
+      .collection('saldos_mensais')
+      .getFullList({ filter: `mes = ${mes} && ano = ${ano}` })
+
+    const saldosMap = new Set(saldos.map((s) => s.funcionario_id))
+
+    for (const func of ativos) {
+      if (!saldosMap.has(func.id)) {
+        await getOrCreateSaldoMensal(func.id, mes, ano)
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao verificar saldos', e)
+  }
+}
+
 export const getOrCreateSaldoMensal = async (funcionarioId: string, mes: number, ano: number) => {
   const current = await getSaldoMensal(funcionarioId, mes, ano)
   if (current) return current
