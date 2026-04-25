@@ -15,6 +15,8 @@ import Login from './pages/Login'
 import Ponto from './pages/gestao/Ponto'
 import BaterPonto from './pages/gestao/BaterPonto'
 import Funcionarios from './pages/gestao/Funcionarios'
+import DashboardPonto from './pages/gestao/DashboardPonto'
+import CartaoPonto from './pages/gestao/CartaoPonto'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 const App = () => (
@@ -35,6 +37,8 @@ const App = () => (
                 <Route path="/leads" element={<LeadsCampanha />} />
                 <Route path="/gestao/ponto" element={<Ponto />} />
                 <Route path="/gestao/ponto/registrar" element={<BaterPonto />} />
+                <Route path="/gestao/ponto/dashboard" element={<DashboardPonto />} />
+                <Route path="/gestao/ponto/cartao/:funcionarioId" element={<CartaoPonto />} />
                 <Route path="/gestao/funcionarios" element={<Funcionarios />} />
               </Route>
             </Route>
