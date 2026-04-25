@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-24T11:14:29.308Z",
+  "generatedAt": "2026-04-25T22:46:18.683Z",
   "collections": [
     {
       "name": "users",
@@ -558,6 +558,256 @@
           "required": false,
           "system": false,
           "selectValues": ["Favorável", "Desfavorável", "Aguardando"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "funcionarios",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "pin",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "perfil",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["admin", "lider", "funcionaria"]
+        },
+        {
+          "name": "horario_entrada",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "horario_saida",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "carga_diaria",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "registros",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "funcionario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "funcionarios"
+        },
+        {
+          "name": "data",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "dia_semana",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "entrada1",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saida1",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "entrada2",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saida2",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "horas_trabalhadas",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saldo_dia",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "tipo_dia",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["normal", "feriado", "falta", "atestado", "fim_de_semana"]
+        },
+        {
+          "name": "justificativa",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "horas_atestado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "editado_por",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "saldos_mensais",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "funcionario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "funcionarios"
+        },
+        {
+          "name": "mes",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ano",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saldo_anterior",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saldo_mes",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saldo_total",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fechado",
+          "type": "bool",
+          "required": false,
+          "system": false
         },
         {
           "name": "created",

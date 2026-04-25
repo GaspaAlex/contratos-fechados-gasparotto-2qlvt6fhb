@@ -61,6 +61,13 @@ const navSections = [
     label: 'CAPTAÇÃO DE LEADS',
     items: [{ name: 'Leads Campanha', path: '/leads', icon: LineChart }],
   },
+  {
+    label: 'GESTÃO DE PESSOAS',
+    items: [
+      { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
+      { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
+    ],
+  },
 ]
 
 export default function Layout() {
