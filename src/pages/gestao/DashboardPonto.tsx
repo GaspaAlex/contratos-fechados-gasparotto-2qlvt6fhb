@@ -78,11 +78,10 @@ export default function DashboardPonto() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let stored = localStorage.getItem('ponto_session')
+    const stored = localStorage.getItem('ponto_session')
     if (!stored) {
-      // Mock session for preview purposes
-      stored = JSON.stringify({ id: 'mock', nome: 'Admin Preview', perfil: 'admin' })
-      localStorage.setItem('ponto_session', stored)
+      navigate('/gestao/ponto')
+      return
     }
 
     const parsed = JSON.parse(stored)
@@ -100,45 +99,10 @@ export default function DashboardPonto() {
       ensureTodosSaldosMes(month, year).catch(() => {})
 
       const count = await getActiveFuncionariosCount()
-      setActiveCount(count || 5) // Fallback for mock
+      setActiveCount(count || 0)
 
       const saldosData = await getSaldosMensais(month, year)
-
-      if (saldosData.length === 0) {
-        // Inject mock data if empty state
-        setSaldos([
-          {
-            id: '1',
-            saldo_anterior: 120,
-            saldo_mes: 45,
-            saldo_total: 165,
-            expand: { funcionario_id: { id: 'f1', nome: 'Maria Clara' } },
-          },
-          {
-            id: '2',
-            saldo_anterior: -30,
-            saldo_mes: -50,
-            saldo_total: -80,
-            expand: { funcionario_id: { id: 'f2', nome: 'João Pedro' } },
-          },
-          {
-            id: '3',
-            saldo_anterior: 0,
-            saldo_mes: 0,
-            saldo_total: 0,
-            expand: { funcionario_id: { id: 'f3', nome: 'Ana Souza' } },
-          },
-          {
-            id: '4',
-            saldo_anterior: -20,
-            saldo_mes: -45,
-            saldo_total: -65,
-            expand: { funcionario_id: { id: 'f4', nome: 'Carlos Silva' } },
-          },
-        ])
-      } else {
-        setSaldos(saldosData)
-      }
+      setSaldos(saldosData)
     } catch (e) {
       console.error(e)
     } finally {
