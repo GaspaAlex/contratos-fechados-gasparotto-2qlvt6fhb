@@ -8,8 +8,22 @@ import {
   Users,
   CalendarDays,
   ArrowRight,
+  Trash2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { useToast } from '@/hooks/use-toast'
+import { deleteFuncionario } from '@/services/funcionarios'
 import {
   Table,
   TableBody,
@@ -139,14 +153,38 @@ export default function DashboardPonto() {
   useRealtime('saldos_mensais', loadData)
   useRealtime('funcionarios', loadData)
 
+  const { toast } = useToast()
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
+
   const handleLogout = () => {
     localStorage.removeItem('ponto_session')
     navigate('/gestao/ponto')
   }
 
-  const positiveCount = saldos.filter((s) => s.saldo_total > 0).length
-  const negativeCount = saldos.filter((s) => s.saldo_total < 0).length
-  const criticalAlerts = saldos.filter((s) => s.saldo_total < -60)
+  const handleDelete = async (id: string, nome: string) => {
+    try {
+      setIsDeleting(id)
+      await deleteFuncionario(id)
+      toast({
+        title: 'Funcionário excluído',
+        description: `${nome} e todos os seus registros foram excluídos com sucesso.`,
+      })
+      loadData()
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: 'Ocorreu um erro ao tentar excluir o funcionário.',
+      })
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
+  const filteredSaldos = saldos.filter((s) => s.expand?.funcionario_id?.perfil !== 'admin')
+  const positiveCount = filteredSaldos.filter((s) => s.saldo_total > 0).length
+  const negativeCount = filteredSaldos.filter((s) => s.saldo_total < 0).length
+  const criticalAlerts = filteredSaldos.filter((s) => s.saldo_total < -60)
 
   if (!session) return null
 
@@ -324,7 +362,7 @@ export default function DashboardPonto() {
                 </TableRow>
               </TableHeader>
               <TableBody className="bg-white">
-                {saldos.map((saldo) => {
+                {filteredSaldos.map((saldo) => {
                   const func = saldo.expand?.funcionario_id
                   const isPositive = saldo.saldo_total > 0
                   const isNegative = saldo.saldo_total < 0
@@ -372,21 +410,56 @@ export default function DashboardPonto() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          asChild
-                          className="text-[#C8922A] hover:text-[#b08020] hover:bg-[#F5F0E8]"
-                        >
-                          <Link to={`/gestao/ponto/cartao/${func?.id}`}>
-                            Ver Cartão <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
+                        <div className="flex justify-end items-center gap-2">
+                          {func && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-[#C62828] border-[#C62828] hover:bg-[#C62828] hover:text-white"
+                                  disabled={isDeleting === func.id}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Excluir
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Excluir Funcionário</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Deseja excluir {func.nome} e todos os seus registros
+                                    permanentemente? Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-[#C62828] hover:bg-[#b71c1c] text-white"
+                                    onClick={() => handleDelete(func.id, func.nome)}
+                                  >
+                                    Sim, Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className="text-[#C8922A] hover:text-[#b08020] hover:bg-[#F5F0E8]"
+                          >
+                            <Link to={`/gestao/ponto/cartao/${func?.id}`}>
+                              Ver Cartão <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
                 })}
-                {saldos.length === 0 && !loading && (
+                {filteredSaldos.length === 0 && !loading && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-10 text-gray-500">
                       Nenhum registro encontrado para o período selecionado.

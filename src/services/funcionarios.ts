@@ -34,18 +34,18 @@ export const updateFuncionario = async (id: string, data: FormData | Partial<any
 
 export const deleteFuncionario = async (id: string) => {
   try {
-    const registros = await pb
-      .collection('registros')
-      .getFullList({ filter: `funcionario_id = "${id}"` })
-    for (const r of registros) {
-      await pb.collection('registros').delete(r.id)
-    }
-
     const saldos = await pb
       .collection('saldos_mensais')
       .getFullList({ filter: `funcionario_id = "${id}"` })
     for (const s of saldos) {
       await pb.collection('saldos_mensais').delete(s.id)
+    }
+
+    const registros = await pb
+      .collection('registros')
+      .getFullList({ filter: `funcionario_id = "${id}"` })
+    for (const r of registros) {
+      await pb.collection('registros').delete(r.id)
     }
 
     return await pb.collection('funcionarios').delete(id)
