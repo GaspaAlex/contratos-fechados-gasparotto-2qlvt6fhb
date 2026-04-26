@@ -140,8 +140,8 @@ export default function Funcionarios() {
       toast.success('Funcionário excluído com sucesso!')
       setIsDeleteAlertOpen(false)
       setSelectedFuncionario(null)
-    } catch (error) {
-      toast.error('Erro ao excluir funcionário')
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir funcionário')
     }
   }
 

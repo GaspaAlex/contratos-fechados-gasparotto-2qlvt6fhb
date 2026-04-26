@@ -2,7 +2,9 @@ import pb from '@/lib/pocketbase/client'
 
 export const getActiveFuncionariosCount = async () => {
   try {
-    const res = await pb.collection('funcionarios').getList(1, 1, { filter: 'ativo = true' })
+    const res = await pb
+      .collection('funcionarios')
+      .getList(1, 1, { filter: "ativo = true && perfil != 'admin'" })
     return res.totalItems
   } catch (e) {
     console.error(e)
@@ -57,7 +59,9 @@ export const updateSaldoMensal = async (id: string, data: any) =>
 
 export const ensureTodosSaldosMes = async (mes: number, ano: number) => {
   try {
-    const ativos = await pb.collection('funcionarios').getFullList({ filter: 'ativo = true' })
+    const ativos = await pb
+      .collection('funcionarios')
+      .getFullList({ filter: "ativo = true && perfil != 'admin'" })
     const saldos = await pb
       .collection('saldos_mensais')
       .getFullList({ filter: `mes = ${mes} && ano = ${ano}` })
