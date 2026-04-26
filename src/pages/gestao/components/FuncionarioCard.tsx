@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { getFuncionarioPhotoUrl } from '@/services/ponto'
 import { toast } from 'sonner'
 
-export function FuncionarioCard({ func, onEdit, onToggleStatus }: any) {
+export function FuncionarioCard({ func, onEdit, onToggleStatus, onDelete }: any) {
   const formatCarga = (mins: number) => {
     if (!mins) return '0h00'
     const h = Math.floor(mins / 60)
@@ -80,24 +80,36 @@ export function FuncionarioCard({ func, onEdit, onToggleStatus }: any) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2 border-t bg-gray-50/50 p-4">
-        <Button variant="outline" className="flex-1 bg-white" onClick={() => onEdit(func)}>
-          <Edit2 className="mr-2 h-4 w-4" />
-          Editar
-        </Button>
+      <CardFooter className="flex flex-col gap-2 border-t bg-gray-50/50 p-4">
+        <div className="flex w-full gap-2">
+          <Button variant="outline" className="flex-1 bg-white" onClick={() => onEdit(func)}>
+            <Edit2 className="mr-2 h-4 w-4" />
+            Editar
+          </Button>
+          <Button
+            variant={func.ativo ? 'destructive' : 'default'}
+            className={!func.ativo ? 'flex-1 bg-green-600 hover:bg-green-700 text-white' : 'flex-1'}
+            onClick={() => {
+              if (func.perfil === 'admin' && func.ativo) {
+                toast.error('Não é possível desativar um perfil de administrador.')
+                return
+              }
+              onToggleStatus(func)
+            }}
+          >
+            {func.ativo ? (
+              <PowerOff className="mr-2 h-4 w-4" />
+            ) : (
+              <Power className="mr-2 h-4 w-4" />
+            )}
+            {func.ativo ? 'Desativar' : 'Ativar'}
+          </Button>
+        </div>
         <Button
-          variant={func.ativo ? 'destructive' : 'default'}
-          className={!func.ativo ? 'flex-1 bg-green-600 hover:bg-green-700 text-white' : 'flex-1'}
-          onClick={() => {
-            if (func.perfil === 'admin' && func.ativo) {
-              toast.error('Não é possível desativar um perfil de administrador.')
-              return
-            }
-            onToggleStatus(func)
-          }}
+          className="w-full bg-[#C62828] text-white hover:bg-[#b71c1c]"
+          onClick={() => onDelete(func)}
         >
-          {func.ativo ? <PowerOff className="mr-2 h-4 w-4" /> : <Power className="mr-2 h-4 w-4" />}
-          {func.ativo ? 'Desativar' : 'Ativar'}
+          Excluir
         </Button>
       </CardFooter>
     </Card>

@@ -8,6 +8,7 @@ import {
   createFuncionario,
   updateFuncionario,
   checkPinUnique,
+  deleteFuncionario,
 } from '@/services/funcionarios'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -33,7 +34,9 @@ export default function Funcionarios() {
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
   const [selectedFuncionario, setSelectedFuncionario] = useState<any>(null)
+  const [session, setSession] = useState<any>(null)
 
   const loadData = async () => {
     try {
@@ -47,6 +50,8 @@ export default function Funcionarios() {
   }
 
   useEffect(() => {
+    const data = sessionStorage.getItem('ponto_session')
+    if (data) setSession(JSON.parse(data))
     loadData()
   }, [])
   useRealtime('funcionarios', () => {
@@ -81,12 +86,18 @@ export default function Funcionarios() {
       formData.append('nome', data.nome)
       formData.append('perfil', data.perfil)
       formData.append('pin', data.pin)
-      formData.append('horario_entrada', data.horario_entrada)
-      formData.append('horario_saida', data.horario_saida)
-      formData.append(
-        'carga_diaria',
-        calcularCargaDiaria(data.horario_entrada, data.horario_saida).toString(),
-      )
+      if (data.perfil === 'admin') {
+        formData.append('horario_entrada', '')
+        formData.append('horario_saida', '')
+        formData.append('carga_diaria', '0')
+      } else {
+        formData.append('horario_entrada', data.horario_entrada)
+        formData.append('horario_saida', data.horario_saida)
+        formData.append(
+          'carga_diaria',
+          calcularCargaDiaria(data.horario_entrada, data.horario_saida).toString(),
+        )
+      }
 
       if (!selectedFuncionario) formData.append('ativo', 'true')
       if (fotoFile) formData.append('foto', fotoFile)
@@ -114,6 +125,23 @@ export default function Funcionarios() {
       setIsAlertOpen(false)
     } catch {
       toast.error('Erro ao alterar status')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedFuncionario) return
+    if (selectedFuncionario.id === session?.id) {
+      toast.error('Você não pode excluir sua própria conta.')
+      setIsDeleteAlertOpen(false)
+      return
+    }
+    try {
+      await deleteFuncionario(selectedFuncionario.id)
+      toast.success('Funcionário excluído com sucesso!')
+      setIsDeleteAlertOpen(false)
+      setSelectedFuncionario(null)
+    } catch (error) {
+      toast.error('Erro ao excluir funcionário')
     }
   }
 
@@ -155,6 +183,10 @@ export default function Funcionarios() {
                   setSelectedFuncionario(func)
                   setIsAlertOpen(true)
                 }}
+                onDelete={(func: any) => {
+                  setSelectedFuncionario(func)
+                  setIsDeleteAlertOpen(true)
+                }}
               />
             ))}
             {funcionarios.length === 0 && (
@@ -195,6 +227,29 @@ export default function Funcionarios() {
                 }
               >
                 Sim, {selectedFuncionario?.ativo ? 'Desativar' : 'Ativar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Atenção!</AlertDialogTitle>
+              <AlertDialogDescription>
+                Ao excluir{' '}
+                <span className="font-semibold text-gray-900">{selectedFuncionario?.nome}</span>,
+                todos os seus registros de ponto e saldos serão permanentemente removidos. Esta ação
+                não pode ser desfeita. Deseja continuar?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-[#C62828] hover:bg-[#b71c1c] text-white"
+              >
+                Excluir Definitivamente
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

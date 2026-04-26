@@ -25,13 +25,31 @@ const formSchema = z
       .length(4, 'PIN deve ter exatos 4 dígitos')
       .regex(/^\d+$/, 'Apenas números permitidos'),
     confirmPin: z.string().min(1, 'Confirmação de PIN é obrigatória'),
-    horario_entrada: z.string().min(1, 'Obrigatório'),
-    horario_saida: z.string().min(1, 'Obrigatório'),
+    horario_entrada: z.string().optional(),
+    horario_saida: z.string().optional(),
   })
   .refine((data) => data.pin === data.confirmPin, {
     message: 'Os PINs não coincidem',
     path: ['confirmPin'],
   })
+  .refine(
+    (data) => {
+      if (data.perfil !== 'admin') {
+        return data.horario_entrada && data.horario_entrada.trim().length > 0
+      }
+      return true
+    },
+    { message: 'Obrigatório', path: ['horario_entrada'] },
+  )
+  .refine(
+    (data) => {
+      if (data.perfil !== 'admin') {
+        return data.horario_saida && data.horario_saida.trim().length > 0
+      }
+      return true
+    },
+    { message: 'Obrigatório', path: ['horario_saida'] },
+  )
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -167,19 +185,33 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="horario_entrada">Entrada</Label>
-                <Input id="horario_entrada" type="time" {...form.register('horario_entrada')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="horario_saida">Saída</Label>
-                <Input id="horario_saida" type="time" {...form.register('horario_saida')} />
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              Carga diária: calculada automaticamente abatendo 1h de intervalo.
-            </p>
+            {form.watch('perfil') !== 'admin' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="horario_entrada">Entrada</Label>
+                    <Input id="horario_entrada" type="time" {...form.register('horario_entrada')} />
+                    {form.formState.errors.horario_entrada && (
+                      <p className="text-xs text-red-500">
+                        {form.formState.errors.horario_entrada.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="horario_saida">Saída</Label>
+                    <Input id="horario_saida" type="time" {...form.register('horario_saida')} />
+                    {form.formState.errors.horario_saida && (
+                      <p className="text-xs text-red-500">
+                        {form.formState.errors.horario_saida.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Carga diária: calculada automaticamente abatendo 1h de intervalo.
+                </p>
+              </>
+            )}
           </div>
 
           <DialogFooter>

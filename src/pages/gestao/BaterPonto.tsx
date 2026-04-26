@@ -12,10 +12,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { LogOut, Clock, CalendarDays, Loader2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useRealtime } from '@/hooks/use-realtime'
 
 const timeToMins = (time: string) => {
   if (!time) return 0
@@ -101,6 +110,12 @@ export default function BaterPonto() {
       setLoading(false)
     }
   }
+
+  useRealtime('registros', (e) => {
+    if (session && e.record.funcionario_id === session.id) {
+      loadData(session)
+    }
+  })
 
   const handleLogout = () => {
     sessionStorage.removeItem('ponto_session')
@@ -362,6 +377,56 @@ export default function BaterPonto() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Daily History Table */}
+        {todayRecord && (
+          <Card className="rounded-[24px] border-0 shadow-sm overflow-hidden mt-6 md:mt-8">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg flex items-center text-gray-700">
+                <Clock className="w-5 h-5 mr-3 text-[#C8922A]" />
+                Registro Diário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Entrada 1</TableHead>
+                      <TableHead>Saída 1</TableHead>
+                      <TableHead>Entrada 2</TableHead>
+                      <TableHead>Saída 2</TableHead>
+                      <TableHead>H. Trabalhadas</TableHead>
+                      <TableHead>Saldo do Dia</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        {todayRecord.entrada1 || '--:--'}
+                      </TableCell>
+                      <TableCell className="font-medium">{todayRecord.saida1 || '--:--'}</TableCell>
+                      <TableCell className="font-medium">
+                        {todayRecord.entrada2 || '--:--'}
+                      </TableCell>
+                      <TableCell className="font-medium">{todayRecord.saida2 || '--:--'}</TableCell>
+                      <TableCell className="font-bold">
+                        {formatHoursMins(todayRecord.horas_trabalhadas || 0)
+                          .replace('+', '')
+                          .replace('-', '')}
+                      </TableCell>
+                      <TableCell
+                        className={`font-bold ${todayRecord.saldo_dia >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}
+                      >
+                        {formatHoursMins(todayRecord.saldo_dia || 0)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <AlertDialog
