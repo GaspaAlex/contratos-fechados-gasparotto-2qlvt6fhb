@@ -23,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
-import { deleteFuncionario } from '@/services/funcionarios'
+import { deleteFuncionarioCascade } from '@/services/funcionarios'
 import {
   Table,
   TableBody,
@@ -128,7 +128,7 @@ export default function DashboardPonto() {
   const handleDelete = async (id: string, nome: string) => {
     try {
       setIsDeleting(id)
-      await deleteFuncionario(id)
+      await deleteFuncionarioCascade(id)
       toast({
         title: 'Funcionário excluído',
         description: `${nome} e todos os seus registros foram excluídos com sucesso.`,

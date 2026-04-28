@@ -58,6 +58,11 @@ export const updateSaldoMensal = async (id: string, data: any) =>
   pb.collection('saldos_mensais').update(id, data)
 
 export const ensureTodosSaldosMes = async (mes: number, ano: number) => {
+  const now = new Date()
+  if (mes !== now.getMonth() + 1 || ano !== now.getFullYear()) {
+    return
+  }
+
   try {
     const ativos = await pb
       .collection('funcionarios')
@@ -82,14 +87,20 @@ export const getOrCreateSaldoMensal = async (funcionarioId: string, mes: number,
   const current = await getSaldoMensal(funcionarioId, mes, ano)
   if (current) return current
 
-  let prevMes = mes - 1
-  let prevAno = ano
-  if (prevMes === 0) {
-    prevMes = 12
-    prevAno--
+  let saldo_anterior = 0
+  try {
+    const mostRecent = await pb
+      .collection('saldos_mensais')
+      .getFirstListItem(
+        `funcionario_id = '${funcionarioId}' && (ano < ${ano} || (ano = ${ano} && mes < ${mes}))`,
+        { sort: '-ano,-mes' },
+      )
+    if (mostRecent) {
+      saldo_anterior = mostRecent.saldo_total
+    }
+  } catch {
+    // No previous record found
   }
-  const prev = await getSaldoMensal(funcionarioId, prevMes, prevAno)
-  const saldo_anterior = prev ? prev.saldo_total : 0
 
   return await createSaldoMensal({
     funcionario_id: funcionarioId,

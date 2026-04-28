@@ -33,6 +33,10 @@ export const updateFuncionario = async (id: string, data: FormData | Partial<any
 }
 
 export const deleteFuncionario = async (id: string) => {
+  return await pb.collection('funcionarios').delete(id)
+}
+
+export const deleteFuncionarioCascade = async (id: string) => {
   try {
     const saldos = await pb
       .collection('saldos_mensais')
