@@ -89,6 +89,18 @@ export function PericiasTable({
           {laudo}
         </span>
       )
+    if (laudo === 'Parcialmente Favorável')
+      return (
+        <span className="px-2 py-1 rounded bg-amber-500/15 text-[#C9922A] text-[11px] font-semibold uppercase dark:bg-amber-500/20 dark:text-amber-500">
+          {laudo}
+        </span>
+      )
+    if (laudo === 'Parcialmente Desfavorável')
+      return (
+        <span className="px-2 py-1 rounded bg-orange-500/15 text-[#E07820] text-[11px] font-semibold uppercase dark:bg-orange-500/20 dark:text-orange-500">
+          {laudo}
+        </span>
+      )
     if (laudo === 'Desfavorável')
       return (
         <span className="px-2 py-1 rounded bg-rose-100 text-rose-800 text-[11px] font-semibold uppercase dark:bg-rose-500/20 dark:text-rose-400">

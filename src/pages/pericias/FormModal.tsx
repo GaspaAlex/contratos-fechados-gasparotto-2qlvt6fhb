@@ -18,7 +18,13 @@ const schema = z.object({
   perito: z.string().optional(),
   status: z.enum(['Agendado', 'Pendente', 'Cancelado']),
   compareceu: z.enum(['Sim', 'Não', 'Não realizada']),
-  laudo: z.enum(['Favorável', 'Desfavorável', 'Aguardando']),
+  laudo: z.enum([
+    'Favorável',
+    'Parcialmente Favorável',
+    'Parcialmente Desfavorável',
+    'Desfavorável',
+    'Aguardando',
+  ]),
 })
 
 export function FormModal({
@@ -151,6 +157,8 @@ export function FormModal({
               >
                 <option value="Aguardando">— Aguardando —</option>
                 <option value="Favorável">Favorável</option>
+                <option value="Parcialmente Favorável">Parcialmente Favorável</option>
+                <option value="Parcialmente Desfavorável">Parcialmente Desfavorável</option>
                 <option value="Desfavorável">Desfavorável</option>
               </select>
             </div>

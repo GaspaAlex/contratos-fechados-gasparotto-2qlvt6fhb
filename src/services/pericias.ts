@@ -10,7 +10,12 @@ export interface Pericia {
   perito: string
   status: 'Agendado' | 'Pendente' | 'Cancelado'
   compareceu: 'Sim' | 'Não' | 'Não realizada'
-  laudo: 'Favorável' | 'Desfavorável' | 'Aguardando'
+  laudo:
+    | 'Favorável'
+    | 'Parcialmente Favorável'
+    | 'Parcialmente Desfavorável'
+    | 'Desfavorável'
+    | 'Aguardando'
   created: string
   updated: string
 }
