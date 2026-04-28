@@ -33,13 +33,9 @@ export const calculateDailyBalance = (
   } else if (tipoDia === 'falta') {
     saldo_dia = -cargaMins
   } else if (tipoDia === 'feriado') {
-    saldo_dia = horas_trabalhadas > 0 ? horas_trabalhadas : 0
+    saldo_dia = 0
   } else if (tipoDia === 'atestado') {
-    if (horasAtestadoMins === 0 && horas_trabalhadas === 0) {
-      saldo_dia = 0
-    } else {
-      saldo_dia = horas_trabalhadas + horasAtestadoMins - cargaMins
-    }
+    saldo_dia = 0
   }
 
   return { horas_trabalhadas, saldo_dia }
