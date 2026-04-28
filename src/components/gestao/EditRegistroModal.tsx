@@ -70,6 +70,7 @@ export function EditRegistroModal({
         cargaMins,
         tipo,
         hAtestado * 60,
+        rowData.date,
       )
 
       const dataToSave = {

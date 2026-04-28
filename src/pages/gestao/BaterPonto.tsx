@@ -38,7 +38,7 @@ const formatHoursMins = (mins: number) => {
   const isNeg = mins < 0
   const absMins = Math.abs(mins)
   const h = Math.floor(absMins / 60)
-  const m = absMins % 60
+  const m = Math.round(absMins % 60)
   return `${isNeg ? '-' : '+'}${h}h ${m.toString().padStart(2, '0')}min`
 }
 
@@ -164,6 +164,7 @@ export default function BaterPonto() {
         cargaMins,
         updateData.tipo_dia || todayRecord?.tipo_dia || 'normal',
         (todayRecord?.horas_atestado || 0) * 60,
+        updateData.data || todayRecord?.data || now,
       )
 
       updateData.horas_trabalhadas = horas_trabalhadas

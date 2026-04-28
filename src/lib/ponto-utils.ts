@@ -24,18 +24,42 @@ export const calculateDailyBalance = (
   cargaMins: number = 480,
   tipoDia: string = 'normal',
   horasAtestadoMins: number = 0,
+  recordDate?: Date | string,
 ): { horas_trabalhadas: number; saldo_dia: number } => {
   const horas_trabalhadas = calculateWorkedMinutes(e1, s1, e2, s2)
   let saldo_dia = 0
 
+  const isTodayOrFuture = () => {
+    if (!recordDate) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const d = new Date(recordDate)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime() >= today.getTime()
+  }
+
   if (tipoDia === 'normal') {
-    saldo_dia = horas_trabalhadas - cargaMins
+    if (!e1 && !s1 && !e2 && !s2) {
+      if (isTodayOrFuture()) {
+        saldo_dia = 0
+      } else {
+        saldo_dia = -cargaMins
+      }
+    } else {
+      saldo_dia = horas_trabalhadas - cargaMins
+    }
   } else if (tipoDia === 'falta') {
     saldo_dia = -cargaMins
   } else if (tipoDia === 'feriado') {
     saldo_dia = 0
   } else if (tipoDia === 'atestado') {
-    saldo_dia = 0
+    if (horasAtestadoMins > 0) {
+      saldo_dia = horas_trabalhadas + horasAtestadoMins - cargaMins
+    } else {
+      saldo_dia = 0
+    }
+  } else if (tipoDia === 'fim_de_semana') {
+    saldo_dia = horas_trabalhadas
   }
 
   return { horas_trabalhadas, saldo_dia }
@@ -48,5 +72,6 @@ export const formatBalance = (
   if (typeof mins !== 'number' || isNaN(mins)) return '00:00'
   const formatted = formatMinutesFn(mins)
   if (mins > 0) return `+${formatted}`
-  return formatted // formatMinutesToHHMM already includes '-' for negative numbers
+  if (mins > 0 && !formatted.startsWith('+')) return `+${formatted}`
+  return formatted
 }
