@@ -25,6 +25,7 @@ import pb from '@/lib/pocketbase/client'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useRealtime } from '@/hooks/use-realtime'
+import { calculateDailyBalance } from '@/lib/ponto-utils'
 
 const timeToMins = (time: string) => {
   if (!time) return 0
@@ -158,14 +159,19 @@ export default function BaterPonto() {
         horas_trabalhadas += timeToMins(s2) - timeToMins(e2)
       }
 
-      const carga = (session.carga_diaria || 8) * 60
-      let saldo_dia = 0
-      if (s1) {
-        saldo_dia = horas_trabalhadas - carga
-      }
+      const cargaMins = session.carga_diaria || 480
+      const { horas_trabalhadas, saldo_dia } = calculateDailyBalance(
+        e1,
+        s1,
+        e2,
+        s2,
+        cargaMins,
+        updateData.tipo_dia || todayRecord?.tipo_dia || 'normal',
+        (todayRecord?.horas_atestado || 0) * 60,
+      )
 
       updateData.horas_trabalhadas = horas_trabalhadas
-      updateData.saldo_dia = saldo_dia
+      updateData.saldo_dia = s1 ? saldo_dia : 0
 
       if (recordId) {
         await pb.collection('registros').update(recordId, updateData)
@@ -239,7 +245,7 @@ export default function BaterPonto() {
     )
   }
 
-  const cargaStr = `${session.carga_diaria || 8}h 00min`
+  const cargaStr = formatHoursMins(session.carga_diaria || 480).replace('+', '')
   const workedMin = todayRecord?.horas_trabalhadas || 0
   const dailyBalance = todayRecord?.saldo_dia || 0
 

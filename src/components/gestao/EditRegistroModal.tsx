@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { calculateWorkedMinutes } from '@/lib/ponto-utils'
+import { calculateDailyBalance } from '@/lib/ponto-utils'
 import { useAuth } from '@/hooks/use-auth'
 
 interface EditModalProps {
@@ -58,22 +58,19 @@ export function EditRegistroModal({
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      const cargaMins = (funcionario.carga_diaria || 8) * 60
-      const hTrab = calculateWorkedMinutes(
+      const cargaMins = funcionario.carga_diaria || 480
+      const tipo = formData.tipo_dia
+      const hAtestado = tipo === 'atestado' ? Number(formData.horas_atestado) || 0 : 0
+
+      const { horas_trabalhadas: hTrab, saldo_dia: saldo } = calculateDailyBalance(
         formData.entrada1,
         formData.saida1,
         formData.entrada2,
         formData.saida2,
+        cargaMins,
+        tipo,
+        hAtestado * 60,
       )
-      let saldo = 0
-      const tipo = formData.tipo_dia
-      const hAtestado = tipo === 'atestado' ? Number(formData.horas_atestado) || 0 : 0
-
-      if (tipo === 'normal') saldo = hTrab - cargaMins
-      else if (tipo === 'falta') saldo = -cargaMins
-      else if (tipo === 'feriado')
-        saldo = hTrab // Any work is extra
-      else if (tipo === 'atestado') saldo = hTrab + hAtestado * 60 - cargaMins
 
       const dataToSave = {
         funcionario_id: funcionario.id,

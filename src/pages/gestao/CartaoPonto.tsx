@@ -72,30 +72,38 @@ export default function CartaoPonto() {
     const start = new Date(year, month - 1, 1)
     const end = endOfMonth(start)
     const days = eachDayOfInterval({ start, end }).filter((d) => !isWeekend(d))
-    const cargaMins = (funcionario.carga_diaria || 8) * 60
+    const cargaMins = funcionario.carga_diaria || 480
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     return days.map((d) => {
       const dateStr = format(d, 'yyyy-MM-dd')
       const rec = registros.find((r) => r.data.startsWith(dateStr))
-      const isPastOrToday = d <= new Date()
+      const compareDate = new Date(d)
+      compareDate.setHours(0, 0, 0, 0)
+
+      const isPast = compareDate < today
+      const isTodayOrFuture = compareDate >= today
 
       if (rec) return { date: d, isReal: true, ...rec }
-      if (isPastOrToday) {
+
+      if (isTodayOrFuture) {
         return {
           date: d,
           isReal: false,
-          tipo_dia: 'falta',
+          tipo_dia: 'normal',
           horas_trabalhadas: 0,
-          saldo_dia: -cargaMins,
+          saldo_dia: 0,
           justificativa: '',
         }
       }
+
       return {
         date: d,
         isReal: false,
-        tipo_dia: 'normal',
+        tipo_dia: 'falta',
         horas_trabalhadas: 0,
-        saldo_dia: 0,
+        saldo_dia: -cargaMins,
         justificativa: '',
       }
     })
