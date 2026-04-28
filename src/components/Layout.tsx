@@ -128,7 +128,7 @@ export default function Layout() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className="relative w-[52px] h-[52px] rounded-[10px] overflow-hidden bg-[#FFFFFF] cursor-pointer group shrink-0"
+                    className="relative w-[52px] h-[52px] rounded-[10px] overflow-hidden bg-[#FFFFFF] cursor-pointer group/logo shrink-0"
                     style={{ border: '2px solid rgba(201, 146, 42, 0.35)' }}
                     onClick={handleLogoClick}
                   >
@@ -145,7 +145,7 @@ export default function Layout() {
                     )}
 
                     <div
-                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity"
                       style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
                     >
                       <Camera className="w-5 h-5 text-white" />
