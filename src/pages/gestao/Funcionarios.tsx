@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
@@ -28,8 +29,9 @@ import { FuncionarioFormDialog } from './components/FuncionarioFormDialog'
 
 export default function Funcionarios() {
   const { user } = useAuth()
-  const isAdmin = true // Mantido true para visualização, pois check real dependeria do link user->funcionario.
+  const navigate = useNavigate()
 
+  const [isAdmin, setIsAdmin] = useState(false)
   const [funcionarios, setFuncionarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -51,9 +53,17 @@ export default function Funcionarios() {
 
   useEffect(() => {
     const data = sessionStorage.getItem('ponto_session')
-    if (data) setSession(JSON.parse(data))
+    if (data) {
+      const parsed = JSON.parse(data)
+      setSession(parsed)
+      if (parsed.perfil === 'admin' || parsed.perfil === 'lider') {
+        setIsAdmin(true)
+      }
+    } else {
+      navigate('/gestao/ponto')
+    }
     loadData()
-  }, [])
+  }, [navigate])
   useRealtime('funcionarios', () => {
     loadData()
   })
@@ -63,7 +73,7 @@ export default function Funcionarios() {
       <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-[#F5F0E8] p-8">
         <Card className="w-full max-w-md p-6 text-center">
           <h2 className="text-2xl font-bold text-red-600">Acesso Restrito</h2>
-          <p className="mt-2 text-gray-600">Acesso restrito ao administrador.</p>
+          <p className="mt-2 text-gray-600">Acesso restrito.</p>
         </Card>
       </div>
     )

@@ -119,7 +119,7 @@ export default function BaterPonto() {
   })
 
   const handleLogout = () => {
-    if (session?.perfil === 'lider') {
+    if (session?.perfil === 'lider' || session?.perfil === 'admin') {
       navigate('/gestao/ponto/dashboard')
     } else {
       sessionStorage.removeItem('ponto_session')
@@ -286,7 +286,7 @@ export default function BaterPonto() {
             >
               <LogOut className="w-4 h-4 md:mr-2" />
               <span className="hidden md:inline font-bold">
-                {session?.perfil === 'lider' ? 'Voltar' : 'Sair'}
+                {session?.perfil === 'lider' || session?.perfil === 'admin' ? 'Voltar' : 'Sair'}
               </span>
             </Button>
           </div>

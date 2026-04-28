@@ -38,7 +38,7 @@ export default function DashboardPonto() {
   const loadData = async () => {
     try {
       const funcs = await pb.collection('funcionarios').getFullList({
-        filter: 'ativo = true',
+        filter: 'ativo = true && perfil != "admin"',
         sort: 'nome',
       })
       setFuncionarios(funcs)
@@ -86,7 +86,7 @@ export default function DashboardPonto() {
         </div>
 
         <div className="flex items-center gap-3">
-          {session?.perfil === 'lider' && (
+          {(session?.perfil === 'lider' || session?.perfil === 'admin') && (
             <Button
               onClick={handleRegistrarPonto}
               className="bg-[#C8922A] hover:bg-[#b07c21] text-white rounded-xl h-11 px-5 shadow-sm transition-colors font-bold"
