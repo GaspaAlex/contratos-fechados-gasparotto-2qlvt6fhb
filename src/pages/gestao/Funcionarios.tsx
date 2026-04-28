@@ -51,28 +51,8 @@ export default function Funcionarios() {
   }
 
   useEffect(() => {
-    const data = sessionStorage.getItem('ponto_session')
-    let hasAccess = false
-
-    if (data) {
-      const parsed = JSON.parse(data)
-      setSession(parsed)
-      if (parsed.perfil === 'admin' || parsed.perfil === 'lider') {
-        hasAccess = true
-      }
-    }
-
-    if (sessionStorage.getItem('funcionarios_unlocked') === 'true') {
-      hasAccess = true
-    }
-
-    setIsAdmin(hasAccess)
-
-    if (hasAccess) {
-      loadData()
-    } else {
-      setLoading(false)
-    }
+    // Remove persistent session checks to require PIN every time the tab is accessed.
+    setLoading(false)
   }, [])
 
   useRealtime('funcionarios', () => {
@@ -80,6 +60,7 @@ export default function Funcionarios() {
   })
 
   const checkPin = useCallback(async (enteredPin: string) => {
+    if (enteredPin.length !== 4) return
     setIsCheckingPin(true)
     try {
       const func = await getFuncionarioByPin(enteredPin)
@@ -93,7 +74,6 @@ export default function Funcionarios() {
         setPin('')
         return
       }
-      sessionStorage.setItem('funcionarios_unlocked', 'true')
       setSession(func)
       setIsAdmin(true)
       setLoading(true)
@@ -105,10 +85,6 @@ export default function Funcionarios() {
       setIsCheckingPin(false)
     }
   }, [])
-
-  useEffect(() => {
-    if (pin.length === 4) checkPin(pin)
-  }, [pin, checkPin])
 
   const handlePinInput = useCallback(
     (digit: string) => {
@@ -126,79 +102,92 @@ export default function Funcionarios() {
         setPin((p) => p.slice(0, -1))
       } else if (e.key === 'Escape' || e.key === 'Delete') {
         setPin('')
+      } else if (e.key === 'Enter' && pin.length === 4) {
+        checkPin(pin)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isAdmin, isCheckingPin, handlePinInput])
+  }, [isAdmin, isCheckingPin, handlePinInput, pin, checkPin])
 
   if (!isAdmin) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-[#F5F0E8] p-4 md:p-8">
-        <Card className="relative w-full max-w-md overflow-hidden rounded-[24px] border-0 bg-white p-8 text-center shadow-sm animate-in fade-in zoom-in duration-500">
+        <Card className="relative w-full max-w-sm overflow-hidden rounded-[24px] border-0 bg-white shadow-xl animate-in fade-in zoom-in duration-500">
           {isCheckingPin && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm">
               <Loader2 className="h-10 w-10 animate-spin text-[#C8922A]" />
             </div>
           )}
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-            <Lock className="h-8 w-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Acesso Restrito</h2>
-          <p className="mt-2 text-gray-500">Insira seu PIN para continuar</p>
 
-          <div className="my-8 flex justify-center space-x-3 md:space-x-4">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={`flex h-14 w-12 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
-                  pin.length > i
-                    ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
-                    : isCheckingPin && pin.length === 4
+          <div className="bg-[#C8922A] px-6 py-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+              <Lock className="h-8 w-8 text-[#C8922A]" />
+            </div>
+            <h2 className="text-2xl font-bold text-white">Acesso Restrito</h2>
+            <p className="mt-1 text-white/90">Insira seu PIN para continuar</p>
+          </div>
+
+          <div className="p-8">
+            <div className="mb-8 flex justify-center space-x-3">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className={`flex h-14 w-12 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
+                    pin.length > i
                       ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
                       : 'border-gray-200 bg-gray-50 text-transparent'
-                }`}
-              >
-                {pin.length > i ? '•' : ''}
-              </div>
-            ))}
-          </div>
+                  }`}
+                >
+                  {pin.length > i ? '•' : ''}
+                </div>
+              ))}
+            </div>
 
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <Button
+                  key={num}
+                  variant="outline"
+                  className="h-14 rounded-xl border-gray-200 text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
+                  onClick={() => handlePinInput(num.toString())}
+                  disabled={isCheckingPin}
+                >
+                  {num}
+                </Button>
+              ))}
               <Button
-                key={num}
                 variant="outline"
-                className="h-14 rounded-xl border-gray-200 text-xl font-semibold hover:bg-gray-100 hover:text-gray-900"
-                onClick={() => handlePinInput(num.toString())}
+                className="h-14 rounded-xl border-gray-200 text-lg font-semibold transition-colors hover:bg-red-50 hover:text-red-600"
+                onClick={() => setPin('')}
+                disabled={isCheckingPin || pin.length === 0}
+              >
+                C
+              </Button>
+              <Button
+                variant="outline"
+                className="h-14 rounded-xl border-gray-200 text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
+                onClick={() => handlePinInput('0')}
                 disabled={isCheckingPin}
               >
-                {num}
+                0
               </Button>
-            ))}
+              <Button
+                variant="outline"
+                className="h-14 rounded-xl border-gray-200 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                onClick={() => setPin((p) => p.slice(0, -1))}
+                disabled={isCheckingPin || pin.length === 0}
+              >
+                <Delete className="h-6 w-6" />
+              </Button>
+            </div>
+
             <Button
-              variant="outline"
-              className="h-14 rounded-xl border-gray-200 text-lg font-semibold hover:bg-red-50 hover:text-red-600"
-              onClick={() => setPin('')}
-              disabled={isCheckingPin || pin.length === 0}
+              className="mt-6 h-14 w-full rounded-xl bg-[#C8922A] text-lg font-bold text-white shadow-sm transition-colors hover:bg-[#b07d20]"
+              onClick={() => checkPin(pin)}
+              disabled={pin.length < 4 || isCheckingPin}
             >
-              C
-            </Button>
-            <Button
-              variant="outline"
-              className="h-14 rounded-xl border-gray-200 text-xl font-semibold hover:bg-gray-100 hover:text-gray-900"
-              onClick={() => handlePinInput('0')}
-              disabled={isCheckingPin}
-            >
-              0
-            </Button>
-            <Button
-              variant="outline"
-              className="h-14 rounded-xl border-gray-200 hover:bg-gray-100 hover:text-gray-900"
-              onClick={() => setPin((p) => p.slice(0, -1))}
-              disabled={isCheckingPin || pin.length === 0}
-            >
-              <Delete className="h-6 w-6" />
+              ENTRAR
             </Button>
           </div>
         </Card>
