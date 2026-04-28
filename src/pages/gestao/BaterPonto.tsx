@@ -193,6 +193,7 @@ export default function BaterPonto() {
 
   const getNextStep = () => {
     if (!todayRecord) return 'entrada1'
+    if (!todayRecord.entrada1) return 'entrada1'
     if (!todayRecord.saida1) return 'saida1'
     if (!todayRecord.entrada2) return 'entrada2'
     if (!todayRecord.saida2) return 'saida2'
@@ -297,6 +298,12 @@ export default function BaterPonto() {
           <h2 className="text-xl font-bold text-gray-400 uppercase tracking-wider mb-10 text-center">
             Registro de Ponto Sequencial
           </h2>
+
+          {nextStep === null && (
+            <div className="text-center text-xl md:text-2xl font-bold text-[#2E7D32] mb-10 bg-[#2E7D32]/10 py-3 px-6 rounded-xl mx-auto max-w-fit animate-in fade-in zoom-in duration-500">
+              Ponto do dia concluído
+            </div>
+          )}
 
           <div className="relative flex justify-center items-center max-w-2xl mx-auto">
             {/* Connecting Line */}
