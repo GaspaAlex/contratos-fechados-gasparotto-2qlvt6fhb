@@ -59,16 +59,19 @@ export function EditRegistroModal({
     setIsSaving(true)
     try {
       const cargaMins = funcionario.carga_diaria || 480
-      const tipo = formData.tipo_dia
-      const hAtestado = tipo === 'atestado' ? Number(formData.horas_atestado) || 0 : 0
+      const hAtestado = formData.tipo_dia === 'atestado' ? Number(formData.horas_atestado) || 0 : 0
 
-      const { horas_trabalhadas: hTrab, saldo_dia: saldo } = calculateDailyBalance(
+      const {
+        horas_trabalhadas: hTrab,
+        saldo_dia: saldo,
+        tipo_dia_sugerido,
+      } = calculateDailyBalance(
         formData.entrada1,
         formData.saida1,
         formData.entrada2,
         formData.saida2,
         cargaMins,
-        tipo,
+        formData.tipo_dia,
         hAtestado * 60,
         rowData.date,
       )
@@ -88,7 +91,7 @@ export function EditRegistroModal({
         saida2: formData.saida2,
         horas_trabalhadas: hTrab,
         saldo_dia: saldo,
-        tipo_dia: tipo,
+        tipo_dia: tipo_dia_sugerido || formData.tipo_dia,
         justificativa: formData.justificativa,
         horas_atestado: hAtestado,
         editado_por: user?.name || 'Admin',

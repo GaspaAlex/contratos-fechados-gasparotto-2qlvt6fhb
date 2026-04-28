@@ -85,13 +85,14 @@ export default function CartaoPonto() {
       const isPast = compareDate < today
       const isTodayOrFuture = compareDate >= today
 
-      if (rec) return { date: d, isReal: true, isTodayOrFuture, ...rec }
+      if (rec) return { date: d, isReal: true, isTodayOrFuture, isPast, ...rec }
 
       if (isTodayOrFuture) {
         return {
           date: d,
           isReal: false,
           isTodayOrFuture,
+          isPast,
           tipo_dia: 'normal',
           horas_trabalhadas: 0,
           saldo_dia: 0,
@@ -103,6 +104,7 @@ export default function CartaoPonto() {
         date: d,
         isReal: false,
         isTodayOrFuture,
+        isPast,
         tipo_dia: 'falta',
         horas_trabalhadas: 0,
         saldo_dia: -cargaMins,
@@ -230,11 +232,13 @@ export default function CartaoPonto() {
     setExportModalOpen(false)
   }
 
-  const getRowStyle = (tipo: string, isReal: boolean) => {
-    if (!isReal && tipo === 'falta') return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80 text-red-900'
+  const getRowStyle = (tipo: string, isReal: boolean, isTodayOrFuture: boolean) => {
+    if (!isReal && tipo === 'falta' && !isTodayOrFuture)
+      return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80 text-red-900'
     if (tipo === 'feriado') return 'bg-[#FFF8E1] hover:bg-[#FFF8E1]/80 text-yellow-900'
     if (tipo === 'atestado') return 'bg-[#E3F2FD] hover:bg-[#E3F2FD]/80 text-blue-900'
-    if (tipo === 'falta') return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80 text-red-900'
+    if (tipo === 'falta' && !isTodayOrFuture)
+      return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80 text-red-900'
     return 'bg-white hover:bg-gray-50'
   }
 
@@ -318,7 +322,10 @@ export default function CartaoPonto() {
                   </TableCell>
                 </TableRow>
                 {tableRows.map((row, i) => (
-                  <TableRow key={i} className={getRowStyle(row.tipo_dia, row.isReal)}>
+                  <TableRow
+                    key={i}
+                    className={getRowStyle(row.tipo_dia, row.isReal, row.isTodayOrFuture)}
+                  >
                     <TableCell>{format(row.date, 'dd/MM')}</TableCell>
                     <TableCell className="capitalize">
                       {format(row.date, 'EEEE', { locale: ptBR })}
@@ -336,9 +343,7 @@ export default function CartaoPonto() {
                         row.saldo_dia > 0
                           ? 'text-[#2E7D32]'
                           : row.saldo_dia < 0
-                            ? row.isTodayOrFuture && !row.entrada1
-                              ? 'text-gray-500'
-                              : 'text-[#C62828]'
+                            ? 'text-[#C62828]'
                             : 'text-gray-500',
                       )}
                     >

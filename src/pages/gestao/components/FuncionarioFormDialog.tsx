@@ -104,7 +104,11 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
   }
 
   const handleSubmit = async (data: FormValues) => {
-    const success = await onSubmit(data, fotoFile)
+    const finalData = {
+      ...data,
+      carga_diaria: funcionario?.carga_diaria || 480,
+    }
+    const success = await onSubmit(finalData, fotoFile)
     if (success === false) {
       form.setError('pin', { message: 'Este PIN já está em uso. Escolha outro.' })
     }

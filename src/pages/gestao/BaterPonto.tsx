@@ -156,7 +156,7 @@ export default function BaterPonto() {
       let s2 = field === 'saida2' ? time : todayRecord?.saida2
 
       const cargaMins = session.carga_diaria || 480
-      const { horas_trabalhadas, saldo_dia } = calculateDailyBalance(
+      const { horas_trabalhadas, saldo_dia, tipo_dia_sugerido } = calculateDailyBalance(
         e1,
         s1,
         e2,
@@ -169,6 +169,7 @@ export default function BaterPonto() {
 
       updateData.horas_trabalhadas = horas_trabalhadas
       updateData.saldo_dia = s1 ? saldo_dia : 0
+      updateData.tipo_dia = tipo_dia_sugerido
 
       if (recordId) {
         await pb.collection('registros').update(recordId, updateData)
