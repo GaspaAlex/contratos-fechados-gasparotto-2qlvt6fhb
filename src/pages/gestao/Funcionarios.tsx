@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Plus, Lock, Delete, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import {
   getFuncionarios,
@@ -10,6 +8,7 @@ import {
   updateFuncionario,
   checkPinUnique,
   deleteFuncionario,
+  getFuncionarioByPin,
 } from '@/services/funcionarios'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -28,9 +27,6 @@ import { FuncionarioCard } from './components/FuncionarioCard'
 import { FuncionarioFormDialog } from './components/FuncionarioFormDialog'
 
 export default function Funcionarios() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-
   const [isAdmin, setIsAdmin] = useState(false)
   const [funcionarios, setFuncionarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +35,9 @@ export default function Funcionarios() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
   const [selectedFuncionario, setSelectedFuncionario] = useState<any>(null)
   const [session, setSession] = useState<any>(null)
+
+  const [pin, setPin] = useState('')
+  const [isCheckingPin, setIsCheckingPin] = useState(false)
 
   const loadData = async () => {
     try {
@@ -53,27 +52,155 @@ export default function Funcionarios() {
 
   useEffect(() => {
     const data = sessionStorage.getItem('ponto_session')
+    let hasAccess = false
+
     if (data) {
       const parsed = JSON.parse(data)
       setSession(parsed)
       if (parsed.perfil === 'admin' || parsed.perfil === 'lider') {
-        setIsAdmin(true)
+        hasAccess = true
       }
-    } else {
-      navigate('/gestao/ponto')
     }
-    loadData()
-  }, [navigate])
+
+    if (sessionStorage.getItem('funcionarios_unlocked') === 'true') {
+      hasAccess = true
+    }
+
+    setIsAdmin(hasAccess)
+
+    if (hasAccess) {
+      loadData()
+    } else {
+      setLoading(false)
+    }
+  }, [])
+
   useRealtime('funcionarios', () => {
-    loadData()
+    if (isAdmin) loadData()
   })
+
+  const checkPin = useCallback(async (enteredPin: string) => {
+    setIsCheckingPin(true)
+    try {
+      const func = await getFuncionarioByPin(enteredPin)
+      if (!func) {
+        toast.error('PIN incorreto.')
+        setPin('')
+        return
+      }
+      if ((func.perfil !== 'admin' && func.perfil !== 'lider') || !func.ativo) {
+        toast.error('Acesso não autorizado.')
+        setPin('')
+        return
+      }
+      sessionStorage.setItem('funcionarios_unlocked', 'true')
+      setSession(func)
+      setIsAdmin(true)
+      setLoading(true)
+      loadData()
+    } catch {
+      toast.error('Erro ao verificar PIN.')
+      setPin('')
+    } finally {
+      setIsCheckingPin(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (pin.length === 4) checkPin(pin)
+  }, [pin, checkPin])
+
+  const handlePinInput = useCallback(
+    (digit: string) => {
+      if (pin.length < 4 && !isCheckingPin) setPin((p) => p + digit)
+    },
+    [pin, isCheckingPin],
+  )
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isAdmin || isCheckingPin) return
+      if (/^[0-9]$/.test(e.key)) {
+        handlePinInput(e.key)
+      } else if (e.key === 'Backspace') {
+        setPin((p) => p.slice(0, -1))
+      } else if (e.key === 'Escape' || e.key === 'Delete') {
+        setPin('')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isAdmin, isCheckingPin, handlePinInput])
 
   if (!isAdmin) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-[#F5F0E8] p-8">
-        <Card className="w-full max-w-md p-6 text-center">
-          <h2 className="text-2xl font-bold text-red-600">Acesso Restrito</h2>
-          <p className="mt-2 text-gray-600">Acesso restrito.</p>
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-[#F5F0E8] p-4 md:p-8">
+        <Card className="relative w-full max-w-md overflow-hidden rounded-[24px] border-0 bg-white p-8 text-center shadow-sm animate-in fade-in zoom-in duration-500">
+          {isCheckingPin && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+              <Loader2 className="h-10 w-10 animate-spin text-[#C8922A]" />
+            </div>
+          )}
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+            <Lock className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Acesso Restrito</h2>
+          <p className="mt-2 text-gray-500">Insira seu PIN para continuar</p>
+
+          <div className="my-8 flex justify-center space-x-3 md:space-x-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`flex h-14 w-12 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
+                  pin.length > i
+                    ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
+                    : isCheckingPin && pin.length === 4
+                      ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
+                      : 'border-gray-200 bg-gray-50 text-transparent'
+                }`}
+              >
+                {pin.length > i ? '•' : ''}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 md:gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <Button
+                key={num}
+                variant="outline"
+                className="h-14 rounded-xl border-gray-200 text-xl font-semibold hover:bg-gray-100 hover:text-gray-900"
+                onClick={() => handlePinInput(num.toString())}
+                disabled={isCheckingPin}
+              >
+                {num}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              className="h-14 rounded-xl border-gray-200 text-lg font-semibold hover:bg-red-50 hover:text-red-600"
+              onClick={() => setPin('')}
+              disabled={isCheckingPin || pin.length === 0}
+            >
+              C
+            </Button>
+            <Button
+              variant="outline"
+              className="h-14 rounded-xl border-gray-200 text-xl font-semibold hover:bg-gray-100 hover:text-gray-900"
+              onClick={() => handlePinInput('0')}
+              disabled={isCheckingPin}
+            >
+              0
+            </Button>
+            <Button
+              variant="outline"
+              className="h-14 rounded-xl border-gray-200 hover:bg-gray-100 hover:text-gray-900"
+              onClick={() => setPin((p) => p.slice(0, -1))}
+              disabled={isCheckingPin || pin.length === 0}
+            >
+              <Delete className="h-6 w-6" />
+            </Button>
+          </div>
         </Card>
       </div>
     )
