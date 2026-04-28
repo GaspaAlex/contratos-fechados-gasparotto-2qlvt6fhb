@@ -119,8 +119,12 @@ export default function BaterPonto() {
   })
 
   const handleLogout = () => {
-    sessionStorage.removeItem('ponto_session')
-    navigate('/gestao/ponto')
+    if (session?.perfil === 'lider') {
+      navigate('/gestao/ponto/dashboard')
+    } else {
+      sessionStorage.removeItem('ponto_session')
+      navigate('/gestao/ponto')
+    }
   }
 
   const handleRegister = async () => {
@@ -279,7 +283,9 @@ export default function BaterPonto() {
               className="border-[#C8922A] text-[#C8922A] hover:bg-[#C8922A] hover:text-white rounded-xl h-12 px-6 shadow-sm transition-colors"
             >
               <LogOut className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline font-bold">Sair</span>
+              <span className="hidden md:inline font-bold">
+                {session?.perfil === 'lider' ? 'Voltar' : 'Sair'}
+              </span>
             </Button>
           </div>
         </div>
