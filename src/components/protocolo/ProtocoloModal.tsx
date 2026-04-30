@@ -446,6 +446,4 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>
-  )
-}
+    </Di
