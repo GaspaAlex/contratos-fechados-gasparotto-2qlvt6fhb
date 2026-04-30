@@ -403,22 +403,22 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
               <div className="flex gap-3 text-amber-800">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
                 <p className="text-sm font-semibold">
-                  Atenção: já existe um processo cadastrado para <strong>{duplicateWarning}</strong>
-                  . Deseja continuar mesmo assim?
+                  Atenção: já existe um protocolo cadastrado para{' '}
+                  <strong>{duplicateWarning}</strong>. Deseja continuar mesmo assim?
                 </p>
               </div>
               <div className="flex gap-2 justify-end">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-200"
+                  className="h-8 text-xs border border-amber-400 text-amber-800 hover:bg-amber-200"
                   onClick={() => setDuplicateWarning(null)}
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="button"
-                  className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                  className="h-8 text-xs bg-amber-500 text-white hover:bg-amber-600"
                   onClick={() => {
                     setDuplicateWarning(null)
                     executeSave()
