@@ -244,7 +244,11 @@ export default function BaterPonto() {
     )
   }
 
-  const cargaStr = formatHoursMins(session.carga_diaria || 480).replace('+', '')
+  const cargaMinsVal = session.carga_diaria || 480
+  const cargaH = Math.floor(cargaMinsVal / 60)
+  const cargaM = Math.round(cargaMinsVal % 60)
+  const cargaStr = `${cargaH}h${cargaM.toString().padStart(2, '0')}`
+
   const workedMin = todayRecord?.horas_trabalhadas || 0
   const dailyBalance = todayRecord?.saldo_dia || 0
 
