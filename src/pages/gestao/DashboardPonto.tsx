@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { LogOut, Clock, Users, Loader2, CalendarDays } from 'lucide-react'
+import { LogOut, Clock, Users, Loader2, CalendarDays, Calculator } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
+import { recalcularTodosSaldos } from '@/services/ponto'
 
 export default function DashboardPonto() {
   const navigate = useNavigate()
@@ -14,6 +16,8 @@ export default function DashboardPonto() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [funcionarios, setFuncionarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRecalculating, setIsRecalculating] = useState(false)
+  const [recalcProgress, setRecalcProgress] = useState('')
 
   useEffect(() => {
     const data = sessionStorage.getItem('ponto_session')
@@ -62,6 +66,33 @@ export default function DashboardPonto() {
     navigate('/gestao/ponto/registrar')
   }
 
+  const handleRecalcular = async () => {
+    if (
+      !confirm(
+        'Tem certeza que deseja recalcular todos os saldos de todos os funcionários? Esta operação pode demorar alguns instantes.',
+      )
+    )
+      return
+    setIsRecalculating(true)
+    try {
+      await recalcularTodosSaldos((current, total, step) => {
+        if (step === 'registros') {
+          setRecalcProgress(`Recalculando... ${current} de ${total} registros`)
+        } else {
+          setRecalcProgress(`Fechando saldos mensais... ${current} de ${total}`)
+        }
+      })
+      toast.success('Saldos recalculados com sucesso!')
+      loadData()
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao recalcular saldos.')
+    } finally {
+      setIsRecalculating(false)
+      setRecalcProgress('')
+    }
+  }
+
   if (loading || !session) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -85,7 +116,28 @@ export default function DashboardPonto() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          {session?.perfil === 'admin' && (
+            <Button
+              variant="outline"
+              onClick={handleRecalcular}
+              disabled={isRecalculating}
+              className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white rounded-xl h-11 px-5 shadow-sm transition-colors"
+            >
+              {isRecalculating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="font-bold">{recalcProgress}</span>
+                </>
+              ) : (
+                <>
+                  <Calculator className="w-4 h-4 mr-2" />
+                  <span className="font-bold">Recalcular Todos os Saldos</span>
+                </>
+              )}
+            </Button>
+          )}
+
           {(session?.perfil === 'lider' || session?.perfil === 'admin') && (
             <Button
               onClick={handleRegistrarPonto}
