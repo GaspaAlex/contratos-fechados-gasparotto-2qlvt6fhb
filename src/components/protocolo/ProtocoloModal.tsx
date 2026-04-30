@@ -245,7 +245,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     try {
       setLoading(true)
       const normalizedName = normalizeText(formData.nome)
-      const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
+      const existing = await pb.collection('protocolos').getFullList({ fields: 'id,nome' })
       const duplicate = existing.find(
         (c: any) => c.id !== protocolo?.id && normalizeText(c.nome) === normalizedName,
       )
