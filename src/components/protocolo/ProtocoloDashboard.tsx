@@ -90,7 +90,7 @@ export function ProtocoloDashboard({
   const tVal = monthlyData.reduce((s, m) => s + m.val, 0)
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 mb-8">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
@@ -119,6 +119,23 @@ export function ProtocoloDashboard({
       </Card>
 
       <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl font-bold">Ticket Médio por Ação</CardTitle>
+          <CardDescription>Média de honorários projetados por processo</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-8 mt-4">
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground">TICKET MÉDIO</p>
+              <p className="text-4xl font-bold text-[#C9922A]">
+                {totalAcoes > 0 ? formatCurrency(projHonorarios / totalAcoes) : '—'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="md:col-span-2 lg:col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Projeção de Ações e Honorários</CardTitle>
           <CardDescription>
