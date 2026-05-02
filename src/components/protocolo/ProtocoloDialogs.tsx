@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import pb from '@/lib/pocketbase/client'
+import { removeAccents } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -45,6 +47,8 @@ const schema = z.object({
 })
 
 export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis, onSaved }: any) {
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -64,6 +68,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
 
   useEffect(() => {
     if (open) {
+      setDuplicateWarning(null)
       if (item) {
         form.reset({
           ...item,
@@ -88,7 +93,27 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
     }
   }, [open, item, form])
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: any, forceSave = false) => {
+    if (forceSave !== true) {
+      try {
+        const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
+        const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
+
+        const duplicate = existing.find((c: any) => {
+          if (item && c['id'] === item['id']) return false
+          const normalizedExisting = removeAccents(c['nome'].toLowerCase().trim())
+          return normalizedExisting === normalizedInput
+        })
+
+        if (duplicate) {
+          setDuplicateWarning(duplicate['nome'])
+          return
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
     try {
       const payload = { ...values }
       if (payload.dcalculo)
@@ -302,14 +327,46 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                 )}
               />
             </div>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white">
-                {item ? 'Salvar alterações' : 'Salvar'}
-              </Button>
-            </DialogFooter>
+
+            {duplicateWarning && (
+              <div className="bg-amber-100 border border-amber-300 rounded-md p-4 mt-4 text-sm text-amber-900">
+                <p className="mb-3">
+                  Atenção: já existe um protocolo cadastrado para{' '}
+                  <strong>{duplicateWarning}</strong>. Deseja continuar mesmo assim?
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-amber-300 text-amber-800 hover:bg-amber-200"
+                    onClick={() => setDuplicateWarning(null)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={() => {
+                      setDuplicateWarning(null)
+                      onSubmit(form.getValues(), true)
+                    }}
+                  >
+                    Salvar mesmo assim
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {!duplicateWarning && (
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white">
+                  {item ? 'Salvar alterações' : 'Salvar'}
+                </Button>
+              </DialogFooter>
+            )}
           </form>
         </Form>
       </DialogContent>
