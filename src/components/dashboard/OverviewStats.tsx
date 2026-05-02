@@ -14,6 +14,24 @@ const formatCurrency = (val: number) =>
 export function OverviewStats({ protocolos, contratos }: Props) {
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+  const months = [
+    { value: 0, label: 'Todos os meses' },
+    { value: 1, label: 'Janeiro' },
+    { value: 2, label: 'Fevereiro' },
+    { value: 3, label: 'Março' },
+    { value: 4, label: 'Abril' },
+    { value: 5, label: 'Maio' },
+    { value: 6, label: 'Junho' },
+    { value: 7, label: 'Julho' },
+    { value: 8, label: 'Agosto' },
+    { value: 9, label: 'Setembro' },
+    { value: 10, label: 'Outubro' },
+    { value: 11, label: 'Novembro' },
+    { value: 12, label: 'Dezembro' },
+  ]
+
+  const [yearTicket, setYearTicket] = useState(currentYear)
+  const [monthTicket, setMonthTicket] = useState(0)
 
   const [yearCard3, setYearCard3] = useState(currentYear)
   const [yearCard4, setYearCard4] = useState(currentYear)
@@ -45,8 +63,28 @@ export function OverviewStats({ protocolos, contratos }: Props) {
   const rdocsPercentage = ativosAno4 > 0 ? Math.round((rDocsAno4 / ativosAno4) * 100) : 0
   const isMetaMet = rdocsPercentage >= 50
 
+  // Ticket Médio Logic
+  const validTicketProtocolos = protocolos.filter((p) => {
+    if (!p.dprotocolo) return false
+    const date = new Date(p.dprotocolo)
+    const isYearMatch = date.getFullYear() === yearTicket
+    const isMonthMatch = monthTicket === 0 || date.getMonth() + 1 === monthTicket
+    const isStatusMatch = ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(
+      p.status,
+    )
+    const isDecisaoMatch = p.decisao !== 'Improcedente'
+    return isYearMatch && isMonthMatch && isStatusMatch && isDecisaoMatch
+  })
+
+  const sumHonorariosTicket = validTicketProtocolos.reduce(
+    (acc, p) => acc + (p.valor || 0) * 0.3,
+    0,
+  )
+  const countTicket = validTicketProtocolos.length
+  const ticketMedio = countTicket > 0 ? sumHonorariosTicket / countTicket : null
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <Card className="border-t-2 border-t-[#C9922A] shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -56,6 +94,43 @@ export function OverviewStats({ protocolos, contratos }: Props) {
         <CardContent>
           <div className="text-2xl font-bold text-foreground">
             {formatCurrency(totalHonorarios)}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-t-2 border-t-[#C9922A] shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Ticket Médio por Ação
+          </CardTitle>
+          <div className="flex gap-1">
+            <select
+              className="h-7 rounded-md border border-input bg-transparent px-1 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={monthTicket}
+              onChange={(e) => setMonthTicket(Number(e.target.value))}
+            >
+              {months.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            <select
+              className="h-7 rounded-md border border-input bg-transparent px-1 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={yearTicket}
+              onChange={(e) => setYearTicket(Number(e.target.value))}
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-[#C9922A]">
+            {ticketMedio !== null ? formatCurrency(ticketMedio) : '—'}
           </div>
         </CardContent>
       </Card>
