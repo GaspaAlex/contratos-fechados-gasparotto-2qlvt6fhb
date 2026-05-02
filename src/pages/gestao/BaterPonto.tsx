@@ -77,11 +77,21 @@ export default function BaterPonto() {
 
   const loadData = async (userSession: any) => {
     try {
+      let currentSession = userSession
+      try {
+        const freshFunc = await pb.collection('funcionarios').getOne(userSession.id)
+        currentSession = freshFunc
+        setSession(freshFunc)
+        sessionStorage.setItem('ponto_session', JSON.stringify(freshFunc))
+      } catch (e) {
+        console.error('Erro ao atualizar dados do funcionário', e)
+      }
+
       const now = new Date()
       const todayStr = format(now, 'yyyy-MM-dd')
 
       const records = await pb.collection('registros').getFullList({
-        filter: `funcionario_id = "${userSession.id}" && data >= "${todayStr} 00:00:00" && data <= "${todayStr} 23:59:59"`,
+        filter: `funcionario_id = "${currentSession.id}" && data >= "${todayStr} 00:00:00" && data <= "${todayStr} 23:59:59"`,
       })
       if (records.length > 0) {
         setTodayRecord(records[0])
@@ -92,7 +102,7 @@ export default function BaterPonto() {
       const currentMonth = now.getMonth() + 1
       const currentYear = now.getFullYear()
       const monthly = await pb.collection('saldos_mensais').getFullList({
-        filter: `funcionario_id = "${userSession.id}" && mes = ${currentMonth} && ano = ${currentYear}`,
+        filter: `funcionario_id = "${currentSession.id}" && mes = ${currentMonth} && ano = ${currentYear}`,
       })
       setMonthlyRecord(monthly.length > 0 ? monthly[0] : null)
 
@@ -100,7 +110,7 @@ export default function BaterPonto() {
       const endOfMonthStr = format(new Date(currentYear, currentMonth, 0), 'yyyy-MM-dd')
 
       const allMonthRecords = await pb.collection('registros').getFullList({
-        filter: `funcionario_id = "${userSession.id}" && data >= "${startOfMonthStr} 00:00:00" && data <= "${endOfMonthStr} 23:59:59"`,
+        filter: `funcionario_id = "${currentSession.id}" && data >= "${startOfMonthStr} 00:00:00" && data <= "${endOfMonthStr} 23:59:59"`,
       })
 
       const sum = allMonthRecords.reduce((acc, r) => acc + (r.saldo_dia || 0), 0)
