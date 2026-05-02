@@ -240,18 +240,19 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (!formData.nome) return toast.error('Preencha o Nome.')
+    if (!formData['nome']) return toast.error('Preencha o Nome.')
 
     try {
       setLoading(true)
-      const normalizedName = normalizeText(formData.nome)
+      const normalizedName = normalizeText(formData['nome'])
       const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
+      const currentId = protocolo?.['id'] || ''
       const duplicate = existing.find(
-        (c: any) => c.id !== protocolo?.id && normalizeText(c.nome) === normalizedName,
+        (c: any) => c['id'] !== currentId && normalizeText(c['nome']) === normalizedName,
       )
 
       if (duplicate) {
-        setDuplicateWarning(duplicate.nome)
+        setDuplicateWarning(duplicate['nome'])
         setLoading(false)
         return
       }
