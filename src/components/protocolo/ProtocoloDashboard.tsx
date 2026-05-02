@@ -90,7 +90,7 @@ export function ProtocoloDashboard({
   const tVal = monthlyData.reduce((s, m) => s + m.val, 0)
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 mb-8">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
@@ -135,7 +135,7 @@ export function ProtocoloDashboard({
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2 lg:col-span-1">
+      <Card className="md:col-span-2">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Projeção de Ações e Honorários</CardTitle>
           <CardDescription>
