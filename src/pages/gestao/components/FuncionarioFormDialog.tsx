@@ -27,6 +27,7 @@ const formSchema = z
     confirmPin: z.string().min(1, 'Confirmação de PIN é obrigatória'),
     horario_entrada: z.string().optional(),
     horario_saida: z.string().optional(),
+    carga_diaria: z.number().min(1, 'Carga diária é obrigatória'),
   })
   .refine((data) => data.pin === data.confirmPin, {
     message: 'Os PINs não coincidem',
@@ -67,6 +68,7 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
       confirmPin: '',
       horario_entrada: '08:00',
       horario_saida: '17:30',
+      carga_diaria: 480,
     },
   })
 
@@ -79,6 +81,7 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
         confirmPin: funcionario.pin,
         horario_entrada: funcionario.horario_entrada || '08:00',
         horario_saida: funcionario.horario_saida || '17:30',
+        carga_diaria: funcionario.carga_diaria || 480,
       })
       setFotoPreview(getFuncionarioPhotoUrl(funcionario))
     } else {
@@ -89,6 +92,7 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
         confirmPin: '',
         horario_entrada: '08:00',
         horario_saida: '17:30',
+        carga_diaria: 480,
       })
       setFotoPreview(null)
     }
@@ -104,11 +108,7 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
   }
 
   const handleSubmit = async (data: FormValues) => {
-    const finalData = {
-      ...data,
-      carga_diaria: funcionario?.carga_diaria || 480,
-    }
-    const success = await onSubmit(finalData, fotoFile)
+    const success = await onSubmit(data, fotoFile)
     if (success === false) {
       form.setError('pin', { message: 'Este PIN já está em uso. Escolha outro.' })
     }
@@ -191,7 +191,7 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
 
             {form.watch('perfil') !== 'admin' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="horario_entrada">Entrada</Label>
                     <Input id="horario_entrada" type="time" {...form.register('horario_entrada')} />
@@ -210,9 +210,22 @@ export function FuncionarioFormDialog({ isOpen, onOpenChange, funcionario, onSub
                       </p>
                     )}
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="carga_diaria">Carga Diária (min)</Label>
+                    <Input
+                      id="carga_diaria"
+                      type="number"
+                      {...form.register('carga_diaria', { valueAsNumber: true })}
+                    />
+                    {form.formState.errors.carga_diaria && (
+                      <p className="text-xs text-red-500">
+                        {form.formState.errors.carga_diaria.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Carga diária: calculada automaticamente abatendo 1h de intervalo.
+                  A carga diária padrão é de 480 minutos (8 horas).
                 </p>
               </>
             )}
