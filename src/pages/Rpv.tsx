@@ -4,6 +4,7 @@ import { getRpvs } from '@/services/rpv'
 import { RpvFilters } from '@/components/rpv/RpvFilters'
 import { RpvTable } from '@/components/rpv/RpvTable'
 import { RpvFormModal } from '@/components/rpv/RpvFormModal'
+import { RpvDashboard } from '@/components/rpv/RpvDashboard'
 
 export default function Rpv() {
   const [data, setData] = useState<any[]>([])
@@ -59,6 +60,8 @@ export default function Rpv() {
         <h1 className="text-3xl font-bold tracking-tight text-[#C9922A]">RPV/Precatório</h1>
         <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
       </div>
+
+      <RpvDashboard data={data} />
 
       <RpvFilters
         search={search}
