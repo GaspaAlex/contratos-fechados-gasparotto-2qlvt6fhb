@@ -103,9 +103,9 @@ export function OverviewStats({ protocolos, contratos }: Props) {
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Ticket Médio por Ação
           </CardTitle>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-2">
             <select
-              className="h-7 rounded-md border border-input bg-transparent px-1 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={monthTicket}
               onChange={(e) => setMonthTicket(Number(e.target.value))}
             >
@@ -116,7 +116,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
               ))}
             </select>
             <select
-              className="h-7 rounded-md border border-input bg-transparent px-1 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={yearTicket}
               onChange={(e) => setYearTicket(Number(e.target.value))}
             >
