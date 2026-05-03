@@ -5,6 +5,7 @@ import { RpvFilters } from '@/components/rpv/RpvFilters'
 import { RpvTable } from '@/components/rpv/RpvTable'
 import { RpvFormModal } from '@/components/rpv/RpvFormModal'
 import { RpvDashboard } from '@/components/rpv/RpvDashboard'
+import { RpvPinGuard } from '@/components/rpv/RpvPinGuard'
 
 export default function Rpv() {
   const [data, setData] = useState<any[]>([])
@@ -52,47 +53,49 @@ export default function Rpv() {
   }, [data, search, tipo, status, month, year])
 
   return (
-    <div
-      className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col gap-6 min-h-[calc(100vh-4rem)] animate-fade-in"
-      style={{ backgroundColor: '#FAF8F2' }}
-    >
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-[#C9922A]">RPV/Precatório</h1>
-        <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
-      </div>
-
-      <RpvDashboard data={data} />
-
-      <RpvFilters
-        search={search}
-        setSearch={setSearch}
-        tipo={tipo}
-        setTipo={setTipo}
-        status={status}
-        setStatus={setStatus}
-        month={month}
-        setMonth={setMonth}
-        year={year}
-        setYear={setYear}
-        onAdd={() => {
-          setEditRecord(null)
-          setFormOpen(true)
-        }}
-      />
-
-      <div className="flex-1 bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-y-auto">
-          <RpvTable
-            data={filteredData}
-            onEdit={(r) => {
-              setEditRecord(r)
-              setFormOpen(true)
-            }}
-          />
+    <RpvPinGuard>
+      <div
+        className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col gap-6 min-h-[calc(100vh-4rem)] animate-fade-in"
+        style={{ backgroundColor: '#FAF8F2' }}
+      >
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-[#C9922A]">RPV/Precatório</h1>
+          <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
         </div>
-      </div>
 
-      <RpvFormModal open={formOpen} onOpenChange={setFormOpen} record={editRecord} />
-    </div>
+        <RpvDashboard data={data} />
+
+        <RpvFilters
+          search={search}
+          setSearch={setSearch}
+          tipo={tipo}
+          setTipo={setTipo}
+          status={status}
+          setStatus={setStatus}
+          month={month}
+          setMonth={setMonth}
+          year={year}
+          setYear={setYear}
+          onAdd={() => {
+            setEditRecord(null)
+            setFormOpen(true)
+          }}
+        />
+
+        <div className="flex-1 bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <RpvTable
+              data={filteredData}
+              onEdit={(r) => {
+                setEditRecord(r)
+                setFormOpen(true)
+              }}
+            />
+          </div>
+        </div>
+
+        <RpvFormModal open={formOpen} onOpenChange={setFormOpen} record={editRecord} />
+      </div>
+    </RpvPinGuard>
   )
 }
