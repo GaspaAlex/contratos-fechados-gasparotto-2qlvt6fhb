@@ -32,23 +32,69 @@ export function RpvFormModal({
   const [formData, setFormData] = useState<any>({})
   const [loading, setLoading] = useState(false)
 
+  const formatCurrencyInput = (val: string) => {
+    if (!val) return ''
+    const numericString = val.replace(/\D/g, '')
+    if (!numericString) return ''
+    const num = parseInt(numericString, 10) / 100
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  const parseCurrencyInput = (val: string) => {
+    const numericString = val.replace(/\D/g, '')
+    if (!numericString) return 0
+    return parseInt(numericString, 10) / 100
+  }
+
+  const formatCpf = (value: string) => {
+    const v = value.replace(/\D/g, '').slice(0, 11)
+    return v
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  }
+
+  const formatPrevisao = (value: string) => {
+    const v = value.replace(/\D/g, '').slice(0, 6)
+    return v.replace(/(\d{2})(\d)/, '$1/$2')
+  }
+
   useEffect(() => {
     if (open) {
-      setFormData(
-        record || {
-          nome: '',
-          cpf: '',
-          numero_processo: '',
-          tipo: 'RPV',
-          valor_rpv: 0,
-          sucumbencia: 0,
-          status: 'Aguardando pagamento',
-          tipo_parceria: 'Sem parceria',
-          previsao_pagamento: '',
-          data_recebimento: '',
-          valor_recebido: '',
-        },
-      )
+      setFormData({
+        ...(record || {}),
+        nome: record?.nome || '',
+        cpf: record?.cpf ? formatCpf(record.cpf) : '',
+        numero_processo: record?.numero_processo || '',
+        tipo: record?.tipo || 'RPV',
+        valor_rpv: record?.valor_rpv || 0,
+        valor_rpv_str: record?.valor_rpv
+          ? record.valor_rpv.toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          : '',
+        sucumbencia: record?.sucumbencia || 0,
+        sucumbencia_str: record?.sucumbencia
+          ? record.sucumbencia.toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          : '',
+        status: record?.status || 'Aguardando pagamento',
+        tipo_parceria: record?.tipo_parceria || 'Sem parceria',
+        previsao_pagamento: record?.previsao_pagamento
+          ? formatPrevisao(record.previsao_pagamento)
+          : '',
+        data_recebimento: record?.data_recebimento || '',
+        valor_recebido: record?.valor_recebido || 0,
+        valor_recebido_str: record?.valor_recebido
+          ? record.valor_recebido.toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          : '',
+      })
     }
   }, [open, record])
 
@@ -58,9 +104,15 @@ export function RpvFormModal({
     try {
       const isRecebido = formData.status === 'Recebido'
       const dataToSave = {
-        ...formData,
+        nome: formData.nome,
+        cpf: formData.cpf,
+        numero_processo: formData.numero_processo,
+        tipo: formData.tipo,
         valor_rpv: Number(formData.valor_rpv) || 0,
         sucumbencia: Number(formData.sucumbencia) || 0,
+        status: formData.status,
+        tipo_parceria: formData.tipo_parceria,
+        previsao_pagamento: formData.previsao_pagamento,
         recebido: isRecebido,
         valor_recebido: isRecebido ? Number(formData.valor_recebido) || 0 : null,
         data_recebimento: isRecebido ? formData.data_recebimento : null,
@@ -140,7 +192,8 @@ export function RpvFormModal({
               <Input
                 required
                 value={formData.cpf || ''}
-                onChange={(e) => handleChange('cpf', e.target.value)}
+                onChange={(e) => handleChange('cpf', formatCpf(e.target.value))}
+                placeholder="000.000.000-00"
               />
             </div>
             <div className="space-y-2">
@@ -165,19 +218,25 @@ export function RpvFormModal({
             <div className="space-y-2">
               <Label>Valor RPV/Precatório R$</Label>
               <Input
-                type="number"
-                step="0.01"
-                value={formData.valor_rpv || ''}
-                onChange={(e) => handleChange('valor_rpv', e.target.value)}
+                type="text"
+                value={formData.valor_rpv_str || ''}
+                onChange={(e) => {
+                  const str = formatCurrencyInput(e.target.value)
+                  const num = parseCurrencyInput(e.target.value)
+                  setFormData((prev: any) => ({ ...prev, valor_rpv_str: str, valor_rpv: num }))
+                }}
               />
             </div>
             <div className="space-y-2">
               <Label>Sucumbência R$</Label>
               <Input
-                type="number"
-                step="0.01"
-                value={formData.sucumbencia || ''}
-                onChange={(e) => handleChange('sucumbencia', e.target.value)}
+                type="text"
+                value={formData.sucumbencia_str || ''}
+                onChange={(e) => {
+                  const str = formatCurrencyInput(e.target.value)
+                  const num = parseCurrencyInput(e.target.value)
+                  setFormData((prev: any) => ({ ...prev, sucumbencia_str: str, sucumbencia: num }))
+                }}
               />
             </div>
 
@@ -252,11 +311,18 @@ export function RpvFormModal({
                 <div className="space-y-2">
                   <Label>Valor Efetivamente Recebido R$ *</Label>
                   <Input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     required
-                    value={formData.valor_recebido || ''}
-                    onChange={(e) => handleChange('valor_recebido', e.target.value)}
+                    value={formData.valor_recebido_str || ''}
+                    onChange={(e) => {
+                      const str = formatCurrencyInput(e.target.value)
+                      const num = parseCurrencyInput(e.target.value)
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        valor_recebido_str: str,
+                        valor_recebido: num,
+                      }))
+                    }}
                   />
                 </div>
               </>
@@ -269,7 +335,7 @@ export function RpvFormModal({
               <Input
                 placeholder="Ex: 06/2026"
                 value={formData.previsao_pagamento || ''}
-                onChange={(e) => handleChange('previsao_pagamento', e.target.value)}
+                onChange={(e) => handleChange('previsao_pagamento', formatPrevisao(e.target.value))}
               />
             </div>
           </div>
