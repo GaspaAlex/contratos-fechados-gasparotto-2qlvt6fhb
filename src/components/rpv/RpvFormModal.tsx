@@ -45,6 +45,8 @@ export function RpvFormModal({
           status: 'Aguardando pagamento',
           tipo_parceria: 'Sem parceria',
           previsao_pagamento: '',
+          data_recebimento: '',
+          valor_recebido: '',
         },
       )
     }
@@ -54,11 +56,14 @@ export function RpvFormModal({
     e.preventDefault()
     setLoading(true)
     try {
+      const isRecebido = formData.status === 'Recebido'
       const dataToSave = {
         ...formData,
         valor_rpv: Number(formData.valor_rpv) || 0,
         sucumbencia: Number(formData.sucumbencia) || 0,
-        recebido: formData.status === 'Recebido',
+        recebido: isRecebido,
+        valor_recebido: isRecebido ? Number(formData.valor_recebido) || 0 : null,
+        data_recebimento: isRecebido ? formData.data_recebimento : null,
       }
 
       if (record?.id) {
@@ -80,9 +85,42 @@ export function RpvFormModal({
     setFormData((prev: any) => ({ ...prev, [field]: val }))
   }
 
+  const valorRpv = Number(formData.valor_rpv) || 0
+  const sucumbencia = Number(formData.sucumbencia) || 0
+
+  const honorarios30 = valorRpv * 0.3
+  const totalHonorarios = honorarios30 + sucumbencia
+
+  let honorariosEscritorio = totalHonorarios
+
+  if (formData.tipo_parceria === 'Carnevale') {
+    honorariosEscritorio = totalHonorarios * 0.5
+  } else if (formData.tipo_parceria?.startsWith('Macohin')) {
+    const step1 = totalHonorarios * 0.857
+    const step2 = step1 * 0.8334
+    const macohinBase = step2 / 2
+
+    if (formData.tipo_parceria === 'Macohin') {
+      honorariosEscritorio = macohinBase
+    } else if (formData.tipo_parceria === 'Macohin + Rogério') {
+      honorariosEscritorio = macohinBase * 0.4
+    } else if (formData.tipo_parceria === 'Macohin + Luciana') {
+      honorariosEscritorio = macohinBase * 0.5
+    }
+  }
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+  }
+
+  const parseDate = (d: string) => {
+    if (!d) return ''
+    return d.split(' ')[0].split('T')[0]
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#FAF8F2]">
         <DialogHeader>
           <DialogTitle>{record ? 'Editar Registro' : 'Novo Registro'}</DialogTitle>
         </DialogHeader>
@@ -125,7 +163,7 @@ export function RpvFormModal({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Valor (Honorários) R$</Label>
+              <Label>Valor RPV/Precatório R$</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -142,6 +180,30 @@ export function RpvFormModal({
                 onChange={(e) => handleChange('sucumbencia', e.target.value)}
               />
             </div>
+
+            <div className="space-y-2 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-md border border-[#C9922A] bg-[#C9922A]/10">
+              <div className="space-y-1">
+                <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
+                  Honorários 30%
+                </Label>
+                <div className="font-semibold text-gray-900">{formatCurrency(honorarios30)}</div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
+                  Total Honorários
+                </Label>
+                <div className="font-semibold text-gray-900">{formatCurrency(totalHonorarios)}</div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
+                  Honorários Escritório
+                </Label>
+                <div className="font-semibold text-gray-900">
+                  {formatCurrency(honorariosEscritorio)}
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
@@ -175,7 +237,34 @@ export function RpvFormModal({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 md:col-span-2">
+
+            {formData.status === 'Recebido' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Data de Recebimento *</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={parseDate(formData.data_recebimento)}
+                    onChange={(e) => handleChange('data_recebimento', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Valor Efetivamente Recebido R$ *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={formData.valor_recebido || ''}
+                    onChange={(e) => handleChange('valor_recebido', e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            <div
+              className={`space-y-2 ${formData.status === 'Recebido' ? 'md:col-span-2' : 'md:col-span-2'}`}
+            >
               <Label>Previsão Pagamento (MM/YYYY)</Label>
               <Input
                 placeholder="Ex: 06/2026"
