@@ -52,6 +52,7 @@ const navSections = [
   {
     label: 'GESTÃO DE CASOS',
     items: [
+      { name: 'RPV/Precatório', path: '/rpv', icon: Scale },
       { name: 'Protocolo', path: '/protocolo', icon: FileText },
       { name: 'Contratos Fechados', path: '/dashboard', icon: Folder },
       { name: 'Perícias', path: '/pericias', icon: Clock },

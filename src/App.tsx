@@ -8,6 +8,7 @@ import Layout from './components/Layout'
 import NotFound from './pages/NotFound'
 import Index from './pages/Index'
 import Dashboard from './pages/Dashboard'
+import Rpv from './pages/Rpv'
 import Protocolo from './pages/Protocolo'
 import Pericias from './pages/Pericias'
 import LeadsCampanha from './pages/LeadsCampanha'
@@ -32,6 +33,7 @@ const App = () => (
               <Route element={<Layout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/rpv" element={<Rpv />} />
                 <Route path="/protocolo" element={<Protocolo />} />
                 <Route path="/pericias" element={<Pericias />} />
                 <Route path="/leads" element={<LeadsCampanha />} />
