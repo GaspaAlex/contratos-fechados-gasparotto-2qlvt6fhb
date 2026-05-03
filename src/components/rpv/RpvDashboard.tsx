@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select'
 import { formatCurrency } from '@/lib/formatters'
 import { MONTHS, YEARS } from './constants'
+import { useRpvFilters } from './store'
 
 export function calculateHonorariosEscritorio(item: any) {
   const valorRpv = Number(item.valor_rpv) || 0
@@ -33,6 +34,7 @@ export function calculateHonorariosEscritorio(item: any) {
 export function RpvDashboard({ data }: { data: any[] }) {
   const [month, setMonth] = useState('Todos')
   const [year, setYear] = useState('Todos')
+  const { quickFilter, parceriaFilter } = useRpvFilters()
 
   const { aReceber, recebido, pendentes, recebidosCount, totalCasos } = useMemo(() => {
     let aReceberVal = 0
@@ -45,6 +47,14 @@ export function RpvDashboard({ data }: { data: any[] }) {
       const [m, y] = (item.previsao_pagamento || '').split('/')
       if (month !== 'Todos' && m !== month) return
       if (year !== 'Todos' && y !== year) return
+
+      if (quickFilter === 'A Receber' && item.recebido) return
+      if (quickFilter === 'Recebido' && !item.recebido) return
+      if (quickFilter === 'RPV' && item.tipo !== 'RPV') return
+      if (quickFilter === 'Precatório' && item.tipo !== 'Precatório') return
+      if (quickFilter === 'Por Parceria') {
+        if (parceriaFilter !== 'Todos os parceiros' && item.tipo_parceria !== parceriaFilter) return
+      }
 
       totalCasosVal++
       if (item.recebido) {
@@ -63,7 +73,7 @@ export function RpvDashboard({ data }: { data: any[] }) {
       recebidosCount: recebidosCountVal,
       totalCasos: totalCasosVal,
     }
-  }, [data, month, year])
+  }, [data, month, year, quickFilter, parceriaFilter])
 
   const totalGeral = aReceber + recebido
 

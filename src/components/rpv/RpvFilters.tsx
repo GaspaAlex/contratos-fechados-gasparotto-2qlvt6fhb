@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, Search } from 'lucide-react'
 import { STATUS_OPTIONS, MONTHS, YEARS } from './constants'
 import { cn } from '@/lib/utils'
+import { useRpvFilters, rpvFilterStore } from './store'
 
 export function RpvFilters({
   search,
@@ -22,12 +23,13 @@ export function RpvFilters({
   setMonth,
   year,
   setYear,
-  quickFilter = 'Todos',
-  setQuickFilter = () => {},
-  parceriaFilter = 'Todos os parceiros',
-  setParceriaFilter = () => {},
   onAdd,
 }: any) {
+  const { quickFilter, parceriaFilter } = useRpvFilters()
+
+  const setQuickFilter = rpvFilterStore.setQuickFilter
+  const setParceriaFilter = rpvFilterStore.setParceriaFilter
+
   const QUICK_FILTERS = ['Todos', 'A Receber', 'Recebido', 'RPV', 'Precatório', 'Por Parceria']
 
   const PARCERIA_OPTIONS = [

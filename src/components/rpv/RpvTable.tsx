@@ -14,6 +14,7 @@ import { deleteRpv } from '@/services/rpv'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { STATUS_COLORS, MONTHS } from './constants'
+import { useRpvFilters } from './store'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,9 +28,23 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => void }) {
+  const { quickFilter, parceriaFilter } = useRpvFilters()
+
   const groupedData = useMemo(() => {
+    const filteredData = data.filter((item) => {
+      if (quickFilter === 'A Receber' && item.recebido) return false
+      if (quickFilter === 'Recebido' && !item.recebido) return false
+      if (quickFilter === 'RPV' && item.tipo !== 'RPV') return false
+      if (quickFilter === 'Precatório' && item.tipo !== 'Precatório') return false
+      if (quickFilter === 'Por Parceria') {
+        if (parceriaFilter !== 'Todos os parceiros' && item.tipo_parceria !== parceriaFilter)
+          return false
+      }
+      return true
+    })
+
     const groups: Record<string, any[]> = {}
-    data.forEach((item) => {
+    filteredData.forEach((item) => {
       const key = item.previsao_pagamento || 'Sem previsão'
       if (!groups[key]) groups[key] = []
       groups[key].push(item)
@@ -48,7 +63,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
       key,
       items: groups[key],
     }))
-  }, [data])
+  }, [data, quickFilter, parceriaFilter])
 
   const handleDelete = async (id: string) => {
     try {
