@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Delete } from 'lucide-react'
+import { Key } from 'lucide-react'
 
 interface RpvPinGuardProps {
   children: React.ReactNode
@@ -13,35 +13,24 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState(false)
 
-  useEffect(() => {
-    const isAuth = sessionStorage.getItem('rpv_autenticado')
-    if (isAuth === 'true') {
-      setAuthenticated(true)
-    }
-  }, [])
-
   const handleDigit = (digit: string) => {
     if (pin.length < 4) {
       setError(false)
-      const newPin = pin + digit
-      setPin(newPin)
-
-      if (newPin.length === 4) {
-        if (newPin === '2683') {
-          sessionStorage.setItem('rpv_autenticado', 'true')
-          setAuthenticated(true)
-        } else {
-          setError(true)
-          setTimeout(() => setPin(''), 500)
-        }
-      }
+      setPin(pin + digit)
     }
   }
 
-  const handleDelete = () => {
-    if (pin.length > 0) {
-      setPin(pin.slice(0, -1))
-      setError(false)
+  const handleClear = () => {
+    setPin('')
+    setError(false)
+  }
+
+  const handleEnter = () => {
+    if (pin === '2683') {
+      setAuthenticated(true)
+    } else {
+      setError(true)
+      setPin('')
     }
   }
 
@@ -54,14 +43,15 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
       className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] animate-fade-in"
       style={{ backgroundColor: '#FAF8F2' }}
     >
-      <Card className="w-full max-w-md shadow-lg border-0 bg-white">
-        <CardHeader className="space-y-2 pb-6 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-[#C9922A]">
-            RPV / PRECATÓRIO
-          </CardTitle>
-          <p className="text-muted-foreground text-sm">Insira seu PIN para acessar</p>
-        </CardHeader>
-        <CardContent className="space-y-8">
+      <Card className="w-full max-w-md shadow-lg border-0 bg-white overflow-hidden">
+        <div className="bg-[#C9922A] p-8 text-center text-white flex flex-col items-center gap-3">
+          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mb-1">
+            <Key className="w-7 h-7 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">RPV / PRECATÓRIO</h2>
+          <p className="text-white/90 text-sm">Insira seu PIN para acessar</p>
+        </div>
+        <CardContent className="p-8 space-y-8">
           <div className="flex justify-center gap-4">
             {[0, 1, 2, 3].map((index) => (
               <div
@@ -79,7 +69,7 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
             ))}
           </div>
 
-          <div className="h-5 flex items-center justify-center">
+          <div className="h-6 flex items-center justify-center">
             {error && (
               <p className="text-red-500 text-sm font-medium animate-fade-in">
                 PIN incorreto. Tente novamente.
@@ -87,35 +77,38 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4 max-w-[280px] mx-auto">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-[300px] mx-auto">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <Button
                 key={num}
                 variant="outline"
-                className="h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors"
+                className="h-14 sm:h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors"
                 onClick={() => handleDigit(num.toString())}
               >
                 {num}
               </Button>
             ))}
-            <div className="col-start-2">
-              <Button
-                variant="outline"
-                className="h-16 w-full text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors"
-                onClick={() => handleDigit('0')}
-              >
-                0
-              </Button>
-            </div>
-            <div className="col-start-3">
-              <Button
-                variant="outline"
-                className="h-16 w-full text-2xl font-medium rounded-2xl text-gray-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
-                onClick={handleDelete}
-              >
-                <Delete className="w-6 h-6" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              className="h-14 sm:h-16 text-sm font-bold rounded-2xl text-gray-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
+              onClick={handleClear}
+            >
+              LIMPAR
+            </Button>
+            <Button
+              variant="outline"
+              className="h-14 sm:h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors"
+              onClick={() => handleDigit('0')}
+            >
+              0
+            </Button>
+            <Button
+              variant="outline"
+              className="h-14 sm:h-16 text-sm font-bold rounded-2xl text-[#C9922A] border-[#C9922A] hover:bg-[#C9922A] hover:text-white transition-colors"
+              onClick={handleEnter}
+            >
+              ENTRAR
+            </Button>
           </div>
         </CardContent>
       </Card>
