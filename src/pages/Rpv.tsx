@@ -1,26 +1,95 @@
-import { Scale } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { useRealtime } from '@/hooks/use-realtime'
+import { getRpvs } from '@/services/rpv'
+import { RpvFilters } from '@/components/rpv/RpvFilters'
+import { RpvTable } from '@/components/rpv/RpvTable'
+import { RpvFormModal } from '@/components/rpv/RpvFormModal'
 
 export default function Rpv() {
+  const [data, setData] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+  const [tipo, setTipo] = useState('Todos')
+  const [status, setStatus] = useState('Todos')
+  const [month, setMonth] = useState('Todos')
+  const [year, setYear] = useState('Todos')
+
+  const [formOpen, setFormOpen] = useState(false)
+  const [editRecord, setEditRecord] = useState<any>(null)
+
+  const loadData = async () => {
+    try {
+      const res = await getRpvs()
+      setData(res)
+    } catch (e) {
+      console.error('Failed to load RPVs:', e)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+  useRealtime('rpv_precatorio', () => {
+    loadData()
+  })
+
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (search) {
+        const query = search.toLowerCase()
+        const matchName = item.nome?.toLowerCase().includes(query)
+        const matchProc = item.numero_processo?.toLowerCase().includes(query)
+        if (!matchName && !matchProc) return false
+      }
+      if (tipo !== 'Todos' && item.tipo !== tipo) return false
+      if (status !== 'Todos' && item.status !== status) return false
+
+      const [m, y] = (item.previsao_pagamento || '').split('/')
+      if (month !== 'Todos' && m !== month) return false
+      if (year !== 'Todos' && y !== year) return false
+      return true
+    })
+  }, [data, search, tipo, status, month, year])
+
   return (
-    <div className="flex flex-col gap-6 h-full animate-fade-in">
+    <div
+      className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col gap-6 min-h-[calc(100vh-4rem)] animate-fade-in"
+      style={{ backgroundColor: '#FAF8F2' }}
+    >
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">RPV/Precatório</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-[#C9922A]">RPV/Precatório</h1>
         <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
       </div>
 
-      <div className="flex-1 bg-card border rounded-xl flex items-center justify-center shadow-sm p-8">
-        <div className="flex flex-col items-center gap-4 text-muted-foreground">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-            <Scale className="w-8 h-8 text-[#C9922A]" />
-          </div>
-          <div className="text-center">
-            <h3 className="font-medium text-foreground text-lg">Módulo em Desenvolvimento</h3>
-            <p className="text-sm mt-1 max-w-[300px]">
-              A área de gestão de RPVs e Precatórios estará disponível em breve.
-            </p>
-          </div>
+      <RpvFilters
+        search={search}
+        setSearch={setSearch}
+        tipo={tipo}
+        setTipo={setTipo}
+        status={status}
+        setStatus={setStatus}
+        month={month}
+        setMonth={setMonth}
+        year={year}
+        setYear={setYear}
+        onAdd={() => {
+          setEditRecord(null)
+          setFormOpen(true)
+        }}
+      />
+
+      <div className="flex-1 bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto">
+          <RpvTable
+            data={filteredData}
+            onEdit={(r) => {
+              setEditRecord(r)
+              setFormOpen(true)
+            }}
+          />
         </div>
       </div>
+
+      <RpvFormModal open={formOpen} onOpenChange={setFormOpen} record={editRecord} />
     </div>
   )
 }
