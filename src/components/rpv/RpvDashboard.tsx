@@ -1,14 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { formatCurrency } from '@/lib/formatters'
-import { MONTHS, YEARS } from './constants'
 import { useRpvFilters } from './store'
 
 export function calculateHonorariosEscritorio(item: any) {
@@ -31,9 +23,7 @@ export function calculateHonorariosEscritorio(item: any) {
   }
 }
 
-export function RpvDashboard({ data }: { data: any[] }) {
-  const [month, setMonth] = useState('Todos')
-  const [year, setYear] = useState('Todos')
+export function RpvDashboard({ data, month, year }: { data: any[]; month: string; year: string }) {
   const { quickFilter, parceriaFilter } = useRpvFilters()
 
   const { aReceber, recebido, pendentes, recebidosCount, totalCasos } = useMemo(() => {
@@ -78,37 +68,9 @@ export function RpvDashboard({ data }: { data: any[] }) {
   const totalGeral = aReceber + recebido
 
   return (
-    <div className="flex flex-col gap-4 mb-2">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col gap-4 mb-2 mt-4">
+      <div>
         <h2 className="text-xl font-semibold text-[#C9922A]">Resumo Financeiro</h2>
-        <div className="flex items-center gap-2">
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-[160px] bg-white">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os meses</SelectItem>
-              {MONTHS.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[120px] bg-white">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os Anos</SelectItem>
-              {YEARS.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

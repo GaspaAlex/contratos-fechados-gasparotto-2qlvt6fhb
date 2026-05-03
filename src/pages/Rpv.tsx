@@ -63,8 +63,6 @@ export default function Rpv() {
           <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
         </div>
 
-        <RpvDashboard data={data} />
-
         <RpvFilters
           search={search}
           setSearch={setSearch}
@@ -81,6 +79,8 @@ export default function Rpv() {
             setFormOpen(true)
           }}
         />
+
+        <RpvDashboard data={data} month={month} year={year} />
 
         <div className="flex-1 bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto">

@@ -43,7 +43,7 @@ export function RpvFilters({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white p-4 rounded-xl border shadow-sm">
+      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white p-4 rounded-lg border shadow-sm">
         <div className="flex flex-wrap items-center gap-3 flex-1">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
