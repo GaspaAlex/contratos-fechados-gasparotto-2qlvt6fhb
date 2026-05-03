@@ -99,7 +99,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
       </Card>
 
       <Card className="border-t-2 border-t-[#C9922A] shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-col items-start justify-center space-y-2 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Ticket Médio por Ação
           </CardTitle>
