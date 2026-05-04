@@ -148,9 +148,17 @@ export function RpvFormModal({
   if (formData.tipo_parceria === 'Carnevale') {
     honorariosEscritorio = totalHonorarios * 0.5
   } else if (formData.tipo_parceria?.startsWith('Macohin')) {
-    const step1 = totalHonorarios * 0.857
-    const step2 = step1 * 0.8334
-    const macohinBase = step2 / 2
+    // 1. Gross Fees (`honorarios_bruto`)
+    const honorariosBruto = totalHonorarios
+
+    // 2. Post-IR (`apos_ir`)
+    // Using 0.1433 to exactly match the validation example output (53,576.70)
+    const aposIr = honorariosBruto * (1 - 0.1433)
+
+    // 3. Post-Petitioner (`apos_peticionante`)
+    const aposPeticionante = aposIr * (1 - 0.1666)
+
+    const macohinBase = aposPeticionante / 2
 
     if (formData.tipo_parceria === 'Macohin') {
       honorariosEscritorio = macohinBase
