@@ -99,8 +99,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-12 text-xs">#</TableHead>
-                  <TableHead className="text-xs">NOME</TableHead>
-                  <TableHead className="text-xs">CPF</TableHead>
+                  <TableHead className="text-xs">NOME / CPF</TableHead>
                   <TableHead className="text-xs">Nº PROCESSO</TableHead>
                   <TableHead className="text-xs">TIPO</TableHead>
                   <TableHead className="text-xs">PREVISÃO</TableHead>
@@ -141,8 +140,10 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                       )}
                     >
                       <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
-                      <TableCell className="font-medium">{item.nome}</TableCell>
-                      <TableCell>{item.cpf}</TableCell>
+                      <TableCell>
+                        <div className="font-bold">{item.nome}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{item.cpf}</div>
+                      </TableCell>
                       <TableCell
                         className="text-sm"
                         style={{ fontFamily: '"JetBrains Mono", monospace' }}
@@ -151,7 +152,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                       </TableCell>
                       <TableCell>{item.tipo || '-'}</TableCell>
                       <TableCell>{item.previsao_pagamento || '-'}</TableCell>
-                      <TableCell>{formatCurrency(item.valor_rpv)}</TableCell>
+                      <TableCell className="font-bold">{formatCurrency(item.valor_rpv)}</TableCell>
                       <TableCell>{formatCurrency(item.sucumbencia)}</TableCell>
                       <TableCell>{formatCurrency(honorariosEscritorio)}</TableCell>
                       <TableCell>
