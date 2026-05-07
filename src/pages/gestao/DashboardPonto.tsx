@@ -35,6 +35,54 @@ export default function DashboardPonto() {
     return () => clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    const fixNatalyBalance = async () => {
+      try {
+        const flagKey = 'fix_nataly_may_2026_done'
+        if (localStorage.getItem(flagKey)) return
+
+        const funcs = await pb.collection('funcionarios').getFullList({
+          filter: 'nome = "Nataly Tayna Figueiredo da Silva"',
+        })
+        const nataly = funcs[0]
+        if (!nataly) return
+
+        const aprilBalances = await pb.collection('saldos_mensais').getFullList({
+          filter: `funcionario_id = "${nataly.id}" && mes = 4 && ano = 2026`,
+        })
+        const aprilBalance = aprilBalances[0]
+
+        const mayBalances = await pb.collection('saldos_mensais').getFullList({
+          filter: `funcionario_id = "${nataly.id}" && mes = 5 && ano = 2026`,
+        })
+        const mayBalance = mayBalances[0]
+
+        if (aprilBalance && mayBalance) {
+          const newSaldoAnterior = aprilBalance.saldo_total
+          const newSaldoTotal = newSaldoAnterior + mayBalance.saldo_mes
+
+          if (
+            mayBalance.saldo_anterior !== newSaldoAnterior ||
+            mayBalance.saldo_total !== newSaldoTotal
+          ) {
+            await pb.collection('saldos_mensais').update(mayBalance.id, {
+              saldo_anterior: newSaldoAnterior,
+              saldo_total: newSaldoTotal,
+            })
+          }
+        }
+
+        localStorage.setItem(flagKey, 'true')
+      } catch (error) {
+        console.error('Erro ao corrigir saldo da Nataly:', error)
+      }
+    }
+
+    if (session) {
+      fixNatalyBalance()
+    }
+  }, [session])
+
   const loadData = async () => {
     try {
       const funcs = await pb.collection('funcionarios').getFullList({
