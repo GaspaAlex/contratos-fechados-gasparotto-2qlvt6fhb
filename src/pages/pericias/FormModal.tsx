@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Pericia, createPericia, updatePericia } from '@/services/pericias'
 import { format, parseISO } from 'date-fns'
+import { Plus, Check, X } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
 
 const schema = z.object({
   nome: z.string().min(1, 'Obrigatório'),
@@ -16,7 +19,7 @@ const schema = z.object({
   horario: z.string().optional(),
   endereco: z.string().optional(),
   perito: z.string().optional(),
-  status: z.enum(['Agendado', 'Pendente', 'Cancelado']),
+  status: z.string().min(1, 'Obrigatório'),
   compareceu: z.enum(['Sim', 'Não', 'Não realizada']),
   laudo: z.enum([
     'Favorável',
@@ -36,6 +39,50 @@ export function FormModal({
   onOpenChange: (v: boolean) => void
   item: Pericia | null
 }) {
+  const [statusOptions, setStatusOptions] = useState<string[]>([
+    'Agendado',
+    'Pendente',
+    'Cancelado',
+    'Concluído',
+  ])
+  const [isAddingStatus, setIsAddingStatus] = useState(false)
+  const [newStatus, setNewStatus] = useState('')
+
+  useEffect(() => {
+    const loadStatuses = async () => {
+      try {
+        const records = await pb.collection('status_pericia').getFullList({ sort: 'created' })
+        setStatusOptions(records.map((r) => r.nome))
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    loadStatuses()
+  }, [])
+
+  useRealtime('status_pericia', (e) => {
+    if (e.action === 'create') {
+      setStatusOptions((prev) => {
+        if (!prev.includes(e.record.nome)) {
+          return [...prev, e.record.nome]
+        }
+        return prev
+      })
+    }
+  })
+
+  const handleAddStatus = async () => {
+    if (!newStatus.trim()) return
+    try {
+      const created = await pb.collection('status_pericia').create({ nome: newStatus.trim() })
+      form.setValue('status', created.nome)
+      setIsAddingStatus(false)
+      setNewStatus('')
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -129,14 +176,59 @@ export function FormModal({
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                {...form.register('status')}
-              >
-                <option value="Agendado">Agendado</option>
-                <option value="Pendente">Pendente</option>
-                <option value="Cancelado">Cancelado</option>
-              </select>
+              {!isAddingStatus ? (
+                <div className="flex items-center gap-2">
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    {...form.register('status')}
+                  >
+                    {statusOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsAddingStatus(true)}
+                    className="shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    placeholder="Novo status"
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="icon"
+                    onClick={handleAddStatus}
+                    className="shrink-0"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setIsAddingStatus(false)
+                      setNewStatus('')
+                    }}
+                    className="shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Compareceu</Label>

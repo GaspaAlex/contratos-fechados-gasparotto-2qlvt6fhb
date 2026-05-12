@@ -8,7 +8,7 @@ export interface Pericia {
   horario: string
   endereco: string
   perito: string
-  status: 'Agendado' | 'Pendente' | 'Cancelado'
+  status: string
   compareceu: 'Sim' | 'Não' | 'Não realizada'
   laudo:
     | 'Favorável'

@@ -25,6 +25,12 @@ export function PericiasTable({
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('Todos')
 
+  const filterOptions = useMemo(() => {
+    const s = new Set(['Agendado', 'Pendente', 'Cancelado', 'Concluído'])
+    data.forEach((d) => s.add(d.status))
+    return Array.from(s)
+  }, [data])
+
   const filtered = useMemo(() => {
     return data.filter((d) => {
       const matchSearch =
@@ -64,6 +70,15 @@ export function PericiasTable({
     if (status === 'Pendente')
       return (
         <span className="px-2 py-1 rounded bg-amber-100 text-amber-800 text-[11px] font-semibold uppercase dark:bg-amber-500/20 dark:text-amber-400">
+          {status}
+        </span>
+      )
+    if (status === 'Concluído')
+      return (
+        <span
+          className="px-2 py-1 rounded text-white text-[11px] font-semibold uppercase"
+          style={{ backgroundColor: '#5A9FD4' }}
+        >
           {status}
         </span>
       )
@@ -128,9 +143,11 @@ export function PericiasTable({
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="Todos">Todos os Status</option>
-          <option value="Agendado">Agendado</option>
-          <option value="Pendente">Pendente</option>
-          <option value="Cancelado">Cancelado</option>
+          {filterOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
         </select>
       </div>
 
