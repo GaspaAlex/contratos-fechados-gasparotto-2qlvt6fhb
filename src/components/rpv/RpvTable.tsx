@@ -33,9 +33,15 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
     useRpvFilters()
 
   const groupedData = useMemo(() => {
-    const searchTerm = removeAccents(search.trim().toLowerCase())
-
     const filteredData = data.filter((item) => {
+      if (search.trim()) {
+        const s = removeAccents(search.trim().toLowerCase())
+        return (
+          removeAccents((item.nome || '').toLowerCase()).includes(s) ||
+          removeAccents((item.numero_processo || '').toLowerCase()).includes(s)
+        )
+      }
+
       if (quickFilter === 'A Receber' && item.recebido) return false
       if (quickFilter === 'Recebido' && !item.recebido) return false
       if (quickFilter === 'RPV' && item.tipo !== 'RPV') return false
@@ -58,14 +64,6 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
         const previsao = item.previsao_pagamento || ''
         const [, y] = previsao.split('/')
         if (y !== anoFilter) return false
-      }
-
-      if (searchTerm) {
-        const nome = removeAccents(String(item.nome || '').toLowerCase())
-        const processo = removeAccents(String(item.numero_processo || '').toLowerCase())
-        if (!nome.includes(searchTerm) && !processo.includes(searchTerm)) {
-          return false
-        }
       }
 
       return true
