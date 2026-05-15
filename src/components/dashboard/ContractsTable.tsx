@@ -11,8 +11,18 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, FileText, Pencil, Trash2, Search, Plus, AlertTriangle } from 'lucide-react'
+import {
+  CheckCircle2,
+  FileText,
+  Pencil,
+  Trash2,
+  Search,
+  Plus,
+  AlertTriangle,
+  UserCheck,
+} from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -374,7 +384,24 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                                 !isArchived && !isRDocs && 'hover:bg-muted/30',
                               )}
                             >
-                              <TableCell className="font-semibold">{contract.nome}</TableCell>
+                              <TableCell className="font-semibold">
+                                <div className="flex items-center gap-2">
+                                  {contract.nome}
+                                  {contract.representante && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <UserCheck className="h-4 w-4 text-[#C9922A] cursor-help shrink-0" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>
+                                          Representante:{' '}
+                                          {contract.representante_nome || 'Não informado'}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </TableCell>
                               <TableCell className="text-muted-foreground whitespace-nowrap">
                                 {contract.fone || '-'}
                               </TableCell>

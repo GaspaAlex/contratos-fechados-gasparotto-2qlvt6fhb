@@ -79,6 +79,11 @@ export function ContractModal({
     parceiro_nome: string
     parceiro_comissao: number
     origem: string
+    representante: boolean
+    representante_nome: string
+    representante_cpf: string
+    representante_vinculo: string
+    representante_telefone: string
   }>({
     nome: '',
     fone: '',
@@ -93,6 +98,11 @@ export function ContractModal({
     parceiro_nome: '',
     parceiro_comissao: 0,
     origem: '',
+    representante: false,
+    representante_nome: '',
+    representante_cpf: '',
+    representante_vinculo: '',
+    representante_telefone: '',
   })
 
   useEffect(() => {
@@ -114,6 +124,11 @@ export function ContractModal({
           parceiro_nome: contract.parceiro_nome || '',
           parceiro_comissao: contract.parceiro_comissao || 0,
           origem: contract.origem || 'Não classificado',
+          representante: contract.representante || false,
+          representante_nome: contract.representante_nome || '',
+          representante_cpf: contract.representante_cpf || '',
+          representante_vinculo: contract.representante_vinculo || '',
+          representante_telefone: contract.representante_telefone || '',
         })
       } else {
         setFormData({
@@ -130,6 +145,11 @@ export function ContractModal({
           parceiro_nome: '',
           parceiro_comissao: 0,
           origem: '',
+          representante: false,
+          representante_nome: '',
+          representante_cpf: '',
+          representante_vinculo: '',
+          representante_telefone: '',
         })
       }
       setDuplicateWarning(null)
@@ -160,6 +180,27 @@ export function ContractModal({
     else if (v.length > 2) formatted = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2')
     else if (v.length > 0) formatted = v.replace(/^(\d{0,2})/, '($1')
     setFormData({ ...formData, fone: formatted })
+  }
+
+  const handleRepPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, '')
+    if (v.length > 11) v = v.slice(0, 11)
+    let formatted = v
+    if (v.length > 10) formatted = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3')
+    else if (v.length > 5) formatted = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3')
+    else if (v.length > 2) formatted = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2')
+    else if (v.length > 0) formatted = v.replace(/^(\d{0,2})/, '($1')
+    setFormData({ ...formData, representante_telefone: formatted })
+  }
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, '')
+    if (v.length > 11) v = v.slice(0, 11)
+    let formatted = v
+    if (v.length > 9) formatted = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4')
+    else if (v.length > 6) formatted = v.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, '$1.$2.$3')
+    else if (v.length > 3) formatted = v.replace(/^(\d{3})(\d{0,3})/, '$1.$2')
+    setFormData({ ...formData, representante_cpf: formatted })
   }
 
   const handleAddBeneficio = async (nome: string) => {
@@ -326,6 +367,10 @@ export function ContractModal({
         dcontrato: toPBDate(formData.dcontrato),
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
+        representante_nome: formData.representante ? formData.representante_nome : '',
+        representante_cpf: formData.representante ? formData.representante_cpf : '',
+        representante_vinculo: formData.representante ? formData.representante_vinculo : '',
+        representante_telefone: formData.representante ? formData.representante_telefone : '',
       }
       if (isEdit) await updateContrato(contract.id, payload)
       else await createContrato(payload)
@@ -343,6 +388,8 @@ export function ContractModal({
     if (!formData.nome || !formData.dcontrato)
       return toast.error('Preencha Nome e Data do Contrato.')
     if (!isEdit && !formData.origem) return toast.error('Selecione a origem do caso')
+    if (formData.representante && !formData.representante_nome)
+      return toast.error('Preencha o Nome do Representante Legal.')
 
     try {
       setLoading(true)
@@ -550,6 +597,74 @@ export function ContractModal({
                         parceiro_comissao: parseFloat(e.target.value) || 0,
                       })
                     }
+                    className="focus-visible:ring-[#C9922A]"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="representante"
+                checked={formData.representante}
+                onCheckedChange={(c) => setFormData({ ...formData, representante: !!c })}
+              />
+              <Label htmlFor="representante" className="text-[#C9922A] font-bold cursor-pointer">
+                Representante Legal
+              </Label>
+            </div>
+            {formData.representante && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                <div className="space-y-2">
+                  <Label>
+                    Nome do Representante <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={formData.representante_nome}
+                    onChange={(e) =>
+                      setFormData({ ...formData, representante_nome: e.target.value })
+                    }
+                    className="focus-visible:ring-[#C9922A]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CPF do Representante</Label>
+                  <Input
+                    value={formData.representante_cpf}
+                    onChange={handleCpfChange}
+                    placeholder="000.000.000-00"
+                    className="focus-visible:ring-[#C9922A]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Parentesco / Vínculo</Label>
+                  <Select
+                    value={formData.representante_vinculo || 'empty'}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, representante_vinculo: v === 'empty' ? '' : v })
+                    }
+                  >
+                    <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="empty">Selecione...</SelectItem>
+                      <SelectItem value="Pai/Mãe">Pai/Mãe</SelectItem>
+                      <SelectItem value="Tutor(a)">Tutor(a)</SelectItem>
+                      <SelectItem value="Curador(a)">Curador(a)</SelectItem>
+                      <SelectItem value="Cônjuge">Cônjuge</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefone do Representante</Label>
+                  <Input
+                    value={formData.representante_telefone}
+                    onChange={handleRepPhoneChange}
+                    placeholder="(00) 00000-0000"
                     className="focus-visible:ring-[#C9922A]"
                   />
                 </div>
