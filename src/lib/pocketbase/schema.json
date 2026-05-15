@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-15T20:05:44.255Z",
+  "generatedAt": "2026-05-15T20:25:44.329Z",
   "collections": [
     {
       "name": "users",
@@ -396,6 +396,36 @@
         },
         {
           "name": "pedido",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante_nome",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante_cpf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante_vinculo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante_telefone",
           "type": "text",
           "required": false,
           "system": false

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -32,7 +33,7 @@ import {
 import { createProtocolo, updateProtocolo, deleteProtocolo } from '@/services/protocolo'
 import { toast } from 'sonner'
 
-const schema = z.object({
+const baseSchema = z.object({
   nome: z.string().min(1, 'Obrigatório'),
   fone: z.string().optional(),
   tipo_acao: z.string().optional(),
@@ -44,7 +45,43 @@ const schema = z.object({
   nautos: z.string().optional(),
   valor: z.coerce.number().optional(),
   decisao: z.string().default('Aguardando'),
+  representante: z.boolean().default(false).optional(),
+  representante_nome: z.string().optional(),
+  representante_cpf: z.string().optional(),
+  representante_vinculo: z.string().optional(),
+  representante_telefone: z.string().optional(),
 })
+
+const schema = baseSchema.refine(
+  (data) => {
+    if (data.representante && (!data.representante_nome || data.representante_nome.trim() === '')) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'Obrigatório',
+    path: ['representante_nome'],
+  },
+)
+
+const applyCpfMask = (value: string) => {
+  let v = value.replace(/\D/g, '')
+  if (v.length > 11) v = v.substring(0, 11)
+  if (v.length > 9) return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  if (v.length > 6) return v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3')
+  if (v.length > 3) return v.replace(/(\d{3})(\d{1,3})/, '$1.$2')
+  return v
+}
+
+const applyPhoneMask = (value: string) => {
+  let v = value.replace(/\D/g, '')
+  if (v.length > 11) v = v.substring(0, 11)
+  if (v.length > 10) return v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+  if (v.length > 6) return v.replace(/(\d{2})(\d{4})(\d{1,4})/, '($1) $2-$3')
+  if (v.length > 2) return v.replace(/(\d{2})(\d{1,5})/, '($1) $2')
+  return v
+}
 
 export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis, onSaved }: any) {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
@@ -63,6 +100,11 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       nautos: '',
       valor: 0,
       decisao: 'Aguardando',
+      representante: false,
+      representante_nome: '',
+      representante_cpf: '',
+      representante_vinculo: '',
+      representante_telefone: '',
     },
   })
 
@@ -74,6 +116,11 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           ...item,
           dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
           dprotocolo: item.dprotocolo ? item.dprotocolo.substring(0, 10) : '',
+          representante: item.representante || false,
+          representante_nome: item.representante_nome || '',
+          representante_cpf: item.representante_cpf || '',
+          representante_vinculo: item.representante_vinculo || '',
+          representante_telefone: item.representante_telefone || '',
         })
       } else {
         form.reset({
@@ -88,6 +135,11 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           nautos: '',
           valor: 0,
           decisao: 'Aguardando',
+          representante: false,
+          representante_nome: '',
+          representante_cpf: '',
+          representante_vinculo: '',
+          representante_telefone: '',
         })
       }
     }
@@ -123,6 +175,13 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
         payload.dprotocolo = new Date(payload.dprotocolo + 'T12:00:00Z').toISOString()
       else payload.dprotocolo = null
 
+      if (!payload.representante) {
+        payload.representante_nome = ''
+        payload.representante_cpf = ''
+        payload.representante_vinculo = ''
+        payload.representante_telefone = ''
+      }
+
       if (item) await updateProtocolo(item.id, payload)
       else await createProtocolo(payload)
 
@@ -136,7 +195,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-[#C9922A]">
             {item ? `Editar: ${item.nome}` : 'Adicionar ao Protocolo'}
@@ -326,6 +385,109 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                   </FormItem>
                 )}
               />
+
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 space-y-4 mt-2">
+                <FormField
+                  control={form.control}
+                  name="representante"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-[#C9922A] data-[state=checked]:border-[#C9922A]"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Representante Legal</FormLabel>
+                        <DialogDescription>
+                          Marque se este caso envolve um tutor, curador ou representante legal.
+                        </DialogDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('representante') && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-300 rounded-lg border border-[#C9922A]/20 bg-[#C9922A]/5 p-4 space-y-4">
+                    <h4 className="font-medium text-[#C9922A] text-sm">Dados do Representante</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="representante_nome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome do Representante</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="representante_cpf"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CPF do Representante</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="000.000.000-00"
+                                onChange={(e) => field.onChange(applyCpfMask(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="representante_vinculo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Parentesco/Vínculo</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Pai/Mãe">Pai/Mãe</SelectItem>
+                                <SelectItem value="Tutor(a)">Tutor(a)</SelectItem>
+                                <SelectItem value="Curador(a)">Curador(a)</SelectItem>
+                                <SelectItem value="Cônjuge">Cônjuge</SelectItem>
+                                <SelectItem value="Outro">Outro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="representante_telefone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone do Representante</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="(00) 00000-0000"
+                                onChange={(e) => field.onChange(applyPhoneMask(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {duplicateWarning && (

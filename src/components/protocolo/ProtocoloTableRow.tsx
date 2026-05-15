@@ -1,8 +1,17 @@
 import { TableCell, TableRow } from '@/components/ui/table'
 import { format, parseISO } from 'date-fns'
-import { Edit, Trash, AlertTriangle, CheckCircle2, ClipboardList, FileText } from 'lucide-react'
+import {
+  Edit,
+  Trash,
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  UserCheck,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/formatters'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 const isOverdue = (dateStr: string) => {
   if (!dateStr) return false
@@ -55,7 +64,21 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       <TableCell className={`w-10 font-medium ${overdue ? 'border-l-2 border-l-rose-500' : ''}`}>
         {index}
       </TableCell>
-      <TableCell className="font-semibold whitespace-nowrap">{item.nome}</TableCell>
+      <TableCell className="font-semibold whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          <span>{item.nome}</span>
+          {item.representante && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <UserCheck className="h-4 w-4 text-[#C9922A] cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Representante: {item.representante_nome || 'Não informado'}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </TableCell>
       <TableCell className="whitespace-nowrap text-muted-foreground">
         {item.expand?.tipo_acao?.nome || '—'}
       </TableCell>
