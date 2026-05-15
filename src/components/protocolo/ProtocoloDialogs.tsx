@@ -76,10 +76,20 @@ const applyCpfMask = (value: string) => {
 
 const applyPhoneMask = (value: string) => {
   let v = value.replace(/\D/g, '')
-  if (v.length > 11) v = v.substring(0, 11)
-  if (v.length > 10) return v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
-  if (v.length > 6) return v.replace(/(\d{2})(\d{4})(\d{1,4})/, '($1) $2-$3')
-  if (v.length > 2) return v.replace(/(\d{2})(\d{1,5})/, '($1) $2')
+  if (v.length > 11) v = v.slice(0, 11)
+  let formatted = v
+  if (v.length > 10) formatted = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3')
+  else if (v.length > 5) formatted = v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3')
+  else if (v.length > 2) formatted = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2')
+  else if (v.length > 0) formatted = v.replace(/^(\d{0,2})/, '($1')
+  return formatted
+}
+
+const formatCurrencyForInput = (num?: number) => {
+  if (num === undefined || num === null) return ''
+  let v = num.toFixed(2)
+  v = v.replace('.', ',')
+  v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
   return v
 }
 
@@ -98,7 +108,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       dprotocolo: '',
       prazo: 15,
       nautos: '',
-      valor: 0,
+      valor: undefined as unknown as number,
       decisao: 'Aguardando',
       representante: false,
       representante_nome: '',
@@ -114,6 +124,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       if (item) {
         form.reset({
           ...item,
+          valor: item.valor === 0 ? undefined : item.valor,
           dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
           dprotocolo: item.dprotocolo ? item.dprotocolo.substring(0, 10) : '',
           representante: item.representante || false,
@@ -133,7 +144,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           dprotocolo: '',
           prazo: 15,
           nautos: '',
-          valor: 0,
+          valor: undefined as unknown as number,
           decisao: 'Aguardando',
           representante: false,
           representante_nome: '',
@@ -225,7 +236,11 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                   <FormItem>
                     <FormLabel>Telefone</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="(00) 00000-0000" />
+                      <Input
+                        {...field}
+                        placeholder="(00) 00000-0000"
+                        onChange={(e) => field.onChange(applyPhoneMask(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -358,7 +373,24 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                   <FormItem>
                     <FormLabel>Valor da Causa</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" {...field} />
+                      <Input
+                        type="text"
+                        placeholder="0,00"
+                        value={
+                          field.value !== undefined && field.value !== null
+                            ? formatCurrencyForInput(field.value)
+                            : ''
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/\D/g, '')
+                          if (v === '') {
+                            field.onChange(undefined)
+                          } else {
+                            const numericValue = parseInt(v, 10) / 100
+                            field.onChange(numericValue)
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

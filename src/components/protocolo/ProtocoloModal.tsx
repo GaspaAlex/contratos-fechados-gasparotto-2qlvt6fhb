@@ -58,7 +58,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     dprotocolo: '',
     prazo: 15,
     nautos: '',
-    valor: 0,
+    valor: undefined as unknown as number,
     decisao: 'Aguardando',
   })
 
@@ -77,7 +77,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           dprotocolo: toYMD(protocolo.dprotocolo) || '',
           prazo: protocolo.prazo || 15,
           nautos: protocolo.nautos || '',
-          valor: protocolo.valor || 0,
+          valor: protocolo.valor === 0 ? undefined : protocolo.valor,
           decisao: protocolo.decisao || 'Aguardando',
         })
       } else {
@@ -91,7 +91,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           dprotocolo: today,
           prazo: 15,
           nautos: '',
-          valor: 0,
+          valor: undefined as unknown as number,
           decisao: 'Aguardando',
         })
       }
@@ -370,13 +370,27 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
             <div className="space-y-2">
               <Label>Valor</Label>
               <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.valor || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, valor: parseFloat(e.target.value) || 0 })
+                type="text"
+                placeholder="0,00"
+                value={
+                  formData.valor !== undefined && formData.valor !== null
+                    ? (() => {
+                        let v = formData.valor.toFixed(2)
+                        v = v.replace('.', ',')
+                        v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
+                        return v
+                      })()
+                    : ''
                 }
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '')
+                  if (v === '') {
+                    setFormData({ ...formData, valor: undefined as unknown as number })
+                  } else {
+                    const numericValue = parseInt(v, 10) / 100
+                    setFormData({ ...formData, valor: numericValue })
+                  }
+                }}
                 className="focus-visible:ring-[#C9922A]"
               />
             </div>
