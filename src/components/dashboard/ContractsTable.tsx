@@ -73,8 +73,19 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
   const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
+  const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
   const [tableOrigem, setTableOrigem] = useState<string>('Todas as origens')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
+
+  const responsaveisList = useMemo(() => {
+    const resps = new Set<string>()
+    contratos.forEach((c) => {
+      if (c.responsavel && c.responsavel.trim()) {
+        resps.add(c.responsavel.trim())
+      }
+    })
+    return Array.from(resps).sort((a, b) => a.localeCompare(b))
+  }, [contratos])
 
   React.useEffect(() => {
     const loadBeneficios = async () => {
@@ -155,6 +166,12 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
       )
     }
 
+    if (tableResponsavel !== 'Todos os responsáveis') {
+      result = result.filter(
+        (c) => (c.responsavel || '').trim().toLowerCase() === tableResponsavel.trim().toLowerCase(),
+      )
+    }
+
     if (tableOrigem !== 'Todas as origens') {
       result = result.filter((c) => (c.origem || 'Não classificado') === tableOrigem)
     }
@@ -184,7 +201,16 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
     }
 
     return result
-  }, [contratos, activeFilter, search, tableYear, tableMonth, tableBeneficio, tableOrigem])
+  }, [
+    contratos,
+    activeFilter,
+    search,
+    tableYear,
+    tableMonth,
+    tableBeneficio,
+    tableResponsavel,
+    tableOrigem,
+  ])
 
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
@@ -242,7 +268,7 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col xl:flex-row justify-between gap-4 mb-6">
-            <div className="flex flex-col sm:flex-row gap-3 w-full xl:flex-1">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full xl:flex-1">
               <div className="relative w-full sm:w-80 shrink-0">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -261,6 +287,19 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                   {beneficiosList.map((b) => (
                     <SelectItem key={b} value={b}>
                       {b}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={tableResponsavel} onValueChange={setTableResponsavel}>
+                <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todos os responsáveis">Todos os responsáveis</SelectItem>
+                  {responsaveisList.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
                     </SelectItem>
                   ))}
                 </SelectContent>
