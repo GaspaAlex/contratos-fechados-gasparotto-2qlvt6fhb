@@ -29,7 +29,8 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => void }) {
-  const { quickFilter, parceriaFilter, search } = useRpvFilters()
+  const { quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter } =
+    useRpvFilters()
 
   const groupedData = useMemo(() => {
     const normalizedSearch = normalizeText(search)
@@ -44,9 +45,26 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
           return false
       }
 
+      if (tipoFilter && tipoFilter !== 'Todos' && item.tipo !== tipoFilter) return false
+      if (statusFilter && statusFilter !== 'Todos' && item.status !== statusFilter) return false
+
+      if (mesFilter && mesFilter !== 'Todos') {
+        const previsao = item.previsao_pagamento || ''
+        const [m] = previsao.split('/')
+        if (m !== mesFilter) return false
+      }
+
+      if (anoFilter && anoFilter !== 'Todos') {
+        const previsao = item.previsao_pagamento || ''
+        const [, y] = previsao.split('/')
+        if (y !== anoFilter) return false
+      }
+
       if (normalizedSearch) {
-        const nome = normalizeText(item.nome)
-        const processo = normalizeText(item.numero_processo)
+        const nomeStr = item.nome != null ? String(item.nome) : ''
+        const processoStr = item.numero_processo != null ? String(item.numero_processo) : ''
+        const nome = normalizeText(nomeStr)
+        const processo = normalizeText(processoStr)
         if (!nome.includes(normalizedSearch) && !processo.includes(normalizedSearch)) {
           return false
         }
@@ -75,7 +93,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
       key,
       items: groups[key],
     }))
-  }, [data, quickFilter, parceriaFilter, search])
+  }, [data, quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter])
 
   const handleDelete = async (id: string) => {
     try {

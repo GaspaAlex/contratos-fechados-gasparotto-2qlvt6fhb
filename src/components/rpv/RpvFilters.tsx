@@ -37,6 +37,22 @@ export function RpvFilters({
     }
   }, [search])
 
+  useEffect(() => {
+    if (tipo !== undefined) rpvFilterStore.setTipoFilter(tipo)
+  }, [tipo])
+
+  useEffect(() => {
+    if (status !== undefined) rpvFilterStore.setStatusFilter(status)
+  }, [status])
+
+  useEffect(() => {
+    if (month !== undefined) rpvFilterStore.setMesFilter(month)
+  }, [month])
+
+  useEffect(() => {
+    if (year !== undefined) rpvFilterStore.setAnoFilter(year)
+  }, [year])
+
   const QUICK_FILTERS = ['Todos', 'A Receber', 'Recebido', 'RPV', 'Precatório', 'Por Parceria']
 
   const PARCERIA_OPTIONS = [
@@ -65,7 +81,13 @@ export function RpvFilters({
             />
           </div>
 
-          <Select value={tipo} onValueChange={setTipo}>
+          <Select
+            value={tipo}
+            onValueChange={(val) => {
+              setTipo(val)
+              rpvFilterStore.setTipoFilter(val)
+            }}
+          >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -76,7 +98,13 @@ export function RpvFilters({
             </SelectContent>
           </Select>
 
-          <Select value={status} onValueChange={setStatus}>
+          <Select
+            value={status}
+            onValueChange={(val) => {
+              setStatus(val)
+              rpvFilterStore.setStatusFilter(val)
+            }}
+          >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -90,7 +118,13 @@ export function RpvFilters({
             </SelectContent>
           </Select>
 
-          <Select value={month} onValueChange={setMonth}>
+          <Select
+            value={month}
+            onValueChange={(val) => {
+              setMonth(val)
+              rpvFilterStore.setMesFilter(val)
+            }}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
@@ -104,7 +138,13 @@ export function RpvFilters({
             </SelectContent>
           </Select>
 
-          <Select value={year} onValueChange={setYear}>
+          <Select
+            value={year}
+            onValueChange={(val) => {
+              setYear(val)
+              rpvFilterStore.setAnoFilter(val)
+            }}
+          >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
