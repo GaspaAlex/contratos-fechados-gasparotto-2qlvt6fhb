@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { STATUS_COLORS, MONTHS } from './constants'
 import { useRpvFilters } from './store'
-import { normalizeText } from '@/lib/utils'
+import { removeAccents } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +33,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
     useRpvFilters()
 
   const groupedData = useMemo(() => {
-    const normalizedSearch = normalizeText(search)
+    const searchTerm = removeAccents(search.trim().toLowerCase())
 
     const filteredData = data.filter((item) => {
       if (quickFilter === 'A Receber' && item.recebido) return false
@@ -60,12 +60,10 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
         if (y !== anoFilter) return false
       }
 
-      if (normalizedSearch) {
-        const nomeStr = item.nome != null ? String(item.nome) : ''
-        const processoStr = item.numero_processo != null ? String(item.numero_processo) : ''
-        const nome = normalizeText(nomeStr)
-        const processo = normalizeText(processoStr)
-        if (!nome.includes(normalizedSearch) && !processo.includes(normalizedSearch)) {
+      if (searchTerm) {
+        const nome = removeAccents(String(item.nome || '').toLowerCase())
+        const processo = removeAccents(String(item.numero_processo || '').toLowerCase())
+        if (!nome.includes(searchTerm) && !processo.includes(searchTerm)) {
           return false
         }
       }
