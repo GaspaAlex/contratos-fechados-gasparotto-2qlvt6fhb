@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { useEffect } from 'react'
 import { Plus, Search } from 'lucide-react'
 import { STATUS_OPTIONS, MONTHS, YEARS } from './constants'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,12 @@ export function RpvFilters({
   const setQuickFilter = rpvFilterStore.setQuickFilter
   const setParceriaFilter = rpvFilterStore.setParceriaFilter
 
+  useEffect(() => {
+    if (search !== undefined) {
+      rpvFilterStore.setSearch(search)
+    }
+  }, [search])
+
   const QUICK_FILTERS = ['Todos', 'A Receber', 'Recebido', 'RPV', 'Precatório', 'Por Parceria']
 
   const PARCERIA_OPTIONS = [
@@ -50,7 +57,10 @@ export function RpvFilters({
             <Input
               placeholder="Buscar nome ou processo..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                rpvFilterStore.setSearch(e.target.value)
+              }}
               className="pl-9"
             />
           </div>

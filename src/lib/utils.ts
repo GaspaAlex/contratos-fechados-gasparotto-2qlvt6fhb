@@ -16,3 +16,11 @@ export function cn(...inputs: ClassValue[]) {
 export function removeAccents(str: string) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
+
+export function normalizeText(str: string | null | undefined): string {
+  if (!str) return ''
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}

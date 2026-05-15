@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { STATUS_COLORS, MONTHS } from './constants'
 import { useRpvFilters } from './store'
+import { normalizeText } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,9 +29,11 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => void }) {
-  const { quickFilter, parceriaFilter } = useRpvFilters()
+  const { quickFilter, parceriaFilter, search } = useRpvFilters()
 
   const groupedData = useMemo(() => {
+    const normalizedSearch = normalizeText(search)
+
     const filteredData = data.filter((item) => {
       if (quickFilter === 'A Receber' && item.recebido) return false
       if (quickFilter === 'Recebido' && !item.recebido) return false
@@ -40,6 +43,15 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
         if (parceriaFilter !== 'Todos os parceiros' && item.tipo_parceria !== parceriaFilter)
           return false
       }
+
+      if (normalizedSearch) {
+        const nome = normalizeText(item.nome)
+        const processo = normalizeText(item.numero_processo)
+        if (!nome.includes(normalizedSearch) && !processo.includes(normalizedSearch)) {
+          return false
+        }
+      }
+
       return true
     })
 
@@ -63,7 +75,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
       key,
       items: groups[key],
     }))
-  }, [data, quickFilter, parceriaFilter])
+  }, [data, quickFilter, parceriaFilter, search])
 
   const handleDelete = async (id: string) => {
     try {

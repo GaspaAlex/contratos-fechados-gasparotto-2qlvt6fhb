@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 class FilterStore {
   quickFilter = 'Todos'
   parceriaFilter = 'Todos os parceiros'
+  search = ''
   listeners = new Set<() => void>()
 
   setQuickFilter = (val: string) => {
@@ -12,6 +13,11 @@ class FilterStore {
 
   setParceriaFilter = (val: string) => {
     this.parceriaFilter = val
+    this.notify()
+  }
+
+  setSearch = (val: string) => {
+    this.search = val
     this.notify()
   }
 
@@ -31,6 +37,7 @@ export function useRpvFilters() {
   const [state, setState] = useState({
     quickFilter: rpvFilterStore.quickFilter,
     parceriaFilter: rpvFilterStore.parceriaFilter,
+    search: rpvFilterStore.search,
   })
 
   useEffect(() => {
@@ -38,6 +45,7 @@ export function useRpvFilters() {
       setState({
         quickFilter: rpvFilterStore.quickFilter,
         parceriaFilter: rpvFilterStore.parceriaFilter,
+        search: rpvFilterStore.search,
       })
     })
     return unsubscribe
