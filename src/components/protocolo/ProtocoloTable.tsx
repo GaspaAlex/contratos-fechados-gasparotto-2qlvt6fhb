@@ -54,6 +54,8 @@ export function ProtocoloTable({
   setStatus,
   tipo,
   setTipo,
+  responsavel,
+  setResponsavel,
   month,
   setMonth,
   year,
@@ -68,6 +70,13 @@ export function ProtocoloTable({
     const currentYear = new Date().getFullYear().toString()
     years.add(currentYear)
     return Array.from(years).sort().reverse()
+  }, [data])
+
+  const responsaveisList = useMemo(() => {
+    const list = new Set(
+      data.map((d: any) => d.expand?.responsavel?.nome || d.responsavel).filter(Boolean),
+    )
+    return Array.from(list).sort()
   }, [data])
 
   // Filters
@@ -90,6 +99,8 @@ export function ProtocoloTable({
     }
     if (status !== 'Todos' && d.status !== status) return false
     if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
+    const respName = d.expand?.responsavel?.nome || d.responsavel || ''
+    if (responsavel !== 'Todos' && respName !== responsavel) return false
 
     if (year !== 'Todos') {
       if (!d.dprotocolo || d.dprotocolo.substring(0, 4) !== year) return false
@@ -206,6 +217,19 @@ export function ProtocoloTable({
               {tipos.map((t: any) => (
                 <SelectItem key={t.id} value={t.nome}>
                   {t.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={responsavel} onValueChange={setResponsavel}>
+            <SelectTrigger className="w-[170px] h-9 text-sm">
+              <SelectValue placeholder="Todos os Responsáveis" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todos os Responsáveis</SelectItem>
+              {responsaveisList.map((r: any) => (
+                <SelectItem key={r} value={r}>
+                  {r}
                 </SelectItem>
               ))}
             </SelectContent>

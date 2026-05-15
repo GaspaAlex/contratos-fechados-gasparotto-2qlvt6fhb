@@ -19,6 +19,7 @@ export default function Protocolo() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Todos')
   const [tipo, setTipo] = useState('Todos')
+  const [responsavel, setResponsavel] = useState('Todos')
   const [month, setMonth] = useState('Todos')
   const [year, setYear] = useState(new Date().getFullYear().toString())
 
@@ -47,7 +48,13 @@ export default function Protocolo() {
         </div>
       </div>
 
-      <ProtocoloDashboard data={data} tipo={tipo} month={month} year={year} />
+      <ProtocoloDashboard
+        data={data}
+        tipo={tipo}
+        responsavel={responsavel}
+        month={month}
+        year={year}
+      />
 
       <ProtocoloTable
         data={data}
@@ -58,6 +65,8 @@ export default function Protocolo() {
         setStatus={setStatus}
         tipo={tipo}
         setTipo={setTipo}
+        responsavel={responsavel}
+        setResponsavel={setResponsavel}
         month={month}
         setMonth={setMonth}
         year={year}
