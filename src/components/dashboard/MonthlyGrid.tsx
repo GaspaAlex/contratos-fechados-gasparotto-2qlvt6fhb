@@ -70,7 +70,7 @@ export function MonthlyGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 mb-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4 mb-6">
         {monthlyCounts.map((month, index) => (
           <Card
             key={month.name}
@@ -81,7 +81,7 @@ export function MonthlyGrid({
             )}
             style={{ animationFillMode: 'both', animationDelay: `${index * 50}ms` }}
           >
-            <CardContent className="p-5">
+            <CardContent className="p-3">
               <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground">
                 {month.name}
               </h3>
@@ -127,7 +127,9 @@ export function MonthlyGrid({
             )}
           </Card>
         ))}
+      </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 mb-4">
         <Card
           className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-[#C9922A]/[0.08] border-[#C9922A]/25 border-t-[#C9922A] border-t-2 animate-fade-in-up"
           style={{ animationFillMode: 'both', animationDelay: '550ms' }}
