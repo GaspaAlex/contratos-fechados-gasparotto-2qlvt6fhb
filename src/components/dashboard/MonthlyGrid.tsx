@@ -75,7 +75,7 @@ export function MonthlyGrid({
           <Card
             key={month.name}
             className={cn(
-              'group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60',
+              'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60',
               'animate-fade-in-up',
               month.count > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
             )}
@@ -129,48 +129,38 @@ export function MonthlyGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 mb-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4 mb-4 w-full">
         <Card
-          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-[#C9922A]/[0.08] border-[#C9922A]/25 border-t-[#C9922A] border-t-2 animate-fade-in-up"
+          className="group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-emerald-600 border-emerald-500 animate-fade-in-up"
           style={{ animationFillMode: 'both', animationDelay: '550ms' }}
         >
-          <CardContent className="p-5">
-            <h3 className="mb-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+          <CardContent className="p-3">
+            <h3 className="mb-2 text-sm font-bold tracking-wider text-emerald-50 uppercase">
               HOJE
             </h3>
             <div className="flex items-baseline gap-2">
-              <span
-                className={cn(
-                  'text-4xl font-black',
-                  todayActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
-                )}
-              >
-                {todayActive}
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground">
-                contratos fechados hoje
-              </span>
+              <span className="text-4xl font-black text-white">{todayActive}</span>
+              <span className="text-sm font-medium text-emerald-100">fechados hoje</span>
             </div>
           </CardContent>
         </Card>
 
         <Card
-          className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-[#C9922A]/10 border-[#C9922A]/30 border-t-[#C9922A] border-t-2 animate-fade-in-up"
+          className="group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-indigo-600 border-indigo-500 animate-fade-in-up"
           style={{ animationFillMode: 'both', animationDelay: '600ms' }}
         >
-          <CardContent className="p-5">
-            <h3 className="mb-2 text-lg font-bold tracking-wider text-[#C9922A]">TOTAL {year}</h3>
+          <CardContent className="p-3">
+            <h3 className="mb-2 text-sm font-bold tracking-wider text-indigo-100 uppercase">
+              TOTAL {year}
+            </h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-[#C9922A]">{totalActive}</span>
-              <span className="text-sm font-semibold text-[#C9922A]/80">ativos</span>
+              <span className="text-4xl font-black text-white">{totalActive}</span>
+              <span className="text-sm font-semibold text-indigo-200">ativos</span>
             </div>
-            <p className="mt-2 text-[10px] font-normal text-muted-foreground">
-              {totalCampanha} campanha / {totalParticular} particular / {totalNaoClassificado} não
-              classificado
+            <p className="mt-2 text-sm font-normal text-indigo-100 leading-tight">
+              {totalCampanha} camp. / {totalParticular} part. / {totalNaoClassificado} n/c
             </p>
-            <p className="mt-1 text-[12px] font-medium text-[#C9922A]">
-              {totalArchived} arquivados excluídos
-            </p>
+            <p className="mt-1 text-sm font-medium text-indigo-200">{totalArchived} arquivados</p>
           </CardContent>
         </Card>
       </div>
