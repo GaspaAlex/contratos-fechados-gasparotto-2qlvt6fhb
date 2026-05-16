@@ -52,16 +52,6 @@ export function MonthlyGrid({
   const totalArchived = yearContratos.filter((c) => isArchived(c)).length
   const totalRegistrado = yearContratos.length
 
-  const totalCampanha = yearContratos.filter(
-    (c) => !isArchived(c) && c.origem === 'Campanha',
-  ).length
-  const totalParticular = yearContratos.filter(
-    (c) => !isArchived(c) && c.origem === 'Particular',
-  ).length
-  const totalNaoClassificado = yearContratos.filter(
-    (c) => !isArchived(c) && (!c.origem || c.origem === 'Não classificado'),
-  ).length
-
   const today = new Date()
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   const todayActive = yearContratos.filter(
@@ -131,36 +121,93 @@ export function MonthlyGrid({
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4 mb-4 w-full">
         <Card
-          className="group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-emerald-600 border-emerald-500 animate-fade-in-up"
+          className={cn(
+            'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60 animate-fade-in-up',
+            todayActive > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
+          )}
           style={{ animationFillMode: 'both', animationDelay: '550ms' }}
         >
           <CardContent className="p-3">
-            <h3 className="mb-2 text-sm font-bold tracking-wider text-emerald-50 uppercase">
+            <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground uppercase">
               HOJE
             </h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-white">{todayActive}</span>
-              <span className="text-sm font-medium text-emerald-100">fechados hoje</span>
+              <span
+                className={cn(
+                  'text-4xl font-black',
+                  todayActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
+                )}
+              >
+                {todayActive}
+              </span>
+              <span
+                className={cn(
+                  'text-sm font-medium',
+                  todayActive > 0 ? 'text-foreground' : 'text-muted-foreground/40',
+                )}
+              >
+                fechados hoje
+              </span>
             </div>
+            {todayActive > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                  ativos
+                </span>
+              </div>
+            )}
+            {todayActive > 0 && (
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
+            )}
           </CardContent>
         </Card>
 
         <Card
-          className="group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md bg-indigo-600 border-indigo-500 animate-fade-in-up"
+          className={cn(
+            'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60 animate-fade-in-up',
+            totalActive > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
+          )}
           style={{ animationFillMode: 'both', animationDelay: '600ms' }}
         >
           <CardContent className="p-3">
-            <h3 className="mb-2 text-sm font-bold tracking-wider text-indigo-100 uppercase">
+            <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground uppercase">
               TOTAL {year}
             </h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-white">{totalActive}</span>
-              <span className="text-sm font-semibold text-indigo-200">ativos</span>
+              <span
+                className={cn(
+                  'text-4xl font-black',
+                  totalActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
+                )}
+              >
+                {totalActive}
+              </span>
+              <span
+                className={cn(
+                  'text-sm font-medium',
+                  totalActive > 0 ? 'text-foreground' : 'text-muted-foreground/40',
+                )}
+              >
+                ativos
+              </span>
             </div>
-            <p className="mt-2 text-sm font-normal text-indigo-100 leading-tight">
-              {totalCampanha} camp. / {totalParticular} part. / {totalNaoClassificado} n/c
-            </p>
-            <p className="mt-1 text-sm font-medium text-indigo-200">{totalArchived} arquivados</p>
+            {(totalActive > 0 || totalArchived > 0) && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {totalActive > 0 && (
+                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                    {totalActive} ativos
+                  </span>
+                )}
+                {totalArchived > 0 && (
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                    {totalArchived} arquivados
+                  </span>
+                )}
+              </div>
+            )}
+            {totalActive > 0 && (
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
+            )}
           </CardContent>
         </Card>
       </div>
