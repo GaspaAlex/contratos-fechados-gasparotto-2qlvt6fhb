@@ -134,11 +134,13 @@ export function OverviewCharts({ protocolos }: Props) {
   return (
     <div className="flex flex-col gap-8 w-full">
       {/* Chart Section */}
-      <section className="bg-white border border-border rounded-[6px] p-[20px_24px] shadow-sm">
+      <section className="bg-white dark:bg-[#0D0F0C] border border-border dark:border-gray-700 rounded-[6px] p-[20px_24px] shadow-sm">
         <div className="flex items-start justify-between mb-6">
           <div className="space-y-1">
-            <h2 className="text-[15px] font-bold text-foreground">Ações Distribuídas por Mês</h2>
-            <p className="text-[12px] text-muted-foreground">
+            <h2 className="text-[15px] font-bold text-foreground dark:text-gray-100">
+              Ações Distribuídas por Mês
+            </h2>
+            <p className="text-[12px] text-muted-foreground dark:text-gray-400">
               {filteredYear === 'all' ? 'Todos os anos' : filteredYear} · baseado em lançamentos da
               aba Protocolo
             </p>
@@ -208,10 +210,12 @@ export function OverviewCharts({ protocolos }: Props) {
       </section>
 
       {/* Table Section */}
-      <section className="bg-white border border-border rounded-[6px] p-[20px_24px] shadow-sm overflow-hidden">
+      <section className="bg-white dark:bg-[#0D0F0C] border border-border dark:border-gray-700 rounded-[6px] p-[20px_24px] shadow-sm overflow-hidden">
         <div className="mb-6 space-y-1">
-          <h2 className="text-[15px] font-bold text-foreground">Histórico Anual</h2>
-          <p className="text-[12px] text-muted-foreground">
+          <h2 className="text-[15px] font-bold text-foreground dark:text-gray-100">
+            Histórico Anual
+          </h2>
+          <p className="text-[12px] text-muted-foreground dark:text-gray-400">
             Ações distribuídas e honorários por ano · dados da aba Protocolo
           </p>
         </div>
@@ -219,22 +223,22 @@ export function OverviewCharts({ protocolos }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-[#F5F1E4] h-[36px] border-b border-border">
-                <th className="pl-4 pr-2 text-left font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
+              <tr className="bg-[#F5F1E4] dark:bg-gray-800 h-[36px] border-b border-border dark:border-gray-700">
+                <th className="pl-4 pr-2 text-left font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase">
                   ANO
                 </th>
                 {tableMonthNames.map((m) => (
                   <th
                     key={m}
-                    className="px-2 text-center font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase"
+                    className="px-2 text-center font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase"
                   >
                     {m}
                   </th>
                 ))}
-                <th className="px-4 text-center font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
+                <th className="px-4 text-center font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase">
                   TOTAL AÇÕES
                 </th>
-                <th className="pr-4 pl-2 text-right font-semibold text-[10px] tracking-[0.6px] text-muted-foreground uppercase">
+                <th className="pr-4 pl-2 text-right font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase">
                   TOTAL HONORÁRIOS
                 </th>
               </tr>
@@ -256,8 +260,8 @@ export function OverviewCharts({ protocolos }: Props) {
                     <tr
                       key={row.year}
                       className={cn(
-                        'h-[44px] transition-colors border-b border-border hover:bg-accent/50',
-                        isCurrentYear ? 'bg-[#FDFAF4]' : 'bg-transparent',
+                        'h-[44px] transition-colors border-b border-border dark:border-gray-700 hover:bg-accent/50 dark:hover:bg-gray-800',
+                        isCurrentYear ? 'bg-[#FDFAF4] dark:bg-gray-900' : 'bg-transparent',
                       )}
                     >
                       <td className="pl-4 pr-2">
@@ -265,8 +269,8 @@ export function OverviewCharts({ protocolos }: Props) {
                           className={cn(
                             'px-2.5 py-0.5 rounded-full text-[11px]',
                             isCurrentYear
-                              ? 'bg-[#F5EED8] text-[#C9922A] font-bold'
-                              : 'bg-[#E8E4D4] text-[#9A9070] font-medium',
+                              ? 'bg-[#F5EED8] dark:bg-gray-800 text-[#C9922A] font-bold'
+                              : 'bg-[#E8E4D4] dark:bg-gray-800/50 text-[#9A9070] dark:text-gray-400 font-medium',
                           )}
                         >
                           {row.year}
@@ -277,7 +281,9 @@ export function OverviewCharts({ protocolos }: Props) {
                           key={i}
                           className={cn(
                             'px-2 text-center text-[13px]',
-                            m > 0 ? 'text-foreground' : 'text-muted-foreground',
+                            m > 0
+                              ? 'text-foreground dark:text-gray-100'
+                              : 'text-muted-foreground dark:text-gray-500',
                           )}
                         >
                           {m > 0 ? m : '—'}
@@ -286,7 +292,9 @@ export function OverviewCharts({ protocolos }: Props) {
                       <td
                         className={cn(
                           'px-4 text-center text-[13px]',
-                          isCurrentYear ? 'font-bold text-foreground' : 'text-foreground',
+                          isCurrentYear
+                            ? 'font-bold text-foreground dark:text-gray-100'
+                            : 'text-foreground dark:text-gray-100',
                         )}
                       >
                         {row.acoes > 0 ? row.acoes : '—'}
@@ -294,7 +302,9 @@ export function OverviewCharts({ protocolos }: Props) {
                       <td
                         className={cn(
                           'pr-4 pl-2 text-right text-[13px]',
-                          isCurrentYear ? 'font-bold text-foreground' : 'text-foreground',
+                          isCurrentYear
+                            ? 'font-bold text-foreground dark:text-gray-100'
+                            : 'text-foreground dark:text-gray-100',
                         )}
                       >
                         {row.honorarios > 0 ? formatCurrency(row.honorarios) : '—'}

@@ -180,7 +180,7 @@ export function RpvFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#FAF8F2]">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#FAF8F2] dark:bg-[#0D0F0C] dark:border-gray-800">
         <DialogHeader>
           <DialogTitle>{record ? 'Editar Registro' : 'Novo Registro'}</DialogTitle>
         </DialogHeader>
@@ -248,24 +248,28 @@ export function RpvFormModal({
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-md border border-[#C9922A] bg-[#C9922A]/10">
+            <div className="space-y-2 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-md border border-[#C9922A] bg-[#C9922A]/10 dark:bg-[#C9922A]/20">
               <div className="space-y-1">
                 <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
                   Honorários 30%
                 </Label>
-                <div className="font-semibold text-gray-900">{formatCurrency(honorarios30)}</div>
+                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                  {formatCurrency(honorarios30)}
+                </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
                   Total Honorários
                 </Label>
-                <div className="font-semibold text-gray-900">{formatCurrency(totalHonorarios)}</div>
+                <div className="font-semibold text-gray-900 dark:text-gray-100">
+                  {formatCurrency(totalHonorarios)}
+                </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
                   Honorários Escritório
                 </Label>
-                <div className="font-semibold text-gray-900">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">
                   {formatCurrency(honorariosEscritorio)}
                 </div>
               </div>

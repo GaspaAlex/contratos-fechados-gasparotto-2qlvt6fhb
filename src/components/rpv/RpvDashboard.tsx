@@ -74,7 +74,7 @@ export function RpvDashboard({ data, month, year }: { data: any[]; month: string
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-[#C9922A]/20 bg-[#C9922A]/5 shadow-sm">
+        <Card className="border-[#C9922A]/20 bg-[#C9922A]/5 dark:bg-gray-800 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-[#C9922A] text-sm font-medium">A Receber</CardTitle>
             <CardDescription className="text-[#C9922A]/70 text-xs">
@@ -86,7 +86,7 @@ export function RpvDashboard({ data, month, year }: { data: any[]; month: string
           </CardContent>
         </Card>
 
-        <Card className="border-[#52B86E]/20 bg-[#52B86E]/5 shadow-sm">
+        <Card className="border-[#52B86E]/20 bg-[#52B86E]/5 dark:bg-gray-800 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-[#52B86E] text-sm font-medium">Total Recebido</CardTitle>
             <CardDescription className="text-[#52B86E]/70 text-xs">
@@ -98,7 +98,7 @@ export function RpvDashboard({ data, month, year }: { data: any[]; month: string
           </CardContent>
         </Card>
 
-        <Card className="border-[#5A9FD4]/20 bg-[#5A9FD4]/5 shadow-sm">
+        <Card className="border-[#5A9FD4]/20 bg-[#5A9FD4]/5 dark:bg-gray-800 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-[#5A9FD4] text-sm font-medium">Total Geral</CardTitle>
             <CardDescription className="text-[#5A9FD4]/70 text-xs">
@@ -110,14 +110,18 @@ export function RpvDashboard({ data, month, year }: { data: any[]; month: string
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200 bg-gray-50/50 shadow-sm">
+        <Card className="border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-gray-700 text-sm font-medium">Casos</CardTitle>
-            <CardDescription className="text-gray-500 text-xs">Volume de processos</CardDescription>
+            <CardTitle className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+              Casos
+            </CardTitle>
+            <CardDescription className="text-gray-500 dark:text-gray-400 text-xs">
+              Volume de processos
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-700">{totalCasos}</div>
-            <p className="text-xs text-gray-500 mt-1 font-medium">
+            <div className="text-2xl font-bold text-gray-700 dark:text-gray-100">{totalCasos}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
               {pendentes} Pendentes &bull; {recebidosCount} Recebidos
             </p>
           </CardContent>

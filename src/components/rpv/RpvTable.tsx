@@ -118,22 +118,24 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
       ) : (
         groupedData.map((group) => (
           <div key={group.key} className="mb-0">
-            <div className="bg-muted/40 px-4 py-3 font-semibold text-xs tracking-wider text-muted-foreground border-b uppercase">
+            <div className="bg-muted/40 dark:bg-gray-800/50 px-4 py-3 font-semibold text-xs tracking-wider text-muted-foreground dark:text-gray-300 border-b dark:border-gray-700 uppercase">
               {formatGroupHeader(group.key, group.items.length)}
             </div>
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-12 text-xs">#</TableHead>
-                  <TableHead className="text-xs">NOME / CPF</TableHead>
-                  <TableHead className="text-xs">Nº PROCESSO</TableHead>
-                  <TableHead className="text-xs">TIPO</TableHead>
-                  <TableHead className="text-xs">PREVISÃO</TableHead>
-                  <TableHead className="text-xs">VALOR RPV/PREC.</TableHead>
-                  <TableHead className="text-xs">SUCUMBÊNCIA</TableHead>
-                  <TableHead className="text-xs">HONORÁRIOS ESCRITÓRIO</TableHead>
-                  <TableHead className="text-xs">STATUS</TableHead>
-                  <TableHead className="text-right text-xs">AÇÕES</TableHead>
+                  <TableHead className="w-12 text-xs dark:text-gray-300">#</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">NOME / CPF</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">Nº PROCESSO</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">TIPO</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">PREVISÃO</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">VALOR RPV/PREC.</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">SUCUMBÊNCIA</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">
+                    HONORÁRIOS ESCRITÓRIO
+                  </TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">STATUS</TableHead>
+                  <TableHead className="text-right text-xs dark:text-gray-300">AÇÕES</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -161,8 +163,9 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                     <TableRow
                       key={item.id}
                       className={cn(
-                        'hover:bg-muted/30 transition-colors',
-                        item.status === 'Recebido' && 'bg-green-50 hover:bg-green-50/80',
+                        'hover:bg-muted/30 dark:hover:bg-gray-800/50 transition-colors border-b dark:border-gray-700',
+                        item.status === 'Recebido' &&
+                          'bg-green-50 dark:bg-green-900/20 hover:bg-green-50/80 dark:hover:bg-green-900/30',
                       )}
                     >
                       <TableCell className="text-muted-foreground">{idx + 1}</TableCell>

@@ -66,7 +66,7 @@ export function RpvFilters({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white p-4 rounded-lg border shadow-sm">
+      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white dark:bg-[#0D0F0C] p-4 rounded-lg border dark:border-gray-800 shadow-sm">
         <div className="flex flex-wrap items-center gap-3 flex-1">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -179,7 +179,7 @@ export function RpvFilters({
                 'px-4 py-1.5 rounded-full text-sm font-medium transition-all border duration-200 ease-in-out',
                 isActive
                   ? 'bg-[#C9922A] text-white border-[#C9922A] shadow-sm'
-                  : 'bg-transparent text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700',
+                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200',
               )}
             >
               {pill}
@@ -190,7 +190,7 @@ export function RpvFilters({
         {quickFilter === 'Por Parceria' && (
           <div className="ml-2 animate-fade-in">
             <Select value={parceriaFilter} onValueChange={setParceriaFilter}>
-              <SelectTrigger className="w-[200px] h-[34px] bg-white border-gray-200 focus:ring-[#C9922A] text-sm rounded-full">
+              <SelectTrigger className="w-[200px] h-[34px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-[#C9922A] text-sm rounded-full">
                 <SelectValue placeholder="Selecione a parceria" />
               </SelectTrigger>
               <SelectContent>

@@ -54,10 +54,7 @@ export default function Rpv() {
 
   return (
     <RpvPinGuard>
-      <div
-        className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col gap-6 min-h-[calc(100vh-4rem)] animate-fade-in"
-        style={{ backgroundColor: '#FAF8F2' }}
-      >
+      <div className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col gap-6 min-h-[calc(100vh-4rem)] animate-fade-in bg-[#FAF8F2] dark:bg-[#0D0F0C]">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight text-[#C9922A]">RPV/Precatório</h1>
           <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
@@ -82,7 +79,7 @@ export default function Rpv() {
 
         <RpvDashboard data={data} month={month} year={year} />
 
-        <div className="flex-1 bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white dark:bg-[#0D0F0C] border dark:border-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto">
             <RpvTable
               data={filteredData}
