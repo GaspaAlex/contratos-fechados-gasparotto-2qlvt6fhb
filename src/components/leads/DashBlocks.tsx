@@ -29,28 +29,28 @@ export function SummaryCards({ leads, month, year, day }: any) {
 
   const getConvGeralStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v > 0.08) return { text: 'Excelente', color: 'text-green-600' }
-    if (v >= 0.06) return { text: 'Na meta', color: 'text-green-600' }
-    return { text: 'Abaixo da meta', color: 'text-red-600' }
+    if (v > 0.08) return { text: 'Excelente', color: 'text-green-600 dark:text-green-500' }
+    if (v >= 0.06) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
+    return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
   }
 
   const getConvQualifStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v > 0.12) return { text: 'Excelente', color: 'text-green-600' }
-    if (v >= 0.1) return { text: 'Na meta', color: 'text-green-600' }
-    return { text: 'Abaixo da meta', color: 'text-red-600' }
+    if (v > 0.12) return { text: 'Excelente', color: 'text-green-600 dark:text-green-500' }
+    if (v >= 0.1) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
+    return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
   }
 
   const getDesqStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v <= 0.3) return { text: 'Na meta', color: 'text-green-600' }
-    return { text: 'Acima do limite', color: 'text-red-600' }
+    if (v <= 0.3) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
+    return { text: 'Acima do limite', color: 'text-red-600 dark:text-red-500' }
   }
 
   const getFupStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v >= 0.4) return { text: 'Na meta', color: 'text-green-600' }
-    return { text: 'Abaixo da meta', color: 'text-red-600' }
+    if (v >= 0.4) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
+    return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
   }
 
   const cGeral = getConvGeralStatus(agg.conv_geral)
@@ -90,7 +90,9 @@ export function SummaryCards({ leads, month, year, day }: any) {
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Desqualificados
           </div>
-          <div className="text-3xl font-black mt-1 mb-1 text-red-600">{agg.total_desq || '—'}</div>
+          <div className="text-3xl font-black mt-1 mb-1 text-red-600 dark:text-red-500">
+            {agg.total_desq || '—'}
+          </div>
           <div className="text-[11px] text-muted-foreground font-medium">fora do perfil</div>
         </CardContent>
       </Card>
@@ -99,7 +101,7 @@ export function SummaryCards({ leads, month, year, day }: any) {
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Total Fechamentos
           </div>
-          <div className="text-3xl font-black mt-1 mb-1 text-amber-600">
+          <div className="text-3xl font-black mt-1 mb-1 text-amber-600 dark:text-amber-500">
             {agg.total_fechados || '—'}
           </div>
           <div className="text-[11px] text-muted-foreground font-medium">direto + FUP</div>
@@ -181,7 +183,10 @@ export function SummaryCards({ leads, month, year, day }: any) {
             FECH. FUP
           </div>
           <div
-            className={cn('text-2xl font-black mt-1 mb-1', cFup ? cFup.color : 'text-amber-600')}
+            className={cn(
+              'text-2xl font-black mt-1 mb-1',
+              cFup ? cFup.color : 'text-amber-600 dark:text-amber-500',
+            )}
           >
             {fmtPct(agg.pct_fech_via_fup)}
           </div>
@@ -208,8 +213,16 @@ const getLocalCacStatus = (v: number | null) => {
   if (v === null || isNaN(v))
     return { text: '-', color: 'text-muted-foreground border-transparent' }
   if (v <= 250)
-    return { text: '✓ Meta atingida', color: 'text-green-700 bg-green-50 border-green-200' }
-  return { text: '✗ Acima do ideal', color: 'text-red-700 bg-red-50 border-red-200' }
+    return {
+      text: '✓ Meta atingida',
+      color:
+        'text-green-700 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/30 dark:border-green-800/50',
+    }
+  return {
+    text: '✗ Acima do ideal',
+    color:
+      'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/30 dark:border-red-800/50',
+  }
 }
 
 export function CACCPLTable({ leads, month, day, year }: any) {
@@ -346,7 +359,7 @@ export function CACCPLTable({ leads, month, day, year }: any) {
               (() => {
                 const cacSt = getLocalCacStatus(aggAno.cac)
                 return (
-                  <TableRow className="bg-amber-50 hover:bg-amber-50/80 font-bold border-t-2 border-t-amber-200">
+                  <TableRow className="bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-50/80 dark:hover:bg-amber-900/30 font-bold border-t-2 border-t-amber-200 dark:border-t-amber-800/50">
                     <TableCell>TOTAL</TableCell>
                     <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
                     <TableCell className="text-right">{aggAno.total_leads}</TableCell>
@@ -438,7 +451,9 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
               <span className="text-sm font-bold uppercase text-muted-foreground">
                 TOTAL DESQUALIFICADOS
               </span>
-              <span className="text-xl font-black text-red-600">{aggAno.total_desq}</span>
+              <span className="text-xl font-black text-red-600 dark:text-red-500">
+                {aggAno.total_desq}
+              </span>
             </div>
           </div>
         </div>
@@ -469,7 +484,7 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         <TableCell className="text-right">{agg.aposentado}</TableCell>
                         <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
                         <TableCell className="text-right">{agg.outros}</TableCell>
-                        <TableCell className="text-right font-bold text-red-600">
+                        <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
                           {agg.total_desq}
                         </TableCell>
                       </TableRow>
@@ -485,7 +500,7 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         <TableCell className="text-right">{aggAno.aposentado}</TableCell>
                         <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
                         <TableCell className="text-right">{aggAno.outros}</TableCell>
-                        <TableCell className="text-right font-bold text-red-600">
+                        <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
                           {aggAno.total_desq}
                         </TableCell>
                       </TableRow>
@@ -499,19 +514,21 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         <TableCell className="text-right">{aggAno.aposentado}</TableCell>
                         <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
                         <TableCell className="text-right">{aggAno.outros}</TableCell>
-                        <TableCell className="text-right font-bold text-red-600">
+                        <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
                           {aggAno.total_desq}
                         </TableCell>
                       </TableRow>
                     )}
               {month === 'Todos' && filteredLeads.length > 0 && (
-                <TableRow className="bg-muted/20 font-bold border-t">
+                <TableRow className="bg-muted/50 font-bold border-t">
                   <TableCell>TOTAL</TableCell>
                   <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
                   <TableCell className="text-right">{aggAno.aposentado}</TableCell>
                   <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
                   <TableCell className="text-right">{aggAno.outros}</TableCell>
-                  <TableCell className="text-right text-red-600">{aggAno.total_desq}</TableCell>
+                  <TableCell className="text-right text-red-600 dark:text-red-500">
+                    {aggAno.total_desq}
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

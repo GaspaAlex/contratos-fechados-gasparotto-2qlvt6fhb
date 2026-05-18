@@ -120,12 +120,12 @@ export default function Funcionarios() {
             </div>
           )}
 
-          <div className="bg-[#C8922A] px-6 py-8 text-center">
+          <div className="bg-primary px-6 py-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-card shadow-sm">
-              <Lock className="h-8 w-8 text-[#C8922A]" />
+              <Lock className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-2xl font-bold text-primary-foreground">Acesso Restrito</h2>
-            <p className="mt-1 text-white/90">Insira seu PIN para continuar</p>
+            <p className="mt-1 text-primary-foreground/90">Insira seu PIN para continuar</p>
           </div>
 
           <div className="p-8">
@@ -135,7 +135,7 @@ export default function Funcionarios() {
                   key={i}
                   className={`flex h-14 w-12 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
                     pin.length > i
-                      ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
+                      ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-muted text-transparent'
                   }`}
                 >
@@ -149,7 +149,7 @@ export default function Funcionarios() {
                 <Button
                   key={num}
                   variant="outline"
-                  className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
+                  className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
                   onClick={() => handlePinInput(num.toString())}
                   disabled={isCheckingPin}
                 >
@@ -166,7 +166,7 @@ export default function Funcionarios() {
               </Button>
               <Button
                 variant="outline"
-                className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
+                className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
                 onClick={() => handlePinInput('0')}
                 disabled={isCheckingPin}
               >
@@ -183,7 +183,7 @@ export default function Funcionarios() {
             </div>
 
             <Button
-              className="mt-6 h-14 w-full rounded-xl bg-[#C8922A] text-lg font-bold text-white shadow-sm transition-colors hover:bg-[#b07d20]"
+              className="mt-6 h-14 w-full rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
               onClick={() => checkPin(pin)}
               disabled={pin.length < 4 || isCheckingPin}
             >

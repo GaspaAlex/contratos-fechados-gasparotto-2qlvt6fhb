@@ -62,11 +62,11 @@ export default function Ponto() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4 font-sans">
-      <Card className="w-full max-w-md border-0 shadow-2xl rounded-[24px] overflow-hidden bg-card">
-        <div className="bg-[#C8922A] p-8 text-center text-white">
+      <Card className="w-full max-w-md border border-border shadow-2xl rounded-[24px] overflow-hidden bg-card">
+        <div className="bg-primary p-8 text-center text-primary-foreground">
           <KeyRound className="mx-auto mb-4 h-12 w-12 opacity-80" />
           <CardTitle className="text-2xl font-bold tracking-wider">REGISTRO DE PONTO</CardTitle>
-          <p className="mt-2 text-[#F5F0E8] opacity-90">Insira seu PIN para acessar</p>
+          <p className="mt-2 text-primary-foreground/90">Insira seu PIN para acessar</p>
         </div>
         <CardContent className="p-8">
           <form onSubmit={handleLogin} className="space-y-6">
@@ -77,7 +77,7 @@ export default function Ponto() {
                     key={i}
                     className={`flex h-16 w-16 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
                       pin.length > i
-                        ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
+                        ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-muted text-transparent'
                     }`}
                   >
@@ -93,7 +93,7 @@ export default function Ponto() {
                   key={num}
                   type="button"
                   variant="outline"
-                  className="h-16 text-2xl font-bold rounded-xl border-border bg-card text-foreground hover:bg-[#C8922A] hover:text-white hover:border-[#C8922A] transition-colors"
+                  className="h-16 text-2xl font-bold rounded-xl border-border bg-card text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
                   onClick={() => handlePadClick(num.toString())}
                 >
                   {num}
@@ -110,14 +110,14 @@ export default function Ponto() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-16 text-2xl font-bold rounded-xl border-border bg-card text-foreground hover:bg-[#C8922A] hover:text-white hover:border-[#C8922A] transition-colors"
+                className="h-16 text-2xl font-bold rounded-xl border-border bg-card text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
                 onClick={() => handlePadClick('0')}
               >
                 0
               </Button>
               <Button
                 type="button"
-                className="h-16 text-sm font-bold rounded-xl bg-[#C8922A] text-white hover:bg-[#b07d20] shadow-md uppercase"
+                className="h-16 text-sm font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-md uppercase"
                 onClick={() => handleLogin()}
                 disabled={pin.length !== 4 || isLoading}
               >

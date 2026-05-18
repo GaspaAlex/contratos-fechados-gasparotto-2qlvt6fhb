@@ -229,16 +229,16 @@ export default function BaterPonto() {
           }}
           className={`h-20 w-20 md:h-24 md:w-24 rounded-full flex flex-col items-center justify-center transition-all duration-300 ${
             isNext
-              ? 'bg-[#C8922A] text-white shadow-xl hover:scale-105 active:scale-95 cursor-pointer ring-4 ring-[#C8922A]/20'
+              ? 'bg-primary text-primary-foreground shadow-xl hover:scale-105 active:scale-95 cursor-pointer ring-4 ring-primary/20'
               : isDone
-                ? 'bg-[#2E7D32]/10 text-[#2E7D32] border-2 border-[#2E7D32]/30 opacity-90 cursor-default'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-green-600/10 dark:bg-green-500/10 text-green-600 dark:text-green-500 border-2 border-green-600/30 dark:border-green-500/30 opacity-90 cursor-default'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
           }`}
         >
           <span className="font-bold text-xs md:text-sm">{label}</span>
         </button>
         <span
-          className={`mt-3 text-sm md:text-base font-bold ${isDone ? 'text-gray-800' : 'text-gray-400'}`}
+          className={`mt-3 text-sm md:text-base font-bold ${isDone ? 'text-foreground' : 'text-muted-foreground'}`}
         >
           {isDone ? recordTime : '--:--'}
         </span>
@@ -248,8 +248,8 @@ export default function BaterPonto() {
 
   if (!session || loading) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#F5F0E8] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[#C8922A]" />
+      <div className="fixed inset-0 z-50 bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     )
   }
@@ -267,19 +267,19 @@ export default function BaterPonto() {
   const totalBalance = prevBalance + monthBalance
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#F5F0E8] overflow-y-auto font-sans text-gray-900">
+    <div className="fixed inset-0 z-50 bg-background overflow-y-auto font-sans text-foreground">
       <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between bg-white p-6 md:p-8 rounded-[24px] shadow-sm gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between bg-card p-6 md:p-8 rounded-[24px] shadow-sm border border-border gap-6">
           <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6 text-center md:text-left">
             <img
               src={getPhotoUrl()}
               alt={session.nome}
-              className="w-20 h-20 rounded-full object-cover border-4 border-[#C8922A]/20"
+              className="w-20 h-20 rounded-full object-cover border-4 border-primary/20"
             />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{session.nome}</h1>
-              <p className="text-gray-500 font-medium capitalize mt-1 text-sm md:text-base">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{session.nome}</h1>
+              <p className="text-muted-foreground font-medium capitalize mt-1 text-sm md:text-base">
                 {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             </div>
@@ -287,17 +287,17 @@ export default function BaterPonto() {
 
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
             <div className="text-center md:text-right">
-              <div className="text-4xl md:text-5xl font-black tracking-tight text-[#C8922A] font-mono">
+              <div className="text-4xl md:text-5xl font-black tracking-tight text-primary font-mono">
                 {format(currentTime, 'HH:mm:ss')}
               </div>
-              <p className="text-sm text-gray-400 font-semibold mt-1 uppercase tracking-wider">
+              <p className="text-sm text-muted-foreground font-semibold mt-1 uppercase tracking-wider">
                 Horário Local
               </p>
             </div>
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="border-[#C8922A] text-[#C8922A] hover:bg-[#C8922A] hover:text-white rounded-xl h-12 px-6 shadow-sm transition-colors"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-xl h-12 px-6 shadow-sm transition-colors"
             >
               <LogOut className="w-4 h-4 md:mr-2" />
               <span className="hidden md:inline font-bold">
@@ -308,20 +308,20 @@ export default function BaterPonto() {
         </div>
 
         {/* Punch Registration */}
-        <div className="bg-white rounded-[24px] shadow-sm p-8 md:p-12 relative overflow-hidden">
-          <h2 className="text-xl font-bold text-gray-400 uppercase tracking-wider mb-10 text-center">
+        <div className="bg-card border border-border rounded-[24px] shadow-sm p-8 md:p-12 relative overflow-hidden">
+          <h2 className="text-xl font-bold text-muted-foreground uppercase tracking-wider mb-10 text-center">
             Registro de Ponto Sequencial
           </h2>
 
           {nextStep === null && (
-            <div className="text-center text-xl md:text-2xl font-bold text-[#2E7D32] mb-10 bg-[#2E7D32]/10 py-3 px-6 rounded-xl mx-auto max-w-fit animate-in fade-in zoom-in duration-500">
+            <div className="text-center text-xl md:text-2xl font-bold text-green-600 dark:text-green-500 mb-10 bg-green-600/10 dark:bg-green-500/10 py-3 px-6 rounded-xl mx-auto max-w-fit animate-in fade-in zoom-in duration-500">
               Ponto do dia concluído
             </div>
           )}
 
           <div className="relative flex justify-center items-center max-w-2xl mx-auto">
             {/* Connecting Line */}
-            <div className="absolute top-10 md:top-12 left-[10%] right-[10%] h-1 bg-gray-100 z-0"></div>
+            <div className="absolute top-10 md:top-12 left-[10%] right-[10%] h-1 bg-muted z-0"></div>
 
             <div className="flex justify-between w-full relative z-10">
               {renderPunchButton('entrada1', 'Entrada 1')}
@@ -335,30 +335,30 @@ export default function BaterPonto() {
         {/* Balance Cards */}
         <div className="grid md:grid-cols-2 gap-6 md:gap-8">
           {/* Daily Card */}
-          <Card className="rounded-[24px] border-0 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
-              <CardTitle className="text-lg flex items-center text-gray-700">
-                <Clock className="w-5 h-5 mr-3 text-[#C8922A]" />
+          <Card className="rounded-[24px] border border-border shadow-sm overflow-hidden bg-card">
+            <CardHeader className="bg-muted/50 border-b border-border pb-4">
+              <CardTitle className="text-lg flex items-center text-foreground">
+                <Clock className="w-5 h-5 mr-3 text-primary" />
                 Desempenho Diário
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5 pt-6">
               <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Horas Trabalhadas</span>
-                <span className="text-xl font-bold text-gray-800">
+                <span className="text-muted-foreground font-medium">Horas Trabalhadas</span>
+                <span className="text-xl font-bold text-foreground">
                   {formatHoursMins(workedMin).replace('+', '').replace('-', '')}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Meta Diária</span>
-                <span className="text-lg font-bold text-gray-400">{cargaStr}</span>
+                <span className="text-muted-foreground font-medium">Meta Diária</span>
+                <span className="text-lg font-bold text-muted-foreground">{cargaStr}</span>
               </div>
-              <div className="pt-4 mt-2 border-t border-gray-100 flex justify-between items-end">
-                <span className="text-gray-800 font-bold uppercase text-sm tracking-wider">
+              <div className="pt-4 mt-2 border-t border-border flex justify-between items-end">
+                <span className="text-foreground font-bold uppercase text-sm tracking-wider">
                   Saldo do Dia
                 </span>
                 <span
-                  className={`text-3xl font-black tracking-tight ${dailyBalance >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}
+                  className={`text-3xl font-black tracking-tight ${dailyBalance >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                 >
                   {formatHoursMins(dailyBalance)}
                 </span>
@@ -367,36 +367,36 @@ export default function BaterPonto() {
           </Card>
 
           {/* Monthly Card */}
-          <Card className="rounded-[24px] border-0 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
-              <CardTitle className="text-lg flex items-center text-gray-700">
-                <CalendarDays className="w-5 h-5 mr-3 text-[#C8922A]" />
+          <Card className="rounded-[24px] border border-border shadow-sm overflow-hidden bg-card">
+            <CardHeader className="bg-muted/50 border-b border-border pb-4">
+              <CardTitle className="text-lg flex items-center text-foreground">
+                <CalendarDays className="w-5 h-5 mr-3 text-primary" />
                 Acúmulo Mensal
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5 pt-6">
               <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Saldo Anterior</span>
+                <span className="text-muted-foreground font-medium">Saldo Anterior</span>
                 <span
-                  className={`text-xl font-bold ${prevBalance >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}
+                  className={`text-xl font-bold ${prevBalance >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                 >
                   {formatHoursMins(prevBalance)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Saldo do Mês</span>
+                <span className="text-muted-foreground font-medium">Saldo do Mês</span>
                 <span
-                  className={`text-xl font-bold ${monthBalance >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}
+                  className={`text-xl font-bold ${monthBalance >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                 >
                   {formatHoursMins(monthBalance)}
                 </span>
               </div>
-              <div className="pt-4 mt-2 border-t border-gray-100 flex justify-between items-end">
-                <span className="text-gray-800 font-bold uppercase text-sm tracking-wider">
+              <div className="pt-4 mt-2 border-t border-border flex justify-between items-end">
+                <span className="text-foreground font-bold uppercase text-sm tracking-wider">
                   Saldo Total
                 </span>
                 <span
-                  className={`text-3xl font-black tracking-tight ${totalBalance >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}
+                  className={`text-3xl font-black tracking-tight ${totalBalance >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                 >
                   {formatHoursMins(totalBalance)}
                 </span>
@@ -407,10 +407,10 @@ export default function BaterPonto() {
 
         {/* Daily History Table */}
         {todayRecord && (
-          <Card className="rounded-[24px] border-0 shadow-sm overflow-hidden mt-6 md:mt-8">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
-              <CardTitle className="text-lg flex items-center text-gray-700">
-                <Clock className="w-5 h-5 mr-3 text-[#C8922A]" />
+          <Card className="rounded-[24px] border border-border shadow-sm overflow-hidden mt-6 md:mt-8 bg-card">
+            <CardHeader className="bg-muted/50 border-b border-border pb-4">
+              <CardTitle className="text-lg flex items-center text-foreground">
+                <Clock className="w-5 h-5 mr-3 text-primary" />
                 Registro Diário
               </CardTitle>
             </CardHeader>
@@ -418,7 +418,7 @@ export default function BaterPonto() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>Entrada 1</TableHead>
                       <TableHead>Saída 1</TableHead>
                       <TableHead>Entrada 2</TableHead>
@@ -428,7 +428,7 @@ export default function BaterPonto() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
+                    <TableRow className="hover:bg-muted/50">
                       <TableCell className="font-medium">
                         {todayRecord.entrada1 || '--:--'}
                       </TableCell>
@@ -443,7 +443,7 @@ export default function BaterPonto() {
                           .replace('-', '')}
                       </TableCell>
                       <TableCell
-                        className={`font-bold ${todayRecord.saldo_dia >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}
+                        className={`font-bold ${todayRecord.saldo_dia >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                       >
                         {formatHoursMins(todayRecord.saldo_dia || 0)}
                       </TableCell>
@@ -460,13 +460,15 @@ export default function BaterPonto() {
         open={!!confirmPunch}
         onOpenChange={(open) => !open && !isProcessing && setConfirmPunch(null)}
       >
-        <AlertDialogContent className="rounded-2xl sm:rounded-[24px]">
+        <AlertDialogContent className="rounded-2xl sm:rounded-[24px] bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">Confirmar Registro</AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-gray-600 mt-2">
+            <AlertDialogTitle className="text-xl text-foreground">
+              Confirmar Registro
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-muted-foreground mt-2">
               Deseja confirmar o registro de{' '}
-              <strong className="text-gray-900 font-bold">{confirmPunch?.label}</strong> às{' '}
-              <strong className="text-[#C8922A] font-bold text-lg">{confirmPunch?.time}</strong>?
+              <strong className="text-foreground font-bold">{confirmPunch?.label}</strong> às{' '}
+              <strong className="text-primary font-bold text-lg">{confirmPunch?.time}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
@@ -476,7 +478,7 @@ export default function BaterPonto() {
             <AlertDialogAction
               onClick={handleRegister}
               disabled={isProcessing}
-              className="bg-[#C8922A] hover:bg-[#b07c21] text-white rounded-xl h-12 px-8 font-bold"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 px-8 font-bold"
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar'}
             </AlertDialogAction>

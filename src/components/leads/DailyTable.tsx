@@ -73,54 +73,83 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
         <TableCell className="text-center font-bold border-r">
           {isTotal ? 'TOTAL MÊS' : row.dia}
         </TableCell>
-        <TableCell className="text-center bg-blue-50/30">{c(calc.google)}</TableCell>
-        <TableCell className="text-center bg-blue-50/30">{c(calc.meta_ads)}</TableCell>
-        <TableCell className="text-center bg-blue-50/30">{c(calc.particular)}</TableCell>
-        <TableCell className="text-center font-bold bg-blue-100/40 border-r">
+        <TableCell className="text-center bg-blue-50/30 dark:bg-blue-900/10">
+          {c(calc.google)}
+        </TableCell>
+        <TableCell className="text-center bg-blue-50/30 dark:bg-blue-900/10">
+          {c(calc.meta_ads)}
+        </TableCell>
+        <TableCell className="text-center bg-blue-50/30 dark:bg-blue-900/10">
+          {c(calc.particular)}
+        </TableCell>
+        <TableCell className="text-center font-bold bg-blue-100/40 dark:bg-blue-900/20 border-r">
           {c(calc.total_leads)}
         </TableCell>
 
-        <TableCell className="text-center bg-amber-50/30 border-r font-medium">
+        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10 border-r font-medium">
           {c(calc.em_qualif)}
         </TableCell>
 
-        <TableCell className="text-center bg-red-50/30">{c(calc.sem_qualidade)}</TableCell>
-        <TableCell className="text-center bg-red-50/30">{c(calc.aposentado)}</TableCell>
-        <TableCell className="text-center bg-red-50/30">{c(calc.contribuinte_carne)}</TableCell>
-        <TableCell className="text-center bg-red-50/30">{c(calc.outros)}</TableCell>
-        <TableCell className="text-center font-bold bg-red-100/40 border-r">
+        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+          {c(calc.sem_qualidade)}
+        </TableCell>
+        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+          {c(calc.aposentado)}
+        </TableCell>
+        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+          {c(calc.contribuinte_carne)}
+        </TableCell>
+        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+          {c(calc.outros)}
+        </TableCell>
+        <TableCell className="text-center font-bold bg-red-100/40 dark:bg-red-900/20 border-r">
           {c(calc.total_desq)}
         </TableCell>
 
-        <TableCell className="text-center font-bold bg-green-100/40 border-r text-green-800">
+        <TableCell className="text-center font-bold bg-green-100/40 dark:bg-green-900/20 border-r text-green-800 dark:text-green-400">
           {c(calc.qualificados)}
         </TableCell>
 
-        <TableCell className="text-center bg-amber-50/30">{c(calc.fechado_direto)}</TableCell>
-        <TableCell className="text-center bg-amber-50/30">{c(calc.fechado_fup)}</TableCell>
-        <TableCell className="text-center bg-amber-50/30">{c(calc.fup_ativo)}</TableCell>
-        <TableCell className="text-center font-bold bg-amber-100/40 border-r">
+        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10">
+          {c(calc.fechado_direto)}
+        </TableCell>
+        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10">
+          {c(calc.fechado_fup)}
+        </TableCell>
+        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10">
+          {c(calc.fup_ativo)}
+        </TableCell>
+        <TableCell className="text-center font-bold bg-amber-100/40 dark:bg-amber-900/20 border-r">
           {c(calc.total_fechados)}
         </TableCell>
 
         <TableCell
-          className={cn('text-center font-bold bg-purple-50/30', colorConvGeral(calc.conv_geral))}
+          className={cn(
+            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10',
+            colorConvGeral(calc.conv_geral),
+          )}
         >
           {fmtPct(calc.conv_geral)}
         </TableCell>
         <TableCell
-          className={cn('text-center font-bold bg-purple-50/30', colorConvQualif(calc.conv_qualif))}
+          className={cn(
+            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10',
+            colorConvQualif(calc.conv_qualif),
+          )}
         >
           {fmtPct(calc.conv_qualif)}
         </TableCell>
         <TableCell
-          className={cn('text-center font-bold bg-purple-50/30', colorDesq(calc.desqual_pct))}
+          className={cn(
+            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10',
+            colorDesq(calc.desqual_pct),
+          )}
         >
           {fmtPct(calc.desqual_pct)}
         </TableCell>
         <TableCell
           className={cn(
-            'text-center font-bold bg-purple-50/30 border-r',
+            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10 border-r',
             colorFechFup(calc.pct_fech_via_fup),
           )}
         >
@@ -204,37 +233,37 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
                 <TableHead className="text-center border-r bg-muted/30 w-16">BASE</TableHead>
                 <TableHead
                   colSpan={4}
-                  className="text-center border-r bg-blue-100/50 text-blue-800 font-bold"
+                  className="text-center border-r bg-blue-100/50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 font-bold"
                 >
                   LEADS RECEBIDOS
                 </TableHead>
                 <TableHead
                   colSpan={1}
-                  className="text-center border-r bg-amber-100/50 text-amber-800 font-bold"
+                  className="text-center border-r bg-amber-100/50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 font-bold"
                 >
                   EM QUALIF.
                 </TableHead>
                 <TableHead
                   colSpan={5}
-                  className="text-center border-r bg-red-100/50 text-red-800 font-bold"
+                  className="text-center border-r bg-red-100/50 dark:bg-red-900/20 text-red-800 dark:text-red-400 font-bold"
                 >
                   DESQUALIFICADOS
                 </TableHead>
                 <TableHead
                   colSpan={1}
-                  className="text-center border-r bg-green-100/50 text-green-800 font-bold"
+                  className="text-center border-r bg-green-100/50 dark:bg-green-900/20 text-green-800 dark:text-green-400 font-bold"
                 >
                   QUALIFICADOS
                 </TableHead>
                 <TableHead
                   colSpan={4}
-                  className="text-center border-r bg-amber-100/50 text-amber-800 font-bold"
+                  className="text-center border-r bg-amber-100/50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 font-bold"
                 >
                   CONTRATOS
                 </TableHead>
                 <TableHead
                   colSpan={6}
-                  className="text-center bg-purple-100/50 text-purple-800 font-bold"
+                  className="text-center bg-purple-100/50 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 font-bold"
                 >
                   INDICADORES
                 </TableHead>

@@ -206,7 +206,7 @@ export default function LeadsCampanha() {
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent className="rounded-[10px]">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Excluir registro</DialogTitle>
+            <DialogTitle className="text-destructive">Excluir registro</DialogTitle>
             <DialogDescription className="py-4 text-base text-foreground">
               Deseja excluir o registro do dia <strong>{recordToDelete?.dia}</strong> de{' '}
               <strong>{recordToDelete?.mes}</strong>? Esta ação não pode ser desfeita.
@@ -217,8 +217,7 @@ export default function LeadsCampanha() {
               Cancelar
             </Button>
             <Button
-              style={{ backgroundColor: '#E84040', color: 'white' }}
-              className="hover:bg-red-700"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={confirmDelete}
             >
               Excluir permanentemente
