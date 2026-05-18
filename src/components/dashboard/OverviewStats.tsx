@@ -85,27 +85,27 @@ export function OverviewStats({ protocolos, contratos }: Props) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      <Card className="border-t-2 border-t-[#C9922A] shadow-sm">
+      <Card className="border-t-2 border-t-[#C9922A] shadow-sm dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
             Total Honorários (todos os anos)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-bold text-foreground dark:text-gray-100">
             {formatCurrency(totalHonorarios)}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-t-2 border-t-[#C9922A] shadow-sm">
+      <Card className="border-t-2 border-t-[#C9922A] shadow-sm dark:bg-gray-800">
         <CardHeader className="flex flex-col items-start justify-center space-y-2 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
             Ticket Médio por Ação
           </CardTitle>
           <div className="flex items-center gap-2">
             <select
-              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               value={monthTicket}
               onChange={(e) => setMonthTicket(Number(e.target.value))}
             >
@@ -116,7 +116,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
               ))}
             </select>
             <select
-              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               value={yearTicket}
               onChange={(e) => setYearTicket(Number(e.target.value))}
             >
@@ -135,24 +135,24 @@ export function OverviewStats({ protocolos, contratos }: Props) {
         </CardContent>
       </Card>
 
-      <Card className="border-t-2 border-t-blue-500 shadow-sm">
+      <Card className="border-t-2 border-t-blue-500 shadow-sm dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
             Ações Distribuídas (todos os anos)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-foreground">{totalAcoes}</div>
+          <div className="text-2xl font-bold text-foreground dark:text-gray-100">{totalAcoes}</div>
         </CardContent>
       </Card>
 
-      <Card className="border-t-2 border-t-green-500 shadow-sm">
+      <Card className="border-t-2 border-t-green-500 shadow-sm dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
             Contratos Fechados (Ativos)
           </CardTitle>
           <select
-            className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             value={yearCard3}
             onChange={(e) => setYearCard3(Number(e.target.value))}
           >
@@ -164,17 +164,17 @@ export function OverviewStats({ protocolos, contratos }: Props) {
           </select>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-foreground">{ativosAno3}</div>
+          <div className="text-2xl font-bold text-foreground dark:text-gray-100">{ativosAno3}</div>
         </CardContent>
       </Card>
 
-      <Card className="border-t-2 border-t-red-500 shadow-sm">
+      <Card className="border-t-2 border-t-red-500 shadow-sm dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
             Casos em R. Docs
           </CardTitle>
           <select
-            className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             value={yearCard4}
             onChange={(e) => setYearCard4(Number(e.target.value))}
           >
@@ -193,7 +193,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
           <p
             className={cn(
               'mt-1 text-xs font-medium',
-              isMetaMet ? 'text-green-600' : 'text-red-600',
+              isMetaMet ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
             )}
           >
             Meta: liberar ≥ 50% para protocolo
