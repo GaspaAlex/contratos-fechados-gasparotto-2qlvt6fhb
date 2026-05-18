@@ -112,19 +112,19 @@ export default function Funcionarios() {
 
   if (!isAdmin) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-[#F5F0E8] p-4 md:p-8">
-        <Card className="relative w-full max-w-sm overflow-hidden rounded-[24px] border-0 bg-white shadow-xl animate-in fade-in zoom-in duration-500">
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4 md:p-8">
+        <Card className="relative w-full max-w-sm overflow-hidden rounded-[24px] border-0 bg-card shadow-xl animate-in fade-in zoom-in duration-500">
           {isCheckingPin && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
               <Loader2 className="h-10 w-10 animate-spin text-[#C8922A]" />
             </div>
           )}
 
           <div className="bg-[#C8922A] px-6 py-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-card shadow-sm">
               <Lock className="h-8 w-8 text-[#C8922A]" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Acesso Restrito</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground">Acesso Restrito</h2>
             <p className="mt-1 text-white/90">Insira seu PIN para continuar</p>
           </div>
 
@@ -136,7 +136,7 @@ export default function Funcionarios() {
                   className={`flex h-14 w-12 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
                     pin.length > i
                       ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
-                      : 'border-gray-200 bg-gray-50 text-transparent'
+                      : 'border-border bg-muted text-transparent'
                   }`}
                 >
                   {pin.length > i ? '•' : ''}
@@ -149,7 +149,7 @@ export default function Funcionarios() {
                 <Button
                   key={num}
                   variant="outline"
-                  className="h-14 rounded-xl border-gray-200 text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
+                  className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
                   onClick={() => handlePinInput(num.toString())}
                   disabled={isCheckingPin}
                 >
@@ -158,7 +158,7 @@ export default function Funcionarios() {
               ))}
               <Button
                 variant="outline"
-                className="h-14 rounded-xl border-gray-200 text-lg font-semibold transition-colors hover:bg-red-50 hover:text-red-600"
+                className="h-14 rounded-xl border-border bg-card text-muted-foreground text-lg font-semibold transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
                 onClick={() => setPin('')}
                 disabled={isCheckingPin || pin.length === 0}
               >
@@ -166,7 +166,7 @@ export default function Funcionarios() {
               </Button>
               <Button
                 variant="outline"
-                className="h-14 rounded-xl border-gray-200 text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
+                className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-[#C8922A] hover:text-white"
                 onClick={() => handlePinInput('0')}
                 disabled={isCheckingPin}
               >
@@ -174,7 +174,7 @@ export default function Funcionarios() {
               </Button>
               <Button
                 variant="outline"
-                className="h-14 rounded-xl border-gray-200 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                className="h-14 rounded-xl border-border bg-card text-foreground transition-colors hover:bg-muted"
                 onClick={() => setPin((p) => p.slice(0, -1))}
                 disabled={isCheckingPin || pin.length === 0}
               >
@@ -272,10 +272,10 @@ export default function Funcionarios() {
   }
 
   return (
-    <div className="flex-1 bg-[#F5F0E8] p-6 md:p-8 min-h-[calc(100vh-4rem)]">
+    <div className="flex-1 bg-background p-6 md:p-8 min-h-[calc(100vh-4rem)]">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Gerenciar Funcionários
           </h2>
           <Button
@@ -292,7 +292,7 @@ export default function Funcionarios() {
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-64 w-full rounded-xl bg-white/50" />
+              <Skeleton key={i} className="h-64 w-full rounded-xl bg-muted/50" />
             ))}
           </div>
         ) : (
@@ -316,7 +316,7 @@ export default function Funcionarios() {
               />
             ))}
             {funcionarios.length === 0 && (
-              <div className="col-span-full py-12 text-center text-gray-500">
+              <div className="col-span-full py-12 text-center text-muted-foreground">
                 Nenhum funcionário cadastrado.
               </div>
             )}

@@ -27,18 +27,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0D0F0C] p-4">
-      <div className="w-full max-w-[380px] bg-[#141710] rounded-[10px] p-[32px] border border-[#C9922A]/20 shadow-2xl">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-[380px] bg-card rounded-[10px] p-[32px] border border-[#C9922A]/20 shadow-2xl">
         <div>
-          <h1 className="text-[22px] text-[#C9922A] font-bold leading-tight">
-            Advocacia Gasparotto
-          </h1>
-          <p className="text-[13px] text-[#8D9485] mt-1">Sistema de Gestão</p>
+          <h1 className="text-[22px] text-primary font-bold leading-tight">Advocacia Gasparotto</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">Sistema de Gestão</p>
         </div>
 
         <form onSubmit={handleLogin} className="mt-[24px] space-y-[16px]">
           <div>
-            <label className="text-[12px] text-[#8D9485] mb-[6px] block">Email</label>
+            <label className="text-[12px] text-muted-foreground mb-[6px] block">Email</label>
             <input
               type="email"
               value={email}
@@ -46,13 +44,13 @@ export default function Login() {
                 setEmail(e.target.value)
                 setError(false)
               }}
-              className="bg-[#1B1F17] border border-[#363C2E] rounded-[6px] px-[14px] py-[10px] text-[#ECEEE8] text-[13px] w-full focus:outline-none focus:border-[#C9922A] transition-colors"
+              className="bg-background border border-border rounded-[6px] px-[14px] py-[10px] text-foreground text-[13px] w-full focus:outline-none focus:border-primary transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-[12px] text-[#8D9485] mb-[6px] block">Senha</label>
+            <label className="text-[12px] text-muted-foreground mb-[6px] block">Senha</label>
             <input
               type="password"
               value={password}
@@ -60,7 +58,7 @@ export default function Login() {
                 setPassword(e.target.value)
                 setError(false)
               }}
-              className="bg-[#1B1F17] border border-[#363C2E] rounded-[6px] px-[14px] py-[10px] text-[#ECEEE8] text-[13px] w-full focus:outline-none focus:border-[#C9922A] transition-colors"
+              className="bg-background border border-border rounded-[6px] px-[14px] py-[10px] text-foreground text-[13px] w-full focus:outline-none focus:border-primary transition-colors"
               required
             />
           </div>

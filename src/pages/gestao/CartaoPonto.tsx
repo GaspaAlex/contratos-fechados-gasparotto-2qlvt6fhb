@@ -234,19 +234,23 @@ export default function CartaoPonto() {
 
   const getRowStyle = (tipo: string, isReal: boolean, isTodayOrFuture: boolean) => {
     if (!isReal && tipo === 'falta' && !isTodayOrFuture)
-      return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80 text-red-900'
-    if (tipo === 'feriado') return 'bg-[#FFF8E1] hover:bg-[#FFF8E1]/80 text-yellow-900'
-    if (tipo === 'atestado') return 'bg-[#E3F2FD] hover:bg-[#E3F2FD]/80 text-blue-900'
+      return 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 text-red-900 dark:text-red-300'
+    if (tipo === 'feriado')
+      return 'bg-yellow-50 dark:bg-yellow-950/20 hover:bg-yellow-100 dark:hover:bg-yellow-950/40 text-yellow-900 dark:text-yellow-300'
+    if (tipo === 'atestado')
+      return 'bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-950/40 text-blue-900 dark:text-blue-300'
     if (tipo === 'falta' && !isTodayOrFuture)
-      return 'bg-[#FFEBEE] hover:bg-[#FFEBEE]/80 text-red-900'
-    return 'bg-white hover:bg-gray-50'
+      return 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 text-red-900 dark:text-red-300'
+    return 'bg-card hover:bg-muted/50'
   }
 
   if (isLoading)
-    return <div className="p-8 text-center text-gray-500">Carregando cartão de ponto...</div>
+    return (
+      <div className="p-8 text-center text-muted-foreground">Carregando cartão de ponto...</div>
+    )
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] p-4 md:p-8 print:bg-white print:p-0">
+    <div className="min-h-screen bg-background p-4 md:p-8 print:bg-white print:p-0">
       <style>{`
         @media print {
           body { background-color: white !important; }
@@ -288,10 +292,10 @@ export default function CartaoPonto() {
           />
         </div>
 
-        <Card className="border-none shadow-sm overflow-hidden print:shadow-none print:border print:border-gray-200">
+        <Card className="border border-border bg-card shadow-sm overflow-hidden print:shadow-none print:border print:border-gray-200">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-gray-50">
+              <TableHeader className="bg-muted">
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Dia</TableHead>
@@ -306,18 +310,20 @@ export default function CartaoPonto() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow className="bg-gray-100">
-                  <TableCell className="font-medium text-gray-600">Saldo Ant.</TableCell>
+                <TableRow className="bg-muted/50">
+                  <TableCell className="font-medium text-muted-foreground">Saldo Ant.</TableCell>
                   <TableCell colSpan={6}></TableCell>
                   <TableCell
                     className={cn(
                       'font-bold',
-                      saldoMensal?.saldo_anterior >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]',
+                      saldoMensal?.saldo_anterior >= 0
+                        ? 'text-green-600 dark:text-green-500'
+                        : 'text-red-600 dark:text-red-500',
                     )}
                   >
                     {formatBalance(saldoMensal?.saldo_anterior, formatMinutesToHHMM)}
                   </TableCell>
-                  <TableCell colSpan={2} className="text-xs text-gray-400">
+                  <TableCell colSpan={2} className="text-xs text-muted-foreground opacity-80">
                     Do mês anterior
                   </TableCell>
                 </TableRow>
@@ -341,10 +347,10 @@ export default function CartaoPonto() {
                       className={cn(
                         'font-bold',
                         row.saldo_dia > 0
-                          ? 'text-[#2E7D32]'
+                          ? 'text-green-600 dark:text-green-500'
                           : row.saldo_dia < 0
-                            ? 'text-[#C62828]'
-                            : 'text-gray-500',
+                            ? 'text-red-600 dark:text-red-500'
+                            : 'text-muted-foreground',
                       )}
                     >
                       {formatBalance(row.saldo_dia, formatMinutesToHHMM)}
@@ -373,41 +379,45 @@ export default function CartaoPonto() {
         </Card>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-card">
             <CardContent className="p-4 text-center">
-              <p className="text-sm text-gray-500 mb-1">Horas Trabalhadas</p>
-              <p className="text-2xl font-bold text-gray-800">
+              <p className="text-sm text-muted-foreground mb-1">Horas Trabalhadas</p>
+              <p className="text-2xl font-bold text-foreground">
                 {formatMinutesToHHMM(monthlyTotals.hTrab)}
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-card">
             <CardContent className="p-4 text-center">
-              <p className="text-sm text-gray-500 mb-1">Saldo do Mês</p>
+              <p className="text-sm text-muted-foreground mb-1">Saldo do Mês</p>
               <p
                 className={cn(
                   'text-2xl font-bold',
-                  monthlyTotals.saldoMes >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]',
+                  monthlyTotals.saldoMes >= 0
+                    ? 'text-green-600 dark:text-green-500'
+                    : 'text-red-600 dark:text-red-500',
                 )}
               >
                 {formatBalance(monthlyTotals.saldoMes, formatMinutesToHHMM)}
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-card">
             <CardContent className="p-4 text-center">
-              <p className="text-sm text-gray-500 mb-1">Saldo Anterior</p>
+              <p className="text-sm text-muted-foreground mb-1">Saldo Anterior</p>
               <p
                 className={cn(
                   'text-2xl font-bold',
-                  saldoMensal?.saldo_anterior >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]',
+                  saldoMensal?.saldo_anterior >= 0
+                    ? 'text-green-600 dark:text-green-500'
+                    : 'text-red-600 dark:text-red-500',
                 )}
               >
                 {formatBalance(saldoMensal?.saldo_anterior, formatMinutesToHHMM)}
               </p>
             </CardContent>
           </Card>
-          <Card className="border-[#C8922A] border-2 print:border-gray-200 print:border">
+          <Card className="border-[#C8922A] border-2 bg-card print:border-gray-200 print:border">
             <CardContent className="p-4 text-center">
               <p className="text-sm font-semibold text-[#C8922A] print:text-gray-800 mb-1">
                 Saldo Acumulado
@@ -415,7 +425,9 @@ export default function CartaoPonto() {
               <p
                 className={cn(
                   'text-3xl font-black print:text-black',
-                  saldoMensal?.saldo_total >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]',
+                  saldoMensal?.saldo_total >= 0
+                    ? 'text-green-600 dark:text-green-500'
+                    : 'text-red-600 dark:text-red-500',
                 )}
               >
                 {formatBalance(saldoMensal?.saldo_total, formatMinutesToHHMM)}
@@ -433,12 +445,12 @@ export default function CartaoPonto() {
       />
 
       <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
-        <DialogContent className="sm:max-w-md bg-[#F5F0E8] border-[#C8922A]/20 print-hide">
+        <DialogContent className="sm:max-w-md bg-background border-border print-hide">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-800 text-center">
+            <DialogTitle className="text-xl font-bold text-foreground text-center">
               Exportar Relatório
             </DialogTitle>
-            <DialogDescription className="text-center text-gray-600">
+            <DialogDescription className="text-center text-muted-foreground">
               Escolha o formato desejado para exportar o cartão de ponto de {funcionario?.nome}.
             </DialogDescription>
           </DialogHeader>
@@ -458,7 +470,7 @@ export default function CartaoPonto() {
             <Button
               variant="ghost"
               onClick={() => setExportModalOpen(false)}
-              className="w-full text-gray-500 hover:text-gray-800 mt-2"
+              className="w-full text-muted-foreground hover:text-foreground mt-2"
             >
               Cancelar
             </Button>

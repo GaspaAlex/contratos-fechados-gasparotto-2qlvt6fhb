@@ -61,8 +61,8 @@ export default function Ponto() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-[#F5F0E8] p-4 font-sans">
-      <Card className="w-full max-w-md border-0 shadow-2xl rounded-[24px] overflow-hidden">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4 font-sans">
+      <Card className="w-full max-w-md border-0 shadow-2xl rounded-[24px] overflow-hidden bg-card">
         <div className="bg-[#C8922A] p-8 text-center text-white">
           <KeyRound className="mx-auto mb-4 h-12 w-12 opacity-80" />
           <CardTitle className="text-2xl font-bold tracking-wider">REGISTRO DE PONTO</CardTitle>
@@ -78,7 +78,7 @@ export default function Ponto() {
                     className={`flex h-16 w-16 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
                       pin.length > i
                         ? 'border-[#C8922A] bg-[#C8922A]/10 text-[#C8922A]'
-                        : 'border-gray-200 bg-gray-50 text-transparent'
+                        : 'border-border bg-muted text-transparent'
                     }`}
                   >
                     {pin.length > i ? '•' : ''}
@@ -93,7 +93,7 @@ export default function Ponto() {
                   key={num}
                   type="button"
                   variant="outline"
-                  className="h-16 text-2xl font-bold rounded-xl border-gray-200 hover:bg-[#C8922A] hover:text-white hover:border-[#C8922A] transition-colors"
+                  className="h-16 text-2xl font-bold rounded-xl border-border bg-card text-foreground hover:bg-[#C8922A] hover:text-white hover:border-[#C8922A] transition-colors"
                   onClick={() => handlePadClick(num.toString())}
                 >
                   {num}
@@ -102,7 +102,7 @@ export default function Ponto() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-16 text-sm font-bold rounded-xl border-gray-200 text-gray-500 hover:bg-gray-100 uppercase"
+                className="h-16 text-sm font-bold rounded-xl border-border bg-card text-muted-foreground hover:bg-muted uppercase"
                 onClick={handleClear}
               >
                 Limpar
@@ -110,7 +110,7 @@ export default function Ponto() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-16 text-2xl font-bold rounded-xl border-gray-200 hover:bg-[#C8922A] hover:text-white hover:border-[#C8922A] transition-colors"
+                className="h-16 text-2xl font-bold rounded-xl border-border bg-card text-foreground hover:bg-[#C8922A] hover:text-white hover:border-[#C8922A] transition-colors"
                 onClick={() => handlePadClick('0')}
               >
                 0
@@ -127,7 +127,7 @@ export default function Ponto() {
           </form>
         </CardContent>
       </Card>
-      <div className="mt-8 text-center text-sm text-gray-500">
+      <div className="mt-8 text-center text-sm text-muted-foreground">
         <p>Acesso restrito aos colaboradores da Advocacia Gasparotto.</p>
       </div>
     </div>

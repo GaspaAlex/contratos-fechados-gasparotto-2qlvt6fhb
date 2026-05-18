@@ -17,11 +17,11 @@ export function FuncionarioCard({ func, onEdit, onToggleStatus, onDelete }: any)
   const getProfileBadgeStyle = (perfil: string) => {
     switch (perfil) {
       case 'admin':
-        return 'bg-[#FFF8E1] text-[#C8922A] hover:bg-[#FFF8E1]'
+        return 'bg-[#FFF8E1] dark:bg-[#C8922A]/20 text-[#C8922A] hover:bg-[#FFF8E1] dark:hover:bg-[#C8922A]/30'
       case 'lider':
-        return 'bg-[#E3F2FD] text-[#1565C0] hover:bg-[#E3F2FD]'
+        return 'bg-[#E3F2FD] dark:bg-[#1565C0]/20 text-[#1565C0] dark:text-[#64B5F6] hover:bg-[#E3F2FD] dark:hover:bg-[#1565C0]/30'
       default:
-        return 'bg-[#F5F5F5] text-[#616161] hover:bg-[#F5F5F5]'
+        return 'bg-[#F5F5F5] dark:bg-muted text-[#616161] dark:text-muted-foreground hover:bg-[#F5F5F5] dark:hover:bg-muted/80'
     }
   }
 
@@ -37,10 +37,10 @@ export function FuncionarioCard({ func, onEdit, onToggleStatus, onDelete }: any)
   }
 
   return (
-    <Card className="overflow-hidden border-none shadow-md transition-shadow hover:shadow-lg">
+    <Card className="overflow-hidden border-border bg-card shadow-md transition-shadow hover:shadow-lg">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
-          <Avatar className="h-20 w-20 border-2 border-white shadow-sm">
+          <Avatar className="h-20 w-20 border-2 border-background shadow-sm">
             <AvatarImage
               src={getFuncionarioPhotoUrl(func)}
               alt={func.nome}
@@ -52,13 +52,13 @@ export function FuncionarioCard({ func, onEdit, onToggleStatus, onDelete }: any)
           </Avatar>
           <Badge
             variant="outline"
-            className={`border-none ${func.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+            className={`border-none ${func.ativo ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}
           >
             {func.ativo ? 'Ativo' : 'Inativo'}
           </Badge>
         </div>
         <div className="mt-4">
-          <CardTitle className="text-xl line-clamp-1">{func.nome}</CardTitle>
+          <CardTitle className="text-xl line-clamp-1 text-foreground">{func.nome}</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pb-6">
@@ -67,28 +67,36 @@ export function FuncionarioCard({ func, onEdit, onToggleStatus, onDelete }: any)
             {getProfileLabel(func.perfil)}
           </Badge>
         </div>
-        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+        <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
           <div>
-            <p className="font-medium text-gray-900">Horário</p>
+            <p className="font-medium text-foreground">Horário</p>
             <p>
               {func.horario_entrada || '--'} às {func.horario_saida || '--'}
             </p>
           </div>
           <div>
-            <p className="font-medium text-gray-900">Carga Diária</p>
+            <p className="font-medium text-foreground">Carga Diária</p>
             <p>{formatCarga(func.carga_diaria)}</p>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 border-t bg-gray-50/50 p-4">
+      <CardFooter className="flex flex-col gap-2 border-t border-border bg-muted/20 p-4">
         <div className="flex w-full gap-2">
-          <Button variant="outline" className="flex-1 bg-white" onClick={() => onEdit(func)}>
+          <Button
+            variant="outline"
+            className="flex-1 bg-card text-foreground"
+            onClick={() => onEdit(func)}
+          >
             <Edit2 className="mr-2 h-4 w-4" />
             Editar
           </Button>
           <Button
             variant={func.ativo ? 'destructive' : 'default'}
-            className={!func.ativo ? 'flex-1 bg-green-600 hover:bg-green-700 text-white' : 'flex-1'}
+            className={
+              !func.ativo
+                ? 'flex-1 bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800'
+                : 'flex-1'
+            }
             onClick={() => {
               if (func.perfil === 'admin' && func.ativo) {
                 toast.error('Não é possível desativar um perfil de administrador.')

@@ -39,11 +39,8 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
   }
 
   return (
-    <div
-      className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] animate-fade-in"
-      style={{ backgroundColor: '#FAF8F2' }}
-    >
-      <Card className="w-full max-w-md shadow-lg border-0 bg-white overflow-hidden">
+    <div className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] animate-fade-in bg-background">
+      <Card className="w-full max-w-md shadow-lg border-0 bg-card overflow-hidden">
         <div className="bg-[#C9922A] p-8 text-center text-white flex flex-col items-center gap-3">
           <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mb-1">
             <Key className="w-7 h-7 text-white" />
@@ -60,8 +57,8 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
                   'w-14 h-16 rounded-xl border-2 flex items-center justify-center text-3xl transition-all duration-200',
                   pin.length > index
                     ? 'border-[#C9922A] bg-[#C9922A]/10 text-[#C9922A]'
-                    : 'border-gray-200',
-                  error && 'border-red-500 bg-red-50 text-red-500',
+                    : 'border-border dark:border-border',
+                  error && 'border-red-500 bg-red-50 dark:bg-red-500/10 text-red-500',
                 )}
               >
                 {pin.length > index ? '•' : ''}
@@ -82,7 +79,7 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
               <Button
                 key={num}
                 variant="outline"
-                className="h-14 sm:h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors"
+                className="h-14 sm:h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors bg-card text-foreground border-border"
                 onClick={() => handleDigit(num.toString())}
               >
                 {num}
@@ -90,14 +87,14 @@ export function RpvPinGuard({ children }: RpvPinGuardProps) {
             ))}
             <Button
               variant="outline"
-              className="h-14 sm:h-16 text-sm font-bold rounded-2xl text-gray-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors"
+              className="h-14 sm:h-16 text-sm font-bold rounded-2xl text-muted-foreground hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors bg-card border-border"
               onClick={handleClear}
             >
               LIMPAR
             </Button>
             <Button
               variant="outline"
-              className="h-14 sm:h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors"
+              className="h-14 sm:h-16 text-2xl font-medium rounded-2xl hover:bg-[#C9922A] hover:text-white hover:border-[#C9922A] transition-colors bg-card text-foreground border-border"
               onClick={() => handleDigit('0')}
             >
               0

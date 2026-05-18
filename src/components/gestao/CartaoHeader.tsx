@@ -47,19 +47,19 @@ export function CartaoHeader({
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i)
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-xl shadow-sm border border-border">
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20 border-2 border-[#C8922A]/20">
           <AvatarImage src={getFuncionarioPhotoUrl(funcionario)} />
-          <AvatarFallback className="text-xl bg-gray-100">
+          <AvatarFallback className="text-xl bg-muted text-foreground">
             {funcionario?.nome?.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-foreground">
             {funcionario?.nome || 'Carregando...'}
           </h2>
-          <p className="text-gray-500 capitalize">{funcionario?.perfil || 'Funcionário'}</p>
+          <p className="text-muted-foreground capitalize">{funcionario?.perfil || 'Funcionário'}</p>
           <p className="text-[#C8922A] font-medium mt-1">
             {MONTHS[month - 1]} de {year}
           </p>

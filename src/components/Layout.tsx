@@ -129,7 +129,7 @@ export default function Layout() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    className="relative w-[52px] h-[52px] rounded-[10px] overflow-hidden bg-[#FFFFFF] cursor-pointer group/logo shrink-0"
+                    className="relative w-[52px] h-[52px] rounded-[10px] overflow-hidden bg-white dark:bg-[#141710] cursor-pointer group/logo shrink-0"
                     style={{ border: '2px solid rgba(201, 146, 42, 0.35)' }}
                     onClick={handleLogoClick}
                   >
@@ -169,16 +169,10 @@ export default function Layout() {
               </Tooltip>
 
               <div className="flex flex-col text-left">
-                <span
-                  className="font-bold text-[15px] leading-tight"
-                  style={{ color: 'var(--text, hsl(var(--foreground)))' }}
-                >
+                <span className="font-bold text-[15px] leading-tight text-foreground">
                   Advocacia Gasparotto
                 </span>
-                <span
-                  className="text-[12px] leading-tight"
-                  style={{ color: 'var(--text3, hsl(var(--muted-foreground)))' }}
-                >
+                <span className="text-[12px] leading-tight text-muted-foreground">
                   Sistema de Gestão
                 </span>
               </div>
@@ -188,10 +182,7 @@ export default function Layout() {
             <div className="flex flex-col">
               {navSections.map((section, index) => (
                 <div key={section.label} className={cn(index > 0 && 'mt-4')}>
-                  <div
-                    className="px-2 mb-2 text-[10px] uppercase font-semibold tracking-[1px]"
-                    style={{ color: 'var(--text3, hsl(var(--muted-foreground)))' }}
-                  >
+                  <div className="px-2 mb-2 text-[10px] uppercase font-semibold tracking-[1px] text-muted-foreground">
                     {section.label}
                   </div>
                   <SidebarMenu>
