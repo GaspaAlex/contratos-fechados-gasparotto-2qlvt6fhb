@@ -23,7 +23,7 @@ export interface LeadDiario {
 
 export const getLeadsByYear = (year: string) =>
   pb.collection('leads_diarios').getFullList<LeadDiario>({
-    filter: `mes ~ "${year}"`,
+    filter: `created >= "${year}-01-01 00:00:00" && created <= "${year}-12-31 23:59:59"`,
     sort: 'dia',
   })
 

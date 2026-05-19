@@ -9,7 +9,7 @@ import {
   TableCell,
   TableFooter,
 } from '@/components/ui/table'
-import { aggregateLeads, calculateLeadRow, MONTHS, fmtMon } from '@/lib/leads-calc'
+import { MONTHS, fmtMon } from '@/lib/leads-calc'
 import { getContratos } from '@/services/contratos'
 import { getProtocolos } from '@/services/protocolo'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -47,12 +47,29 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
 
     const data = monthsToProcess
       .map((m) => {
-        const mLeads = leads.filter((l) => l.mes === m)
+        const mLeads = leads.filter((l) => {
+          const lYear = l.created ? l.created.substring(0, 4) : year
+          return l.mes === m && lYear === year
+        })
         const filteredLeads =
           day === 'Todos' ? mLeads : mLeads.filter((l) => l.dia.toString() === day)
 
-        const agg = aggregateLeads(filteredLeads)
-        const calc = calculateLeadRow(agg)
+        const sumLeads = filteredLeads.reduce(
+          (acc, l) =>
+            acc + (Number(l.google) || 0) + (Number(l.meta_ads) || 0) + (Number(l.particular) || 0),
+          0,
+        )
+        const sumInvestimento = filteredLeads.reduce(
+          (acc, l) => acc + (Number(l.investimento) || 0),
+          0,
+        )
+        const sumFechamentos = filteredLeads.reduce(
+          (acc, l) => acc + (Number(l.fechado_direto) || 0) + (Number(l.fechado_fup) || 0),
+          0,
+        )
+
+        const cpl = sumLeads > 0 ? sumInvestimento / sumLeads : null
+        const cac = sumFechamentos > 0 ? sumInvestimento / sumFechamentos : null
 
         const monthNum = String(MONTHS.indexOf(m) + 1).padStart(2, '0')
 
@@ -69,17 +86,17 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
           return pYear === year && pMonth === monthNum
         }).length
 
-        const cap = protocolosCount > 0 ? calc.investimento / protocolosCount : null
+        const cap = protocolosCount > 0 ? sumInvestimento / protocolosCount : null
 
         return {
           month: m,
-          leads: calc.total_leads,
-          fechamentos: calc.total_fechados,
+          leads: sumLeads,
+          fechamentos: sumFechamentos,
           descartes: descartesCount,
           protocolos: protocolosCount,
-          investimento: calc.investimento,
-          cpl: calc.cpl,
-          cac: calc.cac,
+          investimento: sumInvestimento,
+          cpl: cpl,
+          cac: cac,
           cap: cap,
         }
       })
