@@ -120,12 +120,12 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
 
   if (tableData.length === 0) {
     return (
-      <Card className="bg-zinc-900 border-zinc-800 text-zinc-100 shadow-md">
+      <Card className="bg-white dark:bg-gray-800 shadow-md">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold text-zinc-100">CAC & CPL por Mês</CardTitle>
+          <CardTitle className="text-lg font-semibold">CAC & CPL por Mês</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-zinc-400 py-4 text-center">
+          <div className="text-sm text-muted-foreground py-4 text-center">
             Nenhum dado encontrado para o período.
           </div>
         </CardContent>
@@ -134,68 +134,54 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
   }
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800 text-zinc-100 shadow-md">
+    <Card className="bg-white dark:bg-gray-800 shadow-md">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-zinc-100">CAC & CPL por Mês</CardTitle>
+        <CardTitle className="text-lg font-semibold">CAC & CPL por Mês</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
-                <TableHead className="text-zinc-400">Mês</TableHead>
-                <TableHead className="text-zinc-400 text-right">Leads</TableHead>
-                <TableHead className="text-zinc-400 text-right">Fechamentos</TableHead>
-                <TableHead className="text-zinc-400 text-right">Descartes</TableHead>
-                <TableHead className="text-zinc-400 text-right">Protocolos</TableHead>
-                <TableHead className="text-zinc-400 text-right">Investimento</TableHead>
-                <TableHead className="text-zinc-400 text-right">CPL</TableHead>
-                <TableHead className="text-zinc-400 text-right">CAC</TableHead>
-                <TableHead className="text-zinc-400 text-right whitespace-nowrap">CAP</TableHead>
+              <TableRow className="hover:bg-muted/50">
+                <TableHead>Mês</TableHead>
+                <TableHead className="text-right">Leads</TableHead>
+                <TableHead className="text-right">Fechamentos</TableHead>
+                <TableHead className="text-right">Descartes</TableHead>
+                <TableHead className="text-right">Protocolos</TableHead>
+                <TableHead className="text-right">Investimento</TableHead>
+                <TableHead className="text-right">CPL</TableHead>
+                <TableHead className="text-right">CAC</TableHead>
+                <TableHead className="text-right whitespace-nowrap">CAP</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tableData.map((row) => (
-                <TableRow key={row.month} className="border-zinc-800 hover:bg-zinc-800/50">
-                  <TableCell className="font-medium text-zinc-200">{row.month}</TableCell>
-                  <TableCell className="text-right text-zinc-300">{row.leads}</TableCell>
-                  <TableCell className="text-right text-zinc-300">{row.fechamentos}</TableCell>
-                  <TableCell className="text-right text-zinc-300">{row.descartes}</TableCell>
-                  <TableCell className="text-right text-zinc-300">{row.protocolos}</TableCell>
-                  <TableCell className="text-right text-zinc-300">
-                    {fmtMon(row.investimento)}
-                  </TableCell>
-                  <TableCell className="text-right text-zinc-300">{fmtMon(row.cpl)}</TableCell>
-                  <TableCell className="text-right text-zinc-300">{fmtMon(row.cac)}</TableCell>
-                  <TableCell className="text-right text-zinc-300">{fmtMon(row.cap)}</TableCell>
+                <TableRow key={row.month} className="hover:bg-muted/50">
+                  <TableCell className="font-medium">{row.month}</TableCell>
+                  <TableCell className="text-right">{row.leads}</TableCell>
+                  <TableCell className="text-right">{row.fechamentos}</TableCell>
+                  <TableCell className="text-right">{row.descartes}</TableCell>
+                  <TableCell className="text-right">{row.protocolos}</TableCell>
+                  <TableCell className="text-right">{fmtMon(row.investimento)}</TableCell>
+                  <TableCell className="text-right">{fmtMon(row.cpl)}</TableCell>
+                  <TableCell className="text-right">{fmtMon(row.cac)}</TableCell>
+                  <TableCell className="text-right">{fmtMon(row.cap)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
-            <TableFooter className="bg-zinc-950 border-t border-zinc-800 hover:bg-zinc-950">
-              <TableRow className="hover:bg-transparent border-none">
-                <TableCell className="font-bold text-zinc-100">TOTAL</TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">{totals.leads}</TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
-                  {totals.fechamentos}
-                </TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
-                  {totals.descartes}
-                </TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
-                  {totals.protocolos}
-                </TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
+            <TableFooter>
+              <TableRow className="hover:bg-transparent">
+                <TableCell className="font-bold">TOTAL</TableCell>
+                <TableCell className="text-right font-bold">{totals.leads}</TableCell>
+                <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
+                <TableCell className="text-right font-bold">{totals.descartes}</TableCell>
+                <TableCell className="text-right font-bold">{totals.protocolos}</TableCell>
+                <TableCell className="text-right font-bold">
                   {fmtMon(totals.investimento)}
                 </TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
-                  {fmtMon(totals.cpl)}
-                </TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
-                  {fmtMon(totals.cac)}
-                </TableCell>
-                <TableCell className="text-right font-bold text-zinc-100">
-                  {fmtMon(totals.cap)}
-                </TableCell>
+                <TableCell className="text-right font-bold">{fmtMon(totals.cpl)}</TableCell>
+                <TableCell className="text-right font-bold">{fmtMon(totals.cac)}</TableCell>
+                <TableCell className="text-right font-bold">{fmtMon(totals.cap)}</TableCell>
               </TableRow>
             </TableFooter>
           </Table>
