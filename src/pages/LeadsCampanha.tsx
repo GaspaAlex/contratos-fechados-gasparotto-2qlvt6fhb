@@ -177,13 +177,9 @@ export default function LeadsCampanha() {
 
       <SummaryCards leads={leads} month={summaryMonth} year={year} day={summaryDay} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        <div className="xl:col-span-6 2xl:col-span-5">
-          <CACCPLTable leads={leads} month={summaryMonth} day={summaryDay} year={year} />
-        </div>
-        <div className="xl:col-span-6 2xl:col-span-7">
-          <DisqualificationAnalysis leads={leads} month={summaryMonth} day={summaryDay} />
-        </div>
+      <div className="flex flex-col gap-6 w-full">
+        <CACCPLTable leads={leads} month={summaryMonth} day={summaryDay} year={year} />
+        <DisqualificationAnalysis leads={leads} month={summaryMonth} day={summaryDay} />
       </div>
 
       <DailyTable
