@@ -200,16 +200,16 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
                   <TableCell className="text-right text-[#B07FD4] font-bold">
                     {row.protocolos}
                   </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
+                  <TableCell className="text-right text-gray-500 font-bold">
                     {fmtMon(row.investimento)}
                   </TableCell>
-                  <TableCell className="text-right text-[#C9922A] font-bold">
+                  <TableCell className="text-right text-gray-900 font-bold">
                     {fmtMon(row.cpl)}
                   </TableCell>
-                  <TableCell className="text-right text-[#C9922A] font-bold">
+                  <TableCell className="text-right text-gray-900 font-bold">
                     {fmtMon(row.cac)}
                   </TableCell>
-                  <TableCell className="text-right text-[#C9922A] font-bold">
+                  <TableCell className="text-right text-gray-900 font-bold">
                     {fmtMon(row.cap)}
                   </TableCell>
                 </TableRow>
@@ -222,12 +222,16 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
                 <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
                 <TableCell className="text-right font-bold">{totals.descartes}</TableCell>
                 <TableCell className="text-right font-bold">{totals.protocolos}</TableCell>
-                <TableCell className="text-right font-bold">
+                <TableCell className="text-right text-gray-500 font-bold">
                   {fmtMon(totals.investimento)}
                 </TableCell>
-                <TableCell className="text-right font-bold">{fmtMon(totals.cpl)}</TableCell>
-                <TableCell className="text-right font-bold">{fmtMon(totals.cac)}</TableCell>
-                <TableCell className="text-right font-bold rounded-br-lg">
+                <TableCell className="text-right text-gray-900 font-bold">
+                  {fmtMon(totals.cpl)}
+                </TableCell>
+                <TableCell className="text-right text-gray-900 font-bold">
+                  {fmtMon(totals.cac)}
+                </TableCell>
+                <TableCell className="text-right text-gray-900 font-bold rounded-br-lg">
                   {fmtMon(totals.cap)}
                 </TableCell>
               </TableRow>
