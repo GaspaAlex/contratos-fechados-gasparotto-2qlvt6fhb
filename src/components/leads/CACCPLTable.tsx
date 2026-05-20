@@ -213,8 +213,8 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
                 </TableRow>
               ))}
             </TableBody>
-            <TableFooter>
-              <TableRow className="bg-amber-50 hover:bg-amber-50 border-t-2 border-[#C9922A] text-[#C9922A] text-base rounded-b-lg">
+            <TableFooter className="border-none">
+              <TableRow className="bg-amber-50 hover:bg-amber-50 border-none text-[#C9922A] text-base rounded-b-lg">
                 <TableCell className="font-bold rounded-bl-lg">TOTAL</TableCell>
                 <TableCell className="text-right font-bold">{totals.leads}</TableCell>
                 <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
