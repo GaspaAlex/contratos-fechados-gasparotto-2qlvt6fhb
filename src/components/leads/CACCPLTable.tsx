@@ -157,31 +157,31 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
       <CardContent className="pt-6">
         <div className="overflow-x-auto rounded-b-lg">
           <Table>
-            <TableHeader className="bg-[#C9922A]">
-              <TableRow className="hover:bg-[#C9922A] border-none">
-                <TableHead className="text-xs font-semibold uppercase text-white">MÊS</TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+            <TableHeader className="bg-gray-100">
+              <TableRow className="hover:bg-gray-100 border-none">
+                <TableHead className="text-xs font-semibold uppercase text-gray-600">MÊS</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   LEADS
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   FECHAMENTOS
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   DESCARTES
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   PROTOCOLOS
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   INVESTIMENTO
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   CPL
                 </TableHead>
-                <TableHead className="text-right text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right text-xs font-semibold uppercase text-gray-600">
                   CAC
                 </TableHead>
-                <TableHead className="text-right whitespace-nowrap text-xs font-semibold uppercase text-white">
+                <TableHead className="text-right whitespace-nowrap text-xs font-semibold uppercase text-gray-600">
                   CAP
                 </TableHead>
               </TableRow>
@@ -214,28 +214,18 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
               ))}
             </TableBody>
             <TableFooter>
-              <TableRow className="bg-[#C9922A] hover:bg-[#C9922A] border-none text-white text-base rounded-b-lg">
+              <TableRow className="bg-amber-50 hover:bg-amber-50 border-t-2 border-[#C9922A] text-[#C9922A] text-base rounded-b-lg">
                 <TableCell className="font-bold rounded-bl-lg">TOTAL</TableCell>
-                <TableCell className="text-right font-bold text-white">{totals.leads}</TableCell>
-                <TableCell className="text-right font-bold text-white">
-                  {totals.fechamentos}
-                </TableCell>
-                <TableCell className="text-right font-bold text-white">
-                  {totals.descartes}
-                </TableCell>
-                <TableCell className="text-right font-bold text-white">
-                  {totals.protocolos}
-                </TableCell>
-                <TableCell className="text-right font-bold text-white">
+                <TableCell className="text-right font-bold">{totals.leads}</TableCell>
+                <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
+                <TableCell className="text-right font-bold">{totals.descartes}</TableCell>
+                <TableCell className="text-right font-bold">{totals.protocolos}</TableCell>
+                <TableCell className="text-right font-bold">
                   {fmtMon(totals.investimento)}
                 </TableCell>
-                <TableCell className="text-right font-bold text-white">
-                  {fmtMon(totals.cpl)}
-                </TableCell>
-                <TableCell className="text-right font-bold text-white">
-                  {fmtMon(totals.cac)}
-                </TableCell>
-                <TableCell className="text-right font-bold text-white rounded-br-lg">
+                <TableCell className="text-right font-bold">{fmtMon(totals.cpl)}</TableCell>
+                <TableCell className="text-right font-bold">{fmtMon(totals.cac)}</TableCell>
+                <TableCell className="text-right font-bold rounded-br-lg">
                   {fmtMon(totals.cap)}
                 </TableCell>
               </TableRow>
