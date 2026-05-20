@@ -18,12 +18,16 @@ export function ProtocoloDashboard({
   responsavel,
   month,
   year,
+  monthStart,
+  monthEnd,
 }: {
   data: any[]
   tipo: string
   responsavel: string
   month: string
   year: string
+  monthStart: string
+  monthEnd: string
 }) {
   const filteredData = useMemo(() => {
     return data.filter((d) => {
@@ -33,7 +37,15 @@ export function ProtocoloDashboard({
       if (year !== 'Todos') {
         if (!d.dprotocolo || d.dprotocolo.substring(0, 4) !== year) return false
       }
-      if (month !== 'Todos') {
+
+      const hasRange = monthStart !== 'Todos' && monthEnd !== 'Todos'
+
+      if (hasRange) {
+        const dMonth = d.dprotocolo ? parseInt(d.dprotocolo.substring(5, 7), 10) - 1 : -1
+        const start = parseInt(monthStart, 10)
+        const end = parseInt(monthEnd, 10)
+        if (dMonth < start || dMonth > end) return false
+      } else if (month !== 'Todos') {
         const dMonth = d.dprotocolo
           ? (parseInt(d.dprotocolo.substring(5, 7), 10) - 1).toString()
           : ''
@@ -41,7 +53,7 @@ export function ProtocoloDashboard({
       }
       return true
     })
-  }, [data, tipo, responsavel, year, month])
+  }, [data, tipo, responsavel, year, month, monthStart, monthEnd])
 
   const totalAcoes = filteredData.filter((d) =>
     ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status),

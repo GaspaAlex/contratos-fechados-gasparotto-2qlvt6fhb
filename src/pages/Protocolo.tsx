@@ -22,6 +22,8 @@ export default function Protocolo() {
   const [responsavel, setResponsavel] = useState('Todos')
   const [month, setMonth] = useState('Todos')
   const [year, setYear] = useState(new Date().getFullYear().toString())
+  const [monthStart, setMonthStart] = useState('Todos')
+  const [monthEnd, setMonthEnd] = useState('Todos')
 
   const loadData = async () => {
     try {
@@ -54,6 +56,8 @@ export default function Protocolo() {
         responsavel={responsavel}
         month={month}
         year={year}
+        monthStart={monthStart}
+        monthEnd={monthEnd}
       />
 
       <ProtocoloTable
@@ -71,6 +75,10 @@ export default function Protocolo() {
         setMonth={setMonth}
         year={year}
         setYear={setYear}
+        monthStart={monthStart}
+        setMonthStart={setMonthStart}
+        monthEnd={monthEnd}
+        setMonthEnd={setMonthEnd}
         onAdd={() => {
           setSelected(null)
           setOpen(true)

@@ -60,6 +60,10 @@ export function ProtocoloTable({
   setMonth,
   year,
   setYear,
+  monthStart,
+  setMonthStart,
+  monthEnd,
+  setMonthEnd,
   onAdd,
   onEdit,
   onDelete,
@@ -105,7 +109,15 @@ export function ProtocoloTable({
     if (year !== 'Todos') {
       if (!d.dprotocolo || d.dprotocolo.substring(0, 4) !== year) return false
     }
-    if (month !== 'Todos') {
+
+    const hasRange = monthStart !== 'Todos' && monthEnd !== 'Todos'
+
+    if (hasRange) {
+      const dMonth = d.dprotocolo ? parseInt(d.dprotocolo.substring(5, 7), 10) - 1 : -1
+      const start = parseInt(monthStart, 10)
+      const end = parseInt(monthEnd, 10)
+      if (dMonth < start || dMonth > end) return false
+    } else if (month !== 'Todos') {
       const dMonth = d.dprotocolo ? (parseInt(d.dprotocolo.substring(5, 7), 10) - 1).toString() : ''
       if (dMonth !== month) return false
     }
@@ -260,6 +272,44 @@ export function ProtocoloTable({
               ))}
             </SelectContent>
           </Select>
+          <div className="flex gap-2 items-center border-l pl-3 ml-1 border-muted">
+            <Select value={monthStart} onValueChange={setMonthStart}>
+              <SelectTrigger className="w-[100px] h-9 text-sm">
+                <SelectValue placeholder="De (Mês)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos">De (Mês)</SelectItem>
+                {monthsArray.map((m, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={monthEnd} onValueChange={setMonthEnd}>
+              <SelectTrigger className="w-[100px] h-9 text-sm">
+                <SelectValue placeholder="Até (Mês)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos">Até (Mês)</SelectItem>
+                {monthsArray.map((m, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              className="h-9 px-3 text-xs"
+              onClick={() => {
+                setMonthStart('Todos')
+                setMonthEnd('Todos')
+              }}
+            >
+              Limpar
+            </Button>
+          </div>
         </div>
         <div className="flex gap-3 w-full xl:w-auto justify-end items-center">
           <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap">
