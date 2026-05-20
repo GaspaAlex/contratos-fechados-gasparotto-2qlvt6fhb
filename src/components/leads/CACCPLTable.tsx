@@ -136,7 +136,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
 
   if (tableData.length === 0) {
     return (
-      <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-4 border-[#C9922A]">
+      <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-0 border-x-0 border-[#C9922A]">
         <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
           <CardTitle className="text-base font-bold text-gray-900">CAC & CPL por Mês</CardTitle>
         </CardHeader>
@@ -150,7 +150,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
   }
 
   return (
-    <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-4 border-[#C9922A]">
+    <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-0 border-x-0 border-[#C9922A]">
       <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
         <CardTitle className="text-base font-bold text-gray-900">CAC & CPL por Mês</CardTitle>
       </CardHeader>
@@ -216,7 +216,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
               ))}
             </TableBody>
             <TableFooter className="border-none bg-transparent">
-              <TableRow className="hover:bg-muted/50 border-none text-gray-900 text-base rounded-b-lg">
+              <TableRow className="hover:bg-muted/50 bg-gray-100 border-t border-gray-200 text-gray-900 text-base rounded-b-lg">
                 <TableCell className="font-bold rounded-bl-lg">TOTAL</TableCell>
                 <TableCell className="text-right font-bold">{totals.leads}</TableCell>
                 <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
