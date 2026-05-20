@@ -138,7 +138,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
     return (
       <Card className="bg-card dark:bg-gray-800 shadow-md">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">CAC & CPL por Mês</CardTitle>
+          <CardTitle className="text-base font-semibold">CAC & CPL por Mês</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-sm text-muted-foreground py-4 text-center">
@@ -152,52 +152,76 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
   return (
     <Card className="bg-card dark:bg-gray-800 shadow-md">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">CAC & CPL por Mês</CardTitle>
+        <CardTitle className="text-base font-semibold">CAC & CPL por Mês</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-muted/50">
-                <TableHead>Mês</TableHead>
-                <TableHead className="text-right">Leads</TableHead>
-                <TableHead className="text-right">Fechamentos</TableHead>
-                <TableHead className="text-right">Descartes</TableHead>
-                <TableHead className="text-right">Protocolos</TableHead>
-                <TableHead className="text-right">Investimento</TableHead>
-                <TableHead className="text-right">CPL</TableHead>
-                <TableHead className="text-right">CAC</TableHead>
-                <TableHead className="text-right whitespace-nowrap">CAP</TableHead>
+                <TableHead className="text-xs font-semibold uppercase">MÊS</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">LEADS</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">
+                  FECHAMENTOS
+                </TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">
+                  DESCARTES
+                </TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">
+                  PROTOCOLOS
+                </TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">
+                  INVESTIMENTO
+                </TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">CPL</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase">CAC</TableHead>
+                <TableHead className="text-right whitespace-nowrap text-xs font-semibold uppercase">
+                  CAP
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tableData.map((row) => (
-                <TableRow key={row.month} className="hover:bg-muted/50">
+                <TableRow key={row.month} className="hover:bg-muted/50 text-base">
                   <TableCell className="font-medium">{row.month}</TableCell>
-                  <TableCell className="text-right">{row.leads}</TableCell>
-                  <TableCell className="text-right">{row.fechamentos}</TableCell>
-                  <TableCell className="text-right">{row.descartes}</TableCell>
-                  <TableCell className="text-right">{row.protocolos}</TableCell>
+                  <TableCell className="text-right text-[#5A9FD4]">{row.leads}</TableCell>
+                  <TableCell className="text-right text-[#52B86E]">{row.fechamentos}</TableCell>
+                  <TableCell className="text-right text-[#E84040]">{row.descartes}</TableCell>
+                  <TableCell className="text-right text-[#B07FD4]">{row.protocolos}</TableCell>
                   <TableCell className="text-right">{fmtMon(row.investimento)}</TableCell>
-                  <TableCell className="text-right">{fmtMon(row.cpl)}</TableCell>
-                  <TableCell className="text-right">{fmtMon(row.cac)}</TableCell>
-                  <TableCell className="text-right">{fmtMon(row.cap)}</TableCell>
+                  <TableCell className="text-right text-[#C9922A]">{fmtMon(row.cpl)}</TableCell>
+                  <TableCell className="text-right text-[#C9922A]">{fmtMon(row.cac)}</TableCell>
+                  <TableCell className="text-right text-[#C9922A]">{fmtMon(row.cap)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter>
-              <TableRow className="hover:bg-transparent">
+              <TableRow className="hover:bg-transparent bg-amber-50 dark:bg-amber-900/20 border-t-2 border-[#C9922A] text-base">
                 <TableCell className="font-bold">TOTAL</TableCell>
-                <TableCell className="text-right font-bold">{totals.leads}</TableCell>
-                <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
-                <TableCell className="text-right font-bold">{totals.descartes}</TableCell>
-                <TableCell className="text-right font-bold">{totals.protocolos}</TableCell>
+                <TableCell className="text-right font-bold text-[#5A9FD4]">
+                  {totals.leads}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#52B86E]">
+                  {totals.fechamentos}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#E84040]">
+                  {totals.descartes}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#B07FD4]">
+                  {totals.protocolos}
+                </TableCell>
                 <TableCell className="text-right font-bold">
                   {fmtMon(totals.investimento)}
                 </TableCell>
-                <TableCell className="text-right font-bold">{fmtMon(totals.cpl)}</TableCell>
-                <TableCell className="text-right font-bold">{fmtMon(totals.cac)}</TableCell>
-                <TableCell className="text-right font-bold">{fmtMon(totals.cap)}</TableCell>
+                <TableCell className="text-right font-bold text-[#C9922A]">
+                  {fmtMon(totals.cpl)}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#C9922A]">
+                  {fmtMon(totals.cac)}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#C9922A]">
+                  {fmtMon(totals.cap)}
+                </TableCell>
               </TableRow>
             </TableFooter>
           </Table>
