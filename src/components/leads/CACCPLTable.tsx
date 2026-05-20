@@ -84,6 +84,7 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: P
 
         const protocolosCount = protocolos.filter((p) => {
           if (!p.dprotocolo) return false
+          if (p.origem !== 'Campanha') return false
           const [pYear, pMonth] = p.dprotocolo.split('-')
           return pYear === year && pMonth === monthNum
         }).length

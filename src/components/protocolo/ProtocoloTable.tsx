@@ -343,6 +343,7 @@ export function ProtocoloTable({
               <TableHead className={headerClass}>BENEFÍCIO</TableHead>
               <TableHead className={headerClass}>RESP.</TableHead>
               <TableHead className={headerClass}>STATUS</TableHead>
+              <TableHead className={headerClass}>ORIGEM</TableHead>
               <TableHead className={headerClass}>D. CONTRATO</TableHead>
               <TableHead className={headerClass}>D. PROTOCOLO</TableHead>
               <TableHead className={headerClass}>Nº AUTOS</TableHead>
@@ -368,7 +369,7 @@ export function ProtocoloTable({
                 <React.Fragment key={monthStr}>
                   <TableRow className="bg-muted/50 hover:bg-muted/50 border-b">
                     <TableCell
-                      colSpan={12}
+                      colSpan={13}
                       className="text-[10px] uppercase tracking-wider text-muted-foreground py-3 px-4"
                     >
                       <strong className="font-bold text-foreground">{label}</strong> • {projCount}{' '}
@@ -389,7 +390,7 @@ export function ProtocoloTable({
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
                   Nenhum protocolo encontrado com os filtros atuais.
                 </TableCell>
               </TableRow>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T16:59:59.919Z",
+  "generatedAt": "2026-05-20T17:33:46.117Z",
   "collections": [
     {
       "name": "users",
@@ -426,6 +426,12 @@
         },
         {
           "name": "representante_telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem",
           "type": "text",
           "required": false,
           "system": false

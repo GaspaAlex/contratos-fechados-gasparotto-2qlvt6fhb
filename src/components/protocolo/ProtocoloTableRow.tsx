@@ -93,6 +93,19 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
           {item.status}
         </span>
       </TableCell>
+      <TableCell>
+        {item.origem === 'Campanha' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+            Campanha
+          </span>
+        ) : item.origem === 'Particular' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+            Particular
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </TableCell>
       <TableCell className="whitespace-nowrap text-muted-foreground">
         {item.dcalculo ? format(parseISO(item.dcalculo), 'dd/MM/yy') : '—'}
       </TableCell>
