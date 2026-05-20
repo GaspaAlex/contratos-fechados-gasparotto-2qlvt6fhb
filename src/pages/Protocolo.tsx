@@ -18,6 +18,7 @@ export default function Protocolo() {
   // Filters State
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Todos')
+  const [origem, setOrigem] = useState('Todos')
   const [tipo, setTipo] = useState('Todos')
   const [responsavel, setResponsavel] = useState('Todos')
   const [month, setMonth] = useState('Todos')
@@ -54,6 +55,7 @@ export default function Protocolo() {
         data={data}
         tipo={tipo}
         responsavel={responsavel}
+        origem={origem}
         month={month}
         year={year}
         monthStart={monthStart}
@@ -67,6 +69,8 @@ export default function Protocolo() {
         setSearch={setSearch}
         status={status}
         setStatus={setStatus}
+        origem={origem}
+        setOrigem={setOrigem}
         tipo={tipo}
         setTipo={setTipo}
         responsavel={responsavel}

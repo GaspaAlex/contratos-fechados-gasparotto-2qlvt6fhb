@@ -16,6 +16,7 @@ export function ProtocoloDashboard({
   data,
   tipo,
   responsavel,
+  origem,
   month,
   year,
   monthStart,
@@ -24,6 +25,7 @@ export function ProtocoloDashboard({
   data: any[]
   tipo: string
   responsavel: string
+  origem: string
   month: string
   year: string
   monthStart: string
@@ -31,6 +33,7 @@ export function ProtocoloDashboard({
 }) {
   const filteredData = useMemo(() => {
     return data.filter((d) => {
+      if (origem !== 'Todos' && d.origem !== origem) return false
       if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
       const respName = d.expand?.responsavel?.nome || d.responsavel || ''
       if (responsavel !== 'Todos' && respName !== responsavel) return false
@@ -53,7 +56,7 @@ export function ProtocoloDashboard({
       }
       return true
     })
-  }, [data, tipo, responsavel, year, month, monthStart, monthEnd])
+  }, [data, tipo, responsavel, origem, year, month, monthStart, monthEnd])
 
   const totalAcoes = filteredData.filter((d) =>
     ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status),

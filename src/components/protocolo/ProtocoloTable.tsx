@@ -52,6 +52,8 @@ export function ProtocoloTable({
   setSearch,
   status,
   setStatus,
+  origem,
+  setOrigem,
   tipo,
   setTipo,
   responsavel,
@@ -85,6 +87,7 @@ export function ProtocoloTable({
 
   // Filters
   const filtered = data.filter((d: any) => {
+    if (origem !== 'Todos' && d.origem !== origem) return false
     const searchNormalized = normalizeText(search)
     if (searchNormalized) {
       const nNome = normalizeText(d.nome)
@@ -312,18 +315,32 @@ export function ProtocoloTable({
           </div>
         </div>
         <div className="flex gap-3 w-full xl:w-auto justify-end items-center">
-          <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap">
-            {['Todos', 'Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'R. Docs'].map(
-              (s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatus(s)}
-                  className={`px-3 py-1 text-xs rounded-sm transition-colors ${status === s ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
-                >
-                  {s}
-                </button>
-              ),
-            )}
+          <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap items-center">
+            {[
+              { value: 'Todos', label: 'Todos' },
+              { value: 'Protocolado Judicial', label: 'Judicial' },
+              { value: 'Requerimento Adm.', label: 'Administrativo' },
+              { value: 'Prov. Inicial', label: 'Inicial' },
+              { value: 'R. Docs', label: 'Docs' },
+            ].map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setStatus(s.value)}
+                className={`px-3 py-1 text-xs rounded-sm transition-colors ${status === s.value ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
+              >
+                {s.label}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-border mx-1" />
+            {['Campanha', 'Particular'].map((o) => (
+              <button
+                key={o}
+                onClick={() => setOrigem(origem === o ? 'Todos' : o)}
+                className={`px-3 py-1 text-xs rounded-sm transition-colors ${origem === o ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
+              >
+                {o}
+              </button>
+            ))}
           </div>
           <Button
             onClick={onAdd}
