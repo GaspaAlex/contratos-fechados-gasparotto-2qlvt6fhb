@@ -15,6 +15,42 @@ export const MONTHS = [
   'Dezembro',
 ]
 
+export function getMonthsInRange(startMonth: string, endMonth: string): string[] {
+  if (!startMonth || !endMonth) return []
+  const startIndex = MONTHS.indexOf(startMonth)
+  const endIndex = MONTHS.indexOf(endMonth)
+  if (startIndex === -1 || endIndex === -1) return []
+  const min = Math.min(startIndex, endIndex)
+  const max = Math.max(startIndex, endIndex)
+  return MONTHS.slice(min, max + 1)
+}
+
+export function getDisplayMonths(month: string, startMonth: string, endMonth: string): string[] {
+  if (startMonth && endMonth) {
+    return getMonthsInRange(startMonth, endMonth)
+  }
+  return month === 'Todos' ? MONTHS : [month]
+}
+
+export function filterLeadsByPeriod(
+  leads: any[],
+  month: string,
+  day: string,
+  startMonth: string,
+  endMonth: string,
+): any[] {
+  if (startMonth && endMonth) {
+    const range = getMonthsInRange(startMonth, endMonth)
+    return leads.filter((l) => range.some((m) => l.mes.startsWith(m)))
+  }
+
+  let filtered = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
+  if (month !== 'Todos' && day !== 'Todos') {
+    filtered = filtered.filter((l: any) => l.dia === parseInt(day))
+  }
+  return filtered
+}
+
 export function calculateLeadRow(raw: any) {
   const v = (k: string) => Number(raw[k] || 0)
   const google = v('google'),

@@ -9,7 +9,7 @@ import {
   TableCell,
   TableFooter,
 } from '@/components/ui/table'
-import { MONTHS, fmtMon } from '@/lib/leads-calc'
+import { MONTHS, fmtMon, getDisplayMonths } from '@/lib/leads-calc'
 import { getContratos } from '@/services/contratos'
 import { getProtocolos } from '@/services/protocolo'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -19,9 +19,11 @@ interface Props {
   month: string
   day: string
   year: string
+  startMonth?: string
+  endMonth?: string
 }
 
-export function CACCPLTable({ leads, month, day, year }: Props) {
+export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: Props) {
   const [contratos, setContratos] = useState<any[]>([])
   const [protocolos, setProtocolos] = useState<any[]>([])
 
@@ -43,7 +45,8 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
   useRealtime('protocolo', loadData)
 
   const tableData = useMemo(() => {
-    const monthsToProcess = month === 'Todos' ? MONTHS : [month]
+    const monthsToProcess = getDisplayMonths(month, startMonth || '', endMonth || '')
+    const isRange = Boolean(startMonth && endMonth)
 
     const data = monthsToProcess
       .map((m) => {
@@ -51,7 +54,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
           return l.mes === `${m} ${year}` || l.mes === m
         })
         const filteredLeads =
-          day === 'Todos' ? mLeads : mLeads.filter((l) => l.dia.toString() === day)
+          day === 'Todos' || isRange ? mLeads : mLeads.filter((l) => l.dia.toString() === day)
 
         const sumLeads = filteredLeads.reduce(
           (acc, l) =>
@@ -109,7 +112,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
       )
 
     return data
-  }, [leads, month, day, year, contratos, protocolos])
+  }, [leads, month, day, year, startMonth, endMonth, contratos, protocolos])
 
   const totals = useMemo(() => {
     const sumLeads = tableData.reduce((acc, r) => acc + r.leads, 0)

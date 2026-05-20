@@ -27,20 +27,26 @@ import {
   fmtPct,
   useDraggableScroll,
   MONTHS,
+  filterLeadsByPeriod,
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) {
+export function DailyTable({
+  leads,
+  month,
+  day,
+  startMonth,
+  endMonth,
+  onEdit,
+  onAdd,
+  onDelete,
+}: any) {
   const { ref, onMouseDown, onMouseLeave, onMouseUp, onMouseMove, style } = useDraggableScroll()
   const [searchTerm, setSearchTerm] = useState('')
 
   let filtered = leads || []
-  if (month !== 'Todos') {
-    filtered = filtered.filter((l: any) => l.mes.startsWith(month))
-  }
-  if (month !== 'Todos' && day !== 'Todos') {
-    filtered = filtered.filter((l: any) => l.dia === parseInt(day))
-  }
+  filtered = filterLeadsByPeriod(filtered, month, day, startMonth, endMonth)
+
   if (searchTerm) {
     const s = searchTerm.toLowerCase()
     filtered = filtered.filter(
@@ -311,7 +317,7 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
             <TableBody>
               {sortedMonths.map((m) => (
                 <React.Fragment key={m}>
-                  {month === 'Todos' && (
+                  {((startMonth && endMonth) || month === 'Todos') && (
                     <TableRow className="bg-muted/60 hover:bg-muted/60">
                       <TableCell
                         colSpan={25}
@@ -322,7 +328,9 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
                     </TableRow>
                   )}
                   {groups[m].map((row: any) => renderRow(row, false))}
-                  {groups[m].length > 0 && day === 'Todos' && renderRow(null, true, groups[m])}
+                  {groups[m].length > 0 &&
+                    ((startMonth && endMonth) || day === 'Todos') &&
+                    renderRow(null, true, groups[m])}
                 </React.Fragment>
               ))}
               {sortedMonths.length === 0 && (

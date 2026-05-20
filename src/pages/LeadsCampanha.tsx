@@ -28,6 +28,8 @@ import { MONTHS } from '@/lib/leads-calc'
 export default function LeadsCampanha() {
   const currentYear = new Date().getFullYear().toString()
   const [year, setYear] = useState(currentYear)
+  const [startMonth, setStartMonth] = useState('')
+  const [endMonth, setEndMonth] = useState('')
   const [summaryMonth, setSummaryMonth] = useState('Todos')
   const [summaryDay, setSummaryDay] = useState('Todos')
   const [leads, setLeads] = useState<any[]>([])
@@ -126,7 +128,43 @@ export default function LeadsCampanha() {
             CAC R$ 80–R$ 250
           </Badge>
         </div>
-        <div className="flex w-full md:w-auto gap-2">
+        <div className="flex w-full md:w-auto gap-2 flex-wrap md:flex-nowrap">
+          <Select value={startMonth} onValueChange={setStartMonth}>
+            <SelectTrigger className="h-9 bg-background w-full md:w-32">
+              <SelectValue placeholder="De" />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={endMonth} onValueChange={setEndMonth}>
+            <SelectTrigger className="h-9 bg-background w-full md:w-32">
+              <SelectValue placeholder="Até" />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(startMonth || endMonth) && (
+            <Button
+              variant="ghost"
+              className="h-9 px-3 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setStartMonth('')
+                setEndMonth('')
+              }}
+            >
+              Limpar
+            </Button>
+          )}
           <Select value={summaryMonth} onValueChange={handleMonthChange}>
             <SelectTrigger className="h-9 bg-background w-full md:w-40">
               <SelectValue placeholder="Mês" />
@@ -176,17 +214,39 @@ export default function LeadsCampanha() {
         </div>
       </div>
 
-      <SummaryCards leads={leads} month={summaryMonth} year={year} day={summaryDay} />
+      <SummaryCards
+        leads={leads}
+        month={summaryMonth}
+        year={year}
+        day={summaryDay}
+        startMonth={startMonth}
+        endMonth={endMonth}
+      />
 
       <div className="flex flex-col gap-6 w-full">
-        <CACCPLTable leads={leads} month={summaryMonth} day={summaryDay} year={year} />
-        <DisqualificationAnalysis leads={leads} month={summaryMonth} day={summaryDay} />
+        <CACCPLTable
+          leads={leads}
+          month={summaryMonth}
+          day={summaryDay}
+          year={year}
+          startMonth={startMonth}
+          endMonth={endMonth}
+        />
+        <DisqualificationAnalysis
+          leads={leads}
+          month={summaryMonth}
+          day={summaryDay}
+          startMonth={startMonth}
+          endMonth={endMonth}
+        />
       </div>
 
       <DailyTable
         leads={leads}
         month={summaryMonth}
         day={summaryDay}
+        startMonth={startMonth}
+        endMonth={endMonth}
         onEdit={handleEdit}
         onAdd={handleAdd}
         onDelete={handleDeleteRequest}

@@ -16,14 +16,14 @@ import {
   colorConvGeral,
   colorConvQualif,
   colorDesq,
+  filterLeadsByPeriod,
+  getDisplayMonths,
+  getMonthsInRange,
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function SummaryCards({ leads, month, year, day }: any) {
-  let filteredLeads = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
-  if (month !== 'Todos' && day !== 'Todos') {
-    filteredLeads = filteredLeads.filter((l: any) => l.dia === parseInt(day))
-  }
+export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: any) {
+  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
   const anoLeads = aggregateLeads(filteredLeads)
   const agg = calculateLeadRow(anoLeads)
 
@@ -58,12 +58,19 @@ export function SummaryCards({ leads, month, year, day }: any) {
   const cDesq = getDesqStatus(agg.desqual_pct)
   const cFup = getFupStatus(agg.pct_fech_via_fup)
 
-  const monthLabel =
+  let monthLabel =
     month === 'Todos'
       ? `Ano ${year}`
       : day === 'Todos'
         ? `${month} ${year}`
         : `Dia ${day} de ${month} ${year}`
+
+  if (startMonth && endMonth) {
+    const range = getMonthsInRange(startMonth, endMonth)
+    if (range.length > 0) {
+      monthLabel = `${range[0]} a ${range[range.length - 1]} ${year}`
+    }
+  }
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -225,14 +232,12 @@ const getLocalCacStatus = (v: number | null) => {
   }
 }
 
-export function CACCPLTable({ leads, month, day, year }: any) {
-  let filteredLeads = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
-  if (month !== 'Todos' && day !== 'Todos') {
-    filteredLeads = filteredLeads.filter((l: any) => l.dia === parseInt(day))
-  }
+export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: any) {
+  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
   const anoLeads = aggregateLeads(filteredLeads)
   const aggAno = calculateLeadRow(anoLeads)
-  const displayMonths = month === 'Todos' ? MONTHS : MONTHS.filter((m: string) => m === month)
+  const displayMonths = getDisplayMonths(month, startMonth, endMonth)
+  const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
 
   return (
     <Card className="shadow-sm h-full flex flex-col">
@@ -256,7 +261,7 @@ export function CACCPLTable({ leads, month, day, year }: any) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {month === 'Todos'
+            {isMultiMonth
               ? displayMonths.map((m) => {
                   const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                   if (mLeads.length === 0) return null
@@ -354,7 +359,7 @@ export function CACCPLTable({ leads, month, day, year }: any) {
                       </TableRow>
                     )
                   })()}
-            {month === 'Todos' &&
+            {isMultiMonth &&
               filteredLeads.length > 0 &&
               (() => {
                 const cacSt = getLocalCacStatus(aggAno.cac)
@@ -395,14 +400,12 @@ export function CACCPLTable({ leads, month, day, year }: any) {
   )
 }
 
-export function DisqualificationAnalysis({ leads, month, day }: any) {
-  let filteredLeads = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
-  if (month !== 'Todos' && day !== 'Todos') {
-    filteredLeads = filteredLeads.filter((l: any) => l.dia === parseInt(day))
-  }
+export function DisqualificationAnalysis({ leads, month, day, startMonth, endMonth }: any) {
+  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
   const anoLeads = aggregateLeads(filteredLeads)
   const aggAno = calculateLeadRow(anoLeads)
-  const displayMonths = month === 'Todos' ? MONTHS : MONTHS.filter((m: string) => m === month)
+  const displayMonths = getDisplayMonths(month, startMonth, endMonth)
+  const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
 
   const reasons = [
     { label: 'Sem Qualidade', value: aggAno.sem_qualidade },
@@ -474,7 +477,7 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {month === 'Todos'
+              {isMultiMonth
                 ? displayMonths.map((m) => {
                     const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                     if (mLeads.length === 0) return null
@@ -529,7 +532,7 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         </TableCell>
                       </TableRow>
                     )}
-              {month === 'Todos' && filteredLeads.length > 0 && (
+              {isMultiMonth && filteredLeads.length > 0 && (
                 <TableRow className="bg-muted/50 font-bold border-t">
                   <TableCell>TOTAL</TableCell>
                   <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
