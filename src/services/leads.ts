@@ -12,6 +12,8 @@ export interface LeadDiario {
   aposentado: number
   contribuinte_carne: number
   outros: number
+  sem_interesse: number
+  engano: number
   fechado_direto: number
   fechado_fup: number
   fup_ativo: number

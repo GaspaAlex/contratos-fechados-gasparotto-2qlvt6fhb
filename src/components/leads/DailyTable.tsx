@@ -102,6 +102,12 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
         <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
           {c(calc.outros)}
         </TableCell>
+        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+          {c(calc.sem_interesse)}
+        </TableCell>
+        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+          {c(calc.engano)}
+        </TableCell>
         <TableCell className="text-center font-bold bg-red-100/40 dark:bg-red-900/20 border-r">
           {c(calc.total_desq)}
         </TableCell>
@@ -227,7 +233,7 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
           style={style}
           className="overflow-x-auto select-none"
         >
-          <Table className="w-[2400px] text-xs relative">
+          <Table className="w-[2600px] text-xs relative">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-center border-r bg-muted/30 w-16">BASE</TableHead>
@@ -244,7 +250,7 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
                   EM QUALIF.
                 </TableHead>
                 <TableHead
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center border-r bg-red-100/50 dark:bg-red-900/20 text-red-800 dark:text-red-400 font-bold"
                 >
                   DESQUALIFICADOS
@@ -282,6 +288,8 @@ export function DailyTable({ leads, month, day, onEdit, onAdd, onDelete }: any) 
                 <TableHead className="text-center w-24">Aposentado</TableHead>
                 <TableHead className="text-center w-24">Carnê</TableHead>
                 <TableHead className="text-center w-20">Outros</TableHead>
+                <TableHead className="text-center w-24">Sem Int.</TableHead>
+                <TableHead className="text-center w-24">Engano</TableHead>
                 <TableHead className="text-center border-r w-24 font-bold">Total Desq.</TableHead>
 
                 <TableHead className="text-center border-r w-24 font-bold">Qualificados</TableHead>

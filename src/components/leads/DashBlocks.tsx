@@ -409,6 +409,8 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
     { label: 'Aposentado', value: aggAno.aposentado },
     { label: 'Contrib. Carnê', value: aggAno.contribuinte_carne },
     { label: 'Outros', value: aggAno.outros },
+    { label: 'Sem Interesse', value: aggAno.sem_interesse },
+    { label: 'Engano', value: aggAno.engano },
   ]
   const maxReason = Math.max(...reasons.map((r) => r.value), 1)
 
@@ -458,7 +460,7 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
           </div>
         </div>
         <div className="p-0 flex-1 overflow-x-auto">
-          <Table className="text-xs min-w-[400px]">
+          <Table className="text-xs min-w-[600px]">
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="w-20">MÊS</TableHead>
@@ -466,6 +468,8 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                 <TableHead className="text-right">APOSEN.</TableHead>
                 <TableHead className="text-right">CARNÊ</TableHead>
                 <TableHead className="text-right">OUTROS</TableHead>
+                <TableHead className="text-right">SEM INT.</TableHead>
+                <TableHead className="text-right">ENGANO</TableHead>
                 <TableHead className="text-right font-bold">TOTAL</TableHead>
               </TableRow>
             </TableHeader>
@@ -484,6 +488,8 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         <TableCell className="text-right">{agg.aposentado}</TableCell>
                         <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
                         <TableCell className="text-right">{agg.outros}</TableCell>
+                        <TableCell className="text-right">{agg.sem_interesse}</TableCell>
+                        <TableCell className="text-right">{agg.engano}</TableCell>
                         <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
                           {agg.total_desq}
                         </TableCell>
@@ -500,6 +506,8 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         <TableCell className="text-right">{aggAno.aposentado}</TableCell>
                         <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
                         <TableCell className="text-right">{aggAno.outros}</TableCell>
+                        <TableCell className="text-right">{aggAno.sem_interesse}</TableCell>
+                        <TableCell className="text-right">{aggAno.engano}</TableCell>
                         <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
                           {aggAno.total_desq}
                         </TableCell>
@@ -514,6 +522,8 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                         <TableCell className="text-right">{aggAno.aposentado}</TableCell>
                         <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
                         <TableCell className="text-right">{aggAno.outros}</TableCell>
+                        <TableCell className="text-right">{aggAno.sem_interesse}</TableCell>
+                        <TableCell className="text-right">{aggAno.engano}</TableCell>
                         <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
                           {aggAno.total_desq}
                         </TableCell>
@@ -526,6 +536,8 @@ export function DisqualificationAnalysis({ leads, month, day }: any) {
                   <TableCell className="text-right">{aggAno.aposentado}</TableCell>
                   <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
                   <TableCell className="text-right">{aggAno.outros}</TableCell>
+                  <TableCell className="text-right">{aggAno.sem_interesse}</TableCell>
+                  <TableCell className="text-right">{aggAno.engano}</TableCell>
                   <TableCell className="text-right text-red-600 dark:text-red-500">
                     {aggAno.total_desq}
                   </TableCell>

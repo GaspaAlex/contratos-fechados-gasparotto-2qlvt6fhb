@@ -35,6 +35,8 @@ const schema = z.object({
   aposentado: numSchema,
   contribuinte_carne: numSchema,
   outros: numSchema,
+  sem_interesse: numSchema,
+  engano: numSchema,
   fechado_direto: numSchema,
   fechado_fup: numSchema,
   fup_ativo: numSchema,
@@ -95,6 +97,8 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
       aposentado: 0,
       contribuinte_carne: 0,
       outros: 0,
+      sem_interesse: 0,
+      engano: 0,
       fechado_direto: 0,
       fechado_fup: 0,
       fup_ativo: 0,
@@ -119,6 +123,8 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
           aposentado: 0,
           contribuinte_carne: 0,
           outros: 0,
+          sem_interesse: 0,
+          engano: 0,
           fechado_direto: 0,
           fechado_fup: 0,
           fup_ativo: 0,
@@ -238,6 +244,8 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
                       label="Contrib. Carnê"
                     />
                     <NumInput control={form.control} name="outros" label="Outros" />
+                    <NumInput control={form.control} name="sem_interesse" label="Sem Interesse" />
+                    <NumInput control={form.control} name="engano" label="Engano" />
                     <CalcBox label="Total Desqualif." val={calc.total_desq} />
                   </div>
                 </div>

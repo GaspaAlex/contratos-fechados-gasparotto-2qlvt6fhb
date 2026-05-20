@@ -25,6 +25,8 @@ export function calculateLeadRow(raw: any) {
   const aposentado = v('aposentado'),
     contribuinte_carne = v('contribuinte_carne')
   const outros = v('outros'),
+    sem_interesse = v('sem_interesse'),
+    engano = v('engano'),
     fechado_direto = v('fechado_direto')
   const fechado_fup = v('fechado_fup'),
     fup_ativo = v('fup_ativo')
@@ -32,7 +34,8 @@ export function calculateLeadRow(raw: any) {
 
   const total_leads = google + meta_ads + particular
   const denom_leads = total_leads > 0 ? total_leads : 0
-  const total_desq = sem_qualidade + aposentado + contribuinte_carne + outros
+  const total_desq =
+    sem_qualidade + aposentado + contribuinte_carne + outros + sem_interesse + engano
   const qualificados = total_leads - em_qualif - total_desq
   const total_fechados = fechado_direto + fechado_fup
 
@@ -45,6 +48,8 @@ export function calculateLeadRow(raw: any) {
     aposentado,
     contribuinte_carne,
     outros,
+    sem_interesse,
+    engano,
     fechado_direto,
     fechado_fup,
     fup_ativo,
@@ -75,6 +80,8 @@ export function aggregateLeads(leads: any[]) {
       acc.aposentado += l.aposentado || 0
       acc.contribuinte_carne += l.contribuinte_carne || 0
       acc.outros += l.outros || 0
+      acc.sem_interesse += l.sem_interesse || 0
+      acc.engano += l.engano || 0
       acc.fechado_direto += l.fechado_direto || 0
       acc.fechado_fup += l.fechado_fup || 0
       acc.fup_ativo += l.fup_ativo || 0
@@ -90,6 +97,8 @@ export function aggregateLeads(leads: any[]) {
       aposentado: 0,
       contribuinte_carne: 0,
       outros: 0,
+      sem_interesse: 0,
+      engano: 0,
       fechado_direto: 0,
       fechado_fup: 0,
       fup_ativo: 0,

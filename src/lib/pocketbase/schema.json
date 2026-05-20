@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T14:01:44.001Z",
+  "generatedAt": "2026-05-20T15:49:59.295Z",
   "collections": [
     {
       "name": "users",
@@ -544,6 +544,18 @@
         },
         {
           "name": "meta_ads",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sem_interesse",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "engano",
           "type": "number",
           "required": false,
           "system": false
