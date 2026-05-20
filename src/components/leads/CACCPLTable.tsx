@@ -48,8 +48,11 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
     const data = monthsToProcess
       .map((m) => {
         const mLeads = leads.filter((l) => {
-          const lYear = l.created ? l.created.substring(0, 4) : year
-          return l.mes === m && lYear === year
+          if (!l.created) return l.mes === m
+          const lYear = l.created.substring(0, 4)
+          const lMonthNum = Number(l.created.substring(5, 7))
+          const lMonthStr = MONTHS[lMonthNum - 1]
+          return lMonthStr === m && lYear === year
         })
         const filteredLeads =
           day === 'Todos' ? mLeads : mLeads.filter((l) => l.dia.toString() === day)
@@ -137,7 +140,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
 
   if (tableData.length === 0) {
     return (
-      <Card className="bg-white dark:bg-gray-800 shadow-md">
+      <Card className="bg-card dark:bg-gray-800 shadow-md">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold">CAC & CPL por Mês</CardTitle>
         </CardHeader>
@@ -151,7 +154,7 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
   }
 
   return (
-    <Card className="bg-white dark:bg-gray-800 shadow-md">
+    <Card className="bg-card dark:bg-gray-800 shadow-md">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">CAC & CPL por Mês</CardTitle>
       </CardHeader>
