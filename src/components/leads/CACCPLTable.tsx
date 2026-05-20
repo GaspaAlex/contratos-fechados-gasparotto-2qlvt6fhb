@@ -136,8 +136,8 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
 
   if (tableData.length === 0) {
     return (
-      <Card className="bg-card dark:bg-gray-800 shadow-md">
-        <CardHeader className="bg-amber-50 rounded-t-lg p-4 flex flex-row items-center justify-center">
+      <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-4 border-[#C9922A]">
+        <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
           <CardTitle className="text-base font-bold text-gray-900">CAC & CPL por Mês</CardTitle>
         </CardHeader>
         <CardContent>
@@ -150,8 +150,8 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
   }
 
   return (
-    <Card className="bg-card dark:bg-gray-800 shadow-md">
-      <CardHeader className="bg-amber-50 rounded-t-lg p-4 flex flex-row items-center justify-center">
+    <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-4 border-[#C9922A]">
+      <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
         <CardTitle className="text-base font-bold text-gray-900">CAC & CPL por Mês</CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
@@ -203,20 +203,20 @@ export function CACCPLTable({ leads, month, day, year }: Props) {
                   <TableCell className="text-right text-gray-900 font-bold">
                     {fmtMon(row.investimento)}
                   </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
+                  <TableCell className="text-right text-[#C9922A] font-bold">
                     {fmtMon(row.cpl)}
                   </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
+                  <TableCell className="text-right text-[#C9922A] font-bold">
                     {fmtMon(row.cac)}
                   </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
+                  <TableCell className="text-right text-[#C9922A] font-bold">
                     {fmtMon(row.cap)}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
-            <TableFooter className="border-none">
-              <TableRow className="bg-amber-50 hover:bg-amber-50 border-none text-gray-900 text-base rounded-b-lg">
+            <TableFooter className="border-none bg-transparent">
+              <TableRow className="hover:bg-muted/50 border-none text-gray-900 text-base rounded-b-lg">
                 <TableCell className="font-bold rounded-bl-lg">TOTAL</TableCell>
                 <TableCell className="text-right font-bold">{totals.leads}</TableCell>
                 <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
