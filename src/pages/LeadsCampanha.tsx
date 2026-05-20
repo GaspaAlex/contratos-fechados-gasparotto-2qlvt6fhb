@@ -155,8 +155,8 @@ export default function LeadsCampanha() {
           </Select>
           {(startMonth || endMonth) && (
             <Button
-              variant="ghost"
-              className="h-9 px-3 text-muted-foreground hover:text-foreground"
+              variant="outline"
+              className="h-9 px-3 text-xs"
               onClick={() => {
                 setStartMonth('')
                 setEndMonth('')

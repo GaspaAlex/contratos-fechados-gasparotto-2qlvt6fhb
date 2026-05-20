@@ -275,10 +275,10 @@ export function ProtocoloTable({
           <div className="flex gap-2 items-center border-l pl-3 ml-1 border-muted">
             <Select value={monthStart} onValueChange={setMonthStart}>
               <SelectTrigger className="w-[100px] h-9 text-sm">
-                <SelectValue placeholder="De (Mês)" />
+                <SelectValue placeholder="De" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Todos">De (Mês)</SelectItem>
+                <SelectItem value="Todos">De</SelectItem>
                 {monthsArray.map((m, i) => (
                   <SelectItem key={i} value={i.toString()}>
                     {m}
@@ -288,10 +288,10 @@ export function ProtocoloTable({
             </Select>
             <Select value={monthEnd} onValueChange={setMonthEnd}>
               <SelectTrigger className="w-[100px] h-9 text-sm">
-                <SelectValue placeholder="Até (Mês)" />
+                <SelectValue placeholder="Até" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Todos">Até (Mês)</SelectItem>
+                <SelectItem value="Todos">Até</SelectItem>
                 {monthsArray.map((m, i) => (
                   <SelectItem key={i} value={i.toString()}>
                     {m}
