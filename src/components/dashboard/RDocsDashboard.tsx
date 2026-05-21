@@ -39,6 +39,8 @@ export function RDocsDashboard({
   const activeFilter = propActiveFilter || contextFilter
 
   const metrics = useMemo(() => {
+    console.log('activeFilter recebido:', activeFilter)
+
     let periodContratos = contratos.filter(
       (c) =>
         c.dcontrato &&
@@ -66,7 +68,7 @@ export function RDocsDashboard({
     }
 
     const total = periodContratos.length
-    const liberados = periodContratos.filter((c) => c.status === 'OK').length
+    const liberados = periodContratos.filter((c) => c.status !== 'R. Docs').length
     const pendentes = periodContratos.filter((c) => c.status === 'R. Docs').length
     const rate = total > 0 ? Math.round((liberados / total) * 100) : 0
 
