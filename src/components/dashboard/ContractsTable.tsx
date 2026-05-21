@@ -249,13 +249,6 @@ export function ContractsTable({
 
   return (
     <>
-      <RDocsDashboard
-        contratos={contratos}
-        year={tableYear}
-        month={tableMonth}
-        beneficio={tableBeneficio}
-      />
-
       {activeFilter === 'Parceria' && <PartnershipsSummary contratos={filtered} />}
 
       <Card
