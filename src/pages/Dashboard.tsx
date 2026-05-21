@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getContratos } from '@/services/contratos'
 import { ContractsTable } from '@/components/dashboard/ContractsTable'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -32,6 +32,17 @@ export default function Dashboard() {
   const [contratos, setContratos] = useState<any[]>([])
   const [gridMonth, setGridMonth] = useState('Todos os meses')
   const [gridYear, setGridYear] = useState<number>(new Date().getFullYear())
+  const [activeFilter, setActiveFilter] = useState('Todos')
+
+  const gridContratos = useMemo(() => {
+    let result = contratos
+    if (activeFilter === 'Campanha') {
+      result = result.filter((c) => c.origem === 'Campanha')
+    } else if (activeFilter === 'Particular') {
+      result = result.filter((c) => c.origem === 'Particular')
+    }
+    return result
+  }, [contratos, activeFilter])
 
   const loadData = async () => {
     try {
@@ -92,10 +103,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <MonthlyGrid contratos={contratos} year={gridYear} month={gridMonth} />
+        <MonthlyGrid contratos={gridContratos} year={gridYear} month={gridMonth} />
       </div>
 
-      <ContractsTable contratos={contratos} />
+      <ContractsTable
+        contratos={contratos}
+        activeFilter={activeFilter}
+        setActiveFilter={setActiveFilter}
+      />
     </div>
   )
 }

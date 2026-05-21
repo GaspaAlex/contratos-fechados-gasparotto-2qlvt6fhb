@@ -142,7 +142,7 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: P
     return (
       <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-0 border-x-0 border-[#C9922A]">
         <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
-          <CardTitle className="text-base font-bold text-gray-900">CAC & CPL por Mês</CardTitle>
+          <CardTitle className="text-lg font-semibold text-gray-900">CAC & CPL por Mês</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-sm text-muted-foreground py-4 text-center">
@@ -156,86 +156,70 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: P
   return (
     <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-0 border-x-0 border-[#C9922A]">
       <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
-        <CardTitle className="text-base font-bold text-gray-900">CAC & CPL por Mês</CardTitle>
+        <CardTitle className="text-lg font-semibold text-gray-900">CAC & CPL por Mês</CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
         <div className="overflow-x-auto rounded-b-lg">
           <Table>
             <TableHeader className="bg-gray-100">
               <TableRow className="hover:bg-gray-100 border-none">
-                <TableHead className="text-xs font-bold uppercase text-gray-700">MÊS</TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-sm font-semibold uppercase text-gray-700">MÊS</TableHead>
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   LEADS
                 </TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   FECHAMENTOS
                 </TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   DESCARTES
                 </TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   PROTOCOLOS
                 </TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   INVESTIMENTO
                 </TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   CPL
                 </TableHead>
-                <TableHead className="text-right text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
                   CAC
                 </TableHead>
-                <TableHead className="text-right whitespace-nowrap text-xs font-bold uppercase text-gray-700">
+                <TableHead className="text-right whitespace-nowrap text-sm font-semibold uppercase text-gray-700">
                   CAP
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tableData.map((row) => (
-                <TableRow key={row.month} className="hover:bg-muted/50 text-base">
-                  <TableCell className="font-medium">{row.month}</TableCell>
-                  <TableCell className="text-right text-[#5A9FD4] font-bold">{row.leads}</TableCell>
-                  <TableCell className="text-right text-[#52B86E] font-bold">
-                    {row.fechamentos}
-                  </TableCell>
-                  <TableCell className="text-right text-[#E84040] font-bold">
-                    {row.descartes}
-                  </TableCell>
-                  <TableCell className="text-right text-[#B07FD4] font-bold">
-                    {row.protocolos}
-                  </TableCell>
-                  <TableCell className="text-right text-gray-500 font-bold">
+                <TableRow key={row.month} className="hover:bg-muted/50 text-sm font-bold">
+                  <TableCell className="font-bold">{row.month}</TableCell>
+                  <TableCell className="text-right text-[#5A9FD4]">{row.leads}</TableCell>
+                  <TableCell className="text-right text-[#52B86E]">{row.fechamentos}</TableCell>
+                  <TableCell className="text-right text-[#E84040]">{row.descartes}</TableCell>
+                  <TableCell className="text-right text-[#B07FD4]">{row.protocolos}</TableCell>
+                  <TableCell className="text-right text-gray-500">
                     {fmtMon(row.investimento)}
                   </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
-                    {fmtMon(row.cpl)}
-                  </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
-                    {fmtMon(row.cac)}
-                  </TableCell>
-                  <TableCell className="text-right text-gray-900 font-bold">
-                    {fmtMon(row.cap)}
-                  </TableCell>
+                  <TableCell className="text-right text-gray-900">{fmtMon(row.cpl)}</TableCell>
+                  <TableCell className="text-right text-gray-900">{fmtMon(row.cac)}</TableCell>
+                  <TableCell className="text-right text-gray-900">{fmtMon(row.cap)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter className="border-none bg-transparent">
-              <TableRow className="hover:bg-muted/50 bg-gray-100 border-t border-gray-200 text-gray-900 text-base rounded-b-lg">
-                <TableCell className="font-bold rounded-bl-lg">TOTAL</TableCell>
-                <TableCell className="text-right font-bold">{totals.leads}</TableCell>
-                <TableCell className="text-right font-bold">{totals.fechamentos}</TableCell>
-                <TableCell className="text-right font-bold">{totals.descartes}</TableCell>
-                <TableCell className="text-right font-bold">{totals.protocolos}</TableCell>
-                <TableCell className="text-right text-gray-500 font-bold">
+              <TableRow className="hover:bg-muted/50 bg-gray-100 border-t border-gray-200 text-gray-900 text-sm font-bold rounded-b-lg">
+                <TableCell className="rounded-bl-lg">TOTAL</TableCell>
+                <TableCell className="text-right">{totals.leads}</TableCell>
+                <TableCell className="text-right">{totals.fechamentos}</TableCell>
+                <TableCell className="text-right">{totals.descartes}</TableCell>
+                <TableCell className="text-right">{totals.protocolos}</TableCell>
+                <TableCell className="text-right text-gray-500">
                   {fmtMon(totals.investimento)}
                 </TableCell>
-                <TableCell className="text-right text-gray-900 font-bold">
-                  {fmtMon(totals.cpl)}
-                </TableCell>
-                <TableCell className="text-right text-gray-900 font-bold">
-                  {fmtMon(totals.cac)}
-                </TableCell>
-                <TableCell className="text-right text-gray-900 font-bold rounded-br-lg">
+                <TableCell className="text-right text-gray-900">{fmtMon(totals.cpl)}</TableCell>
+                <TableCell className="text-right text-gray-900">{fmtMon(totals.cac)}</TableCell>
+                <TableCell className="text-right text-gray-900 rounded-br-lg">
                   {fmtMon(totals.cap)}
                 </TableCell>
               </TableRow>

@@ -48,6 +48,8 @@ const filters = [
   'Ag. Perícia',
   'Arquivados',
   'Parceria',
+  'Campanha',
+  'Particular',
 ]
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 const ATIVOS_STATUSES = ['R. Docs', 'L. Cálculos', 'OK', 'Ag. Perícia']
@@ -67,14 +69,20 @@ const MONTHS = [
   'DEZEMBRO',
 ]
 
-export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
-  const [activeFilter, setActiveFilter] = useState('Todos')
+export function ContractsTable({
+  contratos = [],
+  activeFilter,
+  setActiveFilter,
+}: {
+  contratos: any[]
+  activeFilter: string
+  setActiveFilter: (v: string) => void
+}) {
   const [search, setSearch] = useState('')
   const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
   const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
-  const [tableOrigem, setTableOrigem] = useState<string>('Todas as origens')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
 
   const responsaveisList = useMemo(() => {
@@ -172,10 +180,6 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
       )
     }
 
-    if (tableOrigem !== 'Todas as origens') {
-      result = result.filter((c) => (c.origem || 'Não classificado') === tableOrigem)
-    }
-
     if (activeFilter === 'Todos') {
       // no-op, include all
     } else if (activeFilter === 'Ativos') {
@@ -198,19 +202,14 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
       result = result.filter((c) => ARCHIVED_STATUSES.includes(c.status))
     } else if (activeFilter === 'Parceria') {
       result = result.filter((c) => c.parceria === true && !ARCHIVED_STATUSES.includes(c.status))
+    } else if (activeFilter === 'Campanha') {
+      result = result.filter((c) => c.origem === 'Campanha')
+    } else if (activeFilter === 'Particular') {
+      result = result.filter((c) => c.origem === 'Particular')
     }
 
     return result
-  }, [
-    contratos,
-    activeFilter,
-    search,
-    tableYear,
-    tableMonth,
-    tableBeneficio,
-    tableResponsavel,
-    tableOrigem,
-  ])
+  }, [contratos, activeFilter, search, tableYear, tableMonth, tableBeneficio, tableResponsavel])
 
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
@@ -330,17 +329,6 @@ export function ContractsTable({ contratos = [] }: { contratos: any[] }) {
                       {y}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-              <Select value={tableOrigem} onValueChange={setTableOrigem}>
-                <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Origem" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todas as origens">Todas as origens</SelectItem>
-                  <SelectItem value="Campanha">Campanha</SelectItem>
-                  <SelectItem value="Particular">Particular</SelectItem>
-                  <SelectItem value="Não classificado">Não classificado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
