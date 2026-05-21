@@ -37,7 +37,8 @@ export function RDocsDashboard({
 }) {
   const contextFilter = useContext(RDocsFilterContext)
 
-  const activeFilter = propActiveFilter || contextFilter || 'Todos'
+  const activeFilter =
+    propActiveFilter && propActiveFilter !== 'Todos' ? propActiveFilter : contextFilter
 
   const metrics = useMemo(() => {
     console.log('activeFilter recebido:', activeFilter)
