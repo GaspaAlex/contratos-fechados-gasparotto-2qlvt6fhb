@@ -1,5 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, createContext, useContext } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export const RDocsFilterContext = createContext<string>('Todos')
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -25,12 +27,17 @@ export function RDocsDashboard({
   year,
   month,
   beneficio = 'Todos os benefícios',
+  activeFilter: propActiveFilter,
 }: {
   contratos: any[]
   year: number
   month: string
   beneficio?: string
+  activeFilter?: string
 }) {
+  const contextFilter = useContext(RDocsFilterContext)
+  const activeFilter = propActiveFilter || contextFilter
+
   const metrics = useMemo(() => {
     let periodContratos = contratos.filter(
       (c) =>
@@ -38,6 +45,12 @@ export function RDocsDashboard({
         c.dcontrato.startsWith(year.toString()) &&
         !ARCHIVED_STATUSES.includes(c.status),
     )
+
+    if (activeFilter === 'Campanha') {
+      periodContratos = periodContratos.filter((c) => c.origem === 'Campanha')
+    } else if (activeFilter === 'Particular') {
+      periodContratos = periodContratos.filter((c) => c.origem === 'Particular')
+    }
 
     if (month !== 'Todos os meses') {
       const monthIndex = MONTHS.indexOf(month)
@@ -58,11 +71,28 @@ export function RDocsDashboard({
     const rate = total > 0 ? Math.round((liberados / total) * 100) : 0
 
     return { total, liberados, pendentes, rate }
-  }, [contratos, month, year, beneficio])
+  }, [contratos, month, year, beneficio, activeFilter])
 
   const isSuccess = metrics.rate >= 50
-  const formattedMonth = month !== 'Todos os meses' ? month.toLowerCase() : ''
-  const label = month === 'Todos os meses' ? `Em ${year}` : `Em ${formattedMonth}/${year}`
+
+  const displayMonth =
+    month !== 'Todos os meses' ? month.charAt(0).toUpperCase() + month.slice(1).toLowerCase() : ''
+
+  const isOriginSelected = activeFilter === 'Campanha' || activeFilter === 'Particular'
+
+  let subtitle = ''
+  if (!displayMonth && !isOriginSelected) {
+    subtitle = '(Todos os meses)'
+  } else if (displayMonth && !isOriginSelected) {
+    subtitle = `(${displayMonth})`
+  } else if (!displayMonth && isOriginSelected) {
+    subtitle = `(${activeFilter})`
+  } else if (displayMonth && isOriginSelected) {
+    subtitle = `(${displayMonth} · ${activeFilter})`
+  }
+
+  const formattedMonthLower = displayMonth ? displayMonth.toLowerCase() : ''
+  const label = month === 'Todos os meses' ? `Em ${year}` : `Em ${formattedMonthLower}/${year}`
   const message = isSuccess
     ? `${label}, ${metrics.rate}% dos contratos foram liberados — acima da média aceitável de 50%.`
     : `${label}, ${metrics.rate}% dos contratos foram liberados — abaixo da meta de 50%.`
@@ -75,7 +105,7 @@ export function RDocsDashboard({
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-4">
         <CardTitle className="text-xl font-bold">
           Acompanhamento Fechamentos{' '}
-          <span className="text-muted-foreground text-sm font-normal">({month})</span>
+          <span className="text-muted-foreground text-sm font-normal">{subtitle}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
