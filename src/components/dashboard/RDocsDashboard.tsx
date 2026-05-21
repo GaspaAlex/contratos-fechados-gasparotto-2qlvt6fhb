@@ -1,10 +1,8 @@
-import { useMemo, createContext, useContext } from 'react'
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-export const RDocsFilterContext = createContext<string>('Todos')
 
 const MONTHS = [
   'JANEIRO',
@@ -35,10 +33,7 @@ export function RDocsDashboard({
   beneficio?: string
   activeFilter?: string
 }) {
-  const contextFilter = useContext(RDocsFilterContext)
-
-  const activeFilter =
-    propActiveFilter && propActiveFilter !== 'Todos' ? propActiveFilter : contextFilter
+  const activeFilter = propActiveFilter ?? 'Todos'
 
   const metrics = useMemo(() => {
     console.log('activeFilter recebido:', activeFilter)

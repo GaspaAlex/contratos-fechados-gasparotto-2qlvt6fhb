@@ -3,7 +3,6 @@ import { getContratos } from '@/services/contratos'
 import { ContractsTable } from '@/components/dashboard/ContractsTable'
 import { useRealtime } from '@/hooks/use-realtime'
 import { MonthlyGrid } from '@/components/dashboard/MonthlyGrid'
-import { RDocsFilterContext } from '@/components/dashboard/RDocsDashboard'
 import { LayoutGrid } from 'lucide-react'
 import {
   Select,
@@ -104,9 +103,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <RDocsFilterContext.Provider value={activeFilter}>
-          <MonthlyGrid contratos={gridContratos} year={gridYear} month={gridMonth} />
-        </RDocsFilterContext.Provider>
+        <MonthlyGrid
+          contratos={gridContratos}
+          year={gridYear}
+          month={gridMonth}
+          activeFilter={activeFilter}
+        />
       </div>
 
       <ContractsTable
