@@ -105,7 +105,12 @@ export default function Dashboard() {
         </div>
 
         <RDocsFilterContext.Provider value={activeFilter}>
-          <MonthlyGrid contratos={gridContratos} year={gridYear} month={gridMonth} />
+          <MonthlyGrid
+            contratos={gridContratos}
+            year={gridYear}
+            month={gridMonth}
+            activeFilter={activeFilter}
+          />
         </RDocsFilterContext.Provider>
       </div>
 
