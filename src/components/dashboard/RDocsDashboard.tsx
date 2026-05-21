@@ -36,9 +36,6 @@ export function RDocsDashboard({
   const activeFilter = propActiveFilter ?? 'Todos'
 
   const metrics = useMemo(() => {
-    console.log('activeFilter recebido:', activeFilter)
-    console.log('month recebido:', month)
-
     let periodContratos = contratos.filter(
       (c) =>
         c.dcontrato &&
