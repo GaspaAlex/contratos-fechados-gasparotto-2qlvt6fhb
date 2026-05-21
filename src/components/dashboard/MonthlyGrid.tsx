@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { Megaphone } from 'lucide-react'
+import { RDocsDashboard } from './RDocsDashboard'
 
 const MONTHS = [
   'JANEIRO',
@@ -23,10 +24,12 @@ export function MonthlyGrid({
   contratos = [],
   year,
   month = 'Todos os meses',
+  activeFilter,
 }: {
   contratos: any[]
   year: number
   month?: string
+  activeFilter?: string
 }) {
   const isArchived = (c: any) => ARCHIVED_STATUSES.includes(c.status)
 
@@ -221,6 +224,8 @@ export function MonthlyGrid({
         <span className="font-bold text-foreground">{totalArchived}</span> &mdash; Total registrado:{' '}
         <span className="font-bold text-foreground">{totalRegistrado}</span>
       </div>
+
+      <RDocsDashboard contratos={contratos} year={year} month={month} activeFilter={activeFilter} />
     </div>
   )
 }
