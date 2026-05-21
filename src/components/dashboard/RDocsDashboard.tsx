@@ -37,14 +37,7 @@ export function RDocsDashboard({
 }) {
   const contextFilter = useContext(RDocsFilterContext)
 
-  // Resolve activeFilter: prioritize a specific context selection over a potentially hardcoded "Todos" prop,
-  // ensuring the UI filter selection dynamically propagates to the metrics view.
-  const activeFilter =
-    contextFilter && contextFilter !== 'Todos'
-      ? contextFilter
-      : propActiveFilter && propActiveFilter !== 'Todos'
-        ? propActiveFilter
-        : contextFilter || 'Todos'
+  const activeFilter = propActiveFilter || contextFilter || 'Todos'
 
   const metrics = useMemo(() => {
     console.log('activeFilter recebido:', activeFilter)
