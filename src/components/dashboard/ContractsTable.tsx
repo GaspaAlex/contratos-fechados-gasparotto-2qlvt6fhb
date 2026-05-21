@@ -73,10 +73,12 @@ export function ContractsTable({
   contratos = [],
   activeFilter,
   setActiveFilter,
+  onMonthChange,
 }: {
   contratos: any[]
   activeFilter: string
   setActiveFilter: (v: string) => void
+  onMonthChange?: (month: string) => void
 }) {
   const [search, setSearch] = useState('')
   const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
@@ -296,7 +298,13 @@ export function ContractsTable({
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={tableMonth} onValueChange={setTableMonth}>
+              <Select
+                value={tableMonth}
+                onValueChange={(v) => {
+                  setTableMonth(v)
+                  onMonthChange?.(v)
+                }}
+              >
                 <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Mês" />
                 </SelectTrigger>{' '}

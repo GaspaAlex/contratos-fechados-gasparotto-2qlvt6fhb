@@ -115,6 +115,7 @@ export default function Dashboard() {
         contratos={contratos}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
+        onMonthChange={setGridMonth}
       />
     </div>
   )
