@@ -276,10 +276,10 @@ export function ContractsTable({
               </div>
               <Select value={tableBeneficio} onValueChange={setTableBeneficio}>
                 <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Benefícios" />
+                  <SelectValue placeholder="Todos os benefícios" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os benefícios">Benefícios</SelectItem>
+                  <SelectItem value="Todos os benefícios">Todos os benefícios</SelectItem>
                   {beneficiosList.map((b) => (
                     <SelectItem key={b} value={b}>
                       {b}
@@ -289,10 +289,10 @@ export function ContractsTable({
               </Select>
               <Select value={tableResponsavel} onValueChange={setTableResponsavel}>
                 <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Responsáveis" />
+                  <SelectValue placeholder="Todos os responsáveis" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os responsáveis">Responsáveis</SelectItem>
+                  <SelectItem value="Todos os responsáveis">Todos os responsáveis</SelectItem>
                   {responsaveisList.map((r) => (
                     <SelectItem key={r} value={r}>
                       {r}
@@ -308,10 +308,10 @@ export function ContractsTable({
                 }}
               >
                 <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Meses" />
+                  <SelectValue placeholder="Todos os meses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os meses">Meses</SelectItem>
+                  <SelectItem value="Todos os meses">Todos os meses</SelectItem>
                   {MONTHS.map((m) => (
                     <SelectItem key={m} value={m}>
                       {m}
@@ -324,10 +324,10 @@ export function ContractsTable({
                 onValueChange={(v) => setTableYear(v === 'Todos os anos' ? v : parseInt(v, 10))}
               >
                 <SelectTrigger className="w-full sm:w-32 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Anos" />
+                  <SelectValue placeholder="Todos os anos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os anos">Anos</SelectItem>
+                  <SelectItem value="Todos os anos">Todos os anos</SelectItem>
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>
                       {y}
