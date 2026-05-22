@@ -81,7 +81,7 @@ export function ContractsTable({
   onMonthChange?: (month: string) => void
 }) {
   const [search, setSearch] = useState('')
-  const [tableYear, setTableYear] = useState<number>(new Date().getFullYear())
+  const [tableYear, setTableYear] = useState<number | string>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
   const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
@@ -150,7 +150,9 @@ export function ContractsTable({
 
   const filtered = useMemo(() => {
     let result = contratos.filter(
-      (c) => c.dcontrato && c.dcontrato.startsWith(tableYear.toString()),
+      (c) =>
+        tableYear === 'Todos os anos' ||
+        (c.dcontrato && c.dcontrato.startsWith(tableYear.toString())),
     )
     if (tableMonth !== 'Todos os meses') {
       const mIdx = MONTHS.indexOf(tableMonth)
@@ -274,10 +276,10 @@ export function ContractsTable({
               </div>
               <Select value={tableBeneficio} onValueChange={setTableBeneficio}>
                 <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Benefício" />
+                  <SelectValue placeholder="Benefícios" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os benefícios">Todos os benefícios</SelectItem>
+                  <SelectItem value="Todos os benefícios">Benefícios</SelectItem>
                   {beneficiosList.map((b) => (
                     <SelectItem key={b} value={b}>
                       {b}
@@ -287,10 +289,10 @@ export function ContractsTable({
               </Select>
               <Select value={tableResponsavel} onValueChange={setTableResponsavel}>
                 <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Responsável" />
+                  <SelectValue placeholder="Responsáveis" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os responsáveis">Todos os responsáveis</SelectItem>
+                  <SelectItem value="Todos os responsáveis">Responsáveis</SelectItem>
                   {responsaveisList.map((r) => (
                     <SelectItem key={r} value={r}>
                       {r}
@@ -306,10 +308,10 @@ export function ContractsTable({
                 }}
               >
                 <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>{' '}
+                  <SelectValue placeholder="Meses" />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Todos os meses">Todos os meses</SelectItem>
+                  <SelectItem value="Todos os meses">Meses</SelectItem>
                   {MONTHS.map((m) => (
                     <SelectItem key={m} value={m}>
                       {m}
@@ -319,12 +321,13 @@ export function ContractsTable({
               </Select>
               <Select
                 value={tableYear.toString()}
-                onValueChange={(v) => setTableYear(parseInt(v, 10))}
+                onValueChange={(v) => setTableYear(v === 'Todos os anos' ? v : parseInt(v, 10))}
               >
                 <SelectTrigger className="w-full sm:w-32 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Ano" />
+                  <SelectValue placeholder="Anos" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Todos os anos">Anos</SelectItem>
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>
                       {y}

@@ -31,7 +31,7 @@ const MONTHS = [
 export default function Dashboard() {
   const [contratos, setContratos] = useState<any[]>([])
   const [gridMonth, setGridMonth] = useState('Todos os meses')
-  const [gridYear, setGridYear] = useState<number>(new Date().getFullYear())
+  const [gridYear, setGridYear] = useState<number | string>(new Date().getFullYear())
   const [activeFilter, setActiveFilter] = useState('Todos')
 
   const gridContratos = useMemo(() => {
@@ -79,21 +79,25 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <Select value={gridMonth} onValueChange={setGridMonth}>
               <SelectTrigger className="w-[180px] bg-background border-[#C9922A]/30 focus:ring-[#C9922A]">
-                <SelectValue placeholder="Mês" />
+                <SelectValue placeholder="Meses" />
               </SelectTrigger>
               <SelectContent>
                 {MONTHS.map((m) => (
                   <SelectItem key={m} value={m}>
-                    {m}
+                    {m === 'Todos os meses' ? 'Meses' : m}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={gridYear.toString()} onValueChange={(v) => setGridYear(parseInt(v))}>
+            <Select
+              value={gridYear.toString()}
+              onValueChange={(v) => setGridYear(v === 'Todos os anos' ? v : parseInt(v))}
+            >
               <SelectTrigger className="w-[120px] bg-background border-[#C9922A]/30 focus:ring-[#C9922A]">
-                <SelectValue placeholder="Ano" />
+                <SelectValue placeholder="Anos" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="Todos os anos">Anos</SelectItem>
                 <SelectItem value="2024">2024</SelectItem>
                 <SelectItem value="2025">2025</SelectItem>
                 <SelectItem value="2026">2026</SelectItem>
@@ -105,7 +109,7 @@ export default function Dashboard() {
 
         <MonthlyGrid
           contratos={gridContratos}
-          year={gridYear}
+          year={gridYear as any}
           month={gridMonth}
           activeFilter={activeFilter}
         />
