@@ -27,7 +27,7 @@ export function MonthlyGrid({
   activeFilter,
 }: {
   contratos: any[]
-  year: number
+  year: number | string
   month?: string
   activeFilter?: string
 }) {
@@ -35,14 +35,19 @@ export function MonthlyGrid({
 
   const yearContratos = contratos.filter((c) => {
     if (!c.dcontrato) return false
+    if (year === 'Todos os anos') return true
     return c.dcontrato.startsWith(year.toString())
   })
 
   const monthlyCounts = MONTHS.map((name, i) => {
     const monthStr = (i + 1).toString().padStart(2, '0')
-    const monthContratos = yearContratos.filter((c) =>
-      c.dcontrato.startsWith(`${year}-${monthStr}`),
-    )
+    const monthContratos = yearContratos.filter((c) => {
+      if (year === 'Todos os anos') {
+        const parts = c.dcontrato.split('-')
+        return parts.length >= 2 && parts[1] === monthStr
+      }
+      return c.dcontrato.startsWith(`${year}-${monthStr}`)
+    })
     const activeContratos = monthContratos.filter((c) => !isArchived(c))
     const activeCount = activeContratos.length
     const campanhaCount = activeContratos.filter((c) => c.origem === 'Campanha').length
@@ -174,7 +179,7 @@ export function MonthlyGrid({
         >
           <CardContent className="p-3">
             <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground uppercase">
-              TOTAL {year}
+              {year === 'Todos os anos' ? 'TOTAL GERAL' : `TOTAL ${year}`}
             </h3>
             <div className="flex items-baseline gap-2">
               <span
@@ -219,13 +224,18 @@ export function MonthlyGrid({
         className="text-center sm:text-right text-sm text-muted-foreground font-medium mb-8 animate-fade-in-up"
         style={{ animationDelay: '650ms' }}
       >
-        Total do ano (ativos): <span className="font-bold text-foreground">{totalActive}</span>{' '}
-        &mdash; Arquivados excluídos:{' '}
-        <span className="font-bold text-foreground">{totalArchived}</span> &mdash; Total registrado:{' '}
-        <span className="font-bold text-foreground">{totalRegistrado}</span>
+        {year === 'Todos os anos' ? 'Total (ativos):' : 'Total do ano (ativos):'}{' '}
+        <span className="font-bold text-foreground">{totalActive}</span> &mdash; Arquivados
+        excluídos: <span className="font-bold text-foreground">{totalArchived}</span> &mdash; Total
+        registrado: <span className="font-bold text-foreground">{totalRegistrado}</span>
       </div>
 
-      <RDocsDashboard contratos={contratos} year={year} month={month} activeFilter={activeFilter} />
+      <RDocsDashboard
+        contratos={contratos}
+        year={year as any}
+        month={month}
+        activeFilter={activeFilter}
+      />
     </div>
   )
 }
