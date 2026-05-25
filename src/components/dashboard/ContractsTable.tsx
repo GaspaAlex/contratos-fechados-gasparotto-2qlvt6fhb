@@ -83,6 +83,7 @@ export function ContractsTable({
   const [search, setSearch] = useState('')
   const [tableYear, setTableYear] = useState<number | string>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
+  const [tableWeek, setTableWeek] = useState<string>('Todas as semanas')
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
   const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
@@ -148,6 +149,47 @@ export function ContractsTable({
     setIsModalOpen(true)
   }
 
+  const currentWeeks = useMemo(() => {
+    if (tableMonth === 'Todos os meses') return []
+    const y = tableYear === 'Todos os anos' ? new Date().getFullYear() : (tableYear as number)
+    const mIdx = MONTHS.indexOf(tableMonth)
+
+    const firstDay = new Date(y, mIdx, 1)
+    const lastDay = new Date(y, mIdx + 1, 0)
+
+    const diffToMonday = firstDay.getDay() === 0 ? -6 : 1 - firstDay.getDay()
+    const currentStart = new Date(y, mIdx, 1 + diffToMonday)
+
+    const diffToSunday = lastDay.getDay() === 0 ? 0 : 7 - lastDay.getDay()
+    const endDate = new Date(y, mIdx, lastDay.getDate() + diffToSunday)
+
+    const weeks = []
+    let weekNum = 1
+
+    while (currentStart <= endDate) {
+      const currentEnd = new Date(
+        currentStart.getFullYear(),
+        currentStart.getMonth(),
+        currentStart.getDate() + 6,
+      )
+
+      const startStr = `${currentStart.getDate().toString().padStart(2, '0')}/${(currentStart.getMonth() + 1).toString().padStart(2, '0')}`
+      const endStr = `${currentEnd.getDate().toString().padStart(2, '0')}/${(currentEnd.getMonth() + 1).toString().padStart(2, '0')}`
+
+      weeks.push({
+        id: weekNum.toString(),
+        label: `Semana ${weekNum} (${startStr} - ${endStr})`,
+        start: new Date(currentStart),
+        end: new Date(currentEnd),
+      })
+
+      currentStart.setDate(currentStart.getDate() + 7)
+      weekNum++
+    }
+
+    return weeks
+  }, [tableMonth, tableYear])
+
   const filtered = useMemo(() => {
     let result = contratos.filter(
       (c) =>
@@ -158,6 +200,21 @@ export function ContractsTable({
       const mIdx = MONTHS.indexOf(tableMonth)
       const mStr = (mIdx + 1).toString().padStart(2, '0')
       result = result.filter((c) => c.dcontrato.startsWith(`${tableYear}-${mStr}`))
+    }
+
+    if (tableWeek !== 'Todas as semanas') {
+      const week = currentWeeks.find((w) => w.id === tableWeek)
+      if (week) {
+        result = result.filter((c) => {
+          if (!c.dcontrato) return false
+          const dateStr = c.dcontrato.split(' ')[0]
+          if (!dateStr) return false
+          const [yyyy, mm, dd] = dateStr.split('-').map(Number)
+          if (!yyyy || !mm || !dd) return false
+          const contractDate = new Date(yyyy, mm - 1, dd)
+          return contractDate >= week.start && contractDate <= week.end
+        })
+      }
     }
 
     if (search.trim()) {
@@ -213,7 +270,17 @@ export function ContractsTable({
     }
 
     return result
-  }, [contratos, activeFilter, search, tableYear, tableMonth, tableBeneficio, tableResponsavel])
+  }, [
+    contratos,
+    activeFilter,
+    search,
+    tableYear,
+    tableMonth,
+    tableWeek,
+    currentWeeks,
+    tableBeneficio,
+    tableResponsavel,
+  ])
 
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
@@ -304,6 +371,7 @@ export function ContractsTable({
                 value={tableMonth}
                 onValueChange={(v) => {
                   setTableMonth(v)
+                  setTableWeek('Todas as semanas')
                   onMonthChange?.(v)
                 }}
               >
@@ -320,8 +388,28 @@ export function ContractsTable({
                 </SelectContent>
               </Select>
               <Select
+                value={tableWeek}
+                onValueChange={setTableWeek}
+                disabled={tableMonth === 'Todos os meses'}
+              >
+                <SelectTrigger className="w-full sm:w-56 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A] disabled:opacity-50">
+                  <SelectValue placeholder="Todas as semanas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todas as semanas">Todas as semanas</SelectItem>
+                  {currentWeeks.map((w) => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
                 value={tableYear.toString()}
-                onValueChange={(v) => setTableYear(v === 'Todos os anos' ? v : parseInt(v, 10))}
+                onValueChange={(v) => {
+                  setTableYear(v === 'Todos os anos' ? v : parseInt(v, 10))
+                  setTableWeek('Todas as semanas')
+                }}
               >
                 <SelectTrigger className="w-full sm:w-32 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Todos os anos" />
