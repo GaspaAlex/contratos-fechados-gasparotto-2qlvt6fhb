@@ -85,10 +85,32 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
       return (mA || '').localeCompare(mB || '')
     })
 
-    return sortedKeys.map((key) => ({
-      key,
-      items: groups[key],
-    }))
+    return sortedKeys.map((key) => {
+      const items = groups[key].sort((a, b) => {
+        const getDate = (item: any) => {
+          if (item.status === 'Recebido' && item.data_recebimento) {
+            const d = new Date(item.data_recebimento.replace(' ', 'T'))
+            if (!isNaN(d.getTime())) return d.getTime()
+          }
+          if (item.previsao_pagamento) {
+            const parts = item.previsao_pagamento.split('/')
+            if (parts.length === 2) {
+              return new Date(Number(parts[1]), Number(parts[0]) - 1, 1).getTime()
+            }
+            if (parts.length === 3) {
+              return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime()
+            }
+          }
+          return 0
+        }
+        return getDate(a) - getDate(b)
+      })
+
+      return {
+        key,
+        items,
+      }
+    })
   }, [data, quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter])
 
   const handleDelete = async (id: string) => {
