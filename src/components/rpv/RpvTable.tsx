@@ -111,6 +111,16 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
     return `${monthName}/${y} • ${count} CASO(S)`
   }
 
+  const formatDateRecebimento = (dateStr?: string) => {
+    if (!dateStr) return '-'
+    const onlyDate = dateStr.split(' ')[0].split('T')[0]
+    const parts = onlyDate.split('-')
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`
+    }
+    return dateStr
+  }
+
   return (
     <div className="w-full">
       {groupedData.length === 0 ? (
@@ -128,7 +138,9 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                   <TableHead className="text-xs dark:text-gray-300">NOME / CPF</TableHead>
                   <TableHead className="text-xs dark:text-gray-300">Nº PROCESSO</TableHead>
                   <TableHead className="text-xs dark:text-gray-300">TIPO</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">PREVISÃO</TableHead>
+                  <TableHead className="text-xs dark:text-gray-300">
+                    {quickFilter === 'Recebido' ? 'RECEBIDO EM' : 'PREVISÃO'}
+                  </TableHead>
                   <TableHead className="text-xs dark:text-gray-300">VALOR RPV/PREC.</TableHead>
                   <TableHead className="text-xs dark:text-gray-300">SUCUMBÊNCIA</TableHead>
                   <TableHead className="text-xs dark:text-gray-300">
@@ -180,7 +192,11 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                         {item.numero_processo || '-'}
                       </TableCell>
                       <TableCell>{item.tipo || '-'}</TableCell>
-                      <TableCell>{item.previsao_pagamento || '-'}</TableCell>
+                      <TableCell>
+                        {item.status === 'Recebido'
+                          ? formatDateRecebimento(item.data_recebimento)
+                          : item.previsao_pagamento || '-'}
+                      </TableCell>
                       <TableCell className="font-bold">{formatCurrency(item.valor_rpv)}</TableCell>
                       <TableCell>{formatCurrency(item.sucumbencia)}</TableCell>
                       <TableCell>{formatCurrency(honorariosEscritorio)}</TableCell>
