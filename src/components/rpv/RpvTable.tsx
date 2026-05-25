@@ -42,8 +42,8 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
         )
       }
 
-      if (quickFilter === 'A Receber' && item.recebido) return false
-      if (quickFilter === 'Recebido' && !item.recebido) return false
+      if (quickFilter === 'A Receber' && item.status === 'Recebido') return false
+      if (quickFilter === 'Recebido' && item.status !== 'Recebido') return false
       if (quickFilter === 'RPV' && item.tipo !== 'RPV') return false
       if (quickFilter === 'Precatório' && item.tipo !== 'Precatório') return false
       if (quickFilter === 'Por Parceria') {
@@ -166,7 +166,7 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                   <TableHead className="text-xs dark:text-gray-300">VALOR RPV/PREC.</TableHead>
                   <TableHead className="text-xs dark:text-gray-300">SUCUMBÊNCIA</TableHead>
                   <TableHead className="text-xs dark:text-gray-300">
-                    HONORÁRIOS ESCRITÓRIO
+                    {quickFilter === 'Recebido' ? 'RECEBIDO' : 'HONORÁRIOS ESCRITÓRIO'}
                   </TableHead>
                   <TableHead className="text-xs dark:text-gray-300">STATUS</TableHead>
                   <TableHead className="text-right text-xs dark:text-gray-300">AÇÕES</TableHead>
@@ -221,7 +221,13 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                       </TableCell>
                       <TableCell className="font-bold">{formatCurrency(item.valor_rpv)}</TableCell>
                       <TableCell>{formatCurrency(item.sucumbencia)}</TableCell>
-                      <TableCell>{formatCurrency(honorariosEscritorio)}</TableCell>
+                      <TableCell>
+                        {formatCurrency(
+                          item.status === 'Recebido'
+                            ? Number(item.valor_recebido) || 0
+                            : honorariosEscritorio,
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"

@@ -38,8 +38,8 @@ export function RpvDashboard({ data, month, year }: { data: any[]; month: string
       if (month !== 'Todos' && m !== month) return
       if (year !== 'Todos' && y !== year) return
 
-      if (quickFilter === 'A Receber' && item.recebido) return
-      if (quickFilter === 'Recebido' && !item.recebido) return
+      if (quickFilter === 'A Receber' && item.status === 'Recebido') return
+      if (quickFilter === 'Recebido' && item.status !== 'Recebido') return
       if (quickFilter === 'RPV' && item.tipo !== 'RPV') return
       if (quickFilter === 'Precatório' && item.tipo !== 'Precatório') return
       if (quickFilter === 'Por Parceria') {
@@ -47,7 +47,7 @@ export function RpvDashboard({ data, month, year }: { data: any[]; month: string
       }
 
       totalCasosVal++
-      if (item.recebido) {
+      if (item.status === 'Recebido') {
         recebidoVal += Number(item.valor_recebido) || 0
         recebidosCountVal++
       } else {
