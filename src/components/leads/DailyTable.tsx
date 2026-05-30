@@ -368,7 +368,7 @@ export function DailyTable({
                   Ben. Análise
                 </TableHead>
                 <TableHead className="text-center border-r w-24 font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-900 dark:text-teal-300">
-                  Total Camp.
+                  Total
                 </TableHead>
 
                 <TableHead className="text-center w-24">Conv. Geral %</TableHead>

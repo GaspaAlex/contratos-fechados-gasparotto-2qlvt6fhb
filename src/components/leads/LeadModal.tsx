@@ -484,14 +484,14 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     Fechamentos por Campanha (Banco de Dados)
                   </h4>
                   <div className="grid grid-cols-2 gap-2 mb-2">
-                    <CalcBox label="Direto Campanha" val={diretoCampanhaCount} />
-                    <CalcBox label="FUP Campanha" val={fupCampanhaCount} />
+                    <CalcBox label="Direto" val={diretoCampanhaCount} />
+                    <CalcBox label="FUP" val={fupCampanhaCount} />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <CalcBox label="Aux. Acidente" val={auxAcidenteCount} />
                     <CalcBox label="DER" val={derCount} />
                     <CalcBox label="Ben. Análise" val={benAnaliseCount} />
-                    <CalcBox label="Total Campanha" val={totalCampanhaCount} />
+                    <CalcBox label="Total" val={totalCampanhaCount} />
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900 shadow-sm">
