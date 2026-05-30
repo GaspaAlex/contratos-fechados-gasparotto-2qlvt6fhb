@@ -107,8 +107,7 @@ export function calculateLeadRow(raw: any) {
 
   const total_leads = google + meta_ads + particular
   const denom_leads = total_leads > 0 ? total_leads : 0
-  const total_desq =
-    sem_qualidade + aposentado + contribuinte_carne + outros + sem_interesse + engano
+  const total_desq = sem_qualidade + sem_interesse + engano
   const qualificados = total_leads - em_qualif - total_desq
   const total_fechados = fechado_direto + fechado_fup
 

@@ -17,6 +17,7 @@ import {
 import { calculateLeadRow, fmtMon, fmtPct, MONTHS } from '@/lib/leads-calc'
 import { createLeadDiario, updateLeadDiario } from '@/services/leads'
 import { updateCampaignConfig } from '@/services/campaign_config'
+import { getContratos } from '@/services/contratos'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
 import { cn } from '@/lib/utils'
@@ -161,7 +162,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   }, [open, data, year, form, defaultMonth])
 
   const vals = form.watch()
-  const calc = calculateLeadRow(vals)
   const isEdit = !!data?.id
 
   const [metaOpen, setMetaOpen] = useState(false)
@@ -204,6 +204,42 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const meta_c4 = form.watch('meta_c4') || 0
   const meta_c5 = form.watch('meta_c5') || 0
   const hasCampaignLeads = meta_c1 > 0 || meta_c2 > 0 || meta_c3 > 0 || meta_c4 > 0 || meta_c5 > 0
+
+  const currentMetaAds = hasCampaignLeads
+    ? meta_c1 + meta_c2 + meta_c3 + meta_c4 + meta_c5
+    : vals.meta_ads || 0
+
+  const calc = calculateLeadRow({ ...vals, meta_ads: currentMetaAds })
+
+  const [contratosCampanha, setContratosCampanha] = useState<any[]>([])
+
+  useEffect(() => {
+    if (open && vals.mes) {
+      const fetchContratos = async () => {
+        try {
+          const data = await getContratos()
+          const [selectedMonth, selectedYear] = vals.mes.split(' ')
+          const filtered = data.filter((c) => {
+            if (c.origem !== 'Campanha') return false
+            if (!c.dcontrato) return false
+            const date = new Date(c.dcontrato)
+            const m = MONTHS[date.getUTCMonth()]
+            const y = date.getUTCFullYear()
+            return m === selectedMonth && String(y) === selectedYear
+          })
+          setContratosCampanha(filtered)
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      fetchContratos()
+    }
+  }, [open, vals.mes])
+
+  const auxAcidenteCount = contratosCampanha.filter((c) => c.beneficio === 'Aux. Acidente').length
+  const derCount = contratosCampanha.filter((c) => c.beneficio === 'DER').length
+  const benAnaliseCount = contratosCampanha.filter((c) => c.beneficio === 'Ben. Análise').length
+  const totalCampanhaCount = auxAcidenteCount + derCount + benAnaliseCount
 
   const onSubmit = async (values: any) => {
     const finalValues = {
@@ -318,11 +354,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                             </span>
                             <Input
                               type="number"
-                              value={
-                                hasCampaignLeads
-                                  ? meta_c1 + meta_c2 + meta_c3 + meta_c4 + meta_c5
-                                  : form.watch('meta_ads')
-                              }
+                              value={currentMetaAds}
                               onChange={(e) => {
                                 if (!hasCampaignLeads) {
                                   form.setValue('meta_ads', Number(e.target.value) || 0)
@@ -331,7 +363,8 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                               readOnly={hasCampaignLeads}
                               className={cn(
                                 'h-6 w-16 px-2 text-xs text-right font-bold border-blue-300',
-                                hasCampaignLeads && 'bg-muted cursor-not-allowed',
+                                hasCampaignLeads &&
+                                  'bg-muted cursor-not-allowed text-muted-foreground',
                               )}
                             />
                           </div>
@@ -441,6 +474,17 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     <NumInput control={form.control} name="fechado_fup" label="Fechado FUP" />
                     <NumInput control={form.control} name="fup_ativo" label="FUP Ativo" />
                     <CalcBox label="Total Fechados" val={calc.total_fechados} />
+                  </div>
+                </div>
+                <div className="p-3 rounded-md bg-teal-50/50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-900 shadow-sm">
+                  <h4 className="text-xs font-bold text-teal-700 mb-2 uppercase">
+                    Fechamentos por Campanha (Banco de Dados)
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <CalcBox label="Aux. Acidente" val={auxAcidenteCount} />
+                    <CalcBox label="DER" val={derCount} />
+                    <CalcBox label="Ben. Análise" val={benAnaliseCount} />
+                    <CalcBox label="Total Campanha" val={totalCampanhaCount} />
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900 shadow-sm">
