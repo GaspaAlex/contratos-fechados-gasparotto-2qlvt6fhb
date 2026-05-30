@@ -32,6 +32,34 @@ export function getDisplayMonths(month: string, startMonth: string, endMonth: st
   return month === 'Todos' ? MONTHS : [month]
 }
 
+export function isDateInPeriod(
+  dateStr: string,
+  month: string,
+  day: string,
+  year: string,
+  startMonth: string,
+  endMonth: string,
+) {
+  if (!dateStr) return false
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return false
+  const dYear = d.getUTCFullYear().toString()
+  const dMonth = MONTHS[d.getUTCMonth()]
+  const dDay = d.getUTCDate()
+
+  if (dYear !== year) return false
+
+  if (startMonth && endMonth) {
+    const range = getMonthsInRange(startMonth, endMonth)
+    return range.includes(dMonth)
+  }
+
+  if (month !== 'Todos' && dMonth !== month) return false
+  if (month !== 'Todos' && day !== 'Todos' && dDay !== parseInt(day)) return false
+
+  return true
+}
+
 export function filterLeadsByPeriod(
   leads: any[],
   month: string,

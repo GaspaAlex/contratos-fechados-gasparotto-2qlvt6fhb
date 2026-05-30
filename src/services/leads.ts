@@ -6,6 +6,11 @@ export interface LeadDiario {
   dia: number
   google: number
   meta_ads: number
+  meta_c1?: number
+  meta_c2?: number
+  meta_c3?: number
+  meta_c4?: number
+  meta_c5?: number
   particular: number
   em_qualif: number
   sem_qualidade: number

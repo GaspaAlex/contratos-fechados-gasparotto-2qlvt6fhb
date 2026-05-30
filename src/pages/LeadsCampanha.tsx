@@ -17,9 +17,15 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { getLeadsByYear, deleteLeadDiario } from '@/services/leads'
+import { getCampaignConfigs, CampaignConfig } from '@/services/campaign_config'
+import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { DailyTable } from '@/components/leads/DailyTable'
-import { SummaryCards, DisqualificationAnalysis } from '@/components/leads/DashBlocks'
+import {
+  SummaryCards,
+  DisqualificationAnalysis,
+  CampaignPerformance,
+} from '@/components/leads/DashBlocks'
 import { CACCPLTable } from '@/components/leads/CACCPLTable'
 import { LeadModal } from '@/components/leads/LeadModal'
 import { useToast } from '@/hooks/use-toast'
@@ -33,6 +39,8 @@ export default function LeadsCampanha() {
   const [summaryMonth, setSummaryMonth] = useState('Todos')
   const [summaryDay, setSummaryDay] = useState('Todos')
   const [leads, setLeads] = useState<any[]>([])
+  const [campaignConfigs, setCampaignConfigs] = useState<CampaignConfig[]>([])
+  const [contratos, setContratos] = useState<any[]>([])
 
   const handleMonthChange = (val: string) => {
     setSummaryMonth(val)
@@ -51,8 +59,16 @@ export default function LeadsCampanha() {
 
   const loadData = async () => {
     try {
-      const data = await getLeadsByYear(year)
+      const [data, configs, conts] = await Promise.all([
+        getLeadsByYear(year),
+        getCampaignConfigs(),
+        pb.collection('contratos_fechados').getFullList({
+          filter: `dcontrato >= "${year}-01-01 00:00:00" && dcontrato <= "${year}-12-31 23:59:59"`,
+        }),
+      ])
       setLeads(data)
+      setCampaignConfigs(configs)
+      setContratos(conts)
     } catch (e) {
       console.error(e)
     }
@@ -61,9 +77,10 @@ export default function LeadsCampanha() {
   useEffect(() => {
     loadData()
   }, [year])
-  useRealtime('leads_diarios', () => {
-    loadData()
-  })
+
+  useRealtime('leads_diarios', loadData)
+  useRealtime('configuracoes_metas', loadData)
+  useRealtime('contratos_fechados', loadData)
 
   const handleEdit = (row: any) => {
     setSelectedRecord(row)
@@ -223,6 +240,19 @@ export default function LeadsCampanha() {
         endMonth={endMonth}
       />
 
+      <div className="mb-6">
+        <CampaignPerformance
+          leads={leads}
+          contratos={contratos}
+          configs={campaignConfigs}
+          month={summaryMonth}
+          day={summaryDay}
+          year={year}
+          startMonth={startMonth}
+          endMonth={endMonth}
+        />
+      </div>
+
       <div className="flex flex-col gap-6 w-full">
         <CACCPLTable
           leads={leads}
@@ -258,6 +288,7 @@ export default function LeadsCampanha() {
         data={selectedRecord}
         year={year}
         onSuccess={loadData}
+        campaignConfigs={campaignConfigs}
       />
 
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>

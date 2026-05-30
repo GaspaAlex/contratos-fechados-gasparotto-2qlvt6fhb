@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -15,8 +16,10 @@ import {
 } from '@/components/ui/select'
 import { calculateLeadRow, fmtMon, fmtPct, MONTHS } from '@/lib/leads-calc'
 import { createLeadDiario, updateLeadDiario } from '@/services/leads'
+import { updateCampaignConfig } from '@/services/campaign_config'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
+import { cn } from '@/lib/utils'
 
 const numSchema = z.union([z.number(), z.string()]).transform((v) => Number(v) || 0)
 
@@ -29,6 +32,11 @@ const schema = z.object({
     .pipe(z.number().min(1).max(31)),
   google: numSchema,
   meta_ads: numSchema,
+  meta_c1: numSchema.optional(),
+  meta_c2: numSchema.optional(),
+  meta_c3: numSchema.optional(),
+  meta_c4: numSchema.optional(),
+  meta_c5: numSchema.optional(),
   particular: numSchema,
   em_qualif: numSchema,
   sem_qualidade: numSchema,
@@ -79,7 +87,7 @@ const CalcBox = ({ label, val }: any) => (
   </div>
 )
 
-export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
+export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignConfigs }: any) {
   const { toast } = useToast()
 
   const defaultMonth = `${MONTHS[new Date().getMonth()]} ${year}`
@@ -91,6 +99,11 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
       dia: 1,
       google: 0,
       meta_ads: 0,
+      meta_c1: 0,
+      meta_c2: 0,
+      meta_c3: 0,
+      meta_c4: 0,
+      meta_c5: 0,
       particular: 0,
       em_qualif: 0,
       sem_qualidade: 0,
@@ -110,13 +123,25 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
   useEffect(() => {
     if (open) {
       if (data) {
-        form.reset({ ...data })
+        form.reset({
+          ...data,
+          meta_c1: data.meta_c1 || 0,
+          meta_c2: data.meta_c2 || 0,
+          meta_c3: data.meta_c3 || 0,
+          meta_c4: data.meta_c4 || 0,
+          meta_c5: data.meta_c5 || 0,
+        })
       } else {
         form.reset({
           mes: defaultMonth,
           dia: new Date().getDate(),
           google: 0,
           meta_ads: 0,
+          meta_c1: 0,
+          meta_c2: 0,
+          meta_c3: 0,
+          meta_c4: 0,
+          meta_c5: 0,
           particular: 0,
           em_qualif: 0,
           sem_qualidade: 0,
@@ -139,10 +164,58 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
   const calc = calculateLeadRow(vals)
   const isEdit = !!data?.id
 
-  const onSubmit = async (values: any) => {
+  const [metaOpen, setMetaOpen] = useState(false)
+  const [newSlotLabel, setNewSlotLabel] = useState('')
+  const [isAddingSlot, setIsAddingSlot] = useState(false)
+
+  const activeConfigs = (campaignConfigs || [])
+    .filter((c: any) => c.ativo)
+    .sort((a: any, b: any) => a.ordem - b.ordem)
+  const inactiveConfigs = (campaignConfigs || [])
+    .filter((c: any) => !c.ativo)
+    .sort((a: any, b: any) => a.ordem - b.ordem)
+
+  const handleDeactivate = async (c: any) => {
     try {
-      if (isEdit) await updateLeadDiario(data.id, values)
-      else await createLeadDiario(values)
+      await updateCampaignConfig(c.id, { ativo: false })
+      onSuccess()
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleAddSlot = async () => {
+    const slot = inactiveConfigs[0]
+    if (slot && newSlotLabel) {
+      try {
+        await updateCampaignConfig(slot.id, { ativo: true, rotulo: newSlotLabel })
+        setNewSlotLabel('')
+        setIsAddingSlot(false)
+        onSuccess()
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
+
+  const meta_c1 = form.watch('meta_c1') || 0
+  const meta_c2 = form.watch('meta_c2') || 0
+  const meta_c3 = form.watch('meta_c3') || 0
+  const meta_c4 = form.watch('meta_c4') || 0
+  const meta_c5 = form.watch('meta_c5') || 0
+  const hasCampaignLeads = meta_c1 > 0 || meta_c2 > 0 || meta_c3 > 0 || meta_c4 > 0 || meta_c5 > 0
+
+  const onSubmit = async (values: any) => {
+    const finalValues = {
+      ...values,
+      meta_ads: hasCampaignLeads
+        ? values.meta_c1 + values.meta_c2 + values.meta_c3 + values.meta_c4 + values.meta_c5
+        : values.meta_ads,
+    }
+
+    try {
+      if (isEdit) await updateLeadDiario(data.id, finalValues)
+      else await createLeadDiario(finalValues)
       toast({ title: 'Sucesso', description: 'Registro salvo com sucesso.' })
       onSuccess()
       onOpenChange(false)
@@ -222,9 +295,115 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess }: any) {
                   <h4 className="text-xs font-bold text-blue-700 mb-2">LEADS RECEBIDOS</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <NumInput control={form.control} name="google" label="Google Ads" />
-                    <NumInput control={form.control} name="meta_ads" label="Meta Ads" />
                     <NumInput control={form.control} name="particular" label="Particular" />
-                    <CalcBox label="Total Leads" val={calc.total_leads} />
+
+                    <div className="col-span-2">
+                      <div className="p-2 rounded-md bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div
+                            onClick={() => setMetaOpen(!metaOpen)}
+                            className="text-[10px] font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1 cursor-pointer uppercase select-none"
+                          >
+                            META ADS{' '}
+                            <ChevronDown
+                              className={cn(
+                                'w-3 h-3 transition-transform',
+                                metaOpen ? 'rotate-180' : '',
+                              )}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300">
+                              TOTAL:
+                            </span>
+                            <Input
+                              type="number"
+                              value={
+                                hasCampaignLeads
+                                  ? meta_c1 + meta_c2 + meta_c3 + meta_c4 + meta_c5
+                                  : form.watch('meta_ads')
+                              }
+                              onChange={(e) => {
+                                if (!hasCampaignLeads) {
+                                  form.setValue('meta_ads', Number(e.target.value) || 0)
+                                }
+                              }}
+                              readOnly={hasCampaignLeads}
+                              className={cn(
+                                'h-6 w-16 px-2 text-xs text-right font-bold border-blue-300',
+                                hasCampaignLeads && 'bg-muted cursor-not-allowed',
+                              )}
+                            />
+                          </div>
+                        </div>
+                        {metaOpen && (
+                          <div className="space-y-3 pt-1 animate-in fade-in slide-in-from-top-1">
+                            <div className="grid grid-cols-2 gap-2">
+                              {activeConfigs.map((c: any) => (
+                                <div key={c.id} className="relative group">
+                                  <NumInput control={form.control} name={c.slug} label={c.rotulo} />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeactivate(c)}
+                                    className="absolute right-0 top-0 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            {inactiveConfigs.length > 0 && (
+                              <div className="flex items-center gap-2 mt-2">
+                                {!isAddingSlot ? (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 text-[10px] px-2"
+                                    onClick={() => setIsAddingSlot(true)}
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" /> Adicionar Campanha
+                                  </Button>
+                                ) : (
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      value={newSlotLabel}
+                                      onChange={(e) => setNewSlotLabel(e.target.value)}
+                                      placeholder="Nome da campanha"
+                                      className="h-6 text-[10px] w-32"
+                                    />
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      className="h-6 text-[10px] px-2"
+                                      onClick={handleAddSlot}
+                                    >
+                                      Salvar
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 text-[10px] px-2"
+                                      onClick={() => {
+                                        setIsAddingSlot(false)
+                                        setNewSlotLabel('')
+                                      }}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 mt-1">
+                      <CalcBox label="Total Leads" val={calc.total_leads} />
+                    </div>
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900 shadow-sm">
