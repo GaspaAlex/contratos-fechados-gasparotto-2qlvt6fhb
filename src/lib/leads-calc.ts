@@ -36,26 +36,35 @@ export function isDateInPeriod(
   dateStr: string,
   month: string,
   day: string,
-  year: string,
+  year: string | number,
   startMonth: string,
   endMonth: string,
 ) {
   if (!dateStr) return false
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return false
-  const dYear = d.getUTCFullYear().toString()
-  const dMonth = MONTHS[d.getUTCMonth()]
+  const dYear = String(d.getUTCFullYear())
+  const dMonthNum = String(d.getUTCMonth() + 1).padStart(2, '0')
   const dDay = d.getUTCDate()
 
-  if (dYear !== year) return false
+  if (dYear !== String(year)) return false
 
-  if (startMonth && endMonth) {
-    const range = getMonthsInRange(startMonth, endMonth)
-    return range.includes(dMonth)
+  const monthToNum = (m: string) => {
+    const idx = MONTHS.indexOf(m)
+    return idx >= 0 ? String(idx + 1).padStart(2, '0') : m
   }
 
-  if (month !== 'Todos' && dMonth !== month) return false
-  if (month !== 'Todos' && day !== 'Todos' && dDay !== parseInt(day)) return false
+  if (startMonth && endMonth) {
+    const sNum = monthToNum(startMonth)
+    const eNum = monthToNum(endMonth)
+    return dMonthNum >= sNum && dMonthNum <= eNum
+  }
+
+  if (month !== 'Todos') {
+    const mNum = monthToNum(month)
+    if (dMonthNum !== mNum) return false
+    if (day !== 'Todos' && dDay !== parseInt(day)) return false
+  }
 
   return true
 }
