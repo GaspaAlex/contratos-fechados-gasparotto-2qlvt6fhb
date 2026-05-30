@@ -470,15 +470,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                   <h4 className="text-xs font-bold text-green-700 mb-2">QUALIFICADOS</h4>
                   <CalcBox label="Total Qualificados" val={calc.qualificados} />
                 </div>
-                <div className="p-3 rounded-md bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900 shadow-sm">
-                  <h4 className="text-xs font-bold text-orange-700 mb-2">CONTRATOS FECHADOS</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <NumInput control={form.control} name="fechado_direto" label="Fechado Direto" />
-                    <NumInput control={form.control} name="fechado_fup" label="Fechado FUP" />
-                    <NumInput control={form.control} name="fup_ativo" label="FUP Ativo" />
-                    <CalcBox label="Total Fechados" val={calc.total_fechados} />
-                  </div>
-                </div>
                 <div className="p-3 rounded-md bg-teal-50/50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-900 shadow-sm">
                   <h4 className="text-xs font-bold text-teal-700 mb-2 uppercase">
                     Fechamentos por Campanha (Banco de Dados)

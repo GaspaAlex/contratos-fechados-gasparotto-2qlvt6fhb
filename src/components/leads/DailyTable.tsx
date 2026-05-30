@@ -79,6 +79,8 @@ export function DailyTable({
       let aux = 0
       let der = 0
       let ben = 0
+      let direto = 0
+      let fup = 0
 
       if (isTotalGroup && leadsList.length > 0) {
         const rowMonthStr = leadsList[0].mes
@@ -92,7 +94,9 @@ export function DailyTable({
         aux = monthContratos.filter((ct: any) => ct.beneficio === 'Aux. Acidente').length
         der = monthContratos.filter((ct: any) => ct.beneficio === 'DER').length
         ben = monthContratos.filter((ct: any) => ct.beneficio === 'Ben. Análise').length
-        return { aux, der, ben, total: aux + der + ben }
+        direto = monthContratos.filter((ct: any) => ct.fup === false).length
+        fup = monthContratos.filter((ct: any) => ct.fup === true).length
+        return { aux, der, ben, direto, fup, total: aux + der + ben }
       }
 
       leadsList.forEach((l) => {
@@ -108,8 +112,10 @@ export function DailyTable({
         aux += dayContratos.filter((ct: any) => ct.beneficio === 'Aux. Acidente').length
         der += dayContratos.filter((ct: any) => ct.beneficio === 'DER').length
         ben += dayContratos.filter((ct: any) => ct.beneficio === 'Ben. Análise').length
+        direto += dayContratos.filter((ct: any) => ct.fup === false).length
+        fup += dayContratos.filter((ct: any) => ct.fup === true).length
       })
-      return { aux, der, ben, total: aux + der + ben }
+      return { aux, der, ben, direto, fup, total: aux + der + ben }
     }
 
     const cStats = getContratosStats(isTotal ? groupLeads! : [row], isTotal)
@@ -162,19 +168,6 @@ export function DailyTable({
           {c(calc.qualificados)}
         </TableCell>
 
-        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10">
-          {c(calc.fechado_direto)}
-        </TableCell>
-        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10">
-          {c(calc.fechado_fup)}
-        </TableCell>
-        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10">
-          {c(calc.fup_ativo)}
-        </TableCell>
-        <TableCell className="text-center font-bold bg-amber-100/40 dark:bg-amber-900/20 border-r">
-          {c(calc.total_fechados)}
-        </TableCell>
-
         <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
           {cStats.aux}
         </TableCell>
@@ -184,8 +177,14 @@ export function DailyTable({
         <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
           {cStats.ben}
         </TableCell>
-        <TableCell className="text-center font-bold bg-teal-100/40 dark:bg-teal-900/20 border-r text-teal-900 dark:text-teal-300">
+        <TableCell className="text-center font-bold bg-teal-100/40 dark:bg-teal-900/20 text-teal-900 dark:text-teal-300">
           {cStats.total}
+        </TableCell>
+        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
+          {cStats.direto}
+        </TableCell>
+        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium border-r">
+          {cStats.fup}
         </TableCell>
 
         <TableCell
@@ -321,8 +320,8 @@ export function DailyTable({
                   QUALIFICADOS
                 </TableHead>
                 <TableHead
-                  colSpan={8}
-                  className="text-center border-r bg-amber-100/50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 font-bold"
+                  colSpan={6}
+                  className="text-center border-r bg-teal-100/50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-bold"
                 >
                   CONTRATOS
                 </TableHead>
@@ -353,11 +352,6 @@ export function DailyTable({
 
                 <TableHead className="text-center border-r w-24 font-bold">Qualificados</TableHead>
 
-                <TableHead className="text-center w-24">Direto</TableHead>
-                <TableHead className="text-center w-24">FUP</TableHead>
-                <TableHead className="text-center w-24">FUP Ativo</TableHead>
-                <TableHead className="text-center border-r w-24 font-bold">Total</TableHead>
-
                 <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
                   Aux. Acid.
                 </TableHead>
@@ -367,8 +361,14 @@ export function DailyTable({
                 <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
                   Ben. Análise
                 </TableHead>
-                <TableHead className="text-center border-r w-24 font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-900 dark:text-teal-300">
+                <TableHead className="text-center w-24 font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-900 dark:text-teal-300">
                   Total
+                </TableHead>
+                <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
+                  DIRETO
+                </TableHead>
+                <TableHead className="text-center border-r w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
+                  FUP
                 </TableHead>
 
                 <TableHead className="text-center w-24">Conv. Geral %</TableHead>
@@ -386,7 +386,7 @@ export function DailyTable({
                   {((startMonth && endMonth) || month === 'Todos') && (
                     <TableRow className="bg-muted/60 hover:bg-muted/60">
                       <TableCell
-                        colSpan={29}
+                        colSpan={27}
                         className="py-2 px-4 font-bold text-muted-foreground uppercase text-sm tracking-wider"
                       >
                         {m}
@@ -402,7 +402,7 @@ export function DailyTable({
               {sortedMonths.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={29}
+                    colSpan={27}
                     className="text-center py-12 text-muted-foreground bg-muted/5"
                   >
                     Nenhum registro encontrado.
