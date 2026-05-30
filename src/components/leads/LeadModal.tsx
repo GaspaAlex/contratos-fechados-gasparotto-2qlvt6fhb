@@ -241,6 +241,9 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const benAnaliseCount = contratosCampanha.filter((c) => c.beneficio === 'Ben. Análise').length
   const totalCampanhaCount = auxAcidenteCount + derCount + benAnaliseCount
 
+  const diretoCampanhaCount = contratosCampanha.filter((c) => c.fup === false).length
+  const fupCampanhaCount = contratosCampanha.filter((c) => c.fup === true).length
+
   const onSubmit = async (values: any) => {
     const finalValues = {
       ...values,
@@ -480,6 +483,10 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                   <h4 className="text-xs font-bold text-teal-700 mb-2 uppercase">
                     Fechamentos por Campanha (Banco de Dados)
                   </h4>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <CalcBox label="Direto Campanha" val={diretoCampanhaCount} />
+                    <CalcBox label="FUP Campanha" val={fupCampanhaCount} />
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <CalcBox label="Aux. Acidente" val={auxAcidenteCount} />
                     <CalcBox label="DER" val={derCount} />

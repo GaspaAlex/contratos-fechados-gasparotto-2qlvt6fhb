@@ -273,6 +273,7 @@ export default function LeadsCampanha() {
 
       <DailyTable
         leads={leads}
+        contratos={contratos}
         month={summaryMonth}
         day={summaryDay}
         startMonth={startMonth}
