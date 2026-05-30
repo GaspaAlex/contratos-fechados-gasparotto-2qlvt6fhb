@@ -105,7 +105,7 @@ export function calculateLeadRow(raw: any) {
     fup_ativo = v('fup_ativo')
   const investimento = v('investimento')
 
-  const total_leads = google + meta_ads + particular
+  const total_leads = google + meta_ads
   const denom_leads = total_leads > 0 ? total_leads : 0
   const total_desq = sem_qualidade + sem_interesse + engano
   const qualificados = total_leads - em_qualif - total_desq

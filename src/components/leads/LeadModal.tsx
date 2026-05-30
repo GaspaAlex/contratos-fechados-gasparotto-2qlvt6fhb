@@ -38,7 +38,6 @@ const schema = z.object({
   meta_c3: numSchema.optional(),
   meta_c4: numSchema.optional(),
   meta_c5: numSchema.optional(),
-  particular: numSchema,
   em_qualif: numSchema,
   sem_qualidade: numSchema,
   aposentado: numSchema,
@@ -105,7 +104,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
       meta_c3: 0,
       meta_c4: 0,
       meta_c5: 0,
-      particular: 0,
       em_qualif: 0,
       sem_qualidade: 0,
       aposentado: 0,
@@ -143,7 +141,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
           meta_c3: 0,
           meta_c4: 0,
           meta_c5: 0,
-          particular: 0,
           em_qualif: 0,
           sem_qualidade: 0,
           aposentado: 0,
@@ -333,8 +330,9 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                 <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 shadow-sm">
                   <h4 className="text-xs font-bold text-blue-700 mb-2">LEADS RECEBIDOS</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <NumInput control={form.control} name="google" label="Google Ads" />
-                    <NumInput control={form.control} name="particular" label="Particular" />
+                    <div className="col-span-2">
+                      <NumInput control={form.control} name="google" label="Google Ads" />
+                    </div>
 
                     <div className="col-span-2">
                       <div className="p-2 rounded-md bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
