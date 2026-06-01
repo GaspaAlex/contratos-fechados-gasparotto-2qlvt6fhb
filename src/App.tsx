@@ -19,12 +19,19 @@ import Funcionarios from './pages/gestao/Funcionarios'
 import DashboardPonto from './pages/gestao/DashboardPonto'
 import CartaoPonto from './pages/gestao/CartaoPonto'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { useCampanhaMigration } from './hooks/use-campanha-migration'
+
+const MigrationRunner = () => {
+  useCampanhaMigration()
+  return null
+}
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <AuthProvider>
       <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
         <TooltipProvider>
+          <MigrationRunner />
           <Toaster />
           <Sonner />
           <Routes>
