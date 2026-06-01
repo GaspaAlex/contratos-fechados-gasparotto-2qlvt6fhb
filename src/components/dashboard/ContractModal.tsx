@@ -38,6 +38,7 @@ import {
 import { toast } from 'sonner'
 import { DynamicSelect } from './DynamicSelect'
 import pb from '@/lib/pocketbase/client'
+import { getCampaignConfigs } from '@/services/campaign_config'
 
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
@@ -63,6 +64,7 @@ export function ContractModal({
   const [beneficios, setBeneficios] = useState<any[]>([])
   const [statusList, setStatusList] = useState<any[]>([])
   const [responsaveis, setResponsaveis] = useState<any[]>([])
+  const [campanhas, setCampanhas] = useState<any[]>([])
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<{
@@ -79,6 +81,7 @@ export function ContractModal({
     parceiro_nome: string
     parceiro_comissao: number
     origem: string
+    campanha_origem: string
     representante: boolean
     representante_nome: string
     representante_cpf: string
@@ -124,6 +127,7 @@ export function ContractModal({
           parceiro_nome: contract.parceiro_nome || '',
           parceiro_comissao: contract.parceiro_comissao || 0,
           origem: contract.origem || 'Não classificado',
+          campanha_origem: contract.campanha_origem || '',
           representante: contract.representante || false,
           representante_nome: contract.representante_nome || '',
           representante_cpf: contract.representante_cpf || '',
@@ -145,6 +149,7 @@ export function ContractModal({
           parceiro_nome: '',
           parceiro_comissao: 0,
           origem: '',
+          campanha_origem: '',
           representante: false,
           representante_nome: '',
           representante_cpf: '',
@@ -158,14 +163,16 @@ export function ContractModal({
 
   const loadDependencies = async () => {
     try {
-      const [bRes, sRes, rRes] = await Promise.all([
+      const [bRes, sRes, rRes, cRes] = await Promise.all([
         getTiposAcao(),
         getStatusContrato(),
         getResponsaveis(),
+        getCampaignConfigs(),
       ])
       setBeneficios(bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
       setStatusList(sRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
       setResponsaveis(rRes)
+      setCampanhas(cRes.filter((c: any) => c.ativo))
     } catch (e) {
       console.error(e)
     }
@@ -388,6 +395,8 @@ export function ContractModal({
     if (!formData.nome || !formData.dcontrato)
       return toast.error('Preencha Nome e Data do Contrato.')
     if (!isEdit && !formData.origem) return toast.error('Selecione a origem do caso')
+    if (formData.origem === 'Campanha' && !formData.campanha_origem)
+      return toast.error('Selecione a campanha de origem.')
     if (formData.representante && !formData.representante_nome)
       return toast.error('Preencha o Nome do Representante Legal.')
 
@@ -476,7 +485,13 @@ export function ContractModal({
               </Label>
               <Select
                 value={formData.origem || (isEdit ? 'Não classificado' : '')}
-                onValueChange={(v) => setFormData({ ...formData, origem: v })}
+                onValueChange={(v) =>
+                  setFormData({
+                    ...formData,
+                    origem: v,
+                    campanha_origem: v !== 'Campanha' ? '' : formData.campanha_origem,
+                  })
+                }
               >
                 <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
                   <SelectValue placeholder="Selecione..." />
@@ -488,6 +503,36 @@ export function ContractModal({
                 </SelectContent>
               </Select>
             </div>
+
+            {formData.origem === 'Campanha' && (
+              <div className="space-y-2 animate-fade-in">
+                <Label className="text-[#C9922A] font-bold">
+                  Campanha de Origem <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.campanha_origem || ''}
+                  onValueChange={(v) => setFormData({ ...formData, campanha_origem: v })}
+                >
+                  <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {campanhas.map((c) => (
+                      <SelectItem key={c.id} value={c.rotulo}>
+                        {c.rotulo}
+                      </SelectItem>
+                    ))}
+                    {campanhas.length === 0 && (
+                      <>
+                        <SelectItem value="Aux. Acidente">Aux. Acidente</SelectItem>
+                        <SelectItem value="DER">DER</SelectItem>
+                        <SelectItem value="Ben. Análise">Ben. Análise</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Acompanhamento (FUP)</Label>

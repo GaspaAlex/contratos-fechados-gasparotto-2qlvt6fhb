@@ -32,10 +32,10 @@
     "README.md"
   ],
   "deployment": {
-    "lastDevBuildRef": "e86a472",
-    "lastProdBuildRef": "b777ec0",
-    "publishedAt": "2026-06-01T21:50:45.797Z",
-    "lastPublishedRef": "e86a472"
+    "lastDevBuildRef": "adb6501",
+    "lastProdBuildRef": "adb6501",
+    "publishedAt": "2026-06-01T22:44:42.626Z",
+    "lastPublishedRef": "adb6501"
   },
   "migrations": {
     "applied": [
