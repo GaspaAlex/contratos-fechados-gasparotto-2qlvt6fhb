@@ -20,6 +20,7 @@ import {
   Plus,
   AlertTriangle,
   UserCheck,
+  Printer,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -318,6 +319,102 @@ export function ContractsTable({
     return `${day}/${m}/${y}`
   }
 
+  const handlePrintReport = () => {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    const filtersText = [
+      activeFilter !== 'Todos' ? `Status: ${activeFilter}` : '',
+      search ? `Busca: "${search}"` : '',
+      tableBeneficio !== 'Todos os benefícios' ? `Benefício: ${tableBeneficio}` : '',
+      tableResponsavel !== 'Todos os responsáveis' ? `Responsável: ${tableResponsavel}` : '',
+      tableMonth !== 'Todos os meses' ? `Mês: ${tableMonth}` : '',
+      tableYear !== 'Todos os anos' ? `Ano: ${tableYear}` : '',
+      tableWeek !== 'Todas as semanas'
+        ? `Semana: ${currentWeeks.find((w) => w.id === tableWeek)?.label || tableWeek}`
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' | ')
+
+    const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Contratos Fechados</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        h1 { text-align: center; color: #111; margin-bottom: 5px; font-size: 20px; text-transform: uppercase; }
+        .filters { text-align: center; font-size: 12px; color: #555; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+        th { background-color: #f4f4f4; font-weight: bold; text-transform: uppercase; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .footer { margin-top: 20px; font-size: 12px; font-weight: bold; border-top: 1px solid #eee; padding-top: 10px; text-align: right; }
+        @media print {
+            body { margin: 0; }
+            @page { margin: 1cm; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Advocacia Gasparotto &mdash; Contratos Fechados</h1>
+    <div class="filters">${filtersText ? `<strong>Filtros aplicados:</strong> ${filtersText}` : 'Nenhum filtro aplicado (mostrando todos os registros)'}</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Benefício</th>
+                <th>Responsável</th>
+                <th>Status</th>
+                <th>Origem</th>
+                <th>D. Contrato</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${filtered
+              .map((c) => {
+                const dateStr = c.dcontrato ? c.dcontrato.split(' ')[0] : ''
+                const formattedDate = dateStr
+                  ? `${dateStr.split('-')[2]}/${dateStr.split('-')[1]}/${dateStr.split('-')[0]}`
+                  : '-'
+
+                return `
+                <tr>
+                    <td>${c.nome || '-'}</td>
+                    <td>${c.fone || '-'}</td>
+                    <td>${c.beneficio || '-'}</td>
+                    <td>${c.responsavel || '-'}</td>
+                    <td>${c.status || '-'}</td>
+                    <td>${c.origem || '-'}</td>
+                    <td>${formattedDate}</td>
+                </tr>
+            `
+              })
+              .join('')}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Total de registros: ${filtered.length}
+    </div>
+
+    <script>
+        window.onload = () => {
+            window.print();
+        };
+    </script>
+</body>
+</html>
+    `
+
+    printWindow.document.write(html)
+    printWindow.document.close()
+  }
+
   return (
     <>
       {activeFilter === 'Parceria' && <PartnershipsSummary contratos={filtered} />}
@@ -423,6 +520,22 @@ export function ContractsTable({
                   ))}
                 </SelectContent>
               </Select>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePrintReport}
+                    className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Exportar relatório PDF</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <Button
               onClick={handleAdd}
