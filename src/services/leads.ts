@@ -11,6 +11,41 @@ export interface LeadDiario {
   meta_c3?: number
   meta_c4?: number
   meta_c5?: number
+  qualif_c1?: number
+  qualif_c2?: number
+  qualif_c3?: number
+  qualif_c4?: number
+  qualif_c5?: number
+  sem_qualidade_c1?: number
+  sem_qualidade_c2?: number
+  sem_qualidade_c3?: number
+  sem_qualidade_c4?: number
+  sem_qualidade_c5?: number
+  aposentado_c1?: number
+  aposentado_c2?: number
+  aposentado_c3?: number
+  aposentado_c4?: number
+  aposentado_c5?: number
+  carne_c1?: number
+  carne_c2?: number
+  carne_c3?: number
+  carne_c4?: number
+  carne_c5?: number
+  outros_c1?: number
+  outros_c2?: number
+  outros_c3?: number
+  outros_c4?: number
+  outros_c5?: number
+  sem_interesse_c1?: number
+  sem_interesse_c2?: number
+  sem_interesse_c3?: number
+  sem_interesse_c4?: number
+  sem_interesse_c5?: number
+  engano_c1?: number
+  engano_c2?: number
+  engano_c3?: number
+  engano_c4?: number
+  engano_c5?: number
   particular: number
   em_qualif: number
   sem_qualidade: number
