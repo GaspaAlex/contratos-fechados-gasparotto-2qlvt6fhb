@@ -34,7 +34,7 @@
   "deployment": {
     "lastDevBuildRef": "db86305",
     "lastProdBuildRef": "db86305",
-    "publishedAt": "2026-06-02T11:06:35.761Z",
+    "publishedAt": "2026-06-02T11:41:41.014Z",
     "lastPublishedRef": "db86305"
   },
   "migrations": {
