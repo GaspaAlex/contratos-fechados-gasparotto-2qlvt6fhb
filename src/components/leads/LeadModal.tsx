@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { ChevronDown, Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -254,7 +254,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const vals = form.watch()
   const isEdit = !!data?.id
 
-  const [metaOpen, setMetaOpen] = useState(false)
   const [newSlotLabel, setNewSlotLabel] = useState('')
   const [isAddingSlot, setIsAddingSlot] = useState(false)
 
@@ -324,6 +323,14 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const currentOutros = hasCampaignLeads ? outros_sum : vals.outros || 0
   const currentSemInteresse = hasCampaignLeads ? sem_interesse_sum : vals.sem_interesse || 0
   const currentEngano = hasCampaignLeads ? engano_sum : vals.engano || 0
+
+  const currentTotalDesq =
+    currentSemQualidade +
+    currentAposentado +
+    currentCarne +
+    currentOutros +
+    currentSemInteresse +
+    currentEngano
 
   const calc = calculateLeadRow({
     ...vals,
@@ -462,208 +469,269 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
             <div className="space-y-6">
               {/* TOP SECTION */}
               <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 shadow-sm">
-                <h4 className="text-xs font-bold text-blue-700 mb-2">LEADS RECEBIDOS</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  <div>
+                <h4 className="text-xs font-bold text-blue-700 mb-3">LEADS RECEBIDOS</h4>
+                <div className="flex items-center gap-6 mb-4">
+                  <div className="w-48">
                     <NumInput control={form.control} name="google" label="Google Ads" />
                   </div>
-                  <div>
-                    <CalcBox label="Total Leads" val={calc.total_leads} />
+                  <div className="w-48">
+                    <CalcBox label="Total Leads (Google + Meta)" val={calc.total_leads} />
                   </div>
                 </div>
 
                 <div className="p-2 rounded-md bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div
-                      onClick={() => setMetaOpen(!metaOpen)}
-                      className="text-[10px] font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1 cursor-pointer uppercase select-none"
-                    >
-                      META ADS{' '}
-                      <ChevronDown
-                        className={cn('w-3 h-3 transition-transform', metaOpen ? 'rotate-180' : '')}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300">
-                        TOTAL:
-                      </span>
-                      <Input
-                        type="number"
-                        value={currentMetaAds}
-                        onChange={(e) => {
-                          if (!hasCampaignLeads) {
-                            form.setValue('meta_ads', Number(e.target.value) || 0)
-                          }
-                        }}
-                        readOnly={hasCampaignLeads}
-                        className={cn(
-                          'h-6 w-16 px-2 text-xs text-right font-bold border-blue-300',
-                          hasCampaignLeads && 'bg-muted cursor-not-allowed text-muted-foreground',
-                        )}
-                      />
-                    </div>
-                  </div>
-                  {metaOpen && (
-                    <div className="pt-2 animate-in fade-in slide-in-from-top-1">
-                      <div className="w-full border rounded-md shadow-sm overflow-hidden">
-                        <table className="w-full text-xs text-left bg-[#FAF8F2] dark:bg-amber-950/10 table-fixed">
-                          <thead className="bg-muted text-xs text-muted-foreground uppercase whitespace-nowrap">
-                            <tr>
-                              <th className="px-1 py-1.5 font-semibold w-[12%]">CAMPANHA</th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                LEADS
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                EM QUALIF.
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                S.QUAL.
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                APOSENT.
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                CARNÊ
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                OUTROS
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                S.INTER.
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                ENGANO
-                              </th>
-                              <th className="px-0.5 py-1.5 font-semibold text-center w-[8%]">
-                                T.DESQ.
-                              </th>
-                              <th className="px-1 py-1.5 w-[6%]"></th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-amber-100 dark:divide-amber-900/50">
-                            {activeConfigs.map((c: any) => {
-                              const slot = c.slug.replace('meta_c', '')
-                              const metaName = `meta_c${slot}`
-                              const qualifName = `qualif_c${slot}`
-                              const semQualidadeName = `sem_qualidade_c${slot}`
-                              const aposentadoName = `aposentado_c${slot}`
-                              const carneName = `carne_c${slot}`
-                              const outrosName = `outros_c${slot}`
-                              const semInteresseName = `sem_interesse_c${slot}`
-                              const enganoName = `engano_c${slot}`
-
-                              const semQualidade = form.watch(semQualidadeName) || 0
-                              const aposentado = form.watch(aposentadoName) || 0
-                              const carne = form.watch(carneName) || 0
-                              const outros = form.watch(outrosName) || 0
-                              const semInteresse = form.watch(semInteresseName) || 0
-                              const engano = form.watch(enganoName) || 0
-
-                              const totalDesqualif =
-                                semQualidade + aposentado + carne + outros + semInteresse + engano
-
-                              return (
-                                <tr key={c.id}>
-                                  <td
-                                    className="px-1 py-1 align-middle font-medium whitespace-nowrap text-[10px] text-amber-900 dark:text-amber-200 truncate"
-                                    title={c.rotulo}
-                                  >
-                                    {c.rotulo}
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput control={form.control} name={metaName} />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput control={form.control} name={qualifName} />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput
-                                      control={form.control}
-                                      name={semQualidadeName}
-                                    />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput control={form.control} name={aposentadoName} />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput control={form.control} name={carneName} />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput control={form.control} name={outrosName} />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput
-                                      control={form.control}
-                                      name={semInteresseName}
-                                    />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <TableCellInput control={form.control} name={enganoName} />
-                                  </td>
-                                  <td className="px-0.5 py-1 align-middle">
-                                    <div className="h-7 rounded-md bg-[#F3F4F6] dark:bg-muted/50 border dark:border-muted flex items-center justify-center font-bold text-xs text-muted-foreground w-full min-w-[36px]">
-                                      {totalDesqualif}
-                                    </div>
-                                  </td>
-                                  <td className="px-1 py-1 align-middle text-right">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeactivate(c)}
-                                      className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                      title="Desativar campanha"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {inactiveConfigs.length > 0 && (
-                        <div className="flex items-center gap-2 mt-3">
-                          {!isAddingSlot ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 text-[10px] px-2"
-                              onClick={() => setIsAddingSlot(true)}
-                            >
-                              <Plus className="w-3 h-3 mr-1" /> Adicionar Campanha
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={newSlotLabel}
-                                onChange={(e) => setNewSlotLabel(e.target.value)}
-                                placeholder="Nome da campanha"
-                                className="h-7 text-[10px] w-32"
-                              />
-                              <Button
-                                type="button"
-                                size="sm"
-                                className="h-7 text-[10px] px-2"
-                                onClick={handleAddSlot}
-                              >
-                                Salvar
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-[10px] px-2"
-                                onClick={() => {
-                                  setIsAddingSlot(false)
-                                  setNewSlotLabel('')
-                                }}
-                              >
-                                Cancelar
-                              </Button>
+                  <h5 className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase mb-2">
+                    Meta Ads por Campanha
+                  </h5>
+                  <div className="w-full border rounded-md shadow-sm overflow-hidden">
+                    <table className="w-full text-xs text-left bg-[#FAF8F2] dark:bg-amber-950/10 table-fixed">
+                      <thead className="bg-muted text-xs text-muted-foreground uppercase whitespace-nowrap">
+                        <tr>
+                          <th
+                            rowSpan={2}
+                            className="px-1 py-1.5 font-semibold w-[15%] align-bottom text-left"
+                          >
+                            CAMPANHA
+                          </th>
+                          <th
+                            rowSpan={2}
+                            className="px-0.5 py-1.5 font-semibold text-center w-[9%] align-bottom"
+                          >
+                            LEADS
+                          </th>
+                          <th
+                            rowSpan={2}
+                            className="px-0.5 py-1.5 font-semibold text-center w-[9%] align-bottom"
+                          >
+                            EM QUALIF.
+                          </th>
+                          <th colSpan={6} className="px-1 pt-2 pb-0 font-semibold text-center">
+                            <div className="border-t-2 border-x-2 border-blue-500/60 dark:border-blue-400/60 rounded-t-[4px] pt-1 pb-0.5 text-[10px] text-blue-700 dark:text-blue-400 leading-none">
+                              DESQUALIFICADOS
                             </div>
-                          )}
+                          </th>
+                          <th
+                            rowSpan={2}
+                            className="px-0.5 py-1.5 font-semibold text-center w-[10%] align-bottom leading-tight"
+                          >
+                            TOTAL
+                            <br />
+                            DESQUALIF.
+                          </th>
+                          <th rowSpan={2} className="px-1 py-1.5 w-[4%] align-bottom"></th>
+                        </tr>
+                        <tr>
+                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
+                            S.QUAL.
+                          </th>
+                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
+                            APOSENT.
+                          </th>
+                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
+                            CARNÊ
+                          </th>
+                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
+                            OUTROS
+                          </th>
+                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
+                            S.INTER.
+                          </th>
+                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
+                            ENGANO
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-amber-100 dark:divide-amber-900/50">
+                        {activeConfigs.map((c: any) => {
+                          const slot = c.slug.replace('meta_c', '')
+                          const metaName = `meta_c${slot}`
+                          const qualifName = `qualif_c${slot}`
+                          const semQualidadeName = `sem_qualidade_c${slot}`
+                          const aposentadoName = `aposentado_c${slot}`
+                          const carneName = `carne_c${slot}`
+                          const outrosName = `outros_c${slot}`
+                          const semInteresseName = `sem_interesse_c${slot}`
+                          const enganoName = `engano_c${slot}`
+
+                          const semQualidade = form.watch(semQualidadeName) || 0
+                          const aposentado = form.watch(aposentadoName) || 0
+                          const carne = form.watch(carneName) || 0
+                          const outros = form.watch(outrosName) || 0
+                          const semInteresse = form.watch(semInteresseName) || 0
+                          const engano = form.watch(enganoName) || 0
+
+                          const totalDesqualif =
+                            semQualidade + aposentado + carne + outros + semInteresse + engano
+
+                          return (
+                            <tr key={c.id}>
+                              <td
+                                className="px-1 py-1 align-middle font-bold uppercase whitespace-nowrap text-[10px] text-amber-900 dark:text-amber-200 truncate text-left"
+                                title={c.rotulo}
+                              >
+                                {c.rotulo}
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={metaName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={qualifName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={semQualidadeName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={aposentadoName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={carneName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={outrosName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={semInteresseName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <TableCellInput control={form.control} name={enganoName} />
+                              </td>
+                              <td className="px-0.5 py-1 align-middle">
+                                <div className="h-7 rounded-md bg-[#F3F4F6] dark:bg-muted/50 border dark:border-muted flex items-center justify-center font-bold text-xs text-muted-foreground w-full min-w-[36px]">
+                                  {totalDesqualif}
+                                </div>
+                              </td>
+                              <td className="px-1 py-1 align-middle text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeactivate(c)}
+                                  className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                  title="Desativar campanha"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                      <tfoot className="bg-blue-100/80 dark:bg-blue-900/40 border-t border-blue-200 dark:border-blue-800">
+                        <tr>
+                          <td className="px-1 py-2 text-[10px] font-bold text-blue-900 dark:text-blue-200 text-right uppercase">
+                            Total Leads:
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">{currentMetaAds}</div>
+                            ) : (
+                              <TableCellInput control={form.control} name="meta_ads" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">{currentEmQualif}</div>
+                            ) : (
+                              <TableCellInput control={form.control} name="em_qualif" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">
+                                {currentSemQualidade}
+                              </div>
+                            ) : (
+                              <TableCellInput control={form.control} name="sem_qualidade" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">
+                                {currentAposentado}
+                              </div>
+                            ) : (
+                              <TableCellInput control={form.control} name="aposentado" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">{currentCarne}</div>
+                            ) : (
+                              <TableCellInput control={form.control} name="contribuinte_carne" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">{currentOutros}</div>
+                            ) : (
+                              <TableCellInput control={form.control} name="outros" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">
+                                {currentSemInteresse}
+                              </div>
+                            ) : (
+                              <TableCellInput control={form.control} name="sem_interesse" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            {hasCampaignLeads ? (
+                              <div className="text-center font-bold text-xs">{currentEngano}</div>
+                            ) : (
+                              <TableCellInput control={form.control} name="engano" />
+                            )}
+                          </td>
+                          <td className="px-0.5 py-1 align-middle">
+                            <div className="text-center font-bold text-xs text-red-600">
+                              {currentTotalDesq}
+                            </div>
+                          </td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  {inactiveConfigs.length > 0 && (
+                    <div className="flex items-center gap-2 mt-3">
+                      {!isAddingSlot ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[10px] px-2"
+                          onClick={() => setIsAddingSlot(true)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Adicionar Campanha
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={newSlotLabel}
+                            onChange={(e) => setNewSlotLabel(e.target.value)}
+                            placeholder="Nome da campanha"
+                            className="h-7 text-[10px] w-32"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-7 text-[10px] px-2"
+                            onClick={handleAddSlot}
+                          >
+                            Salvar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-[10px] px-2"
+                            onClick={() => {
+                              setIsAddingSlot(false)
+                              setNewSlotLabel('')
+                            }}
+                          >
+                            Cancelar
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -688,11 +756,10 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     <CalcBox label="Direto" val={diretoCampanhaCount} />
                     <CalcBox label="FUP" val={fupCampanhaCount} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <CalcBox label="Aux. Acidente" val={auxAcidenteCount} />
                     <CalcBox label="DER" val={derCount} />
                     <CalcBox label="Ben. Análise" val={benAnaliseCount} />
-                    <CalcBox label="Total" val={totalCampanhaCount} />
                   </div>
                 </div>
               </div>
