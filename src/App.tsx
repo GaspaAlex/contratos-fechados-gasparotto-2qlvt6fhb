@@ -20,9 +20,11 @@ import DashboardPonto from './pages/gestao/DashboardPonto'
 import CartaoPonto from './pages/gestao/CartaoPonto'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { useCampanhaMigration } from './hooks/use-campanha-migration'
+import { useProtocoloMigration } from './hooks/use-protocolo-migration'
 
 const MigrationRunner = () => {
   useCampanhaMigration()
+  useProtocoloMigration()
   return null
 }
 
