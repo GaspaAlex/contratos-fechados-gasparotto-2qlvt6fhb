@@ -160,7 +160,9 @@ const NumInput = ({ control, name, label, cl }: any) => (
     render={({ field }) => {
       return (
         <FormItem>
-          <FormLabel className="text-[10px] uppercase text-muted-foreground">{label}</FormLabel>
+          <FormLabel className="text-[10px] font-bold uppercase text-muted-foreground">
+            {label}
+          </FormLabel>
           <FormControl>
             <Input
               type="number"
@@ -181,7 +183,7 @@ const NumInput = ({ control, name, label, cl }: any) => (
 
 const CalcBox = ({ label, val }: any) => (
   <div>
-    <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
+    <div className="text-[10px] font-bold uppercase text-muted-foreground">{label}</div>
     <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border shadow-inner">
       {val}
     </div>
@@ -474,9 +476,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                   <div className="w-48">
                     <NumInput control={form.control} name="google" label="Google Ads" />
                   </div>
-                  <div className="w-48">
-                    <CalcBox label="Total Leads (Google + Meta)" val={calc.total_leads} />
-                  </div>
                 </div>
 
                 <div className="p-2 rounded-md bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
@@ -569,7 +568,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                                 className="px-1 py-1 align-middle font-bold uppercase whitespace-nowrap text-[10px] text-amber-900 dark:text-amber-200 truncate text-left"
                                 title={c.rotulo}
                               >
-                                {c.rotulo}
+                                {c.rotulo?.toUpperCase()}
                               </td>
                               <td className="px-0.5 py-1 align-middle">
                                 <TableCellInput control={form.control} name={metaName} />
@@ -614,79 +613,17 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           )
                         })}
                       </tbody>
-                      <tfoot className="bg-blue-100/80 dark:bg-blue-900/40 border-t border-blue-200 dark:border-blue-800">
+                      <tfoot className="bg-blue-50/80 dark:bg-blue-900/30 border-t-2 border-blue-200 dark:border-blue-800">
                         <tr>
-                          <td className="px-1 py-2 text-[10px] font-bold text-blue-900 dark:text-blue-200 text-right uppercase">
-                            Total Leads:
+                          <td colSpan={10} className="px-2 py-2 text-right align-middle">
+                            <span className="text-[10px] font-bold uppercase text-blue-800 dark:text-blue-300 mr-2">
+                              Total Leads (Google + Meta)
+                            </span>
+                            <span className="text-sm font-bold text-blue-900 dark:text-blue-200">
+                              {calc.total_leads}
+                            </span>
                           </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">{currentMetaAds}</div>
-                            ) : (
-                              <TableCellInput control={form.control} name="meta_ads" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">{currentEmQualif}</div>
-                            ) : (
-                              <TableCellInput control={form.control} name="em_qualif" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">
-                                {currentSemQualidade}
-                              </div>
-                            ) : (
-                              <TableCellInput control={form.control} name="sem_qualidade" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">
-                                {currentAposentado}
-                              </div>
-                            ) : (
-                              <TableCellInput control={form.control} name="aposentado" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">{currentCarne}</div>
-                            ) : (
-                              <TableCellInput control={form.control} name="contribuinte_carne" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">{currentOutros}</div>
-                            ) : (
-                              <TableCellInput control={form.control} name="outros" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">
-                                {currentSemInteresse}
-                              </div>
-                            ) : (
-                              <TableCellInput control={form.control} name="sem_interesse" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            {hasCampaignLeads ? (
-                              <div className="text-center font-bold text-xs">{currentEngano}</div>
-                            ) : (
-                              <TableCellInput control={form.control} name="engano" />
-                            )}
-                          </td>
-                          <td className="px-0.5 py-1 align-middle">
-                            <div className="text-center font-bold text-xs text-red-600">
-                              {currentTotalDesq}
-                            </div>
-                          </td>
-                          <td></td>
+                          <td className="px-1 py-2"></td>
                         </tr>
                       </tfoot>
                     </table>
@@ -778,7 +715,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     name="observacoes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                        <FormLabel className="text-[10px] font-bold uppercase text-muted-foreground">
                           Observações
                         </FormLabel>
                         <FormControl>
