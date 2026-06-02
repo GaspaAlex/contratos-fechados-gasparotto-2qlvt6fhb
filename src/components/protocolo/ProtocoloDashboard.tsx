@@ -11,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Bar, BarChart, XAxis, YAxis } from 'recharts'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 
 export function ProtocoloDashboard({
   data,
@@ -108,6 +110,49 @@ export function ProtocoloDashboard({
   const tCount = monthlyData.reduce((s, m) => s + m.count, 0)
   const tVal = monthlyData.reduce((s, m) => s + m.val, 0)
 
+  const filteredByCalculoData = useMemo(() => {
+    return data.filter((d) => {
+      if (!d.dcalculo) return false
+
+      if (origem !== 'Todos' && d.origem !== origem) return false
+      if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
+      const respName = d.expand?.responsavel?.nome || d.responsavel || ''
+      if (responsavel !== 'Todos' && respName !== responsavel) return false
+      if (year !== 'Todos') {
+        if (!d.dcalculo || d.dcalculo.substring(0, 4) !== year) return false
+      }
+
+      const hasRange = monthStart !== 'Todos' && monthEnd !== 'Todos'
+
+      if (hasRange) {
+        const dMonth = d.dcalculo ? parseInt(d.dcalculo.substring(5, 7), 10) - 1 : -1
+        const start = parseInt(monthStart, 10)
+        const end = parseInt(monthEnd, 10)
+        if (dMonth < start || dMonth > end) return false
+      } else if (month !== 'Todos') {
+        const dMonth = d.dcalculo ? (parseInt(d.dcalculo.substring(5, 7), 10) - 1).toString() : ''
+        if (dMonth !== month) return false
+      }
+      return true
+    })
+  }, [data, tipo, responsavel, origem, year, month, monthStart, monthEnd])
+
+  const teamPerformanceData = useMemo(() => {
+    const groups: Record<string, number> = {}
+    const exclusions = ['IA', 'Dr. Caio', 'Dr. Alex']
+
+    filteredByCalculoData.forEach((d) => {
+      const respName = d.expand?.responsavel?.nome || d.responsavel || 'Sem responsável'
+      if (exclusions.includes(respName)) return
+      groups[respName] = (groups[respName] || 0) + 1
+    })
+
+    return Object.entries(groups)
+      .filter(([_, count]) => count > 0)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+  }, [filteredByCalculoData])
+
   return (
     <div className="grid gap-6 grid-cols-1 md:grid-cols-2 mb-8">
       <Card>
@@ -151,6 +196,56 @@ export function ProtocoloDashboard({
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="md:col-span-2">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl font-bold">Desempenho da Equipe</CardTitle>
+          <CardDescription>
+            Casos liberados para protocolo por responsável (por data do cálculo)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {teamPerformanceData.length > 0 ? (
+            <ChartContainer
+              config={{
+                count: {
+                  label: 'Casos',
+                  color: '#C9922A',
+                },
+              }}
+              className="h-[300px] w-full"
+            >
+              <BarChart
+                data={teamPerformanceData}
+                layout="vertical"
+                margin={{ top: 0, right: 32, bottom: 0, left: 0 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={140}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar
+                  dataKey="count"
+                  fill="#C9922A"
+                  radius={[0, 4, 4, 0]}
+                  barSize={32}
+                  label={{ position: 'right', fill: 'currentColor', fontSize: 12 }}
+                />
+              </BarChart>
+            </ChartContainer>
+          ) : (
+            <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+              Nenhum dado encontrado.
+            </div>
+          )}
         </CardContent>
       </Card>
 
