@@ -275,9 +275,17 @@ export function CampaignPerformance({
                 (acc: number, l: any) => acc + (Number(l[c.slug]) || 0),
                 0,
               )
-              const fechamentos = filteredContratos.filter(
-                (cont: any) => cont.origem === 'Campanha' && cont.beneficio === c.rotulo,
-              ).length
+              const fechamentos = filteredContratos.filter((cont: any) => {
+                const excludedStatuses = [
+                  'Sem Qualidade de Segurado',
+                  'Tem Advogado',
+                  'Litispendência',
+                ]
+                if (excludedStatuses.includes(cont.status)) return false
+                if (cont.origem !== 'Campanha') return false
+                const campOrigem = cont.campanha_origem || 'Aux. Acidente'
+                return campOrigem === c.rotulo
+              }).length
               const conv = leadsCount > 0 ? fechamentos / leadsCount : null
               return (
                 <TableRow key={c.id}>
