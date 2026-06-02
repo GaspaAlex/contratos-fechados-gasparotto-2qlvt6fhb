@@ -39,6 +39,7 @@ const baseSchema = z.object({
   tipo_acao: z.string().optional(),
   responsavel: z.string().optional(),
   status: z.string().min(1, 'Obrigatório'),
+  dcontrato: z.string().optional(),
   dcalculo: z.string().optional(),
   dprotocolo: z.string().optional(),
   prazo: z.coerce.number().min(1).default(15),
@@ -105,6 +106,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       tipo_acao: '',
       responsavel: '',
       status: 'Protocolado',
+      dcontrato: '',
       dcalculo: '',
       dprotocolo: '',
       prazo: 15,
@@ -127,6 +129,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
         form.reset({
           ...item,
           valor: item.valor === 0 ? undefined : item.valor,
+          dcontrato: item.dcontrato ? item.dcontrato.substring(0, 10) : '',
           dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
           dprotocolo: item.dprotocolo ? item.dprotocolo.substring(0, 10) : '',
           origem: item.origem || '',
@@ -143,6 +146,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           tipo_acao: '',
           responsavel: '',
           status: 'Protocolado',
+          dcontrato: '',
           dcalculo: '',
           dprotocolo: '',
           prazo: 15,
@@ -183,6 +187,9 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
 
     try {
       const payload = { ...values }
+      if (payload.dcontrato)
+        payload.dcontrato = new Date(payload.dcontrato + 'T12:00:00Z').toISOString()
+      else payload.dcontrato = null
       if (payload.dcalculo)
         payload.dcalculo = new Date(payload.dcalculo + 'T12:00:00Z').toISOString()
       else payload.dcalculo = null
@@ -344,10 +351,23 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
               />
               <FormField
                 control={form.control}
-                name="dcalculo"
+                name="dcontrato"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Data do Contrato</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dcalculo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data do Cálculo</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
