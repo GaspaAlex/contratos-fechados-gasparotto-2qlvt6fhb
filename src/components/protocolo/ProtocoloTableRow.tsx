@@ -107,13 +107,16 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
         )}
       </TableCell>
       <TableCell className="whitespace-nowrap text-muted-foreground">
-        {item.dcalculo ? format(parseISO(item.dcalculo), 'dd/MM/yy') : '—'}
+        {item.dcontrato ? format(parseISO(item.dcontrato), 'dd/MM/yyyy') : '—'}
+      </TableCell>
+      <TableCell className="whitespace-nowrap text-muted-foreground">
+        {item.dcalculo ? format(parseISO(item.dcalculo), 'dd/MM/yyyy') : '—'}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1.5 whitespace-nowrap">
           {overdue && <AlertTriangle className="h-4 w-4 text-rose-500" />}
           <span className={overdue ? 'text-rose-600 font-bold' : 'text-muted-foreground'}>
-            {item.dprotocolo ? format(parseISO(item.dprotocolo), 'dd/MM/yy') : '—'}
+            {item.dprotocolo ? format(parseISO(item.dprotocolo), 'dd/MM/yyyy') : '—'}
           </span>
         </div>
       </TableCell>
