@@ -69,6 +69,19 @@ export function isDateInPeriod(
   return true
 }
 
+export function isAfterMay2026(mesStr: string, defaultYear: number | string): boolean {
+  if (!mesStr) return false
+  let y = Number(defaultYear) || 2026
+  const match = mesStr.match(/\d{4}/)
+  if (match) {
+    y = Number(match[0])
+  }
+  const mIndex = MONTHS.findIndex((m) => mesStr.startsWith(m))
+  if (y > 2026) return true
+  if (y < 2026) return false
+  return mIndex >= 4 // Maio (index 4) and onwards
+}
+
 export function filterLeadsByPeriod(
   leads: any[],
   month: string,
@@ -107,7 +120,8 @@ export function calculateLeadRow(raw: any) {
 
   const total_leads = google + meta_ads
   const denom_leads = total_leads > 0 ? total_leads : 0
-  const total_desq = sem_qualidade + sem_interesse + engano
+  const total_desq =
+    sem_qualidade + aposentado + contribuinte_carne + outros + sem_interesse + engano
   const qualificados = total_leads - em_qualif - total_desq
   const total_fechados = fechado_direto + fechado_fup
 
@@ -141,19 +155,62 @@ export function calculateLeadRow(raw: any) {
   }
 }
 
-export function aggregateLeads(leads: any[]) {
+export function aggregateLeads(leads: any[], year?: string | number) {
   return leads.reduce(
     (acc, l) => {
       acc.google += l.google || 0
       acc.meta_ads += l.meta_ads || 0
       acc.particular += l.particular || 0
       acc.em_qualif += l.em_qualif || 0
-      acc.sem_qualidade += l.sem_qualidade || 0
-      acc.aposentado += l.aposentado || 0
-      acc.contribuinte_carne += l.contribuinte_carne || 0
-      acc.outros += l.outros || 0
-      acc.sem_interesse += l.sem_interesse || 0
-      acc.engano += l.engano || 0
+
+      const isModern = isAfterMay2026(l.mes, year || 2026)
+
+      if (isModern) {
+        acc.sem_qualidade +=
+          (l.sem_qualidade_c1 || 0) +
+          (l.sem_qualidade_c2 || 0) +
+          (l.sem_qualidade_c3 || 0) +
+          (l.sem_qualidade_c4 || 0) +
+          (l.sem_qualidade_c5 || 0)
+        acc.aposentado +=
+          (l.aposentado_c1 || 0) +
+          (l.aposentado_c2 || 0) +
+          (l.aposentado_c3 || 0) +
+          (l.aposentado_c4 || 0) +
+          (l.aposentado_c5 || 0)
+        acc.contribuinte_carne +=
+          (l.carne_c1 || 0) +
+          (l.carne_c2 || 0) +
+          (l.carne_c3 || 0) +
+          (l.carne_c4 || 0) +
+          (l.carne_c5 || 0)
+        acc.outros +=
+          (l.outros_c1 || 0) +
+          (l.outros_c2 || 0) +
+          (l.outros_c3 || 0) +
+          (l.outros_c4 || 0) +
+          (l.outros_c5 || 0)
+        acc.sem_interesse +=
+          (l.sem_interesse_c1 || 0) +
+          (l.sem_interesse_c2 || 0) +
+          (l.sem_interesse_c3 || 0) +
+          (l.sem_interesse_c4 || 0) +
+          (l.sem_interesse_c5 || 0)
+        acc.engano +=
+          (l.engano_c1 || 0) +
+          (l.engano_c2 || 0) +
+          (l.engano_c3 || 0) +
+          (l.engano_c4 || 0) +
+          (l.engano_c5 || 0)
+      } else {
+        acc.sem_qualidade += l.sem_qualidade || 0
+        acc.aposentado += l.aposentado || 0
+        acc.contribuinte_carne += l.contribuinte_carne || 0
+        acc.outros += l.outros || 0
+        acc.sem_interesse += l.sem_interesse || 0
+        acc.engano += l.engano || 0
+      }
+
       acc.fechado_direto += l.fechado_direto || 0
       acc.fechado_fup += l.fechado_fup || 0
       acc.fup_ativo += l.fup_ativo || 0

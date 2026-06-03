@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils'
 
 export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: any) {
   const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const anoLeads = aggregateLeads(filteredLeads)
+  const anoLeads = aggregateLeads(filteredLeads, year)
   const agg = calculateLeadRow(anoLeads)
 
   const getConvGeralStatus = (v: number | null) => {
@@ -321,7 +321,7 @@ export function CampaignPerformance({
 
 export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: any) {
   const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const anoLeads = aggregateLeads(filteredLeads)
+  const anoLeads = aggregateLeads(filteredLeads, year)
   const aggAno = calculateLeadRow(anoLeads)
   const displayMonths = getDisplayMonths(month, startMonth, endMonth)
   const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
@@ -352,7 +352,7 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: a
               ? displayMonths.map((m) => {
                   const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                   if (mLeads.length === 0) return null
-                  const agg = calculateLeadRow(aggregateLeads(mLeads))
+                  const agg = calculateLeadRow(aggregateLeads(mLeads, year))
                   const cacSt = getLocalCacStatus(agg.cac)
                   return (
                     <TableRow key={m}>
@@ -487,9 +487,9 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: a
   )
 }
 
-export function DisqualificationAnalysis({ leads, month, day, startMonth, endMonth }: any) {
+export function DisqualificationAnalysis({ leads, month, day, year, startMonth, endMonth }: any) {
   const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const anoLeads = aggregateLeads(filteredLeads)
+  const anoLeads = aggregateLeads(filteredLeads, year)
   const aggAno = calculateLeadRow(anoLeads)
   const displayMonths = getDisplayMonths(month, startMonth, endMonth)
   const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
@@ -568,7 +568,7 @@ export function DisqualificationAnalysis({ leads, month, day, startMonth, endMon
                 ? displayMonths.map((m) => {
                     const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                     if (mLeads.length === 0) return null
-                    const agg = calculateLeadRow(aggregateLeads(mLeads))
+                    const agg = calculateLeadRow(aggregateLeads(mLeads, year))
                     return (
                       <TableRow key={m}>
                         <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
