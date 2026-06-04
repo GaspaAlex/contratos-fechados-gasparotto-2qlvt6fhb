@@ -41,6 +41,7 @@ export default function LeadsCampanha() {
   const [leads, setLeads] = useState<any[]>([])
   const [campaignConfigs, setCampaignConfigs] = useState<CampaignConfig[]>([])
   const [contratos, setContratos] = useState<any[]>([])
+  const [campaign, setCampaign] = useState('Todas')
 
   const handleMonthChange = (val: string) => {
     setSummaryMonth(val)
@@ -113,39 +114,35 @@ export default function LeadsCampanha() {
     }
   }
 
+  console.log('[LeadsCampanha] campaign state:', campaign)
+
   return (
     <div className="animate-fade-in-up pb-10 space-y-6">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/20 border p-3 rounded-lg shadow-sm sticky top-0 z-30 backdrop-blur-md">
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-bold text-muted-foreground mr-2 uppercase tracking-wider">
-            Metas da Campanha:
-          </span>
-          <Badge
-            variant="outline"
-            className="bg-background text-muted-foreground border-muted-foreground/30 font-medium rounded-full px-3"
+        <div className="flex w-full md:w-auto">
+          <Select
+            value={campaign}
+            onValueChange={(val) => {
+              console.log('[LeadsCampanha] onValueChange campanha:', val)
+              setCampaign(val)
+            }}
           >
-            Conv. Geral ≥ 6%
-          </Badge>
-          <Badge
-            variant="outline"
-            className="bg-background text-muted-foreground border-muted-foreground/30 font-medium rounded-full px-3"
-          >
-            Conv. Qualif. ≥ 10%
-          </Badge>
-          <Badge
-            variant="outline"
-            className="bg-background text-muted-foreground border-muted-foreground/30 font-medium rounded-full px-3"
-          >
-            Desqualificado ≤ 30%
-          </Badge>
-          <Badge
-            variant="outline"
-            className="bg-background text-muted-foreground border-muted-foreground/30 font-medium rounded-full px-3"
-          >
-            CAC R$ 80–R$ 250
-          </Badge>
+            <SelectTrigger className="h-9 bg-background w-full min-w-[220px]">
+              <SelectValue placeholder="Campanha" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todas">Todas as Campanhas</SelectItem>
+              {campaignConfigs
+                .filter((c) => c.ativo)
+                .map((c) => (
+                  <SelectItem key={c.slug} value={c.slug}>
+                    {c.rotulo}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div className="flex w-full md:w-auto gap-2 flex-wrap md:flex-nowrap">
+        <div className="flex w-full md:w-auto gap-2 flex-wrap md:flex-nowrap md:justify-end">
           <Select value={startMonth} onValueChange={setStartMonth}>
             <SelectTrigger className="h-9 bg-background w-full md:w-32">
               <SelectValue placeholder="De" />
@@ -234,11 +231,13 @@ export default function LeadsCampanha() {
       <SummaryCards
         leads={leads}
         contratos={contratos}
+        configs={campaignConfigs}
         month={summaryMonth}
         year={year}
         day={summaryDay}
         startMonth={startMonth}
         endMonth={endMonth}
+        campaign={campaign}
       />
 
       <div className="mb-6">
@@ -251,30 +250,38 @@ export default function LeadsCampanha() {
           year={year}
           startMonth={startMonth}
           endMonth={endMonth}
+          campaign={campaign}
         />
       </div>
 
       <div className="flex flex-col gap-6 w-full">
         <CACCPLTable
           leads={leads}
+          contratos={contratos}
+          configs={campaignConfigs}
           month={summaryMonth}
           day={summaryDay}
           year={year}
           startMonth={startMonth}
           endMonth={endMonth}
+          campaign={campaign}
         />
         <DisqualificationAnalysis
           leads={leads}
           month={summaryMonth}
           day={summaryDay}
+          year={year}
           startMonth={startMonth}
           endMonth={endMonth}
+          campaign={campaign}
         />
       </div>
 
       <DailyTable
         leads={leads}
         contratos={contratos}
+        configs={campaignConfigs}
+        campaign={campaign}
         month={summaryMonth}
         day={summaryDay}
         startMonth={startMonth}

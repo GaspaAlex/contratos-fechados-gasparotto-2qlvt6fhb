@@ -16,14 +16,26 @@ import { useRealtime } from '@/hooks/use-realtime'
 
 interface Props {
   leads: any[]
+  contratos?: any[]
+  configs?: any[]
   month: string
   day: string
   year: string
   startMonth?: string
   endMonth?: string
+  campaign?: string
 }
 
-export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: Props) {
+export function CACCPLTable({
+  leads,
+  month,
+  day,
+  year,
+  startMonth,
+  endMonth,
+  campaign = 'Todas',
+  configs,
+}: Props) {
   const [contratos, setContratos] = useState<any[]>([])
   const [protocolos, setProtocolos] = useState<any[]>([])
 
@@ -56,30 +68,67 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: P
         const filteredLeads =
           day === 'Todos' || isRange ? mLeads : mLeads.filter((l) => l.dia.toString() === day)
 
-        const sumLeads = filteredLeads.reduce(
-          (acc, l) =>
-            acc + (Number(l.google) || 0) + (Number(l.meta_ads) || 0) + (Number(l.particular) || 0),
-          0,
-        )
+        let sumLeads = 0
+        if (campaign !== 'Todas') {
+          sumLeads = filteredLeads.reduce((acc, l) => acc + (Number(l[`meta_${campaign}`]) || 0), 0)
+        } else {
+          sumLeads = filteredLeads.reduce(
+            (acc, l) =>
+              acc +
+              (Number(l.google) || 0) +
+              (Number(l.meta_ads) || 0) +
+              (Number(l.particular) || 0),
+            0,
+          )
+        }
+
         const sumInvestimento = filteredLeads.reduce(
           (acc, l) => acc + (Number(l.investimento) || 0),
           0,
         )
-        const sumFechamentos = filteredLeads.reduce(
-          (acc, l) => acc + (Number(l.fechado_direto) || 0) + (Number(l.fechado_fup) || 0),
-          0,
-        )
+
+        let sumFechamentos = 0
+        if (campaign !== 'Todas') {
+          const selectedRotulo = configs?.find((c) => c.slug === campaign)?.rotulo || campaign
+          sumFechamentos = contratos.filter((c) => {
+            if (!c.dcontrato) return false
+            const [cYear, cMonth] = c.dcontrato.split('-')
+            if (cYear !== year || cMonth !== monthNum) return false
+            if (['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência'].includes(c.status))
+              return false
+            if (c.origem !== 'Campanha') return false
+            const campOrigem = c.campanha_origem || 'Aux. Acidente'
+            return campOrigem === selectedRotulo || c.campanha_origem === campaign
+          }).length
+        } else {
+          sumFechamentos = filteredLeads.reduce(
+            (acc, l) => acc + (Number(l.fechado_direto) || 0) + (Number(l.fechado_fup) || 0),
+            0,
+          )
+        }
 
         const cpl = sumLeads > 0 ? sumInvestimento / sumLeads : null
         const cac = sumFechamentos > 0 ? sumInvestimento / sumFechamentos : null
 
         const monthNum = String(MONTHS.indexOf(m) + 1).padStart(2, '0')
 
+        const selectedRotulo =
+          campaign !== 'Todas'
+            ? configs?.find((c) => c.slug === campaign)?.rotulo || campaign
+            : 'Todas'
+
         const descartesCount = contratos.filter((c) => {
           if (!c.dcontrato) return false
           const [cYear, cMonth] = c.dcontrato.split('-')
           if (cYear !== year || cMonth !== monthNum) return false
-          return ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência'].includes(c.status)
+          if (!['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência'].includes(c.status))
+            return false
+          if (campaign !== 'Todas') {
+            if (c.origem !== 'Campanha') return false
+            const campOrigem = c.campanha_origem || 'Aux. Acidente'
+            if (campOrigem !== selectedRotulo && c.campanha_origem !== campaign) return false
+          }
+          return true
         }).length
 
         const protocolosCount = protocolos.filter((p) => {

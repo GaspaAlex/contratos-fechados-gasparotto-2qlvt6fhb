@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -23,20 +24,64 @@ import {
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function SummaryCards({ leads, contratos, month, year, day, startMonth, endMonth }: any) {
-  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const anoLeads = aggregateLeads(filteredLeads, year)
-  const agg = calculateLeadRow(anoLeads)
+export function SummaryCards({
+  leads,
+  contratos,
+  configs,
+  month,
+  year,
+  day,
+  startMonth,
+  endMonth,
+  campaign = 'Todas',
+}: any) {
+  const filteredLeads = useMemo(
+    () => filterLeadsByPeriod(leads, month, day, startMonth, endMonth),
+    [leads, month, day, startMonth, endMonth],
+  )
 
-  const filteredContratos = (contratos || []).filter((c: any) => {
-    const excludedStatuses = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
-    if (excludedStatuses.includes(c.status)) return false
-    if (c.origem !== 'Campanha') return false
-    return isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth)
-  })
+  console.log(
+    '[DashBlocks] campaign prop:',
+    campaign,
+    '| filteredLeads.length:',
+    filteredLeads?.length,
+    '| leads.length:',
+    leads?.length,
+  )
+
+  const anoLeads = useMemo(() => {
+    console.log('[useMemo anoLeads] campaign:', campaign)
+    return aggregateLeads(filteredLeads, year, campaign)
+  }, [filteredLeads, year, campaign])
+
+  const agg = useMemo(() => calculateLeadRow(anoLeads), [anoLeads])
+
+  const selectedCampaignRotulo = useMemo(
+    () =>
+      campaign === 'Todas'
+        ? 'Todas'
+        : configs?.find((c: any) => c.slug === campaign)?.rotulo || 'Todas',
+    [campaign, configs],
+  )
+
+  const filteredContratos = useMemo(() => {
+    return (contratos || []).filter((c: any) => {
+      const excludedStatuses = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
+      if (excludedStatuses.includes(c.status)) return false
+      if (c.origem !== 'Campanha') return false
+      if (selectedCampaignRotulo !== 'Todas') {
+        const campOrigem = c.campanha_origem || 'Aux. Acidente'
+        if (campOrigem !== selectedCampaignRotulo && c.campanha_origem !== campaign) return false
+      }
+      return isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth)
+    })
+  }, [contratos, selectedCampaignRotulo, campaign, month, day, year, startMonth, endMonth])
 
   const total_fechados = filteredContratos.length
-  const fechados_fup = filteredContratos.filter((c: any) => c.fup === true).length
+  const fechados_fup = useMemo(
+    () => filteredContratos.filter((c: any) => c.fup === true).length,
+    [filteredContratos],
+  )
 
   const conv_geral = agg.total_leads > 0 ? total_fechados / agg.total_leads : null
   const conv_qualif = agg.qualificados > 0 ? total_fechados / agg.qualificados : null
@@ -94,7 +139,7 @@ export function SummaryCards({ leads, contratos, month, year, day, startMonth, e
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Total Leads
           </div>
-          <div className="text-3xl font-black mt-1 mb-1">{agg.total_leads || '—'}</div>
+          <div className="text-3xl font-black mt-1 mb-1">{agg.total_leads}</div>
           <div className="text-[11px] text-muted-foreground font-medium">{monthLabel}</div>
         </CardContent>
       </Card>
@@ -103,7 +148,7 @@ export function SummaryCards({ leads, contratos, month, year, day, startMonth, e
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Qualificados
           </div>
-          <div className="text-3xl font-black mt-1 mb-1">{agg.qualificados || '—'}</div>
+          <div className="text-3xl font-black mt-1 mb-1">{agg.qualificados}</div>
           <div className="text-[11px] text-muted-foreground font-medium">leads válidos</div>
         </CardContent>
       </Card>
@@ -113,7 +158,7 @@ export function SummaryCards({ leads, contratos, month, year, day, startMonth, e
             Desqualificados
           </div>
           <div className="text-3xl font-black mt-1 mb-1 text-red-600 dark:text-red-500">
-            {agg.total_desq || '—'}
+            {agg.total_desq}
           </div>
           <div className="text-[11px] text-muted-foreground font-medium">fora do perfil</div>
         </CardContent>
@@ -124,7 +169,7 @@ export function SummaryCards({ leads, contratos, month, year, day, startMonth, e
             Total Fechamentos
           </div>
           <div className="text-3xl font-black mt-1 mb-1 text-amber-600 dark:text-amber-500">
-            {total_fechados || '—'}
+            {total_fechados}
           </div>
           <div className="text-[11px] text-muted-foreground font-medium">direto + FUP</div>
         </CardContent>
@@ -256,15 +301,26 @@ export function CampaignPerformance({
   year,
   startMonth,
   endMonth,
+  campaign = 'Todas',
 }: any) {
-  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const filteredContratos = contratos.filter((c: any) =>
-    isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth),
+  const filteredLeads = useMemo(
+    () => filterLeadsByPeriod(leads, month, day, startMonth, endMonth),
+    [leads, month, day, startMonth, endMonth],
   )
 
-  const activeConfigs = (configs || [])
-    .filter((c: any) => c.ativo)
-    .sort((a: any, b: any) => a.ordem - b.ordem)
+  const filteredContratos = useMemo(() => {
+    return (contratos || []).filter((c: any) =>
+      isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth),
+    )
+  }, [contratos, month, day, year, startMonth, endMonth])
+
+  const activeConfigs = useMemo(() => {
+    return (configs || []).filter((c: any) => c.ativo).sort((a: any, b: any) => a.ordem - b.ordem)
+  }, [configs])
+
+  if (campaign !== 'Todas') {
+    return null
+  }
 
   return (
     <Card className="shadow-sm">
@@ -333,10 +389,56 @@ export function CampaignPerformance({
   )
 }
 
-export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: any) {
-  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const anoLeads = aggregateLeads(filteredLeads, year)
-  const aggAno = calculateLeadRow(anoLeads)
+export function CACCPLTable({
+  leads,
+  contratos,
+  configs,
+  month,
+  day,
+  year,
+  startMonth,
+  endMonth,
+  campaign = 'Todas',
+}: any) {
+  const filteredLeads = useMemo(
+    () => filterLeadsByPeriod(leads, month, day, startMonth, endMonth),
+    [leads, month, day, startMonth, endMonth],
+  )
+  const anoLeads = useMemo(
+    () => aggregateLeads(filteredLeads, year, campaign),
+    [filteredLeads, year, campaign],
+  )
+
+  const selectedCampaignRotulo = useMemo(
+    () =>
+      campaign === 'Todas'
+        ? 'Todas'
+        : configs?.find((c: any) => c.slug === campaign)?.rotulo || 'Todas',
+    [campaign, configs],
+  )
+
+  const getFechamentosCount = useCallback(
+    (mLeads: any[], m: string | null = null, d: string | null = null) => {
+      return (contratos || []).filter((c: any) => {
+        const excludedStatuses = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
+        if (excludedStatuses.includes(c.status)) return false
+        if (c.origem !== 'Campanha') return false
+        if (selectedCampaignRotulo !== 'Todas') {
+          const campOrigem = c.campanha_origem || 'Aux. Acidente'
+          if (campOrigem !== selectedCampaignRotulo && c.campanha_origem !== campaign) return false
+        }
+        if (m && d) return isDateInPeriod(c.dcontrato, m, d, year, '', '')
+        if (m) return isDateInPeriod(c.dcontrato, m, 'Todos', year, '', '')
+        return isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth)
+      }).length
+    },
+    [contratos, selectedCampaignRotulo, campaign, month, day, year, startMonth, endMonth],
+  )
+
+  const aggAno = useMemo(() => calculateLeadRow(anoLeads), [anoLeads])
+  aggAno.total_fechados = getFechamentosCount(filteredLeads)
+  aggAno.cac = aggAno.total_fechados > 0 ? aggAno.investimento / aggAno.total_fechados : null
+
   const displayMonths = getDisplayMonths(month, startMonth, endMonth)
   const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
 
@@ -366,7 +468,9 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: a
               ? displayMonths.map((m) => {
                   const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                   if (mLeads.length === 0) return null
-                  const agg = calculateLeadRow(aggregateLeads(mLeads, year))
+                  const agg = calculateLeadRow(aggregateLeads(mLeads, year, campaign))
+                  agg.total_fechados = getFechamentosCount(mLeads, m)
+                  agg.cac = agg.total_fechados > 0 ? agg.investimento / agg.total_fechados : null
                   const cacSt = getLocalCacStatus(agg.cac)
                   return (
                     <TableRow key={m}>
@@ -501,11 +605,28 @@ export function CACCPLTable({ leads, month, day, year, startMonth, endMonth }: a
   )
 }
 
-export function DisqualificationAnalysis({ leads, month, day, year, startMonth, endMonth }: any) {
-  const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
-  const anoLeads = aggregateLeads(filteredLeads, year)
-  const aggAno = calculateLeadRow(anoLeads)
-  const displayMonths = getDisplayMonths(month, startMonth, endMonth)
+export function DisqualificationAnalysis({
+  leads,
+  month,
+  day,
+  year,
+  startMonth,
+  endMonth,
+  campaign = 'Todas',
+}: any) {
+  const filteredLeads = useMemo(
+    () => filterLeadsByPeriod(leads, month, day, startMonth, endMonth),
+    [leads, month, day, startMonth, endMonth],
+  )
+  const anoLeads = useMemo(
+    () => aggregateLeads(filteredLeads, year, campaign),
+    [filteredLeads, year, campaign],
+  )
+  const aggAno = useMemo(() => calculateLeadRow(anoLeads), [anoLeads])
+  const displayMonths = useMemo(
+    () => getDisplayMonths(month, startMonth, endMonth),
+    [month, startMonth, endMonth],
+  )
   const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
 
   const reasons = [
@@ -582,7 +703,7 @@ export function DisqualificationAnalysis({ leads, month, day, year, startMonth, 
                 ? displayMonths.map((m) => {
                     const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
                     if (mLeads.length === 0) return null
-                    const agg = calculateLeadRow(aggregateLeads(mLeads, year))
+                    const agg = calculateLeadRow(aggregateLeads(mLeads, year, campaign))
                     return (
                       <TableRow key={m}>
                         <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">

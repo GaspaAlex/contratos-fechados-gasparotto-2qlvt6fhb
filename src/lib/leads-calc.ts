@@ -103,22 +103,26 @@ export function filterLeadsByPeriod(
 
 export function calculateLeadRow(raw: any) {
   const v = (k: string) => Number(raw[k] || 0)
-  const google = v('google'),
-    meta_ads = v('meta_ads'),
-    particular = v('particular')
-  const em_qualif = v('em_qualif'),
-    sem_qualidade = v('sem_qualidade')
-  const aposentado = v('aposentado'),
-    contribuinte_carne = v('contribuinte_carne')
-  const outros = v('outros'),
-    sem_interesse = v('sem_interesse'),
-    engano = v('engano'),
-    fechado_direto = v('fechado_direto')
+
+  let google = v('google')
+  let meta_ads = v('meta_ads')
+  let particular = v('particular')
+
+  let em_qualif = v('em_qualif')
+  let sem_qualidade = v('sem_qualidade')
+  let aposentado = v('aposentado')
+  let contribuinte_carne = v('contribuinte_carne')
+  let outros = v('outros')
+  let sem_interesse = v('sem_interesse')
+  let engano = v('engano')
+
+  let total_leads = google + meta_ads
+
+  const fechado_direto = v('fechado_direto')
   const fechado_fup = v('fechado_fup'),
     fup_ativo = v('fup_ativo')
   const investimento = v('investimento')
 
-  const total_leads = google + meta_ads
   const denom_leads = total_leads > 0 ? total_leads : 0
   const total_desq =
     sem_qualidade + aposentado + contribuinte_carne + outros + sem_interesse + engano
@@ -155,66 +159,86 @@ export function calculateLeadRow(raw: any) {
   }
 }
 
-export function aggregateLeads(leads: any[], year?: string | number) {
-  return leads.reduce(
-    (acc, l) => {
-      acc.google += l.google || 0
-      acc.meta_ads += l.meta_ads || 0
-      acc.particular += l.particular || 0
-      acc.em_qualif += l.em_qualif || 0
+export function aggregateLeads(leads: any[], year?: string | number, campaign: string = 'Todas') {
+  const result = leads.reduce(
+    (acc: any, l: any) => {
+      const isSpecificCampaign = campaign && campaign !== 'Todas' && campaign !== 'all'
+      const campaignKey = isSpecificCampaign ? campaign.replace(/^meta_/, '') : campaign
+      if (isSpecificCampaign) {
+        acc.meta_ads += Number(l[`meta_${campaignKey}`]) || 0
+        acc.em_qualif += Number(l[`qualif_${campaignKey}`]) || 0
+        acc.sem_qualidade += Number(l[`sem_qualidade_${campaignKey}`]) || 0
+        acc.aposentado += Number(l[`aposentado_${campaignKey}`]) || 0
+        acc.contribuinte_carne += Number(l[`carne_${campaignKey}`]) || 0
+        acc.outros += Number(l[`outros_${campaignKey}`]) || 0
+        acc.sem_interesse += Number(l[`sem_interesse_${campaignKey}`]) || 0
+        acc.engano += Number(l[`engano_${campaignKey}`]) || 0
 
-      const isModern = isAfterMay2026(l.mes, year || 2026)
-
-      if (isModern) {
-        acc.sem_qualidade +=
-          (l.sem_qualidade_c1 || 0) +
-          (l.sem_qualidade_c2 || 0) +
-          (l.sem_qualidade_c3 || 0) +
-          (l.sem_qualidade_c4 || 0) +
-          (l.sem_qualidade_c5 || 0)
-        acc.aposentado +=
-          (l.aposentado_c1 || 0) +
-          (l.aposentado_c2 || 0) +
-          (l.aposentado_c3 || 0) +
-          (l.aposentado_c4 || 0) +
-          (l.aposentado_c5 || 0)
-        acc.contribuinte_carne +=
-          (l.carne_c1 || 0) +
-          (l.carne_c2 || 0) +
-          (l.carne_c3 || 0) +
-          (l.carne_c4 || 0) +
-          (l.carne_c5 || 0)
-        acc.outros +=
-          (l.outros_c1 || 0) +
-          (l.outros_c2 || 0) +
-          (l.outros_c3 || 0) +
-          (l.outros_c4 || 0) +
-          (l.outros_c5 || 0)
-        acc.sem_interesse +=
-          (l.sem_interesse_c1 || 0) +
-          (l.sem_interesse_c2 || 0) +
-          (l.sem_interesse_c3 || 0) +
-          (l.sem_interesse_c4 || 0) +
-          (l.sem_interesse_c5 || 0)
-        acc.engano +=
-          (l.engano_c1 || 0) +
-          (l.engano_c2 || 0) +
-          (l.engano_c3 || 0) +
-          (l.engano_c4 || 0) +
-          (l.engano_c5 || 0)
+        acc.google += 0
+        acc.particular += 0
+        acc.fechado_direto += 0
+        acc.fechado_fup += 0
+        acc.fup_ativo += 0
+        acc.investimento += Number(l.investimento) || 0
       } else {
-        acc.sem_qualidade += l.sem_qualidade || 0
-        acc.aposentado += l.aposentado || 0
-        acc.contribuinte_carne += l.contribuinte_carne || 0
-        acc.outros += l.outros || 0
-        acc.sem_interesse += l.sem_interesse || 0
-        acc.engano += l.engano || 0
-      }
+        acc.google += l.google || 0
+        acc.meta_ads += l.meta_ads || 0
+        acc.particular += l.particular || 0
+        acc.em_qualif += l.em_qualif || 0
 
-      acc.fechado_direto += l.fechado_direto || 0
-      acc.fechado_fup += l.fechado_fup || 0
-      acc.fup_ativo += l.fup_ativo || 0
-      acc.investimento += l.investimento || 0
+        const isModern = isAfterMay2026(l.mes, year || 2026)
+
+        if (isModern) {
+          acc.sem_qualidade +=
+            (l.sem_qualidade_c1 || 0) +
+            (l.sem_qualidade_c2 || 0) +
+            (l.sem_qualidade_c3 || 0) +
+            (l.sem_qualidade_c4 || 0) +
+            (l.sem_qualidade_c5 || 0)
+          acc.aposentado +=
+            (l.aposentado_c1 || 0) +
+            (l.aposentado_c2 || 0) +
+            (l.aposentado_c3 || 0) +
+            (l.aposentado_c4 || 0) +
+            (l.aposentado_c5 || 0)
+          acc.contribuinte_carne +=
+            (l.carne_c1 || 0) +
+            (l.carne_c2 || 0) +
+            (l.carne_c3 || 0) +
+            (l.carne_c4 || 0) +
+            (l.carne_c5 || 0)
+          acc.outros +=
+            (l.outros_c1 || 0) +
+            (l.outros_c2 || 0) +
+            (l.outros_c3 || 0) +
+            (l.outros_c4 || 0) +
+            (l.outros_c5 || 0)
+          acc.sem_interesse +=
+            (l.sem_interesse_c1 || 0) +
+            (l.sem_interesse_c2 || 0) +
+            (l.sem_interesse_c3 || 0) +
+            (l.sem_interesse_c4 || 0) +
+            (l.sem_interesse_c5 || 0)
+          acc.engano +=
+            (l.engano_c1 || 0) +
+            (l.engano_c2 || 0) +
+            (l.engano_c3 || 0) +
+            (l.engano_c4 || 0) +
+            (l.engano_c5 || 0)
+        } else {
+          acc.sem_qualidade += l.sem_qualidade || 0
+          acc.aposentado += l.aposentado || 0
+          acc.contribuinte_carne += l.contribuinte_carne || 0
+          acc.outros += l.outros || 0
+          acc.sem_interesse += l.sem_interesse || 0
+          acc.engano += l.engano || 0
+        }
+
+        acc.fechado_direto += l.fechado_direto || 0
+        acc.fechado_fup += l.fechado_fup || 0
+        acc.fup_ativo += l.fup_ativo || 0
+        acc.investimento += l.investimento || 0
+      }
       return acc
     },
     {
@@ -232,8 +256,12 @@ export function aggregateLeads(leads: any[], year?: string | number) {
       fechado_fup: 0,
       fup_ativo: 0,
       investimento: 0,
-    },
+    } as any,
   )
+
+  console.log(`[aggregateLeads] campaign: ${campaign} | resultado: ${JSON.stringify(result)}`)
+
+  return result
 }
 
 export const fmtPct = (v: number | null) => (v !== null ? `${(v * 100).toFixed(1)}%` : '—')
