@@ -233,6 +233,7 @@ export default function LeadsCampanha() {
 
       <SummaryCards
         leads={leads}
+        contratos={contratos}
         month={summaryMonth}
         year={year}
         day={summaryDay}

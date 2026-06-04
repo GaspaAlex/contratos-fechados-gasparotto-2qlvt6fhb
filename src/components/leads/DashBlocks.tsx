@@ -23,10 +23,24 @@ import {
 } from '@/lib/leads-calc'
 import { cn } from '@/lib/utils'
 
-export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: any) {
+export function SummaryCards({ leads, contratos, month, year, day, startMonth, endMonth }: any) {
   const filteredLeads = filterLeadsByPeriod(leads, month, day, startMonth, endMonth)
   const anoLeads = aggregateLeads(filteredLeads, year)
   const agg = calculateLeadRow(anoLeads)
+
+  const filteredContratos = (contratos || []).filter((c: any) => {
+    const excludedStatuses = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
+    if (excludedStatuses.includes(c.status)) return false
+    if (c.origem !== 'Campanha') return false
+    return isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth)
+  })
+
+  const total_fechados = filteredContratos.length
+  const fechados_fup = filteredContratos.filter((c: any) => c.fup === true).length
+
+  const conv_geral = agg.total_leads > 0 ? total_fechados / agg.total_leads : null
+  const conv_qualif = agg.qualificados > 0 ? total_fechados / agg.qualificados : null
+  const pct_fech_via_fup = total_fechados > 0 ? fechados_fup / total_fechados : null
 
   const getConvGeralStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
@@ -54,10 +68,10 @@ export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: 
     return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
   }
 
-  const cGeral = getConvGeralStatus(agg.conv_geral)
-  const cQualif = getConvQualifStatus(agg.conv_qualif)
+  const cGeral = getConvGeralStatus(conv_geral)
+  const cQualif = getConvQualifStatus(conv_qualif)
   const cDesq = getDesqStatus(agg.desqual_pct)
-  const cFup = getFupStatus(agg.pct_fech_via_fup)
+  const cFup = getFupStatus(pct_fech_via_fup)
 
   let monthLabel =
     month === 'Todos'
@@ -110,7 +124,7 @@ export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: 
             Total Fechamentos
           </div>
           <div className="text-3xl font-black mt-1 mb-1 text-amber-600 dark:text-amber-500">
-            {agg.total_fechados || '—'}
+            {total_fechados || '—'}
           </div>
           <div className="text-[11px] text-muted-foreground font-medium">direto + FUP</div>
         </CardContent>
@@ -121,8 +135,8 @@ export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: 
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Conv. Geral
           </div>
-          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvGeral(agg.conv_geral))}>
-            {fmtPct(agg.conv_geral)}
+          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvGeral(conv_geral))}>
+            {fmtPct(conv_geral)}
           </div>
           <div className="flex justify-between items-center mt-auto">
             <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 6%</span>
@@ -144,8 +158,8 @@ export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: 
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Conv. Qualif.
           </div>
-          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvQualif(agg.conv_qualif))}>
-            {fmtPct(agg.conv_qualif)}
+          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvQualif(conv_qualif))}>
+            {fmtPct(conv_qualif)}
           </div>
           <div className="flex justify-between items-center mt-auto">
             <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 10%</span>
@@ -196,7 +210,7 @@ export function SummaryCards({ leads, month, year, day, startMonth, endMonth }: 
               cFup ? cFup.color : 'text-amber-600 dark:text-amber-500',
             )}
           >
-            {fmtPct(agg.pct_fech_via_fup)}
+            {fmtPct(pct_fech_via_fup)}
           </div>
           <div className="flex justify-between items-center mt-auto">
             <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 40%</span>
