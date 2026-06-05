@@ -40,17 +40,7 @@ export function SummaryCards({
     [leads, month, day, startMonth, endMonth],
   )
 
-  console.log(
-    '[DashBlocks] campaign prop:',
-    campaign,
-    '| filteredLeads.length:',
-    filteredLeads?.length,
-    '| leads.length:',
-    leads?.length,
-  )
-
   const anoLeads = useMemo(() => {
-    console.log('[useMemo anoLeads] campaign:', campaign)
     return aggregateLeads(filteredLeads, year, campaign)
   }, [filteredLeads, year, campaign])
 
@@ -290,103 +280,6 @@ const getLocalCacStatus = (v: number | null) => {
     color:
       'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/30 dark:border-red-800/50',
   }
-}
-
-export function CampaignPerformance({
-  leads,
-  contratos,
-  configs,
-  month,
-  day,
-  year,
-  startMonth,
-  endMonth,
-  campaign = 'Todas',
-}: any) {
-  const filteredLeads = useMemo(
-    () => filterLeadsByPeriod(leads, month, day, startMonth, endMonth),
-    [leads, month, day, startMonth, endMonth],
-  )
-
-  const filteredContratos = useMemo(() => {
-    return (contratos || []).filter((c: any) =>
-      isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth),
-    )
-  }, [contratos, month, day, year, startMonth, endMonth])
-
-  const activeConfigs = useMemo(() => {
-    return (configs || []).filter((c: any) => c.ativo).sort((a: any, b: any) => a.ordem - b.ordem)
-  }, [configs])
-
-  if (campaign !== 'Todas') {
-    return null
-  }
-
-  return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3 border-b">
-        <CardTitle className="text-base font-bold text-foreground">
-          Performance por Campanha (Meta Ads)
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 overflow-x-auto">
-        <Table className="text-sm min-w-[600px]">
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead>CAMPANHA</TableHead>
-              <TableHead className="text-right">LEADS</TableHead>
-              <TableHead className="text-right">FECHAMENTOS</TableHead>
-              <TableHead className="text-right">CONVERSÃO %</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {activeConfigs.map((c: any) => {
-              const leadsCount = filteredLeads.reduce(
-                (acc: number, l: any) => acc + (Number(l[c.slug]) || 0),
-                0,
-              )
-              const fechamentos = filteredContratos.filter((cont: any) => {
-                const excludedStatuses = [
-                  'Sem Qualidade de Segurado',
-                  'Tem Advogado',
-                  'Litispendência',
-                ]
-                if (excludedStatuses.includes(cont.status)) return false
-                if (cont.origem !== 'Campanha') return false
-                const campOrigem = cont.campanha_origem || 'Aux. Acidente'
-                return campOrigem === c.rotulo
-              }).length
-              const conv = leadsCount > 0 ? fechamentos / leadsCount : null
-              return (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.rotulo}</TableCell>
-                  <TableCell className="text-right">{leadsCount}</TableCell>
-                  <TableCell className="text-right">{fechamentos}</TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-right font-bold',
-                      conv !== null && conv > 0
-                        ? 'text-green-600 dark:text-green-500'
-                        : 'text-muted-foreground',
-                    )}
-                  >
-                    {fmtPct(conv)}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-            {activeConfigs.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                  Nenhuma campanha ativa
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  )
 }
 
 export function CACCPLTable({

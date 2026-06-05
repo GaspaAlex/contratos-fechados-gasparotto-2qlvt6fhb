@@ -21,11 +21,7 @@ import { getCampaignConfigs, CampaignConfig } from '@/services/campaign_config'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { DailyTable } from '@/components/leads/DailyTable'
-import {
-  SummaryCards,
-  DisqualificationAnalysis,
-  CampaignPerformance,
-} from '@/components/leads/DashBlocks'
+import { SummaryCards, DisqualificationAnalysis } from '@/components/leads/DashBlocks'
 import { CACCPLTable } from '@/components/leads/CACCPLTable'
 import { LeadModal } from '@/components/leads/LeadModal'
 import { useToast } from '@/hooks/use-toast'
@@ -114,8 +110,6 @@ export default function LeadsCampanha() {
     }
   }
 
-  console.log('[LeadsCampanha] campaign state:', campaign)
-
   return (
     <div className="animate-fade-in-up pb-10 space-y-6">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/20 border p-3 rounded-lg shadow-sm sticky top-0 z-30 backdrop-blur-md">
@@ -123,7 +117,6 @@ export default function LeadsCampanha() {
           <Select
             value={campaign}
             onValueChange={(val) => {
-              console.log('[LeadsCampanha] onValueChange campanha:', val)
               setCampaign(val)
             }}
           >
@@ -239,20 +232,6 @@ export default function LeadsCampanha() {
         endMonth={endMonth}
         campaign={campaign}
       />
-
-      <div className="mb-6">
-        <CampaignPerformance
-          leads={leads}
-          contratos={contratos}
-          configs={campaignConfigs}
-          month={summaryMonth}
-          day={summaryDay}
-          year={year}
-          startMonth={startMonth}
-          endMonth={endMonth}
-          campaign={campaign}
-        />
-      </div>
 
       <div className="flex flex-col gap-6 w-full">
         <CACCPLTable

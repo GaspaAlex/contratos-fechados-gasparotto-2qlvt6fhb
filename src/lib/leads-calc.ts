@@ -259,8 +259,6 @@ export function aggregateLeads(leads: any[], year?: string | number, campaign: s
     } as any,
   )
 
-  console.log(`[aggregateLeads] campaign: ${campaign} | resultado: ${JSON.stringify(result)}`)
-
   return result
 }
 
