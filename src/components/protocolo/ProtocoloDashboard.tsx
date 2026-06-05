@@ -11,9 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Bar, BarChart, XAxis, YAxis } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-
 export function ProtocoloDashboard({
   data,
   tipo,
@@ -154,8 +151,8 @@ export function ProtocoloDashboard({
   }, [filteredByCalculoData])
 
   return (
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 mb-8">
-      <Card>
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
+      <Card className="md:col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
           <CardDescription>
@@ -182,7 +179,7 @@ export function ProtocoloDashboard({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="md:col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Ticket Médio por Ação</CardTitle>
           <CardDescription>Média de honorários projetados por processo</CardDescription>
@@ -199,7 +196,7 @@ export function ProtocoloDashboard({
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Desempenho da Equipe</CardTitle>
           <CardDescription>
@@ -208,48 +205,36 @@ export function ProtocoloDashboard({
         </CardHeader>
         <CardContent>
           {teamPerformanceData.length > 0 ? (
-            <ChartContainer
-              config={{
-                count: {
-                  label: 'Casos',
-                  color: '#C9922A',
-                },
-              }}
-              className="h-[300px] w-full"
-            >
-              <BarChart
-                data={teamPerformanceData}
-                layout="vertical"
-                margin={{ top: 0, right: 32, bottom: 0, left: 0 }}
-              >
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  width={140}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: 'currentColor' }}
-                />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Bar
-                  dataKey="count"
-                  fill="#C9922A"
-                  radius={[0, 4, 4, 0]}
-                  barSize={32}
-                  label={{ position: 'right', fill: 'currentColor', fontSize: 12 }}
-                />
-              </BarChart>
-            </ChartContainer>
+            <div className="flex flex-col">
+              {teamPerformanceData.map((item, idx) => {
+                const colors = ['#5A9FD4', '#C9922A', '#52B86E', '#B07FD4', '#E84040']
+                const color = colors[idx % colors.length]
+                return (
+                  <div
+                    key={item.name}
+                    className="flex items-center gap-2 py-3 border-b border-border last:border-0 first:pt-0 last:pb-0"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="font-medium text-sm truncate">{item.name}</span>
+                    <span className="ml-auto text-sm text-muted-foreground shrink-0">
+                      {item.count} {item.count === 1 ? 'caso' : 'casos'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
           ) : (
-            <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-[120px] items-center justify-center text-sm text-muted-foreground">
               Nenhum dado encontrado.
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-3">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Projeção de Ações e Honorários</CardTitle>
           <CardDescription>
