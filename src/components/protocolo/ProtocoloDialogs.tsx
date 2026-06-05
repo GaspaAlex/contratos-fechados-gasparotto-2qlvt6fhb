@@ -42,7 +42,6 @@ const baseSchema = z.object({
   dcontrato: z.string().optional(),
   dcalculo: z.string().optional(),
   dprotocolo: z.string().optional(),
-  prazo: z.coerce.number().min(1).default(15),
   nautos: z.string().optional(),
   valor: z.coerce.number().optional(),
   decisao: z.string().default('Aguardando'),
@@ -109,7 +108,6 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       dcontrato: '',
       dcalculo: '',
       dprotocolo: '',
-      prazo: 15,
       nautos: '',
       valor: undefined as unknown as number,
       decisao: 'Aguardando',
@@ -126,8 +124,9 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
     if (open) {
       setDuplicateWarning(null)
       if (item) {
+        const { prazo: _prazo, ...restItem } = item
         form.reset({
-          ...item,
+          ...restItem,
           valor: item.valor === 0 ? undefined : item.valor,
           dcontrato: item.dcontrato ? item.dcontrato.substring(0, 10) : '',
           dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
@@ -149,7 +148,6 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           dcontrato: '',
           dcalculo: '',
           dprotocolo: '',
-          prazo: 15,
           nautos: '',
           valor: undefined as unknown as number,
           decisao: 'Aguardando',
@@ -383,19 +381,6 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                     <FormLabel>Data do Protocolo</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="prazo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prazo (dias úteis)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

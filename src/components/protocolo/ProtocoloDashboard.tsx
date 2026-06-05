@@ -155,9 +155,6 @@ export function ProtocoloDashboard({
       <Card className="md:col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
-          <CardDescription>
-            Casos com status Protocolado Judicial, Req. Adm. ou Prov. Inicial · R. Docs excluído
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-8 mt-4">
@@ -187,7 +184,6 @@ export function ProtocoloDashboard({
         <CardContent>
           <div className="flex gap-8 mt-4">
             <div>
-              <p className="text-sm font-semibold text-muted-foreground">TICKET MÉDIO</p>
               <p className="text-4xl font-bold text-[#C9922A]">
                 {totalAcoes > 0 ? formatCurrency(projHonorarios / totalAcoes) : '—'}
               </p>
@@ -207,21 +203,33 @@ export function ProtocoloDashboard({
           {teamPerformanceData.length > 0 ? (
             <div className="flex flex-col">
               {teamPerformanceData.map((item, idx) => {
+                const COMISSAO_POR_CASO = 15
                 const colors = ['#5A9FD4', '#C9922A', '#52B86E', '#B07FD4', '#E84040']
                 const color = colors[idx % colors.length]
+                const comissaoTotal = item.count * COMISSAO_POR_CASO
                 return (
                   <div
                     key={item.name}
-                    className="flex items-center gap-2 py-3 border-b border-border last:border-0 first:pt-0 last:pb-0"
+                    className="flex items-center justify-between gap-2 py-2 border-b border-border last:border-0 first:pt-0 last:pb-0"
                   >
-                    <div
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="font-medium text-sm truncate">{item.name}</span>
-                    <span className="ml-auto text-sm text-muted-foreground shrink-0">
-                      {item.count} {item.count === 1 ? 'caso' : 'casos'}
-                    </span>
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="font-medium text-sm truncate">{item.name}</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground shrink-0">
+                      <span className="font-bold text-foreground">{item.count}</span>{' '}
+                      {item.count === 1 ? 'caso' : 'casos'} (
+                      <span className="font-semibold text-[#52B86E]">
+                        {comissaoTotal.toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </span>
+                      )
+                    </div>
                   </div>
                 )
               })}
@@ -237,9 +245,6 @@ export function ProtocoloDashboard({
       <Card className="md:col-span-3">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-bold">Projeção de Ações e Honorários</CardTitle>
-          <CardDescription>
-            Protocolado Judicial, Req. Adm. + Prov. Inicial · R. Docs excluído
-          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
