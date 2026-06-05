@@ -32,6 +32,7 @@ import { formatBalance } from '@/lib/ponto-utils'
 import { CartaoHeader } from '@/components/gestao/CartaoHeader'
 import { EditRegistroModal } from '@/components/gestao/EditRegistroModal'
 import { cn } from '@/lib/utils'
+import pb from '@/lib/pocketbase/client'
 
 export default function CartaoPonto() {
   const { funcionarioId } = useParams()
@@ -56,8 +57,23 @@ export default function CartaoPonto() {
           getRegistrosMes(funcionarioId, month, year),
           getOrCreateSaldoMensal(funcionarioId, month, year),
         ])
+
+        let saldoAnterior = 0
+        try {
+          const prevMonth = month === 1 ? 12 : month - 1
+          const prevYear = month === 1 ? year - 1 : year
+          const prevSaldo = await pb
+            .collection('saldos_mensais')
+            .getFirstListItem(
+              `funcionario_id = "${funcionarioId}" && mes = ${prevMonth} && ano = ${prevYear}`,
+            )
+          saldoAnterior = prevSaldo.saldo_total || 0
+        } catch (_) {
+          // Se não houver registro do mês anterior, assume 0
+        }
+
         setRegistros(regs)
-        setSaldoMensal(saldo)
+        setSaldoMensal({ ...saldo, saldo_anterior: saldoAnterior })
       } catch (err) {
         toast({ title: 'Erro ao carregar dados', variant: 'destructive' })
       } finally {
