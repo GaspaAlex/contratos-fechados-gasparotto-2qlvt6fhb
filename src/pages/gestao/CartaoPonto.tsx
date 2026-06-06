@@ -26,13 +26,13 @@ import {
   getOrCreateSaldoMensal,
   upsertRegistro,
   updateSaldoMensal,
+  getPreviousMonthBalance,
 } from '@/services/ponto'
 import { formatMinutesToHHMM } from '@/lib/formatters'
 import { formatBalance } from '@/lib/ponto-utils'
 import { CartaoHeader } from '@/components/gestao/CartaoHeader'
 import { EditRegistroModal } from '@/components/gestao/EditRegistroModal'
 import { cn } from '@/lib/utils'
-import pb from '@/lib/pocketbase/client'
 
 export default function CartaoPonto() {
   const { funcionarioId } = useParams()
@@ -42,6 +42,7 @@ export default function CartaoPonto() {
   const [funcionario, setFuncionario] = useState<any>(null)
   const [registros, setRegistros] = useState<any[]>([])
   const [saldoMensal, setSaldoMensal] = useState<any>(null)
+  const [saldoAnteriorDinamico, setSaldoAnteriorDinamico] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(true)
   const [editingRow, setEditingRow] = useState<any>(null)
   const [exportModalOpen, setExportModalOpen] = useState(false)
@@ -53,27 +54,14 @@ export default function CartaoPonto() {
       try {
         const func = await getFuncionario(funcionarioId)
         setFuncionario(func)
-        const [regs, saldo] = await Promise.all([
+        const [regs, saldo, prevBalance] = await Promise.all([
           getRegistrosMes(funcionarioId, month, year),
           getOrCreateSaldoMensal(funcionarioId, month, year),
+          getPreviousMonthBalance(funcionarioId, month, year),
         ])
-
-        let saldoAnterior = 0
-        try {
-          const prevMonth = month === 1 ? 12 : month - 1
-          const prevYear = month === 1 ? year - 1 : year
-          const prevSaldo = await pb
-            .collection('saldos_mensais')
-            .getFirstListItem(
-              `funcionario_id = "${funcionarioId}" && mes = ${prevMonth} && ano = ${prevYear}`,
-            )
-          saldoAnterior = prevSaldo.saldo_total || 0
-        } catch (_) {
-          // Se não houver registro do mês anterior, assume 0
-        }
-
         setRegistros(regs)
-        setSaldoMensal({ ...saldo, saldo_anterior: saldoAnterior })
+        setSaldoMensal(saldo)
+        setSaldoAnteriorDinamico(prevBalance)
       } catch (err) {
         toast({ title: 'Erro ao carregar dados', variant: 'destructive' })
       } finally {
@@ -100,8 +88,9 @@ export default function CartaoPonto() {
 
       const isPast = compareDate < today
       const isTodayOrFuture = compareDate >= today
+      const isToday = compareDate.getTime() === today.getTime()
 
-      if (rec) return { date: d, isReal: true, isTodayOrFuture, isPast, ...rec }
+      if (rec) return { date: d, isReal: true, isTodayOrFuture, isPast, isToday, ...rec }
 
       if (isTodayOrFuture) {
         return {
@@ -109,6 +98,7 @@ export default function CartaoPonto() {
           isReal: false,
           isTodayOrFuture,
           isPast,
+          isToday,
           tipo_dia: 'normal',
           horas_trabalhadas: 0,
           saldo_dia: 0,
@@ -121,6 +111,7 @@ export default function CartaoPonto() {
         isReal: false,
         isTodayOrFuture,
         isPast,
+        isToday,
         tipo_dia: 'falta',
         horas_trabalhadas: 0,
         saldo_dia: -cargaMins,
@@ -131,19 +122,43 @@ export default function CartaoPonto() {
 
   const monthlyTotals = useMemo(() => {
     const hTrab = tableRows.reduce((acc, row) => acc + (row.horas_trabalhadas || 0), 0)
-    const saldoMes = tableRows.reduce((acc, row) => acc + (row.saldo_dia || 0), 0)
+    const saldoMes = tableRows.reduce((acc, row) => {
+      if (row.isToday && !row.saida2) {
+        return acc
+      }
+      return acc + (row.saldo_dia || 0)
+    }, 0)
     return { hTrab, saldoMes }
   }, [tableRows])
 
+  const saldoAcumulado = useMemo(() => {
+    return saldoAnteriorDinamico + (monthlyTotals.saldoMes || 0)
+  }, [saldoAnteriorDinamico, monthlyTotals.saldoMes])
+
   useEffect(() => {
-    if (saldoMensal && !isLoading && saldoMensal.saldo_mes !== monthlyTotals.saldoMes) {
-      const novoTotal = (saldoMensal.saldo_anterior || 0) + monthlyTotals.saldoMes
+    if (
+      saldoMensal &&
+      !isLoading &&
+      saldoMensal.mes === month &&
+      saldoMensal.ano === year &&
+      (saldoMensal.saldo_mes !== monthlyTotals.saldoMes ||
+        saldoMensal.saldo_anterior !== saldoAnteriorDinamico)
+    ) {
       updateSaldoMensal(saldoMensal.id, {
         saldo_mes: monthlyTotals.saldoMes,
-        saldo_total: novoTotal,
-      }).then((updated) => setSaldoMensal(updated))
+        saldo_total: saldoAcumulado,
+        saldo_anterior: saldoAnteriorDinamico,
+      }).then((updated) => setSaldoMensal({ ...updated, saldo_anterior: saldoAnteriorDinamico }))
     }
-  }, [monthlyTotals.saldoMes, saldoMensal, isLoading])
+  }, [
+    monthlyTotals.saldoMes,
+    saldoMensal,
+    isLoading,
+    saldoAcumulado,
+    saldoAnteriorDinamico,
+    month,
+    year,
+  ])
 
   const handleSaveRegistro = async (data: any) => {
     try {
@@ -224,12 +239,12 @@ export default function CartaoPonto() {
             </tr>
             <tr>
               <td colspan="7"><strong>Saldo Anterior</strong></td>
-              <td><strong>${formatBalance(saldoMensal?.saldo_anterior, formatMinutesToHHMM)}</strong></td>
+              <td><strong>${formatBalance(saldoAnteriorDinamico, formatMinutesToHHMM)}</strong></td>
               <td></td>
             </tr>
             <tr>
               <td colspan="7"><strong>Saldo Total Acumulado</strong></td>
-              <td><strong>${formatBalance(saldoMensal?.saldo_total, formatMinutesToHHMM)}</strong></td>
+              <td><strong>${formatBalance(saldoAcumulado, formatMinutesToHHMM)}</strong></td>
               <td></td>
             </tr>
           </tfoot>
@@ -332,12 +347,12 @@ export default function CartaoPonto() {
                   <TableCell
                     className={cn(
                       'font-bold',
-                      saldoMensal?.saldo_anterior >= 0
+                      saldoAnteriorDinamico >= 0
                         ? 'text-green-600 dark:text-green-500'
                         : 'text-red-600 dark:text-red-500',
                     )}
                   >
-                    {formatBalance(saldoMensal?.saldo_anterior, formatMinutesToHHMM)}
+                    {formatBalance(saldoAnteriorDinamico, formatMinutesToHHMM)}
                   </TableCell>
                   <TableCell colSpan={2} className="text-xs text-muted-foreground opacity-80">
                     Do mês anterior
@@ -424,12 +439,12 @@ export default function CartaoPonto() {
               <p
                 className={cn(
                   'text-2xl font-bold',
-                  saldoMensal?.saldo_anterior >= 0
+                  saldoAnteriorDinamico >= 0
                     ? 'text-green-600 dark:text-green-500'
                     : 'text-red-600 dark:text-red-500',
                 )}
               >
-                {formatBalance(saldoMensal?.saldo_anterior, formatMinutesToHHMM)}
+                {formatBalance(saldoAnteriorDinamico, formatMinutesToHHMM)}
               </p>
             </CardContent>
           </Card>
@@ -441,12 +456,12 @@ export default function CartaoPonto() {
               <p
                 className={cn(
                   'text-3xl font-black print:text-black',
-                  saldoMensal?.saldo_total >= 0
+                  saldoAcumulado >= 0
                     ? 'text-green-600 dark:text-green-500'
                     : 'text-red-600 dark:text-red-500',
                 )}
               >
-                {formatBalance(saldoMensal?.saldo_total, formatMinutesToHHMM)}
+                {formatBalance(saldoAcumulado, formatMinutesToHHMM)}
               </p>
             </CardContent>
           </Card>

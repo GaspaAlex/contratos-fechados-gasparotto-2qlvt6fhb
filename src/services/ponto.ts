@@ -53,9 +53,92 @@ export const getSaldoMensal = async (funcionarioId: string, mes: number, ano: nu
   }
 }
 
+export const getPreviousMonthBalance = async (
+  funcionarioId: string,
+  currentMonth: number,
+  currentYear: number,
+) => {
+  let prevMonth = currentMonth - 1
+  let prevYear = currentYear
+  if (prevMonth === 0) {
+    prevMonth = 12
+    prevYear--
+  }
+
+  try {
+    const prevRecord = await pb
+      .collection('saldos_mensais')
+      .getFirstListItem(
+        `funcionario_id = '${funcionarioId}' && mes = ${prevMonth} && ano = ${prevYear}`,
+      )
+    return prevRecord.saldo_total || 0
+  } catch {
+    return 0
+  }
+}
+
 export const createSaldoMensal = async (data: any) => pb.collection('saldos_mensais').create(data)
-export const updateSaldoMensal = async (id: string, data: any) =>
-  pb.collection('saldos_mensais').update(id, data)
+export const recalculateSubsequentMonths = async (
+  funcionarioId: string,
+  fromMonth: number,
+  fromYear: number,
+  newSaldoTotal: number,
+) => {
+  let currentMonth = fromMonth + 1
+  let currentYear = fromYear
+  if (currentMonth > 12) {
+    currentMonth = 1
+    currentYear++
+  }
+
+  let currentSaldoAnterior = newSaldoTotal
+
+  while (true) {
+    try {
+      const nextMonthRecord = await pb
+        .collection('saldos_mensais')
+        .getFirstListItem(
+          `funcionario_id = '${funcionarioId}' && mes = ${currentMonth} && ano = ${currentYear}`,
+        )
+
+      const newSaldoTotalNext = currentSaldoAnterior + nextMonthRecord.saldo_mes
+
+      if (
+        nextMonthRecord.saldo_anterior !== currentSaldoAnterior ||
+        nextMonthRecord.saldo_total !== newSaldoTotalNext
+      ) {
+        await pb.collection('saldos_mensais').update(nextMonthRecord.id, {
+          saldo_anterior: currentSaldoAnterior,
+          saldo_total: newSaldoTotalNext,
+        })
+        currentSaldoAnterior = newSaldoTotalNext
+      } else {
+        break
+      }
+
+      currentMonth++
+      if (currentMonth > 12) {
+        currentMonth = 1
+        currentYear++
+      }
+    } catch {
+      break
+    }
+  }
+}
+
+export const updateSaldoMensal = async (id: string, data: any) => {
+  const updated = await pb.collection('saldos_mensais').update(id, data)
+  if (data.saldo_total !== undefined) {
+    await recalculateSubsequentMonths(
+      updated.funcionario_id,
+      updated.mes,
+      updated.ano,
+      updated.saldo_total,
+    )
+  }
+  return updated
+}
 
 export const ensureTodosSaldosMes = async (mes: number, ano: number) => {
   const now = new Date()
@@ -84,22 +167,11 @@ export const ensureTodosSaldosMes = async (mes: number, ano: number) => {
 }
 
 export const getOrCreateSaldoMensal = async (funcionarioId: string, mes: number, ano: number) => {
-  const current = await getSaldoMensal(funcionarioId, mes, ano)
-  if (current) return current
+  const saldo_anterior = await getPreviousMonthBalance(funcionarioId, mes, ano)
 
-  let saldo_anterior = 0
-  try {
-    const mostRecent = await pb
-      .collection('saldos_mensais')
-      .getFirstListItem(
-        `funcionario_id = '${funcionarioId}' && (ano < ${ano} || (ano = ${ano} && mes < ${mes}))`,
-        { sort: '-ano,-mes' },
-      )
-    if (mostRecent) {
-      saldo_anterior = mostRecent.saldo_total
-    }
-  } catch {
-    // No previous record found
+  const current = await getSaldoMensal(funcionarioId, mes, ano)
+  if (current) {
+    return { ...current, saldo_anterior }
   }
 
   return await createSaldoMensal({

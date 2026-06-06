@@ -165,6 +165,13 @@ export function ProtocoloTable({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
+        <p>
+          Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial: {cProv} | R. Docs:{' '}
+          {cDocs} | Total: {filtered.length}
+        </p>
+      </div>
+
       {/* Decisions Mini-Dashboard */}
       <Card className="border shadow-sm">
         <CardContent className="p-4">
