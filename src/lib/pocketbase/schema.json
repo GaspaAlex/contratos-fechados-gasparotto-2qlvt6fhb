@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T19:31:51.420Z",
+  "generatedAt": "2026-06-10T19:55:55.277Z",
   "collections": [
     {
       "name": "users",
@@ -814,6 +814,306 @@
         },
         {
           "name": "engano_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "s_acidente_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "serv_pub_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rec_aux_doen_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_decadencial_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fora_prazo_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_pensao_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "queria_rvt_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "possui_adv_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recebe_beneficio_c1",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "s_acidente_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "serv_pub_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rec_aux_doen_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_decadencial_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fora_prazo_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_pensao_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "queria_rvt_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "possui_adv_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recebe_beneficio_c2",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "s_acidente_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "serv_pub_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rec_aux_doen_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_decadencial_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fora_prazo_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_pensao_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "queria_rvt_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "possui_adv_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recebe_beneficio_c3",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "s_acidente_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "serv_pub_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rec_aux_doen_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_decadencial_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fora_prazo_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_pensao_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "queria_rvt_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "possui_adv_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recebe_beneficio_c4",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "s_acidente_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "serv_pub_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rec_aux_doen_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_decadencial_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fora_prazo_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_pensao_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisao_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "queria_rvt_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "possui_adv_c5",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recebe_beneficio_c5",
           "type": "number",
           "required": false,
           "system": false

@@ -31,6 +31,25 @@ export default function Login() {
       className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden"
       style={{ backgroundColor: '#0D0F0C' }}
     >
+      <style>{`
+        .login-input {
+          background: rgba(255,255,255,0.05) !important;
+          border: 0.5px solid rgba(201,146,42,0.25) !important;
+          color: #F5E9D0 !important;
+          -webkit-text-fill-color: #F5E9D0 !important;
+        }
+        .login-input:-webkit-autofill,
+        .login-input:-webkit-autofill:hover,
+        .login-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0px 1000px #1a1508 inset !important;
+          -webkit-text-fill-color: #F5E9D0 !important;
+          border: 0.5px solid rgba(201,146,42,0.25) !important;
+        }
+        .login-input:focus {
+          border: 0.5px solid #C9922A !important;
+          outline: none !important;
+        }
+      `}</style>
       {/* Glow effect */}
       <div
         className="absolute top-0 left-0 w-full max-w-[600px] h-[600px] pointer-events-none -translate-x-1/4 -translate-y-1/4"
@@ -81,14 +100,7 @@ export default function Login() {
                 setEmail(e.target.value)
                 setError(false)
               }}
-              className="w-full rounded-[8px] px-[16px] py-[12px] text-[14px] transition-colors focus:outline-none placeholder:text-[#F5E9D0]/30"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '0.5px solid rgba(201,146,42,0.25)',
-                color: '#F5E9D0',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#C9922A')}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(201,146,42,0.25)')}
+              className="login-input w-full rounded-[8px] px-[12px] py-[10px] text-[13px]"
               required
             />
           </div>
@@ -107,14 +119,7 @@ export default function Login() {
                 setPassword(e.target.value)
                 setError(false)
               }}
-              className="w-full rounded-[8px] px-[16px] py-[12px] text-[14px] transition-colors focus:outline-none placeholder:text-[#F5E9D0]/30"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '0.5px solid rgba(201,146,42,0.25)',
-                color: '#F5E9D0',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#C9922A')}
-              onBlur={(e) => (e.target.style.borderColor = 'rgba(201,146,42,0.25)')}
+              className="login-input w-full rounded-[8px] px-[12px] py-[10px] text-[13px]"
               required
             />
           </div>
