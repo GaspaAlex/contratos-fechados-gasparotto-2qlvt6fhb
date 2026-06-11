@@ -274,86 +274,8 @@ export default function LeadsRegistro() {
         </button>
       </div>
 
-      <div className="flex-1 bg-white rounded-xl border border-border/50 shadow-sm flex flex-col overflow-hidden">
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center min-h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : leads.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center p-8 animate-fade-in-up duration-500 min-h-[400px]">
-            <div className="text-center max-w-sm">
-              <div className="w-16 h-16 bg-[#FAF8F2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#C9922A]/20">
-                <ClipboardList className="w-8 h-8 text-[#C9922A]" />
-              </div>
-              <h3 className="text-lg font-bold text-foreground mb-2 font-sans">
-                Nenhum lead encontrado
-              </h3>
-              <p className="text-muted-foreground font-sans text-sm">
-                Nenhum lead registrado neste período.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-auto flex-1">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-[#FAF8F2]/50 hover:bg-[#FAF8F2]/50">
-                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
-                    Data
-                  </TableHead>
-                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
-                    Telefone
-                  </TableHead>
-                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
-                    Responsável
-                  </TableHead>
-                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
-                    Classificação
-                  </TableHead>
-                  <TableHead className="font-sans font-semibold text-foreground w-[80px] text-right whitespace-nowrap">
-                    Ações
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leads.map((lead) => {
-                  const badge = getBadgeProps(lead.classificacao)
-                  return (
-                    <TableRow key={lead.id} className="hover:bg-muted/30">
-                      <TableCell className="font-sans py-3">
-                        {lead.data.split(' ')[0].split('-').reverse().join('/')}
-                      </TableCell>
-                      <TableCell className="font-sans py-3">{lead.telefone}</TableCell>
-                      <TableCell className="font-sans py-3">{lead.responsavel}</TableCell>
-                      <TableCell className="font-sans py-3">
-                        <span
-                          className="px-2.5 py-1 text-[11px] uppercase tracking-wider font-bold rounded-md text-white inline-block shadow-sm"
-                          style={{ backgroundColor: badge.bg }}
-                        >
-                          {badge.label}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right py-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-                          onClick={() => setLeadToDelete(lead.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-
       {!isLoading && summaryData.length > 0 && (
-        <div className="mt-8 bg-[#FAF8F2] rounded-xl border border-[#C9922A]/20 shadow-sm flex flex-col overflow-hidden">
+        <div className="mb-6 bg-[#FAF8F2] rounded-xl border border-[#C9922A]/20 shadow-sm flex flex-col overflow-hidden">
           <div className="p-4 border-b border-[#C9922A]/20">
             <h2 className="text-xl font-bold text-foreground font-sans">Resumo por Data</h2>
           </div>
@@ -524,6 +446,84 @@ export default function LeadsRegistro() {
           </div>
         </div>
       )}
+
+      <div className="flex-1 bg-white rounded-xl border border-border/50 shadow-sm flex flex-col overflow-hidden">
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center p-8 animate-fade-in-up duration-500 min-h-[400px]">
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 bg-[#FAF8F2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#C9922A]/20">
+                <ClipboardList className="w-8 h-8 text-[#C9922A]" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2 font-sans">
+                Nenhum lead encontrado
+              </h3>
+              <p className="text-muted-foreground font-sans text-sm">
+                Nenhum lead registrado neste período.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-auto flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[#FAF8F2]/50 hover:bg-[#FAF8F2]/50">
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Data
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Telefone
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Responsável
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Classificação
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground w-[80px] text-right whitespace-nowrap">
+                    Ações
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => {
+                  const badge = getBadgeProps(lead.classificacao)
+                  return (
+                    <TableRow key={lead.id} className="hover:bg-muted/30">
+                      <TableCell className="font-sans py-3">
+                        {lead.data.split(' ')[0].split('-').reverse().join('/')}
+                      </TableCell>
+                      <TableCell className="font-sans py-3">{lead.telefone}</TableCell>
+                      <TableCell className="font-sans py-3">{lead.responsavel}</TableCell>
+                      <TableCell className="font-sans py-3">
+                        <span
+                          className="px-2.5 py-1 text-[11px] uppercase tracking-wider font-bold rounded-md text-white inline-block shadow-sm"
+                          style={{ backgroundColor: badge.bg }}
+                        >
+                          {badge.label}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right py-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                          onClick={() => setLeadToDelete(lead.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       <LeadsRegistroModal
         open={modalOpen}

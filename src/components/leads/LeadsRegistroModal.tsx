@@ -76,6 +76,7 @@ interface LeadsRegistroModalProps {
 export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRegistroModalProps) {
   const [loading, setLoading] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
+  const [duplicateWarning, setDuplicateWarning] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -96,6 +97,7 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
         classificacao: 'none',
       })
       setDateOpen(false)
+      setDuplicateWarning(false)
     }
   }, [open, form])
 
@@ -116,17 +118,19 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
     return `(${truncated.slice(0, 2)}) ${truncated.slice(2, 7)}-${truncated.slice(7)}`
   }
 
-  const onSubmit = async (values: FormValues) => {
+  const handleSave = async (values: FormValues, forceSave = false) => {
     setLoading(true)
     try {
-      const duplicates = await pb.collection('leads_registro').getFullList({
-        filter: `telefone = '${values.telefone}' && campanha = '${campanha}'`,
-      })
+      if (!forceSave) {
+        const duplicates = await pb.collection('leads_registro').getFullList({
+          filter: `telefone = '${values.telefone}' && campanha = '${campanha}'`,
+        })
 
-      if (duplicates.length > 0) {
-        toast.error('Este telefone já foi registrado nesta campanha.')
-        setLoading(false)
-        return
+        if (duplicates.length > 0) {
+          setDuplicateWarning(true)
+          setLoading(false)
+          return
+        }
       }
 
       const d = values.data
@@ -147,6 +151,8 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
       setLoading(false)
     }
   }
+
+  const onSubmit = (values: FormValues) => handleSave(values, false)
 
   const classificacaoOptions =
     campanha === 'DER' ? DER_OPTIONS : campanha === 'AUX. ACIDENTE' ? AUX_ACIDENTE_OPTIONS : []
@@ -275,18 +281,48 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
               )}
             />
 
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-[#C9922A] hover:bg-[#b07d22] text-white"
-              >
-                {loading ? 'Salvando...' : 'Salvar'}
-              </Button>
-            </DialogFooter>
+            {duplicateWarning && (
+              <div className="bg-amber-50 border border-amber-500 p-4 rounded-md mt-4 flex flex-col gap-3">
+                <p className="text-sm text-amber-700 font-semibold">
+                  Já existe um lead cadastrado com este telefone nesta campanha. Deseja continuar
+                  mesmo assim?
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDuplicateWarning(false)}
+                    className="border-amber-500 text-amber-700 hover:bg-amber-100 h-9"
+                    disabled={loading}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleSave(form.getValues(), true)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white h-9"
+                    disabled={loading}
+                  >
+                    {loading ? 'Salvando...' : 'Registrar mesmo assim'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {!duplicateWarning && (
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#C9922A] hover:bg-[#b07d22] text-white"
+                >
+                  {loading ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </DialogFooter>
+            )}
           </form>
         </Form>
       </DialogContent>
