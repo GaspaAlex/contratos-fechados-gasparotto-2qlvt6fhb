@@ -710,7 +710,7 @@ migrate(
       record.set('data', item.data + ' 00:00:00.000Z')
       record.set('campanha', item.campanha)
       record.set('telefone', item.telefone)
-      record.set('responsavel', item.responsavel || '')
+      record.set('responsavel', item.responsavel || 'Não Informado')
       record.set('classificacao', item.classificacao || '')
 
       app.save(record)
