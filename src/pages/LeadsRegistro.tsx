@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, ClipboardList } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Plus, ClipboardList, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { LeadsRegistroModal } from '@/components/leads/LeadsRegistroModal'
@@ -10,19 +10,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { format } from 'date-fns'
+import { format, endOfMonth, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import pb from '@/lib/pocketbase/client'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export default function LeadsRegistro() {
   const [activeTab, setActiveTab] = useState<'DER' | 'AUX. ACIDENTE'>('DER')
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(() => format(new Date(), 'yyyy-MM'))
 
+  const [leads, setLeads] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date()
     d.setMonth(d.getMonth() - i)
     return format(d, 'yyyy-MM')
   })
+
+  const fetchLeads = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const startStr = `${selectedMonth}-01`
+      const endMonthDate = endOfMonth(parseISO(startStr))
+      const endStr = format(endMonthDate, 'yyyy-MM-dd')
+
+      const filter = `campanha = '${activeTab}' && data >= '${startStr} 00:00:00' && data <= '${endStr} 23:59:59'`
+
+      const records = await pb.collection('leads_registro').getFullList({
+        filter,
+        sort: '+data',
+      })
+
+      setLeads(records)
+    } catch (error) {
+      console.error('Error fetching leads:', error)
+      toast.error('Erro ao buscar leads')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [activeTab, selectedMonth])
+
+  useEffect(() => {
+    fetchLeads()
+  }, [fetchLeads])
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja remover este lead?')) return
+    try {
+      await pb.collection('leads_registro').delete(id)
+      toast.success('Lead removido')
+      fetchLeads()
+    } catch (error) {
+      console.error('Error deleting lead:', error)
+      toast.error('Erro ao remover lead')
+    }
+  }
+
+  const getBadgeProps = (classificacao?: string) => {
+    if (!classificacao) return { label: 'Qualificando', bg: '#5A9FD4' }
+    if (classificacao === 'Qualificado') return { label: 'Qualificado', bg: '#52B86E' }
+    if (classificacao === 'Contrato Fechado') return { label: 'Contrato Fechado', bg: '#C9922A' }
+    return { label: classificacao, bg: '#E84040' }
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#FAF8F2] min-h-[calc(100vh-8rem)] rounded-xl overflow-hidden p-6 shadow-sm">
@@ -89,18 +147,82 @@ export default function LeadsRegistro() {
         </button>
       </div>
 
-      <div className="flex-1 bg-white rounded-xl border border-border/50 shadow-sm p-8 flex items-center justify-center animate-fade-in-up duration-500">
-        <div className="text-center max-w-sm">
-          <div className="w-16 h-16 bg-[#FAF8F2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#C9922A]/20">
-            <ClipboardList className="w-8 h-8 text-[#C9922A]" />
+      <div className="flex-1 bg-white rounded-xl border border-border/50 shadow-sm flex flex-col overflow-hidden">
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-bold text-foreground mb-2 font-sans">Em construção</h3>
-          <p className="text-muted-foreground font-sans">
-            A listagem de registros da aba{' '}
-            <span className="font-semibold text-foreground">{activeTab}</span> estará disponível em
-            breve.
-          </p>
-        </div>
+        ) : leads.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center p-8 animate-fade-in-up duration-500 min-h-[400px]">
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 bg-[#FAF8F2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#C9922A]/20">
+                <ClipboardList className="w-8 h-8 text-[#C9922A]" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2 font-sans">
+                Nenhum lead encontrado
+              </h3>
+              <p className="text-muted-foreground font-sans text-sm">
+                Nenhum lead registrado neste período.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-auto flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[#FAF8F2]/50 hover:bg-[#FAF8F2]/50">
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Data
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Telefone
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Responsável
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground whitespace-nowrap">
+                    Classificação
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-foreground w-[80px] text-right whitespace-nowrap">
+                    Ações
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => {
+                  const badge = getBadgeProps(lead.classificacao)
+                  return (
+                    <TableRow key={lead.id} className="hover:bg-muted/30">
+                      <TableCell className="font-sans py-3">
+                        {format(parseISO(lead.data), 'dd/MM/yyyy')}
+                      </TableCell>
+                      <TableCell className="font-sans py-3">{lead.telefone}</TableCell>
+                      <TableCell className="font-sans py-3">{lead.responsavel}</TableCell>
+                      <TableCell className="font-sans py-3">
+                        <span
+                          className="px-2.5 py-1 text-[11px] uppercase tracking-wider font-bold rounded-md text-white inline-block shadow-sm"
+                          style={{ backgroundColor: badge.bg }}
+                        >
+                          {badge.label}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right py-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                          onClick={() => handleDelete(lead.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
 
       <LeadsRegistroModal
@@ -109,6 +231,7 @@ export default function LeadsRegistro() {
         onSaved={() => {
           setModalOpen(false)
           toast.success('Lead registrado com sucesso')
+          fetchLeads()
         }}
       />
     </div>
