@@ -12,6 +12,7 @@ import Rpv from './pages/Rpv'
 import Protocolo from './pages/Protocolo'
 import Pericias from './pages/Pericias'
 import LeadsCampanha from './pages/LeadsCampanha'
+import LeadsRegistro from './pages/LeadsRegistro'
 import Login from './pages/Login'
 import Ponto from './pages/gestao/Ponto'
 import BaterPonto from './pages/gestao/BaterPonto'
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/protocolo" element={<Protocolo />} />
                 <Route path="/pericias" element={<Pericias />} />
                 <Route path="/leads" element={<LeadsCampanha />} />
+                <Route path="/leads-registro" element={<LeadsRegistro />} />
                 <Route path="/gestao/ponto" element={<Ponto />} />
                 <Route path="/gestao/ponto/registrar" element={<BaterPonto />} />
                 <Route path="/gestao/ponto/dashboard" element={<DashboardPonto />} />

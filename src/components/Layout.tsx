@@ -13,6 +13,7 @@ import {
   LogOut,
   Scale,
   Camera,
+  ClipboardList,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useState, useRef, useEffect } from 'react'
@@ -60,7 +61,10 @@ const navSections = [
   },
   {
     label: 'CAPTAÇÃO DE LEADS',
-    items: [{ name: 'Leads Campanha', path: '/leads', icon: LineChart }],
+    items: [
+      { name: 'Leads Campanha', path: '/leads', icon: LineChart },
+      { name: 'Registro de Leads', path: '/leads-registro', icon: ClipboardList },
+    ],
   },
   {
     label: 'GESTÃO DE PESSOAS',
