@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { format, endOfMonth, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import pb from '@/lib/pocketbase/client'
 import {
@@ -39,9 +39,13 @@ export default function LeadsRegistro() {
   const fetchLeads = useCallback(async () => {
     setIsLoading(true)
     try {
+      const [yearStr, monthStr] = selectedMonth.split('-')
+      const year = parseInt(yearStr, 10)
+      const month = parseInt(monthStr, 10)
+      const lastDay = new Date(year, month, 0).getDate()
+
       const startStr = `${selectedMonth}-01`
-      const endMonthDate = endOfMonth(parseISO(startStr))
-      const endStr = format(endMonthDate, 'yyyy-MM-dd')
+      const endStr = `${selectedMonth}-${String(lastDay).padStart(2, '0')}`
 
       const filter = `campanha = '${activeTab}' && data >= '${startStr} 00:00:00' && data <= '${endStr} 23:59:59'`
 
@@ -304,7 +308,7 @@ export default function LeadsRegistro() {
                   return (
                     <TableRow key={lead.id} className="hover:bg-muted/30">
                       <TableCell className="font-sans py-3">
-                        {format(parseISO(lead.data), 'dd/MM/yyyy')}
+                        {lead.data.split(' ')[0].split('-').reverse().join('/')}
                       </TableCell>
                       <TableCell className="font-sans py-3">{lead.telefone}</TableCell>
                       <TableCell className="font-sans py-3">{lead.responsavel}</TableCell>
@@ -405,7 +409,7 @@ export default function LeadsRegistro() {
                 {summaryData.map((row: any) => (
                   <TableRow key={row.date} className="hover:bg-muted/30">
                     <TableCell className="font-sans py-3 font-medium">
-                      {format(parseISO(row.date), 'dd/MM/yyyy')}
+                      {row.date.split('-').reverse().join('/')}
                     </TableCell>
                     <TableCell className="font-sans py-3 text-center">{row.total}</TableCell>
                     <TableCell className="font-sans py-3 text-center">{row.qualificando}</TableCell>

@@ -106,11 +106,25 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
     }
   }, [watchedCampanha, form, open])
 
+  const formatPhone = (value: string) => {
+    if (!value) return ''
+    const numbers = value.replace(/\D/g, '')
+    const truncated = numbers.slice(0, 11)
+
+    if (truncated.length === 0) return ''
+    if (truncated.length <= 2) return `(${truncated}`
+    if (truncated.length <= 7) return `(${truncated.slice(0, 2)}) ${truncated.slice(2)}`
+    return `(${truncated.slice(0, 2)}) ${truncated.slice(2, 7)}-${truncated.slice(7)}`
+  }
+
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
     try {
+      const d = values.data
+      const dataStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
       await pb.collection('leads_registro').create({
-        data: format(values.data, 'yyyy-MM-dd'),
+        data: dataStr,
         campanha: values.campanha,
         telefone: values.telefone,
         responsavel: values.responsavel,
@@ -208,7 +222,15 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
                 <FormItem>
                   <FormLabel>Telefone</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: (00) 00000-0000" className="bg-white" {...field} />
+                    <Input
+                      placeholder="Ex: (00) 00000-0000"
+                      className="bg-white"
+                      {...field}
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value)
+                        field.onChange(formatted)
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
