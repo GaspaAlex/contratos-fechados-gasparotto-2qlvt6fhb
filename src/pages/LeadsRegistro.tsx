@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Plus, ClipboardList, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -81,6 +81,116 @@ export default function LeadsRegistro() {
     if (classificacao === 'Contrato Fechado') return { label: 'Contrato Fechado', bg: '#C9922A' }
     return { label: classificacao, bg: '#E84040' }
   }
+
+  const summaryData = useMemo(() => {
+    if (!leads || leads.length === 0) return []
+
+    const grouped = leads.reduce(
+      (acc, lead) => {
+        const date = lead.data.split(' ')[0]
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            total: 0,
+            qualificando: 0,
+            qualificado: 0,
+            contratoFechado: 0,
+            prazoDecadencial: 0,
+            foraDoPrazo: 0,
+            revisaoEmPensao: 0,
+            revisao: 0,
+            queriaRvt: 0,
+            outros: 0,
+            semQualidade: 0,
+            aposentado: 0,
+            carne: 0,
+            semInteresse: 0,
+            engano: 0,
+          }
+        }
+
+        acc[date].total += 1
+
+        const c = lead.classificacao
+        if (!c) {
+          acc[date].qualificando += 1
+        } else if (c === 'Qualificado') {
+          acc[date].qualificado += 1
+        } else if (c === 'Contrato Fechado') {
+          acc[date].contratoFechado += 1
+        } else if (c === 'Prazo Decadencial') {
+          acc[date].prazoDecadencial += 1
+        } else if (c === 'Fora do prazo') {
+          acc[date].foraDoPrazo += 1
+        } else if (c === 'Revisão em pensão') {
+          acc[date].revisaoEmPensao += 1
+        } else if (c === 'Revisão') {
+          acc[date].revisao += 1
+        } else if (c === 'Queria RVT') {
+          acc[date].queriaRvt += 1
+        } else if (c === 'Outros') {
+          acc[date].outros += 1
+        } else if (c === 'Sem qualidade') {
+          acc[date].semQualidade += 1
+        } else if (c === 'Aposentado') {
+          acc[date].aposentado += 1
+        } else if (c === 'Carnê') {
+          acc[date].carne += 1
+        } else if (c === 'Sem interesse') {
+          acc[date].semInteresse += 1
+        } else if (c === 'Engano') {
+          acc[date].engano += 1
+        } else {
+          acc[date].outros += 1
+        }
+
+        return acc
+      },
+      {} as Record<string, any>,
+    )
+
+    return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date))
+  }, [leads])
+
+  const totals = useMemo(() => {
+    const t = {
+      total: 0,
+      qualificando: 0,
+      qualificado: 0,
+      contratoFechado: 0,
+      prazoDecadencial: 0,
+      foraDoPrazo: 0,
+      revisaoEmPensao: 0,
+      revisao: 0,
+      queriaRvt: 0,
+      outros: 0,
+      semQualidade: 0,
+      aposentado: 0,
+      carne: 0,
+      semInteresse: 0,
+      engano: 0,
+    }
+
+    summaryData.forEach((row: any) => {
+      t.total += row.total
+      t.qualificando += row.qualificando
+      t.qualificado += row.qualificado
+      t.contratoFechado += row.contratoFechado
+      t.prazoDecadencial += row.prazoDecadencial
+      t.foraDoPrazo += row.foraDoPrazo
+      t.revisaoEmPensao += row.revisaoEmPensao
+      t.revisao += row.revisao
+      t.queriaRvt += row.queriaRvt
+      t.outros += row.outros
+      t.semQualidade += row.semQualidade
+      t.aposentado += row.aposentado
+      t.carne += row.carne
+      t.semInteresse += row.semInteresse
+      t.engano += row.engano
+    })
+
+    return t
+  }, [summaryData])
 
   return (
     <div className="flex flex-col h-full bg-[#FAF8F2] min-h-[calc(100vh-8rem)] rounded-xl overflow-hidden p-6 shadow-sm">
@@ -224,6 +334,179 @@ export default function LeadsRegistro() {
           </div>
         )}
       </div>
+
+      {!isLoading && summaryData.length > 0 && (
+        <div className="mt-8 bg-[#FAF8F2] rounded-xl border border-[#C9922A]/20 shadow-sm flex flex-col overflow-hidden">
+          <div className="p-4 border-b border-[#C9922A]/20">
+            <h2 className="text-xl font-bold text-foreground font-sans">Resumo por Data</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[#C9922A] hover:bg-[#C9922A]">
+                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap">
+                    Data
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                    Total
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                    Qualificando
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                    Qualificado
+                  </TableHead>
+                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                    Contrato Fechado
+                  </TableHead>
+                  {activeTab === 'DER' ? (
+                    <>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Prazo Decadencial
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Fora do prazo
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Revisão em pensão
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Revisão
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Queria RVT
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Outros
+                      </TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Sem qualidade
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Aposentado
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Carnê
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Sem interesse
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Engano
+                      </TableHead>
+                    </>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {summaryData.map((row: any) => (
+                  <TableRow key={row.date} className="hover:bg-muted/30">
+                    <TableCell className="font-sans py-3 font-medium">
+                      {format(parseISO(row.date), 'dd/MM/yyyy')}
+                    </TableCell>
+                    <TableCell className="font-sans py-3 text-center">{row.total}</TableCell>
+                    <TableCell className="font-sans py-3 text-center">{row.qualificando}</TableCell>
+                    <TableCell className="font-sans py-3 text-center">{row.qualificado}</TableCell>
+                    <TableCell className="font-sans py-3 text-center">
+                      {row.contratoFechado}
+                    </TableCell>
+                    {activeTab === 'DER' ? (
+                      <>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.prazoDecadencial}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.foraDoPrazo}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.revisaoEmPensao}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">{row.revisao}</TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.queriaRvt}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">{row.outros}</TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.semQualidade}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.aposentado}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">{row.carne}</TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.semInteresse}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">{row.engano}</TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))}
+                <TableRow className="bg-[#FAF8F2] hover:bg-[#FAF8F2] border-t-2 border-[#C9922A]/20">
+                  <TableCell className="font-sans py-3 font-bold text-foreground">Total</TableCell>
+                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                    {totals.total}
+                  </TableCell>
+                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                    {totals.qualificando}
+                  </TableCell>
+                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                    {totals.qualificado}
+                  </TableCell>
+                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                    {totals.contratoFechado}
+                  </TableCell>
+                  {activeTab === 'DER' ? (
+                    <>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.prazoDecadencial}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.foraDoPrazo}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.revisaoEmPensao}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.revisao}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.queriaRvt}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.outros}
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.semQualidade}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.aposentado}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.carne}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.semInteresse}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.engano}
+                      </TableCell>
+                    </>
+                  )}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
 
       <LeadsRegistroModal
         open={modalOpen}
