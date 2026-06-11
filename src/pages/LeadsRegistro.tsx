@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Plus, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+import { LeadsRegistroModal } from '@/components/leads/LeadsRegistroModal'
 import {
   Select,
   SelectContent,
@@ -13,6 +15,7 @@ import { ptBR } from 'date-fns/locale'
 
 export default function LeadsRegistro() {
   const [activeTab, setActiveTab] = useState<'DER' | 'AUX. ACIDENTE'>('DER')
+  const [modalOpen, setModalOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(() => format(new Date(), 'yyyy-MM'))
 
   const months = Array.from({ length: 12 }).map((_, i) => {
@@ -49,7 +52,10 @@ export default function LeadsRegistro() {
             </SelectContent>
           </Select>
 
-          <Button className="bg-[#C9922A] hover:bg-[#b07d22] text-white font-sans font-medium">
+          <Button
+            className="bg-[#C9922A] hover:bg-[#b07d22] text-white font-sans font-medium"
+            onClick={() => setModalOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Novo Lead
           </Button>
@@ -96,6 +102,15 @@ export default function LeadsRegistro() {
           </p>
         </div>
       </div>
+
+      <LeadsRegistroModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSaved={() => {
+          setModalOpen(false)
+          toast.success('Lead registrado com sucesso')
+        }}
+      />
     </div>
   )
 }
