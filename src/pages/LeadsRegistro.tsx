@@ -4,6 +4,16 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { LeadsRegistroModal } from '@/components/leads/LeadsRegistroModal'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -29,6 +39,7 @@ export default function LeadsRegistro() {
 
   const [leads, setLeads] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [leadToDelete, setLeadToDelete] = useState<string | null>(null)
 
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date()
@@ -67,15 +78,17 @@ export default function LeadsRegistro() {
     fetchLeads()
   }, [fetchLeads])
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja remover este lead?')) return
+  const confirmDelete = async () => {
+    if (!leadToDelete) return
     try {
-      await pb.collection('leads_registro').delete(id)
+      await pb.collection('leads_registro').delete(leadToDelete)
       toast.success('Lead removido')
       fetchLeads()
     } catch (error) {
       console.error('Error deleting lead:', error)
       toast.error('Erro ao remover lead')
+    } finally {
+      setLeadToDelete(null)
     }
   }
 
@@ -325,7 +338,7 @@ export default function LeadsRegistro() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-                          onClick={() => handleDelete(lead.id)}
+                          onClick={() => setLeadToDelete(lead.id)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -515,12 +528,36 @@ export default function LeadsRegistro() {
       <LeadsRegistroModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        campanha={activeTab}
         onSaved={() => {
           setModalOpen(false)
           toast.success('Lead registrado com sucesso')
           fetchLeads()
         }}
       />
+
+      <AlertDialog
+        open={!!leadToDelete}
+        onOpenChange={(isOpen) => !isOpen && setLeadToDelete(null)}
+      >
+        <AlertDialogContent className="font-sans">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este lead? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={confirmDelete}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

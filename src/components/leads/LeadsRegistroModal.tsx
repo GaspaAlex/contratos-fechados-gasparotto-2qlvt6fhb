@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   Dialog,
@@ -37,7 +38,6 @@ import pb from '@/lib/pocketbase/client'
 
 const schema = z.object({
   data: z.date({ required_error: 'A data é obrigatória.' }),
-  campanha: z.string().min(1, 'A campanha é obrigatória.'),
   telefone: z.string().min(1, 'O telefone é obrigatório.'),
   responsavel: z.string().min(1, 'O responsável é obrigatório.'),
   classificacao: z.string().optional(),
@@ -70,16 +70,17 @@ interface LeadsRegistroModalProps {
   open: boolean
   onClose: () => void
   onSaved: () => void
+  campanha: string
 }
 
-export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModalProps) {
+export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRegistroModalProps) {
   const [loading, setLoading] = useState(false)
+  const [dateOpen, setDateOpen] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       data: new Date(),
-      campanha: '',
       telefone: '',
       responsavel: '',
       classificacao: 'none',
@@ -90,21 +91,19 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
     if (open) {
       form.reset({
         data: new Date(),
-        campanha: '',
         telefone: '',
         responsavel: '',
         classificacao: 'none',
       })
+      setDateOpen(false)
     }
   }, [open, form])
-
-  const watchedCampanha = form.watch('campanha')
 
   useEffect(() => {
     if (open) {
       form.setValue('classificacao', 'none')
     }
-  }, [watchedCampanha, form, open])
+  }, [campanha, form, open])
 
   const formatPhone = (value: string) => {
     if (!value) return ''
@@ -120,12 +119,22 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
     try {
+      const duplicates = await pb.collection('leads_registro').getFullList({
+        filter: `telefone = '${values.telefone}' && campanha = '${campanha}'`,
+      })
+
+      if (duplicates.length > 0) {
+        toast.error('Este telefone já foi registrado nesta campanha.')
+        setLoading(false)
+        return
+      }
+
       const d = values.data
       const dataStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
       await pb.collection('leads_registro').create({
         data: dataStr,
-        campanha: values.campanha,
+        campanha: campanha,
         telefone: values.telefone,
         responsavel: values.responsavel,
         classificacao: values.classificacao === 'none' ? '' : values.classificacao,
@@ -133,17 +142,14 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
       onSaved()
     } catch (error) {
       console.error(error)
+      toast.error('Erro ao salvar lead')
     } finally {
       setLoading(false)
     }
   }
 
   const classificacaoOptions =
-    watchedCampanha === 'DER'
-      ? DER_OPTIONS
-      : watchedCampanha === 'AUX. ACIDENTE'
-        ? AUX_ACIDENTE_OPTIONS
-        : []
+    campanha === 'DER' ? DER_OPTIONS : campanha === 'AUX. ACIDENTE' ? AUX_ACIDENTE_OPTIONS : []
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -160,7 +166,7 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Data</FormLabel>
-                  <Popover>
+                  <Popover open={dateOpen} onOpenChange={setDateOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -183,33 +189,16 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          if (date) {
+                            field.onChange(date)
+                            setDateOpen(false)
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="campanha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Campanha</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || undefined}>
-                    <FormControl>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Selecione a campanha" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="DER">DER</SelectItem>
-                      <SelectItem value="AUX. ACIDENTE">AUX. ACIDENTE</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -266,11 +255,7 @@ export function LeadsRegistroModal({ open, onClose, onSaved }: LeadsRegistroModa
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Classificação</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!watchedCampanha}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!campanha}>
                     <FormControl>
                       <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Selecione (opcional)" />
