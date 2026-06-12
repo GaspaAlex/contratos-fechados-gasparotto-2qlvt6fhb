@@ -305,76 +305,76 @@ export default function LeadsRegistro() {
           <div className="p-4 border-b border-[#C9922A]/20">
             <h2 className="text-xl font-bold text-foreground font-sans">Resumo por Data</h2>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
             <Table>
               <TableHeader>
                 <TableRow className="bg-[#C9922A] hover:bg-[#C9922A]">
-                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap">
+                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap bg-[#C9922A]">
                     Data
                   </TableHead>
-                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                     Total
                   </TableHead>
-                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                     Qualificando
                   </TableHead>
-                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                     Qualificado
                   </TableHead>
-                  <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                     Contrato Fechado
                   </TableHead>
                   {activeTab === 'DER' ? (
                     <>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Prazo Decadencial
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Fora do prazo
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Revisão em pensão
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Revisão
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Queria RVT
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Outros
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Total Desq.
                       </TableHead>
                     </>
                   ) : (
                     <>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Sem qualidade
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Aposentado
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Carnê
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Sem interesse
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Rec. Aux Doença
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Não sof. acidente
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Servidor público
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Engano
                       </TableHead>
-                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
                         Total Desq.
                       </TableHead>
                     </>
