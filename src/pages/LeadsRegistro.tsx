@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Plus, ClipboardList, Trash2, Loader2 } from 'lucide-react'
+import { Plus, ClipboardList, Trash2, Pencil, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { LeadsRegistroModal } from '@/components/leads/LeadsRegistroModal'
@@ -40,6 +40,7 @@ export default function LeadsRegistro() {
   const [leads, setLeads] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null)
+  const [leadToEdit, setLeadToEdit] = useState<any>(null)
 
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date()
@@ -112,6 +113,7 @@ export default function LeadsRegistro() {
             qualificando: 0,
             qualificado: 0,
             contratoFechado: 0,
+            totalDesq: 0,
             prazoDecadencial: 0,
             foraDoPrazo: 0,
             revisaoEmPensao: 0,
@@ -138,36 +140,40 @@ export default function LeadsRegistro() {
           acc[date].qualificado += 1
         } else if (c === 'Contrato Fechado') {
           acc[date].contratoFechado += 1
-        } else if (c === 'Prazo Decadencial') {
-          acc[date].prazoDecadencial += 1
-        } else if (c === 'Fora do prazo') {
-          acc[date].foraDoPrazo += 1
-        } else if (c === 'Revisão em pensão') {
-          acc[date].revisaoEmPensao += 1
-        } else if (c === 'Revisão') {
-          acc[date].revisao += 1
-        } else if (c === 'Queria RVT') {
-          acc[date].queriaRvt += 1
-        } else if (c === 'Outros') {
-          acc[date].outros += 1
-        } else if (c === 'Sem qualidade') {
-          acc[date].semQualidade += 1
-        } else if (c === 'Aposentado') {
-          acc[date].aposentado += 1
-        } else if (c === 'Carnê') {
-          acc[date].carne += 1
-        } else if (c === 'Sem interesse') {
-          acc[date].semInteresse += 1
-        } else if (c === 'Recebendo aux doença') {
-          acc[date].recAuxDoenca += 1
-        } else if (c === 'Não sofreu acidente') {
-          acc[date].naoSofreuAcidente += 1
-        } else if (c === 'Servidor público') {
-          acc[date].servidorPublico += 1
-        } else if (c === 'Engano') {
-          acc[date].engano += 1
         } else {
-          acc[date].outros += 1
+          acc[date].totalDesq += 1
+
+          if (c === 'Prazo Decadencial') {
+            acc[date].prazoDecadencial += 1
+          } else if (c === 'Fora do prazo') {
+            acc[date].foraDoPrazo += 1
+          } else if (c === 'Revisão em pensão') {
+            acc[date].revisaoEmPensao += 1
+          } else if (c === 'Revisão') {
+            acc[date].revisao += 1
+          } else if (c === 'Queria RVT') {
+            acc[date].queriaRvt += 1
+          } else if (c === 'Outros') {
+            acc[date].outros += 1
+          } else if (c === 'Sem qualidade') {
+            acc[date].semQualidade += 1
+          } else if (c === 'Aposentado') {
+            acc[date].aposentado += 1
+          } else if (c === 'Carnê') {
+            acc[date].carne += 1
+          } else if (c === 'Sem interesse') {
+            acc[date].semInteresse += 1
+          } else if (c === 'Recebendo aux doença') {
+            acc[date].recAuxDoenca += 1
+          } else if (c === 'Não sofreu acidente') {
+            acc[date].naoSofreuAcidente += 1
+          } else if (c === 'Servidor público') {
+            acc[date].servidorPublico += 1
+          } else if (c === 'Engano') {
+            acc[date].engano += 1
+          } else {
+            acc[date].outros += 1
+          }
         }
 
         return acc
@@ -184,6 +190,7 @@ export default function LeadsRegistro() {
       qualificando: 0,
       qualificado: 0,
       contratoFechado: 0,
+      totalDesq: 0,
       prazoDecadencial: 0,
       foraDoPrazo: 0,
       revisaoEmPensao: 0,
@@ -205,6 +212,7 @@ export default function LeadsRegistro() {
       t.qualificando += row.qualificando
       t.qualificado += row.qualificado
       t.contratoFechado += row.contratoFechado
+      t.totalDesq += row.totalDesq
       t.prazoDecadencial += row.prazoDecadencial
       t.foraDoPrazo += row.foraDoPrazo
       t.revisaoEmPensao += row.revisaoEmPensao
@@ -254,7 +262,10 @@ export default function LeadsRegistro() {
 
           <Button
             className="bg-[#C9922A] hover:bg-[#b07d22] text-white font-sans font-medium"
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setLeadToEdit(null)
+              setModalOpen(true)
+            }}
           >
             <Plus className="w-4 h-4 mr-2" />
             Novo Lead
@@ -333,6 +344,9 @@ export default function LeadsRegistro() {
                       <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
                         Outros
                       </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Total Desq.
+                      </TableHead>
                     </>
                   ) : (
                     <>
@@ -359,6 +373,9 @@ export default function LeadsRegistro() {
                       </TableHead>
                       <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
                         Engano
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Total Desq.
                       </TableHead>
                     </>
                   )}
@@ -392,6 +409,9 @@ export default function LeadsRegistro() {
                           {row.queriaRvt}
                         </TableCell>
                         <TableCell className="font-sans py-3 text-center">{row.outros}</TableCell>
+                        <TableCell className="font-sans py-3 text-center font-medium">
+                          {row.totalDesq}
+                        </TableCell>
                       </>
                     ) : (
                       <>
@@ -415,6 +435,9 @@ export default function LeadsRegistro() {
                           {row.servidorPublico}
                         </TableCell>
                         <TableCell className="font-sans py-3 text-center">{row.engano}</TableCell>
+                        <TableCell className="font-sans py-3 text-center font-medium">
+                          {row.totalDesq}
+                        </TableCell>
                       </>
                     )}
                   </TableRow>
@@ -453,6 +476,9 @@ export default function LeadsRegistro() {
                       <TableCell className="font-sans py-3 text-center font-bold text-foreground">
                         {totals.outros}
                       </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.totalDesq}
+                      </TableCell>
                     </>
                   ) : (
                     <>
@@ -479,6 +505,9 @@ export default function LeadsRegistro() {
                       </TableCell>
                       <TableCell className="font-sans py-3 text-center font-bold text-foreground">
                         {totals.engano}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.totalDesq}
                       </TableCell>
                     </>
                   )}
@@ -549,14 +578,27 @@ export default function LeadsRegistro() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right py-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-                          onClick={() => setLeadToDelete(lead.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                            onClick={() => {
+                              setLeadToEdit(lead)
+                              setModalOpen(true)
+                            }}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                            onClick={() => setLeadToDelete(lead.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
@@ -571,9 +613,10 @@ export default function LeadsRegistro() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         campanha={activeTab}
+        lead={leadToEdit}
         onSaved={() => {
           setModalOpen(false)
-          toast.success('Lead registrado com sucesso')
+          toast.success(leadToEdit ? 'Lead atualizado com sucesso' : 'Lead registrado com sucesso')
           fetchLeads()
         }}
       />

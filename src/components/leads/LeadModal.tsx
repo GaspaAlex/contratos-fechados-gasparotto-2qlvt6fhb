@@ -21,6 +21,7 @@ import { getContratos } from '@/services/contratos'
 import { useToast } from '@/hooks/use-toast'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
 import { cn } from '@/lib/utils'
+import pb from '@/lib/pocketbase/client'
 
 const numSchema = z.union([z.number(), z.string()]).transform((v) => Number(v) || 0)
 
@@ -146,7 +147,8 @@ const TableCellInput = ({ control, name, readOnly }: any) => (
         readOnly={readOnly}
         className={cn(
           'h-7 text-xs text-center px-0.5 border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 min-w-[36px] w-full',
-          readOnly && 'bg-muted cursor-not-allowed border-muted text-muted-foreground font-bold',
+          readOnly &&
+            'bg-gray-50 dark:bg-gray-800 cursor-not-allowed border-muted text-muted-foreground font-bold',
         )}
       />
     )}
@@ -346,6 +348,64 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
     engano: currentEngano,
   })
 
+  useEffect(() => {
+    if (open && vals.mes && vals.dia && campaignConfigs) {
+      const fetchLeadsRegistro = async () => {
+        try {
+          try {
+            const teste = await pb.collection('leads_registro').getFullList({ perPage: 3 })
+            console.log(
+              '[TESTE_BANCO] registros:',
+              JSON.stringify(teste.map((r) => ({ campanha: r.campanha, data: r.data }))),
+            )
+          } catch (e) {
+            console.log('[TESTE_BANCO] erro:', e)
+          }
+
+          const [selectedMonth, selectedYear] = vals.mes.split(' ')
+          const monthIndex = MONTHS.indexOf(selectedMonth)
+          if (monthIndex === -1) return
+
+          const dateStr = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(vals.dia).padStart(2, '0')}`
+          const active = (campaignConfigs || []).filter((c: any) => c.ativo)
+
+          for (const c of active) {
+            const slot = c.slug.replace('meta_c', '')
+            const qualifName = `qualif_c${slot}`
+            const semQualidadeName = `sem_qualidade_c${slot}`
+
+            let qualifCount = 0
+            let semQualidadeCount = 0
+
+            const records = await pb.collection('leads_registro').getFullList({
+              filter: `data = "${dateStr}" && campanha = "${c.rotulo.toUpperCase()}"`,
+            })
+
+            records.forEach((lr) => {
+              const classif = lr.classificacao || ''
+              if (classif === 'Qualificado') {
+                qualifCount++
+              } else if (
+                classif !== '' &&
+                classif !== 'Qualificado' &&
+                classif !== 'Contrato Fechado'
+              ) {
+                semQualidadeCount++
+              }
+            })
+
+            form.setValue(qualifName as any, qualifCount, { shouldDirty: true })
+            form.setValue(semQualidadeName as any, semQualidadeCount, { shouldDirty: true })
+          }
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      fetchLeadsRegistro()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, vals.mes, vals.dia, campaignConfigs])
+
   const [contratosCampanha, setContratosCampanha] = useState<any[]>([])
 
   useEffect(() => {
@@ -486,58 +546,17 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     <table className="w-full text-xs text-left bg-[#FAF8F2] dark:bg-amber-950/10 table-fixed">
                       <thead className="bg-muted text-xs text-muted-foreground uppercase whitespace-nowrap">
                         <tr>
-                          <th
-                            rowSpan={2}
-                            className="px-1 py-1.5 font-semibold w-[15%] align-bottom text-left"
-                          >
-                            CAMPANHA
-                          </th>
-                          <th
-                            rowSpan={2}
-                            className="px-0.5 py-1.5 font-semibold text-center w-[9%] align-bottom"
-                          >
-                            LEADS
-                          </th>
-                          <th
-                            rowSpan={2}
-                            className="px-0.5 py-1.5 font-semibold text-center w-[9%] align-bottom"
-                          >
+                          <th className="px-1 py-2 font-semibold w-[30%] text-left">CAMPANHA</th>
+                          <th className="px-0.5 py-2 font-semibold text-center w-[20%]">LEADS</th>
+                          <th className="px-0.5 py-2 font-semibold text-center w-[20%]">
                             EM QUALIF.
                           </th>
-                          <th colSpan={6} className="px-1 pt-2 pb-0 font-semibold text-center">
-                            <div className="border-t-2 border-x-2 border-blue-500/60 dark:border-blue-400/60 rounded-t-[4px] pt-1 pb-0.5 text-[10px] text-blue-700 dark:text-blue-400 leading-none">
-                              DESQUALIFICADOS
-                            </div>
-                          </th>
-                          <th
-                            rowSpan={2}
-                            className="px-0.5 py-1.5 font-semibold text-center w-[10%] align-bottom leading-tight"
-                          >
+                          <th className="px-0.5 py-2 font-semibold text-center w-[25%] leading-tight">
                             TOTAL
                             <br />
                             DESQUALIF.
                           </th>
-                          <th rowSpan={2} className="px-1 py-1.5 w-[4%] align-bottom"></th>
-                        </tr>
-                        <tr>
-                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
-                            S.QUAL.
-                          </th>
-                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
-                            APOSENT.
-                          </th>
-                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
-                            CARNÊ
-                          </th>
-                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
-                            OUTROS
-                          </th>
-                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
-                            S.INTER.
-                          </th>
-                          <th className="px-0.5 pb-1.5 pt-1 font-semibold text-center w-[9%]">
-                            ENGANO
-                          </th>
+                          <th className="px-1 py-2 w-[5%]"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-amber-100 dark:divide-amber-900/50">
@@ -559,9 +578,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           const semInteresse = form.watch(semInteresseName) || 0
                           const engano = form.watch(enganoName) || 0
 
-                          const totalDesqualif =
-                            semQualidade + aposentado + carne + outros + semInteresse + engano
-
                           return (
                             <tr key={c.id}>
                               <td
@@ -574,30 +590,14 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                                 <TableCellInput control={form.control} name={metaName} />
                               </td>
                               <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={qualifName} />
+                                <TableCellInput control={form.control} name={qualifName} readOnly />
                               </td>
                               <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={semQualidadeName} />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={aposentadoName} />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={carneName} />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={outrosName} />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={semInteresseName} />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={enganoName} />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <div className="h-7 rounded-md bg-[#F3F4F6] dark:bg-muted/50 border dark:border-muted flex items-center justify-center font-bold text-xs text-muted-foreground w-full min-w-[36px]">
-                                  {totalDesqualif}
-                                </div>
+                                <TableCellInput
+                                  control={form.control}
+                                  name={semQualidadeName}
+                                  readOnly
+                                />
                               </td>
                               <td className="px-1 py-1 align-middle text-right">
                                 <button
@@ -615,7 +615,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                       </tbody>
                       <tfoot className="bg-blue-50/80 dark:bg-blue-900/30 border-t-2 border-blue-200 dark:border-blue-800">
                         <tr>
-                          <td colSpan={10} className="px-2 py-2 text-right align-middle">
+                          <td colSpan={4} className="px-2 py-2 text-right align-middle">
                             <span className="text-[10px] font-bold uppercase text-blue-800 dark:text-blue-300 mr-2">
                               Total Leads (Google + Meta)
                             </span>

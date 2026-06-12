@@ -74,9 +74,16 @@ interface LeadsRegistroModalProps {
   onClose: () => void
   onSaved: () => void
   campanha: string
+  lead?: any
 }
 
-export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRegistroModalProps) {
+export function LeadsRegistroModal({
+  open,
+  onClose,
+  onSaved,
+  campanha,
+  lead,
+}: LeadsRegistroModalProps) {
   const [loading, setLoading] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
   const [duplicateWarning, setDuplicateWarning] = useState(false)
@@ -93,22 +100,36 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
 
   useEffect(() => {
     if (open) {
-      form.reset({
-        data: new Date(),
-        telefone: '',
-        responsavel: '',
-        classificacao: 'none',
-      })
+      if (lead) {
+        let date = new Date()
+        if (lead.data) {
+          const [datePart] = lead.data.split(' ')
+          date = new Date(`${datePart}T12:00:00`)
+        }
+        form.reset({
+          data: date,
+          telefone: lead.telefone,
+          responsavel: lead.responsavel,
+          classificacao: lead.classificacao || 'none',
+        })
+      } else {
+        form.reset({
+          data: new Date(),
+          telefone: '',
+          responsavel: '',
+          classificacao: 'none',
+        })
+      }
       setDateOpen(false)
       setDuplicateWarning(false)
     }
-  }, [open, form])
+  }, [open, form, lead])
 
   useEffect(() => {
-    if (open) {
+    if (open && !lead) {
       form.setValue('classificacao', 'none')
     }
-  }, [campanha, form, open])
+  }, [campanha, form, open, lead])
 
   const formatPhone = (value: string) => {
     if (!value) return ''
@@ -124,7 +145,7 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
   const handleSave = async (values: FormValues, forceSave = false) => {
     setLoading(true)
     try {
-      if (!forceSave) {
+      if (!forceSave && !lead) {
         const duplicates = await pb.collection('leads_registro').getFullList({
           filter: `telefone = '${values.telefone}' && campanha = '${campanha}'`,
         })
@@ -139,17 +160,24 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
       const d = values.data
       const dataStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-      await pb.collection('leads_registro').create({
+      const payload = {
         data: dataStr,
-        campanha: campanha,
+        campanha: lead ? lead.campanha : campanha,
         telefone: values.telefone,
         responsavel: values.responsavel,
         classificacao: values.classificacao === 'none' ? '' : values.classificacao,
-      })
+      }
+
+      if (lead) {
+        await pb.collection('leads_registro').update(lead.id, payload)
+      } else {
+        await pb.collection('leads_registro').create(payload)
+      }
+
       onSaved()
     } catch (error) {
       console.error(error)
-      toast.error('Erro ao salvar lead')
+      toast.error(lead ? 'Erro ao atualizar lead' : 'Erro ao salvar lead')
     } finally {
       setLoading(false)
     }
@@ -157,14 +185,21 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
 
   const onSubmit = (values: FormValues) => handleSave(values, false)
 
+  const activeCampanha = lead ? lead.campanha : campanha
   const classificacaoOptions =
-    campanha === 'DER' ? DER_OPTIONS : campanha === 'AUX. ACIDENTE' ? AUX_ACIDENTE_OPTIONS : []
+    activeCampanha === 'DER'
+      ? DER_OPTIONS
+      : activeCampanha === 'AUX. ACIDENTE'
+        ? AUX_ACIDENTE_OPTIONS
+        : []
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[425px] bg-[#FAF8F2] font-sans">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Novo Lead</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {lead ? 'Editar Lead' : 'Novo Lead'}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -264,7 +299,11 @@ export function LeadsRegistroModal({ open, onClose, onSaved, campanha }: LeadsRe
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Classificação</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={!campanha}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!activeCampanha}
+                  >
                     <FormControl>
                       <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Selecione (opcional)" />
