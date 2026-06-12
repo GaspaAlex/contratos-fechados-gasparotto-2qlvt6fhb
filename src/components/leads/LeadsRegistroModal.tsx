@@ -63,6 +63,9 @@ const AUX_ACIDENTE_OPTIONS = [
   'Aposentado',
   'Carnê',
   'Sem interesse',
+  'Recebendo aux doença',
+  'Não sofreu acidente',
+  'Servidor público',
   'Engano',
 ]
 

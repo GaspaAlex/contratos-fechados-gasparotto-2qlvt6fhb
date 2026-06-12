@@ -122,6 +122,9 @@ export default function LeadsRegistro() {
             aposentado: 0,
             carne: 0,
             semInteresse: 0,
+            recAuxDoenca: 0,
+            naoSofreuAcidente: 0,
+            servidorPublico: 0,
             engano: 0,
           }
         }
@@ -155,6 +158,12 @@ export default function LeadsRegistro() {
           acc[date].carne += 1
         } else if (c === 'Sem interesse') {
           acc[date].semInteresse += 1
+        } else if (c === 'Recebendo aux doença') {
+          acc[date].recAuxDoenca += 1
+        } else if (c === 'Não sofreu acidente') {
+          acc[date].naoSofreuAcidente += 1
+        } else if (c === 'Servidor público') {
+          acc[date].servidorPublico += 1
         } else if (c === 'Engano') {
           acc[date].engano += 1
         } else {
@@ -185,6 +194,9 @@ export default function LeadsRegistro() {
       aposentado: 0,
       carne: 0,
       semInteresse: 0,
+      recAuxDoenca: 0,
+      naoSofreuAcidente: 0,
+      servidorPublico: 0,
       engano: 0,
     }
 
@@ -203,6 +215,9 @@ export default function LeadsRegistro() {
       t.aposentado += row.aposentado
       t.carne += row.carne
       t.semInteresse += row.semInteresse
+      t.recAuxDoenca += row.recAuxDoenca
+      t.naoSofreuAcidente += row.naoSofreuAcidente
+      t.servidorPublico += row.servidorPublico
       t.engano += row.engano
     })
 
@@ -334,6 +349,15 @@ export default function LeadsRegistro() {
                         Sem interesse
                       </TableHead>
                       <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Rec. Aux Doença
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Não sof. acidente
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
+                        Servidor público
+                      </TableHead>
+                      <TableHead className="font-sans font-semibold text-white whitespace-nowrap text-center">
                         Engano
                       </TableHead>
                     </>
@@ -380,6 +404,15 @@ export default function LeadsRegistro() {
                         <TableCell className="font-sans py-3 text-center">{row.carne}</TableCell>
                         <TableCell className="font-sans py-3 text-center">
                           {row.semInteresse}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.recAuxDoenca}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.naoSofreuAcidente}
+                        </TableCell>
+                        <TableCell className="font-sans py-3 text-center">
+                          {row.servidorPublico}
                         </TableCell>
                         <TableCell className="font-sans py-3 text-center">{row.engano}</TableCell>
                       </>
@@ -434,6 +467,15 @@ export default function LeadsRegistro() {
                       </TableCell>
                       <TableCell className="font-sans py-3 text-center font-bold text-foreground">
                         {totals.semInteresse}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.recAuxDoenca}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.naoSofreuAcidente}
+                      </TableCell>
+                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
+                        {totals.servidorPublico}
                       </TableCell>
                       <TableCell className="font-sans py-3 text-center font-bold text-foreground">
                         {totals.engano}
