@@ -352,16 +352,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
     if (open && vals.mes && vals.dia && campaignConfigs) {
       const fetchLeadsRegistro = async () => {
         try {
-          try {
-            const teste = await pb.collection('leads_registro').getFullList({ perPage: 3 })
-            console.log(
-              '[TESTE_BANCO] registros:',
-              JSON.stringify(teste.map((r) => ({ campanha: r.campanha, data: r.data }))),
-            )
-          } catch (e) {
-            console.log('[TESTE_BANCO] erro:', e)
-          }
-
           const [selectedMonth, selectedYear] = vals.mes.split(' ')
           const monthIndex = MONTHS.indexOf(selectedMonth)
           if (monthIndex === -1) return
@@ -377,8 +367,10 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
             let qualifCount = 0
             let semQualidadeCount = 0
 
+            const filterStr = `data ~ "${dateStr}" && campanha = "${c.rotulo.toUpperCase()}"`
+
             const records = await pb.collection('leads_registro').getFullList({
-              filter: `data = "${dateStr}" && campanha = "${c.rotulo.toUpperCase()}"`,
+              filter: filterStr,
             })
 
             records.forEach((lr) => {
