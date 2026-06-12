@@ -361,6 +361,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
 
           for (const c of active) {
             const slot = c.slug.replace('meta_c', '')
+            const metaName = `meta_c${slot}`
             const qualifName = `qualif_c${slot}`
             const semQualidadeName = `sem_qualidade_c${slot}`
 
@@ -369,23 +370,27 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
 
             const filterStr = `data ~ "${dateStr}" && campanha = "${c.rotulo.toUpperCase()}"`
 
-            const records = await pb.collection('leads_registro').getFullList({
+            const registros = await pb.collection('leads_registro').getFullList({
               filter: filterStr,
             })
 
-            records.forEach((lr) => {
+            const metaCount = registros.length
+
+            registros.forEach((lr) => {
               const classif = lr.classificacao || ''
-              if (classif === 'Qualificado') {
+              if (classif === '' || classif === 'Qualificando') {
                 qualifCount++
               } else if (
                 classif !== '' &&
                 classif !== 'Qualificado' &&
-                classif !== 'Contrato Fechado'
+                classif !== 'Contrato Fechado' &&
+                classif !== 'Qualificando'
               ) {
                 semQualidadeCount++
               }
             })
 
+            form.setValue(metaName as any, metaCount, { shouldDirty: true })
             form.setValue(qualifName as any, qualifCount, { shouldDirty: true })
             form.setValue(semQualidadeName as any, semQualidadeCount, { shouldDirty: true })
           }
@@ -579,7 +584,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                                 {c.rotulo?.toUpperCase()}
                               </td>
                               <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput control={form.control} name={metaName} />
+                                <TableCellInput control={form.control} name={metaName} readOnly />
                               </td>
                               <td className="px-0.5 py-1 align-middle">
                                 <TableCellInput control={form.control} name={qualifName} readOnly />
