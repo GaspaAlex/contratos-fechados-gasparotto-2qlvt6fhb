@@ -286,6 +286,7 @@ export function LeadsRegistroModal({
                       <SelectItem value="Giulianna">Giulianna</SelectItem>
                       <SelectItem value="Nataly">Nataly</SelectItem>
                       <SelectItem value="Kaique">Kaique</SelectItem>
+                      <SelectItem value="IA">IA</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

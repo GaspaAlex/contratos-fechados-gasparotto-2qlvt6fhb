@@ -93,6 +93,47 @@ export default function LeadsRegistro() {
     }
   }
 
+  const derColumns = useMemo(
+    () => [
+      { key: 'data', label: 'Data', width: '100px' },
+      { key: 'total', label: 'Total', width: '70px' },
+      { key: 'qualificando', label: 'Qualificando', width: '110px' },
+      { key: 'qualificado', label: 'Qualificado', width: '110px' },
+      { key: 'contratoFechado', label: 'Contrato Fechado', width: '110px' },
+      { key: 'prazoDecadencial', label: 'Prazo Decadencial', width: '110px' },
+      { key: 'foraDoPrazo', label: 'Fora do prazo', width: '110px' },
+      { key: 'revisaoEmPensao', label: 'Revisão em pensão', width: '110px' },
+      { key: 'revisao', label: 'Revisão', width: '110px' },
+      { key: 'queriaRvt', label: 'Queria RVT', width: '110px' },
+      { key: 'outros', label: 'Outros', width: '110px' },
+      { key: 'totalDesq', label: 'Total Desq.', width: '110px' },
+    ],
+    [],
+  )
+
+  const auxColumns = useMemo(
+    () => [
+      { key: 'data', label: 'Data', width: '100px' },
+      { key: 'total', label: 'Total', width: '70px' },
+      { key: 'qualificando', label: 'Qualificando', width: '110px' },
+      { key: 'qualificado', label: 'Qualificado', width: '110px' },
+      { key: 'contratoFechado', label: 'Contrato Fechado', width: '110px' },
+      { key: 'semQualidade', label: 'Sem qualidade', width: '110px' },
+      { key: 'aposentado', label: 'Aposentado', width: '110px' },
+      { key: 'carne', label: 'Carnê', width: '110px' },
+      { key: 'semInteresse', label: 'Sem interesse', width: '110px' },
+      { key: 'recAuxDoenca', label: 'Rec. Aux Doença', width: '110px' },
+      { key: 'naoSofreuAcidente', label: 'Não sof. acidente', width: '110px' },
+      { key: 'servidorPublico', label: 'Servidor público', width: '110px' },
+      { key: 'engano', label: 'Engano', width: '110px' },
+      { key: 'totalDesq', label: 'Total Desq.', width: '110px' },
+    ],
+    [],
+  )
+
+  const activeColumns = activeTab === 'DER' ? derColumns : auxColumns
+  const tableMinWidth = activeTab === 'DER' ? '1270px' : '1490px'
+
   const getBadgeProps = (classificacao?: string) => {
     if (!classificacao) return { label: 'Qualificando', bg: '#5A9FD4' }
     if (classificacao === 'Qualificado') return { label: 'Qualificado', bg: '#52B86E' }
@@ -301,219 +342,77 @@ export default function LeadsRegistro() {
       </div>
 
       {!isLoading && summaryData.length > 0 && (
-        <div className="mb-6 bg-[#FAF8F2] rounded-xl border border-[#C9922A]/20 shadow-sm flex flex-col overflow-hidden">
+        <div className="mb-6 bg-[#FAF8F2] rounded-xl border border-[#C9922A]/20 shadow-sm flex flex-col">
           <div className="p-4 border-b border-[#C9922A]/20">
             <h2 className="text-xl font-bold text-foreground font-sans">Resumo por Data</h2>
           </div>
-          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-[#C9922A] hover:bg-[#C9922A]">
-                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap bg-[#C9922A]">
-                    Data
-                  </TableHead>
-                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                    Total
-                  </TableHead>
-                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                    Qualificando
-                  </TableHead>
-                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                    Qualificado
-                  </TableHead>
-                  <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                    Contrato Fechado
-                  </TableHead>
-                  {activeTab === 'DER' ? (
-                    <>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Prazo Decadencial
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: tableMinWidth }}>
+              {/* Table Part 1 (Header) */}
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow className="bg-[#C9922A] hover:bg-[#C9922A]">
+                    {activeColumns.map((col, idx) => (
+                      <TableHead
+                        key={idx}
+                        style={{ width: col.width }}
+                        className={`font-sans font-semibold text-white whitespace-nowrap bg-[#C9922A] ${
+                          col.key === 'data' ? '' : 'text-center'
+                        }`}
+                      >
+                        {col.label}
                       </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Fora do prazo
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Revisão em pensão
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Revisão
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Queria RVT
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Outros
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Total Desq.
-                      </TableHead>
-                    </>
-                  ) : (
-                    <>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Sem qualidade
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Aposentado
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Carnê
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Sem interesse
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Rec. Aux Doença
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Não sof. acidente
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Servidor público
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Engano
-                      </TableHead>
-                      <TableHead className="sticky top-0 z-10 font-sans font-semibold text-white whitespace-nowrap text-center bg-[#C9922A]">
-                        Total Desq.
-                      </TableHead>
-                    </>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {summaryData.map((row: any) => (
-                  <TableRow key={row.date} className="hover:bg-muted/30">
-                    <TableCell className="font-sans py-3 font-medium">
-                      {row.date.split('-').reverse().join('/')}
-                    </TableCell>
-                    <TableCell className="font-sans py-3 text-center">{row.total}</TableCell>
-                    <TableCell className="font-sans py-3 text-center">{row.qualificando}</TableCell>
-                    <TableCell className="font-sans py-3 text-center">{row.qualificado}</TableCell>
-                    <TableCell className="font-sans py-3 text-center">
-                      {row.contratoFechado}
-                    </TableCell>
-                    {activeTab === 'DER' ? (
-                      <>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.prazoDecadencial}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.foraDoPrazo}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.revisaoEmPensao}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">{row.revisao}</TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.queriaRvt}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">{row.outros}</TableCell>
-                        <TableCell className="font-sans py-3 text-center font-medium">
-                          {row.totalDesq}
-                        </TableCell>
-                      </>
-                    ) : (
-                      <>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.semQualidade}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.aposentado}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">{row.carne}</TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.semInteresse}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.recAuxDoenca}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.naoSofreuAcidente}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">
-                          {row.servidorPublico}
-                        </TableCell>
-                        <TableCell className="font-sans py-3 text-center">{row.engano}</TableCell>
-                        <TableCell className="font-sans py-3 text-center font-medium">
-                          {row.totalDesq}
-                        </TableCell>
-                      </>
-                    )}
+                    ))}
                   </TableRow>
-                ))}
-                <TableRow className="bg-[#FAF8F2] hover:bg-[#FAF8F2] border-t-2 border-[#C9922A]/20">
-                  <TableCell className="font-sans py-3 font-bold text-foreground">Total</TableCell>
-                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                    {totals.total}
-                  </TableCell>
-                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                    {totals.qualificando}
-                  </TableCell>
-                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                    {totals.qualificado}
-                  </TableCell>
-                  <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                    {totals.contratoFechado}
-                  </TableCell>
-                  {activeTab === 'DER' ? (
-                    <>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.prazoDecadencial}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.foraDoPrazo}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.revisaoEmPensao}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.revisao}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.queriaRvt}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.outros}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.totalDesq}
-                      </TableCell>
-                    </>
-                  ) : (
-                    <>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.semQualidade}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.aposentado}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.carne}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.semInteresse}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.recAuxDoenca}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.naoSofreuAcidente}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.servidorPublico}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.engano}
-                      </TableCell>
-                      <TableCell className="font-sans py-3 text-center font-bold text-foreground">
-                        {totals.totalDesq}
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
-              </TableBody>
-            </Table>
+                </TableHeader>
+              </Table>
+
+              {/* Table Part 2 (Data) */}
+              <div className="overflow-y-auto max-h-[400px]">
+                <Table className="table-fixed w-full">
+                  <TableBody>
+                    {summaryData.map((row: any) => (
+                      <TableRow key={row.date} className="hover:bg-muted/30">
+                        {activeColumns.map((col, idx) => {
+                          const val =
+                            col.key === 'data'
+                              ? row.date.split('-').reverse().join('/')
+                              : row[col.key]
+                          return (
+                            <TableCell
+                              key={idx}
+                              style={{ width: col.width }}
+                              className={`font-sans py-3 ${
+                                col.key === 'data' ? 'font-medium' : 'text-center'
+                              } ${col.key === 'totalDesq' ? 'font-medium' : ''}`}
+                            >
+                              {val}
+                            </TableCell>
+                          )
+                        })}
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-[#FAF8F2] hover:bg-[#FAF8F2] border-t-2 border-[#C9922A]/20">
+                      {activeColumns.map((col, idx) => {
+                        const val =
+                          col.key === 'data' ? 'Total' : totals[col.key as keyof typeof totals]
+                        return (
+                          <TableCell
+                            key={idx}
+                            style={{ width: col.width }}
+                            className={`font-sans py-3 font-bold text-foreground ${
+                              col.key === 'data' ? '' : 'text-center'
+                            }`}
+                          >
+                            {val}
+                          </TableCell>
+                        )
+                      })}
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </div>
         </div>
       )}
