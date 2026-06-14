@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Plus, ClipboardList, Trash2, Pencil, Loader2 } from 'lucide-react'
+import { Plus, ClipboardList, Trash2, Pencil, Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { LeadsRegistroModal } from '@/components/leads/LeadsRegistroModal'
@@ -41,6 +41,17 @@ export default function LeadsRegistro() {
   const [isLoading, setIsLoading] = useState(true)
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null)
   const [leadToEdit, setLeadToEdit] = useState<any>(null)
+  const [searchTel, setSearchTel] = useState('')
+
+  const filteredLeads = useMemo(() => {
+    if (!searchTel.trim()) return leads
+
+    const searchDigits = searchTel.replace(/\D/g, '')
+    return leads.filter((lead) => {
+      const leadTelDigits = (lead.telefone || '').replace(/\D/g, '')
+      return leadTelDigits.includes(searchDigits)
+    })
+  }, [leads, searchTel])
 
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date()
@@ -417,12 +428,25 @@ export default function LeadsRegistro() {
         </div>
       )}
 
+      <div className="mb-4">
+        <div className="relative max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por telefone..."
+            value={searchTel}
+            onChange={(e) => setSearchTel(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9922A] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          />
+        </div>
+      </div>
+
       <div className="flex-1 bg-white rounded-xl border border-border/50 shadow-sm flex flex-col overflow-hidden">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : leads.length === 0 ? (
+        ) : filteredLeads.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-8 animate-fade-in-up duration-500 min-h-[400px]">
             <div className="text-center max-w-sm">
               <div className="w-16 h-16 bg-[#FAF8F2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#C9922A]/20">
@@ -459,7 +483,7 @@ export default function LeadsRegistro() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leads.map((lead) => {
+                {filteredLeads.map((lead) => {
                   const badge = getBadgeProps(lead.classificacao)
                   return (
                     <TableRow key={lead.id} className="hover:bg-muted/30">
