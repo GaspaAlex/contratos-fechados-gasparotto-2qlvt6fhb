@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Plus, ClipboardList, Trash2, Pencil, Loader2, Search } from 'lucide-react'
+import { Plus, ClipboardList, Trash2, Pencil, Loader2, Search, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { LeadsRegistroModal } from '@/components/leads/LeadsRegistroModal'
@@ -42,16 +42,37 @@ export default function LeadsRegistro() {
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null)
   const [leadToEdit, setLeadToEdit] = useState<any>(null)
   const [searchTel, setSearchTel] = useState('')
+  const [searchDate, setSearchDate] = useState('')
 
   const filteredLeads = useMemo(() => {
-    if (!searchTel.trim()) return leads
+    let result = leads
 
-    const searchDigits = searchTel.replace(/\D/g, '')
-    return leads.filter((lead) => {
-      const leadTelDigits = (lead.telefone || '').replace(/\D/g, '')
-      return leadTelDigits.includes(searchDigits)
-    })
-  }, [leads, searchTel])
+    if (searchTel.trim()) {
+      const searchDigits = searchTel.replace(/\D/g, '')
+      result = result.filter((lead) => {
+        const leadTelDigits = (lead.telefone || '').replace(/\D/g, '')
+        return leadTelDigits.includes(searchDigits)
+      })
+    }
+
+    if (searchDate.trim()) {
+      const sd = searchDate.trim()
+      const matchFull = sd.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+      const matchPartial = sd.match(/^(\d{2})\/(\d{2})$/)
+
+      if (matchFull) {
+        const expectedStr = `${matchFull[3]}-${matchFull[2]}-${matchFull[1]}`
+        result = result.filter((lead) => lead.data.split(' ')[0] === expectedStr)
+      } else if (matchPartial) {
+        const expectedStr = `-${matchPartial[2]}-${matchPartial[1]}`
+        result = result.filter((lead) => lead.data.includes(expectedStr))
+      } else {
+        result = result.filter((lead) => lead.data.includes(sd))
+      }
+    }
+
+    return result
+  }, [leads, searchTel, searchDate])
 
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date()
@@ -428,14 +449,24 @@ export default function LeadsRegistro() {
         </div>
       )}
 
-      <div className="mb-4">
-        <div className="relative max-w-xs">
+      <div className="mb-4 flex gap-2">
+        <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Buscar por telefone..."
             value={searchTel}
             onChange={(e) => setSearchTel(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9922A] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          />
+        </div>
+        <div className="relative w-full max-w-xs">
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por data... (ex: 08/06)"
+            value={searchDate}
+            onChange={(e) => setSearchDate(e.target.value)}
             className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9922A] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
           />
         </div>
