@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DynamicSelect } from '@/components/dashboard/DynamicSelect'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
@@ -44,30 +45,6 @@ const schema = z.object({
 })
 
 type FormValues = z.infer<typeof schema>
-
-const DER_OPTIONS = [
-  'Qualificado',
-  'Contrato Fechado',
-  'Prazo Decadencial',
-  'Fora do prazo',
-  'Revisão em pensão',
-  'Revisão',
-  'Queria RVT',
-  'Outros',
-]
-
-const AUX_ACIDENTE_OPTIONS = [
-  'Qualificado',
-  'Contrato Fechado',
-  'Sem qualidade',
-  'Aposentado',
-  'Carnê',
-  'Sem interesse',
-  'Recebendo aux doença',
-  'Não sofreu acidente',
-  'Servidor público',
-  'Engano',
-]
 
 interface LeadsRegistroModalProps {
   open: boolean
@@ -87,6 +64,9 @@ export function LeadsRegistroModal({
   const [loading, setLoading] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
   const [duplicateWarning, setDuplicateWarning] = useState(false)
+  const [classificacaoItems, setClassificacaoItems] = useState<{ id: string; nome: string }[]>([])
+
+  const activeCampanha = lead ? lead.campanha : campanha
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -130,6 +110,79 @@ export function LeadsRegistroModal({
       form.setValue('classificacao', 'none')
     }
   }, [campanha, form, open, lead])
+
+  useEffect(() => {
+    const fetchClassificacoes = async () => {
+      if (!activeCampanha) {
+        setClassificacaoItems([])
+        return
+      }
+      try {
+        const records = await pb.collection('classificacoes_lead').getFullList({
+          filter: `campanha = '${activeCampanha}'`,
+          sort: 'created',
+        })
+        setClassificacaoItems(records.map((r) => ({ id: r.id, nome: r.nome })))
+      } catch (err) {
+        console.error('Error fetching classificacoes', err)
+      }
+    }
+
+    if (open) {
+      fetchClassificacoes()
+    }
+  }, [activeCampanha, open])
+
+  const handleAddClassificacao = async (nome: string) => {
+    try {
+      const record = await pb.collection('classificacoes_lead').create({
+        campanha: activeCampanha,
+        nome,
+      })
+      setClassificacaoItems((prev) => [...prev, { id: record.id, nome: record.nome }])
+      toast.success('Classificação adicionada')
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao adicionar classificação')
+    }
+  }
+
+  const handleEditClassificacao = async (id: string, nome: string) => {
+    try {
+      const record = await pb.collection('classificacoes_lead').update(id, { nome })
+      setClassificacaoItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, nome: record.nome } : item)),
+      )
+
+      const currentVal = form.getValues('classificacao')
+      const oldItem = classificacaoItems.find((c) => c.id === id)
+      if (oldItem && currentVal === oldItem.nome) {
+        form.setValue('classificacao', nome)
+      }
+      toast.success('Classificação atualizada')
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao atualizar classificação')
+    }
+  }
+
+  const handleDeleteClassificacao = async (id: string) => {
+    try {
+      await pb.collection('classificacoes_lead').delete(id)
+
+      const deletedItem = classificacaoItems.find((c) => c.id === id)
+      setClassificacaoItems((prev) => prev.filter((item) => item.id !== id))
+
+      const currentVal = form.getValues('classificacao')
+      if (deletedItem && currentVal === deletedItem.nome) {
+        form.setValue('classificacao', 'none')
+      }
+      toast.success('Classificação removida')
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao remover classificação')
+    }
+  }
 
   const formatPhone = (value: string) => {
     if (!value) return ''
@@ -184,14 +237,6 @@ export function LeadsRegistroModal({
   }
 
   const onSubmit = (values: FormValues) => handleSave(values, false)
-
-  const activeCampanha = lead ? lead.campanha : campanha
-  const classificacaoOptions =
-    activeCampanha === 'DER'
-      ? DER_OPTIONS
-      : activeCampanha === 'AUX. ACIDENTE'
-        ? AUX_ACIDENTE_OPTIONS
-        : []
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -297,31 +342,40 @@ export function LeadsRegistroModal({
             <FormField
               control={form.control}
               name="classificacao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Classificação</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!activeCampanha}
-                  >
+              render={({ field }) => {
+                const selectedItem = classificacaoItems.find((c) => c.nome === field.value)
+                const selectValue = selectedItem
+                  ? selectedItem.id
+                  : field.value === 'none' || !field.value
+                    ? ''
+                    : field.value
+
+                return (
+                  <FormItem>
+                    <FormLabel>Classificação</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Selecione (opcional)" />
-                      </SelectTrigger>
+                      <DynamicSelect
+                        value={selectValue}
+                        onChange={(val) => {
+                          if (!val || val === 'none') {
+                            field.onChange('none')
+                          } else {
+                            const item = classificacaoItems.find((c) => c.id === val)
+                            field.onChange(item ? item.nome : val)
+                          }
+                        }}
+                        items={classificacaoItems}
+                        onAdd={handleAddClassificacao}
+                        onEdit={handleEditClassificacao}
+                        onDelete={handleDeleteClassificacao}
+                        placeholder="Qualificando"
+                        disabled={!activeCampanha}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">Qualificando</SelectItem>
-                      {classificacaoOptions.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+                    <FormMessage />
+                  </FormItem>
+                )
+              }}
             />
 
             {duplicateWarning && (
