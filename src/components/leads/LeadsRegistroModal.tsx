@@ -118,10 +118,56 @@ export function LeadsRegistroModal({
         return
       }
       try {
-        const records = await pb.collection('classificacoes_lead').getFullList({
+        let records = await pb.collection('classificacoes_lead').getFullList({
           filter: `campanha = '${activeCampanha}'`,
           sort: 'created',
         })
+
+        if (activeCampanha === 'AUX. ACIDENTE') {
+          const renamingMap: Record<string, string> = {
+            'Sem qualidade': 'Sem Qual.',
+            Aposentado: 'Aposent.',
+            'Sem interesse': 'Sem Inter.',
+            'Recebendo aux doença': 'Rec. Aux. D.',
+            'Não sofreu acidente': 'N. Sof. Ac.',
+            'Servidor público': 'Serv. Públ.',
+          }
+
+          let needsRefetch = false
+
+          for (const r of records) {
+            if (renamingMap[r.nome]) {
+              await pb.collection('classificacoes_lead').update(r.id, { nome: renamingMap[r.nome] })
+              needsRefetch = true
+            }
+          }
+
+          const currentNames = records.map((r) => renamingMap[r.nome] || r.nome)
+          const requiredNames = ['Possui Adv', 'Rec. Aux. Acid.']
+
+          for (const req of requiredNames) {
+            if (!currentNames.includes(req)) {
+              await pb.collection('classificacoes_lead').create({
+                campanha: 'AUX. ACIDENTE',
+                nome: req,
+              })
+              needsRefetch = true
+            }
+          }
+
+          if (needsRefetch) {
+            records = await pb.collection('classificacoes_lead').getFullList({
+              filter: `campanha = '${activeCampanha}'`,
+              sort: 'created',
+            })
+          }
+
+          const currentVal = form.getValues('classificacao')
+          if (currentVal && renamingMap[currentVal]) {
+            form.setValue('classificacao', renamingMap[currentVal])
+          }
+        }
+
         setClassificacaoItems(records.map((r) => ({ id: r.id, nome: r.nome })))
       } catch (err) {
         console.error('Error fetching classificacoes', err)
@@ -131,7 +177,7 @@ export function LeadsRegistroModal({
     if (open) {
       fetchClassificacoes()
     }
-  }, [activeCampanha, open])
+  }, [activeCampanha, open, form])
 
   const handleAddClassificacao = async (nome: string) => {
     try {
@@ -144,43 +190,6 @@ export function LeadsRegistroModal({
     } catch (err) {
       console.error(err)
       toast.error('Erro ao adicionar classificação')
-    }
-  }
-
-  const handleEditClassificacao = async (id: string, nome: string) => {
-    try {
-      const record = await pb.collection('classificacoes_lead').update(id, { nome })
-      setClassificacaoItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, nome: record.nome } : item)),
-      )
-
-      const currentVal = form.getValues('classificacao')
-      const oldItem = classificacaoItems.find((c) => c.id === id)
-      if (oldItem && currentVal === oldItem.nome) {
-        form.setValue('classificacao', nome)
-      }
-      toast.success('Classificação atualizada')
-    } catch (err) {
-      console.error(err)
-      toast.error('Erro ao atualizar classificação')
-    }
-  }
-
-  const handleDeleteClassificacao = async (id: string) => {
-    try {
-      await pb.collection('classificacoes_lead').delete(id)
-
-      const deletedItem = classificacaoItems.find((c) => c.id === id)
-      setClassificacaoItems((prev) => prev.filter((item) => item.id !== id))
-
-      const currentVal = form.getValues('classificacao')
-      if (deletedItem && currentVal === deletedItem.nome) {
-        form.setValue('classificacao', 'none')
-      }
-      toast.success('Classificação removida')
-    } catch (err) {
-      console.error(err)
-      toast.error('Erro ao remover classificação')
     }
   }
 
@@ -357,8 +366,6 @@ export function LeadsRegistroModal({
                       }}
                       items={classificacaoItems}
                       onAdd={handleAddClassificacao}
-                      onEdit={handleEditClassificacao}
-                      onDelete={handleDeleteClassificacao}
                       placeholder="Qualificando"
                       disabled={!activeCampanha}
                     />
