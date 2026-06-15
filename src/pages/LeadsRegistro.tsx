@@ -143,6 +143,49 @@ export default function LeadsRegistro() {
     fetchClassificacoes()
   }, [fetchClassificacoes])
 
+  useEffect(() => {
+    const migrateClassificacoes = async () => {
+      if (localStorage.getItem('migration_classificacao_v2') === 'true') {
+        return
+      }
+
+      try {
+        const records = await pb.collection('leads_registro').getFullList({
+          filter: "campanha = 'AUX. ACIDENTE'",
+        })
+
+        const mapping: Record<string, string> = {
+          'Sem qualidade': 'Sem Qual.',
+          Aposentado: 'Aposent.',
+          'Sem interesse': 'Sem Inter.',
+          'Recebendo aux doença': 'Rec. Aux. D.',
+          'Não sofreu acidente': 'N. Sof. Ac.',
+          'Servidor público': 'Serv. Públ.',
+        }
+
+        let updated = false
+        for (const record of records) {
+          if (record.classificacao && mapping[record.classificacao]) {
+            await pb.collection('leads_registro').update(record.id, {
+              classificacao: mapping[record.classificacao],
+            })
+            updated = true
+          }
+        }
+
+        localStorage.setItem('migration_classificacao_v2', 'true')
+
+        if (updated) {
+          fetchLeads()
+        }
+      } catch (error) {
+        console.error('Error migrating classificacoes:', error)
+      }
+    }
+
+    migrateClassificacoes()
+  }, [fetchLeads])
+
   const activeColumns = useMemo(() => {
     const baseCols = [
       { key: 'data', label: 'Data', width: '100px' },
