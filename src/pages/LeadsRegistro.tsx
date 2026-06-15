@@ -125,46 +125,47 @@ export default function LeadsRegistro() {
     }
   }
 
-  const derColumns = useMemo(
-    () => [
+  const [classificacoes, setClassificacoes] = useState<any[]>([])
+
+  const fetchClassificacoes = useCallback(async () => {
+    try {
+      const records = await pb.collection('classificacoes_lead').getFullList({
+        filter: `campanha = '${activeTab}'`,
+        sort: '+created',
+      })
+      setClassificacoes(records)
+    } catch (error) {
+      console.error('Error fetching classificacoes:', error)
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    fetchClassificacoes()
+  }, [fetchClassificacoes])
+
+  const activeColumns = useMemo(() => {
+    const baseCols = [
       { key: 'data', label: 'Data', width: '100px' },
       { key: 'total', label: 'Total', width: '70px' },
       { key: 'qualificando', label: 'Qualificando', width: '110px' },
       { key: 'qualificado', label: 'Qualificado', width: '110px' },
       { key: 'contratoFechado', label: 'Contrato Fechado', width: '110px' },
-      { key: 'prazoDecadencial', label: 'Prazo Decadencial', width: '110px' },
-      { key: 'foraDoPrazo', label: 'Fora do prazo', width: '110px' },
-      { key: 'revisaoEmPensao', label: 'Revisão em pensão', width: '110px' },
-      { key: 'revisao', label: 'Revisão', width: '110px' },
-      { key: 'queriaRvt', label: 'Queria RVT', width: '110px' },
-      { key: 'outros', label: 'Outros', width: '110px' },
-      { key: 'totalDesq', label: 'Total Desq.', width: '110px' },
-    ],
-    [],
-  )
+    ]
 
-  const auxColumns = useMemo(
-    () => [
-      { key: 'data', label: 'Data', width: '100px' },
-      { key: 'total', label: 'Total', width: '70px' },
-      { key: 'qualificando', label: 'Qualificando', width: '110px' },
-      { key: 'qualificado', label: 'Qualificado', width: '110px' },
-      { key: 'contratoFechado', label: 'Contrato Fechado', width: '110px' },
-      { key: 'semQualidade', label: 'Sem qualidade', width: '110px' },
-      { key: 'aposentado', label: 'Aposentado', width: '110px' },
-      { key: 'carne', label: 'Carnê', width: '110px' },
-      { key: 'semInteresse', label: 'Sem interesse', width: '110px' },
-      { key: 'recAuxDoenca', label: 'Rec. Aux Doença', width: '110px' },
-      { key: 'naoSofreuAcidente', label: 'Não sof. acidente', width: '110px' },
-      { key: 'servidorPublico', label: 'Servidor público', width: '110px' },
-      { key: 'engano', label: 'Engano', width: '110px' },
-      { key: 'totalDesq', label: 'Total Desq.', width: '110px' },
-    ],
-    [],
-  )
+    const dynCols = classificacoes
+      .filter((c) => c.nome !== 'Qualificado' && c.nome !== 'Contrato Fechado')
+      .map((c) => ({
+        key: c.nome,
+        label: c.nome,
+        width: '110px',
+      }))
 
-  const activeColumns = activeTab === 'DER' ? derColumns : auxColumns
-  const tableMinWidth = activeTab === 'DER' ? '1270px' : '1490px'
+    const endCols = [{ key: 'totalDesq', label: 'Total Desq.', width: '110px' }]
+
+    return [...baseCols, ...dynCols, ...endCols]
+  }, [classificacoes])
+
+  const tableMinWidth = `${100 + 70 + (activeColumns.length - 2) * 110}px`
 
   const getBadgeProps = (classificacao?: string) => {
     if (!classificacao) return { label: 'Qualificando', bg: '#5A9FD4' }
@@ -187,21 +188,12 @@ export default function LeadsRegistro() {
             qualificado: 0,
             contratoFechado: 0,
             totalDesq: 0,
-            prazoDecadencial: 0,
-            foraDoPrazo: 0,
-            revisaoEmPensao: 0,
-            revisao: 0,
-            queriaRvt: 0,
-            outros: 0,
-            semQualidade: 0,
-            aposentado: 0,
-            carne: 0,
-            semInteresse: 0,
-            recAuxDoenca: 0,
-            naoSofreuAcidente: 0,
-            servidorPublico: 0,
-            engano: 0,
           }
+          classificacoes.forEach((c) => {
+            if (c.nome !== 'Qualificado' && c.nome !== 'Contrato Fechado') {
+              acc[date][c.nome] = 0
+            }
+          })
         }
 
         acc[date].total += 1
@@ -215,38 +207,7 @@ export default function LeadsRegistro() {
           acc[date].contratoFechado += 1
         } else {
           acc[date].totalDesq += 1
-
-          if (c === 'Prazo Decadencial') {
-            acc[date].prazoDecadencial += 1
-          } else if (c === 'Fora do prazo') {
-            acc[date].foraDoPrazo += 1
-          } else if (c === 'Revisão em pensão') {
-            acc[date].revisaoEmPensao += 1
-          } else if (c === 'Revisão') {
-            acc[date].revisao += 1
-          } else if (c === 'Queria RVT') {
-            acc[date].queriaRvt += 1
-          } else if (c === 'Outros') {
-            acc[date].outros += 1
-          } else if (c === 'Sem qualidade') {
-            acc[date].semQualidade += 1
-          } else if (c === 'Aposentado') {
-            acc[date].aposentado += 1
-          } else if (c === 'Carnê') {
-            acc[date].carne += 1
-          } else if (c === 'Sem interesse') {
-            acc[date].semInteresse += 1
-          } else if (c === 'Recebendo aux doença') {
-            acc[date].recAuxDoenca += 1
-          } else if (c === 'Não sofreu acidente') {
-            acc[date].naoSofreuAcidente += 1
-          } else if (c === 'Servidor público') {
-            acc[date].servidorPublico += 1
-          } else if (c === 'Engano') {
-            acc[date].engano += 1
-          } else {
-            acc[date].outros += 1
-          }
+          acc[date][c] = (acc[date][c] || 0) + 1
         }
 
         return acc
@@ -255,55 +216,46 @@ export default function LeadsRegistro() {
     )
 
     return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date))
-  }, [filteredLeads])
+  }, [filteredLeads, classificacoes])
 
   const totals = useMemo(() => {
-    const t = {
+    const t: Record<string, number> = {
       total: 0,
       qualificando: 0,
       qualificado: 0,
       contratoFechado: 0,
       totalDesq: 0,
-      prazoDecadencial: 0,
-      foraDoPrazo: 0,
-      revisaoEmPensao: 0,
-      revisao: 0,
-      queriaRvt: 0,
-      outros: 0,
-      semQualidade: 0,
-      aposentado: 0,
-      carne: 0,
-      semInteresse: 0,
-      recAuxDoenca: 0,
-      naoSofreuAcidente: 0,
-      servidorPublico: 0,
-      engano: 0,
     }
 
+    classificacoes.forEach((c) => {
+      if (c.nome !== 'Qualificado' && c.nome !== 'Contrato Fechado') {
+        t[c.nome] = 0
+      }
+    })
+
     summaryData.forEach((row: any) => {
-      t.total += row.total
-      t.qualificando += row.qualificando
-      t.qualificado += row.qualificado
-      t.contratoFechado += row.contratoFechado
-      t.totalDesq += row.totalDesq
-      t.prazoDecadencial += row.prazoDecadencial
-      t.foraDoPrazo += row.foraDoPrazo
-      t.revisaoEmPensao += row.revisaoEmPensao
-      t.revisao += row.revisao
-      t.queriaRvt += row.queriaRvt
-      t.outros += row.outros
-      t.semQualidade += row.semQualidade
-      t.aposentado += row.aposentado
-      t.carne += row.carne
-      t.semInteresse += row.semInteresse
-      t.recAuxDoenca += row.recAuxDoenca
-      t.naoSofreuAcidente += row.naoSofreuAcidente
-      t.servidorPublico += row.servidorPublico
-      t.engano += row.engano
+      t.total += row.total || 0
+      t.qualificando += row.qualificando || 0
+      t.qualificado += row.qualificado || 0
+      t.contratoFechado += row.contratoFechado || 0
+      t.totalDesq += row.totalDesq || 0
+
+      Object.keys(row).forEach((k) => {
+        if (
+          k !== 'date' &&
+          k !== 'total' &&
+          k !== 'qualificando' &&
+          k !== 'qualificado' &&
+          k !== 'contratoFechado' &&
+          k !== 'totalDesq'
+        ) {
+          t[k] = (t[k] || 0) + (row[k] || 0)
+        }
+      })
     })
 
     return t
-  }, [summaryData])
+  }, [summaryData, classificacoes])
 
   return (
     <div className="flex flex-col h-full bg-[#FAF8F2] min-h-[calc(100vh-8rem)] rounded-xl overflow-hidden p-6 shadow-sm">
@@ -409,7 +361,7 @@ export default function LeadsRegistro() {
                           const val =
                             col.key === 'data'
                               ? row.date.split('-').reverse().join('/')
-                              : row[col.key]
+                              : row[col.key] || 0
                           return (
                             <TableCell
                               key={idx}
@@ -427,7 +379,7 @@ export default function LeadsRegistro() {
                     <TableRow className="bg-[#FAF8F2] hover:bg-[#FAF8F2] border-t-2 border-[#C9922A]/20">
                       {activeColumns.map((col, idx) => {
                         const val =
-                          col.key === 'data' ? 'Total' : totals[col.key as keyof typeof totals]
+                          col.key === 'data' ? 'Total' : totals[col.key as keyof typeof totals] || 0
                         return (
                           <TableCell
                             key={idx}
