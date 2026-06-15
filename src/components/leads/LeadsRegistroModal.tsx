@@ -342,40 +342,30 @@ export function LeadsRegistroModal({
             <FormField
               control={form.control}
               name="classificacao"
-              render={({ field }) => {
-                const selectedItem = classificacaoItems.find((c) => c.nome === field.value)
-                const selectValue = selectedItem
-                  ? selectedItem.id
-                  : field.value === 'none' || !field.value
-                    ? ''
-                    : field.value
-
-                return (
-                  <FormItem>
-                    <FormLabel>Classificação</FormLabel>
-                    <FormControl>
-                      <DynamicSelect
-                        value={selectValue}
-                        onChange={(val) => {
-                          if (!val || val === 'none') {
-                            field.onChange('none')
-                          } else {
-                            const item = classificacaoItems.find((c) => c.id === val)
-                            field.onChange(item ? item.nome : val)
-                          }
-                        }}
-                        items={classificacaoItems}
-                        onAdd={handleAddClassificacao}
-                        onEdit={handleEditClassificacao}
-                        onDelete={handleDeleteClassificacao}
-                        placeholder="Qualificando"
-                        disabled={!activeCampanha}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )
-              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Classificação</FormLabel>
+                  <FormControl>
+                    <DynamicSelect
+                      value={!field.value || field.value === 'none' ? '' : field.value}
+                      onChange={(val: string) => {
+                        if (!val || val === 'none') {
+                          field.onChange('')
+                        } else {
+                          field.onChange(val)
+                        }
+                      }}
+                      items={classificacaoItems}
+                      onAdd={handleAddClassificacao}
+                      onEdit={handleEditClassificacao}
+                      onDelete={handleDeleteClassificacao}
+                      placeholder="Qualificando"
+                      disabled={!activeCampanha}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             {duplicateWarning && (
