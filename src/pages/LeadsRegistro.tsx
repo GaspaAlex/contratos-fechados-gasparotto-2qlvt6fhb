@@ -568,6 +568,7 @@ export default function LeadsRegistro() {
           toast.success(leadToEdit ? 'Lead atualizado com sucesso' : 'Lead registrado com sucesso')
           fetchLeads()
         }}
+        onClassificacaoAdded={fetchClassificacoes}
       />
 
       <AlertDialog

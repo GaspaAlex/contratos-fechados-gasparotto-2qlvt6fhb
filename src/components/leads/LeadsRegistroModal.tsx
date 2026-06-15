@@ -52,6 +52,7 @@ interface LeadsRegistroModalProps {
   onSaved: () => void
   campanha: string
   lead?: any
+  onClassificacaoAdded?: () => void
 }
 
 export function LeadsRegistroModal({
@@ -60,6 +61,7 @@ export function LeadsRegistroModal({
   onSaved,
   campanha,
   lead,
+  onClassificacaoAdded,
 }: LeadsRegistroModalProps) {
   const [loading, setLoading] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
@@ -160,6 +162,9 @@ export function LeadsRegistroModal({
               filter: `campanha = '${activeCampanha}'`,
               sort: 'created',
             })
+            if (onClassificacaoAdded) {
+              onClassificacaoAdded()
+            }
           }
 
           const currentVal = form.getValues('classificacao')
@@ -177,7 +182,7 @@ export function LeadsRegistroModal({
     if (open) {
       fetchClassificacoes()
     }
-  }, [activeCampanha, open, form])
+  }, [activeCampanha, open, form, onClassificacaoAdded])
 
   const handleAddClassificacao = async (nome: string) => {
     try {
@@ -187,6 +192,9 @@ export function LeadsRegistroModal({
       })
       setClassificacaoItems((prev) => [...prev, { id: record.id, nome: record.nome }])
       toast.success('Classificação adicionada')
+      if (onClassificacaoAdded) {
+        onClassificacaoAdded()
+      }
     } catch (err) {
       console.error(err)
       toast.error('Erro ao adicionar classificação')
