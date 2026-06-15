@@ -87,10 +87,12 @@ export function ProtocoloTable({
 
   // Filters
   const filtered = data.filter((d: any) => {
-    if (origem === 'Parceria') {
-      if (!d.parceiro) return false
-    } else if (origem !== 'Todos' && d.origem !== origem) {
-      return false
+    if (origem !== 'Todos') {
+      if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
+        if (d.parceiro !== origem) return false
+      } else if (d.origem !== origem) {
+        return false
+      }
     }
     const searchNormalized = normalizeText(search)
     if (searchNormalized) {
@@ -298,7 +300,7 @@ export function ProtocoloTable({
               </button>
             ))}
             <div className="w-px h-4 bg-border mx-1" />
-            {['Campanha', 'Particular', 'Parceria'].map((o) => (
+            {['Campanha', 'Particular', 'Previdenciarista', 'Carnevale', 'Macohin'].map((o) => (
               <button
                 key={o}
                 onClick={() => setOrigem(origem === o ? 'Todos' : o)}

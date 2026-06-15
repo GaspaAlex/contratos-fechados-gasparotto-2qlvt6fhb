@@ -32,7 +32,13 @@ export function ProtocoloDashboard({
 }) {
   const filteredData = useMemo(() => {
     return data.filter((d) => {
-      if (origem !== 'Todos' && d.origem !== origem) return false
+      if (origem !== 'Todos') {
+        if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
+          if (d.parceiro !== origem) return false
+        } else if (d.origem !== origem) {
+          return false
+        }
+      }
       if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
       const respName = d.expand?.responsavel?.nome || d.responsavel || ''
       if (responsavel !== 'Todos' && respName !== responsavel) return false
@@ -67,7 +73,7 @@ export function ProtocoloDashboard({
         ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status) &&
         d.decisao !== 'Improcedente',
     )
-    .reduce((sum, d) => sum + (d.valor || 0) * 0.3, 0)
+    .reduce((sum, d) => sum + (d.valor || 0) * (d.parceiro ? 0.15 : 0.3), 0)
 
   const cProtJud = filteredData.filter((d) => d.status === 'Protocolado Judicial').length
   const cReqAdm = filteredData.filter((d) => d.status === 'Requerimento Adm.').length
@@ -87,7 +93,7 @@ export function ProtocoloDashboard({
       }
       groups[ym].count += 1
       if (d.decisao !== 'Improcedente') {
-        groups[ym].val += (d.valor || 0) * 0.3
+        groups[ym].val += (d.valor || 0) * (d.parceiro ? 0.15 : 0.3)
       }
     })
 
@@ -111,7 +117,13 @@ export function ProtocoloDashboard({
     return data.filter((d) => {
       if (!d.dcalculo) return false
 
-      if (origem !== 'Todos' && d.origem !== origem) return false
+      if (origem !== 'Todos') {
+        if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
+          if (d.parceiro !== origem) return false
+        } else if (d.origem !== origem) {
+          return false
+        }
+      }
       if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
       const respName = d.expand?.responsavel?.nome || d.responsavel || ''
       if (responsavel !== 'Todos' && respName !== responsavel) return false
@@ -257,7 +269,7 @@ export function ProtocoloDashboard({
                   QUANTIDADE DE AÇÕES
                 </TableHead>
                 <TableHead className="text-right text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                  HONORÁRIOS (30%)
+                  HONORÁRIOS PROJETADOS
                 </TableHead>
               </TableRow>
             </TableHeader>
