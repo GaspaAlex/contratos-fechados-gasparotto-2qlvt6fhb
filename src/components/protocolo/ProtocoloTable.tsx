@@ -87,7 +87,11 @@ export function ProtocoloTable({
 
   // Filters
   const filtered = data.filter((d: any) => {
-    if (origem !== 'Todos' && d.origem !== origem) return false
+    if (origem === 'Parceria') {
+      if (!d.parceiro) return false
+    } else if (origem !== 'Todos' && d.origem !== origem) {
+      return false
+    }
     const searchNormalized = normalizeText(search)
     if (searchNormalized) {
       const nNome = normalizeText(d.nome)
@@ -275,44 +279,6 @@ export function ProtocoloTable({
               ))}
             </SelectContent>
           </Select>
-          <div className="flex gap-2 items-center border-l pl-3 ml-1 border-muted">
-            <Select value={monthStart} onValueChange={setMonthStart}>
-              <SelectTrigger className="w-[100px] h-9 text-sm">
-                <SelectValue placeholder="De" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Todos">De</SelectItem>
-                {monthsArray.map((m, i) => (
-                  <SelectItem key={i} value={i.toString()}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={monthEnd} onValueChange={setMonthEnd}>
-              <SelectTrigger className="w-[100px] h-9 text-sm">
-                <SelectValue placeholder="Até" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Todos">Até</SelectItem>
-                {monthsArray.map((m, i) => (
-                  <SelectItem key={i} value={i.toString()}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              className="h-9 px-3 text-xs"
-              onClick={() => {
-                setMonthStart('Todos')
-                setMonthEnd('Todos')
-              }}
-            >
-              Limpar
-            </Button>
-          </div>
         </div>
         <div className="flex gap-3 w-full xl:w-auto justify-end items-center">
           <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap items-center">
@@ -332,7 +298,7 @@ export function ProtocoloTable({
               </button>
             ))}
             <div className="w-px h-4 bg-border mx-1" />
-            {['Campanha', 'Particular'].map((o) => (
+            {['Campanha', 'Particular', 'Parceria'].map((o) => (
               <button
                 key={o}
                 onClick={() => setOrigem(origem === o ? 'Todos' : o)}
@@ -361,12 +327,13 @@ export function ProtocoloTable({
               <TableHead className={headerClass}>RESP.</TableHead>
               <TableHead className={headerClass}>STATUS</TableHead>
               <TableHead className={headerClass}>ORIGEM</TableHead>
+              <TableHead className={headerClass}>PARCEIRO</TableHead>
               <TableHead className={headerClass}>D. CONTRATO</TableHead>
               <TableHead className={headerClass}>D. CÁLCULO</TableHead>
               <TableHead className={headerClass}>D. PROTOCOLO</TableHead>
               <TableHead className={headerClass}>Nº AUTOS</TableHead>
               <TableHead className={`text-right ${headerClass}`}>VALOR</TableHead>
-              <TableHead className={`text-right ${headerClass}`}>HONORÁRIOS (30%)</TableHead>
+              <TableHead className={`text-right ${headerClass}`}>HONORÁRIOS</TableHead>
               <TableHead className={headerClass}>DECISÃO</TableHead>
               <TableHead className={`w-20 text-center ${headerClass}`}>AÇÕES</TableHead>
             </TableRow>
@@ -387,7 +354,7 @@ export function ProtocoloTable({
                 <React.Fragment key={monthStr}>
                   <TableRow className="bg-muted/50 hover:bg-muted/50 border-b">
                     <TableCell
-                      colSpan={14}
+                      colSpan={15}
                       className="text-[10px] uppercase tracking-wider text-muted-foreground py-3 px-4"
                     >
                       <strong className="font-bold text-foreground">{label}</strong> • {projCount}{' '}
@@ -408,7 +375,7 @@ export function ProtocoloTable({
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={14} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={15} className="text-center py-12 text-muted-foreground">
                   Nenhum protocolo encontrado com os filtros atuais.
                 </TableCell>
               </TableRow>

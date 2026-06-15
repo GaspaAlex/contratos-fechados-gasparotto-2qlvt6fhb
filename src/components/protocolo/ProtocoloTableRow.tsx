@@ -54,8 +54,11 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       : item.decisao === 'Improcedente'
         ? 'text-rose-600 font-medium'
         : 'text-muted-foreground'
+  const percentual = item.parceiro ? 0.15 : 0.3
   const honorarios =
-    item.decisao === 'Improcedente' || !item.valor ? '—' : formatCurrency(item.valor * 0.3)
+    item.decisao === 'Improcedente' || !item.valor
+      ? '—'
+      : `${formatCurrency(item.valor * percentual)} (${Math.round(percentual * 100)}%)`
 
   return (
     <TableRow
@@ -105,6 +108,9 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
         ) : (
           <span className="text-muted-foreground">—</span>
         )}
+      </TableCell>
+      <TableCell className="whitespace-nowrap text-muted-foreground">
+        {item.parceiro || '—'}
       </TableCell>
       <TableCell className="whitespace-nowrap text-muted-foreground">
         {item.dcontrato ? format(parseISO(item.dcontrato), 'dd/MM/yyyy') : '—'}

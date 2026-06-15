@@ -46,6 +46,7 @@ const baseSchema = z.object({
   valor: z.coerce.number().optional(),
   decisao: z.string().default('Aguardando'),
   origem: z.string().optional(),
+  parceiro: z.string().optional(),
   representante: z.boolean().default(false).optional(),
   representante_nome: z.string().optional(),
   representante_cpf: z.string().optional(),
@@ -112,6 +113,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       valor: undefined as unknown as number,
       decisao: 'Aguardando',
       origem: '',
+      parceiro: '',
       representante: false,
       representante_nome: '',
       representante_cpf: '',
@@ -132,6 +134,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
           dprotocolo: item.dprotocolo ? item.dprotocolo.substring(0, 10) : '',
           origem: item.origem || '',
+          parceiro: item.parceiro || '',
           representante: item.representante || false,
           representante_nome: item.representante_nome || '',
           representante_cpf: item.representante_cpf || '',
@@ -152,6 +155,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           valor: undefined as unknown as number,
           decisao: 'Aguardando',
           origem: '',
+          parceiro: '',
           representante: false,
           representante_nome: '',
           representante_cpf: '',
@@ -342,6 +346,31 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                         <SelectItem value="none">Não informado</SelectItem>
                         <SelectItem value="Campanha">Campanha</SelectItem>
                         <SelectItem value="Particular">Particular</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="parceiro"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parceiro</FormLabel>
+                    <Select
+                      onValueChange={(val) => field.onChange(val === 'none' ? '' : val)}
+                      value={field.value || 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum</SelectItem>
+                        <SelectItem value="Previdenciarista">Previdenciarista</SelectItem>
+                        <SelectItem value="Carnevale">Carnevale</SelectItem>
+                        <SelectItem value="Macohin">Macohin</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
