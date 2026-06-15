@@ -174,9 +174,9 @@ export default function LeadsRegistro() {
   }
 
   const summaryData = useMemo(() => {
-    if (!leads || leads.length === 0) return []
+    if (!filteredLeads || filteredLeads.length === 0) return []
 
-    const grouped = leads.reduce(
+    const grouped = filteredLeads.reduce(
       (acc, lead) => {
         const date = lead.data.split(' ')[0]
         if (!acc[date]) {
@@ -255,7 +255,7 @@ export default function LeadsRegistro() {
     )
 
     return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date))
-  }, [leads])
+  }, [filteredLeads])
 
   const totals = useMemo(() => {
     const t = {
