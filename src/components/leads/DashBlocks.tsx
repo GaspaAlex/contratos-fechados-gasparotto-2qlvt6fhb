@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 
 export function SummaryCards({
   leads,
+  leadsRegistro = [],
   contratos,
   configs,
   month,
@@ -73,6 +74,21 @@ export function SummaryCards({
     [filteredContratos],
   )
 
+  const total_desq = useMemo(() => {
+    return leadsRegistro.filter((lead: any) => {
+      if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
+      if (campaign !== 'Todas' && lead.campanha !== campaign.toUpperCase()) return false
+
+      const cls = lead.classificacao || ''
+      const excluded = ['', 'Qualificando', 'Qualificado', 'Contrato Fechado']
+      if (excluded.includes(cls)) return false
+
+      return true
+    }).length
+  }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign])
+
+  const desqual_pct = agg.total_leads > 0 ? total_desq / agg.total_leads : 0
+
   const conv_geral = agg.total_leads > 0 ? total_fechados / agg.total_leads : null
   const conv_qualif = agg.qualificados > 0 ? total_fechados / agg.qualificados : null
   const pct_fech_via_fup = total_fechados > 0 ? fechados_fup / total_fechados : null
@@ -105,7 +121,7 @@ export function SummaryCards({
 
   const cGeral = getConvGeralStatus(conv_geral)
   const cQualif = getConvQualifStatus(conv_qualif)
-  const cDesq = getDesqStatus(agg.desqual_pct)
+  const cDesq = getDesqStatus(desqual_pct)
   const cFup = getFupStatus(pct_fech_via_fup)
 
   let monthLabel =
@@ -148,7 +164,7 @@ export function SummaryCards({
             Desqualificados
           </div>
           <div className="text-3xl font-black mt-1 mb-1 text-red-600 dark:text-red-500">
-            {agg.total_desq}
+            {total_desq}
           </div>
           <div className="text-[11px] text-muted-foreground font-medium">fora do perfil</div>
         </CardContent>
@@ -216,8 +232,8 @@ export function SummaryCards({
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Desqualificação %
           </div>
-          <div className={cn('text-2xl font-black mt-1 mb-1', colorDesq(agg.desqual_pct))}>
-            {fmtPct(agg.desqual_pct)}
+          <div className={cn('text-2xl font-black mt-1 mb-1', colorDesq(desqual_pct))}>
+            {fmtPct(desqual_pct)}
           </div>
           <div className="flex justify-between items-center mt-auto">
             <span className="text-[11px] text-muted-foreground font-medium">Limite ≤ 30%</span>

@@ -35,6 +35,7 @@ export default function LeadsCampanha() {
   const [summaryMonth, setSummaryMonth] = useState('Todos')
   const [summaryDay, setSummaryDay] = useState('Todos')
   const [leads, setLeads] = useState<any[]>([])
+  const [leadsRegistro, setLeadsRegistro] = useState<any[]>([])
   const [campaignConfigs, setCampaignConfigs] = useState<CampaignConfig[]>([])
   const [contratos, setContratos] = useState<any[]>([])
   const [campaign, setCampaign] = useState('Todas')
@@ -56,16 +57,20 @@ export default function LeadsCampanha() {
 
   const loadData = async () => {
     try {
-      const [data, configs, conts] = await Promise.all([
+      const [data, configs, conts, registros] = await Promise.all([
         getLeadsByYear(year),
         getCampaignConfigs(),
         pb.collection('contratos_fechados').getFullList({
           filter: `dcontrato >= "${year}-01-01 00:00:00" && dcontrato <= "${year}-12-31 23:59:59"`,
         }),
+        pb.collection('leads_registro').getFullList({
+          filter: `data >= "${year}-01-01 00:00:00" && data <= "${year}-12-31 23:59:59"`,
+        }),
       ])
       setLeads(data)
       setCampaignConfigs(configs)
       setContratos(conts)
+      setLeadsRegistro(registros)
     } catch (e) {
       console.error(e)
     }
@@ -78,6 +83,7 @@ export default function LeadsCampanha() {
   useRealtime('leads_diarios', loadData)
   useRealtime('configuracoes_metas', loadData)
   useRealtime('contratos_fechados', loadData)
+  useRealtime('leads_registro', loadData)
 
   const handleEdit = (row: any) => {
     setSelectedRecord(row)
@@ -223,6 +229,7 @@ export default function LeadsCampanha() {
 
       <SummaryCards
         leads={leads}
+        leadsRegistro={leadsRegistro}
         contratos={contratos}
         configs={campaignConfigs}
         month={summaryMonth}
