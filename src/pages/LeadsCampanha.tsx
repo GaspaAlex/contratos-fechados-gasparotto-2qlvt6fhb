@@ -67,10 +67,10 @@ export default function LeadsCampanha() {
           filter: `data >= "${year}-01-01 00:00:00" && data <= "${year}-12-31 23:59:59"`,
         }),
       ])
-      setLeads(data)
-      setCampaignConfigs(configs)
-      setContratos(conts)
-      setLeadsRegistro(registros)
+      setLeads(data ?? [])
+      setCampaignConfigs(configs ?? [])
+      setContratos(conts ?? [])
+      setLeadsRegistro(registros ?? [])
     } catch (e) {
       console.error(e)
     }

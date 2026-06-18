@@ -295,7 +295,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
 
             let qualifCount = 0
 
-            const filterStr = `data ~ "${dateStr}" && campanha = "${c.rotulo.toUpperCase()}"`
+            const filterStr = `data ~ "${dateStr}" && campanha = "${c.rotulo?.toUpperCase()}"`
 
             const registros = await pb.collection('leads_registro').getFullList({
               filter: filterStr,
@@ -450,13 +450,13 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                 <h4 className="text-xs font-bold text-blue-700 mb-3">LEADS RECEBIDOS</h4>
                 <div className="flex items-center gap-6 mb-4">
                   <div className="w-48">
-                    <NumInput control={form.control} name="google" label="Google Ads" />
+                    <NumInput control={form.control} name="google" label="Google Ads (DER)" />
                   </div>
                 </div>
 
                 <div className="p-2 rounded-md bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
                   <h5 className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase mb-2">
-                    Meta Ads por Campanha
+                    Leads por Campanha
                   </h5>
                   <div className="w-full border rounded-md shadow-sm overflow-hidden">
                     <table className="w-full text-xs text-left bg-[#FAF8F2] dark:bg-amber-950/10 table-fixed">
@@ -482,7 +482,8 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                                 className="px-1 py-1 align-middle font-bold uppercase whitespace-nowrap text-[10px] text-amber-900 dark:text-amber-200 truncate text-left"
                                 title={c.rotulo}
                               >
-                                {c.rotulo?.toUpperCase()}
+                                {c.rotulo?.toUpperCase()}{' '}
+                                {c.rotulo?.toUpperCase() === 'DER' ? '(GOOGLE)' : '(META)'}
                               </td>
                               <td className="px-0.5 py-1 align-middle">
                                 <TableCellInput control={form.control} name={metaName} readOnly />

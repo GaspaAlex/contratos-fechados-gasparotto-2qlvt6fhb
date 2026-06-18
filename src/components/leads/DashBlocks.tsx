@@ -54,9 +54,9 @@ export function SummaryCards({
   )
 
   const totalLeadsCalculated = useMemo(() => {
-    let countRegistro = leadsRegistro.filter((lead: any) => {
+    let countRegistro = (leadsRegistro ?? []).filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo.toUpperCase())
+      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo?.toUpperCase())
         return false
       return true
     }).length
@@ -102,9 +102,9 @@ export function SummaryCards({
   )
 
   const total_desq = useMemo(() => {
-    return leadsRegistro.filter((lead: any) => {
+    return (leadsRegistro ?? []).filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo.toUpperCase())
+      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo?.toUpperCase())
         return false
 
       const cls = lead.classificacao || ''
@@ -116,9 +116,9 @@ export function SummaryCards({
   }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign, selectedCampaignRotulo])
 
   const totalQualificados = useMemo(() => {
-    return leadsRegistro.filter((lead: any) => {
+    return (leadsRegistro ?? []).filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo.toUpperCase())
+      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo?.toUpperCase())
         return false
 
       return lead.classificacao === 'Qualificado'
