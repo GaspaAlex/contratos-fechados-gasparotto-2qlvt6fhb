@@ -87,10 +87,19 @@ export function SummaryCards({
     }).length
   }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign])
 
+  const totalQualificados = useMemo(() => {
+    return leadsRegistro.filter((lead: any) => {
+      if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
+      if (campaign !== 'Todas' && lead.campanha !== campaign.toUpperCase()) return false
+
+      return lead.classificacao === 'Qualificado'
+    }).length
+  }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign])
+
   const desqual_pct = agg.total_leads > 0 ? total_desq / agg.total_leads : 0
 
   const conv_geral = agg.total_leads > 0 ? total_fechados / agg.total_leads : null
-  const conv_qualif = agg.qualificados > 0 ? total_fechados / agg.qualificados : null
+  const conv_qualif = totalQualificados > 0 ? total_fechados / totalQualificados : null
   const pct_fech_via_fup = total_fechados > 0 ? fechados_fup / total_fechados : null
 
   const getConvGeralStatus = (v: number | null) => {
@@ -154,7 +163,7 @@ export function SummaryCards({
           <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             Qualificados
           </div>
-          <div className="text-3xl font-black mt-1 mb-1">{agg.qualificados}</div>
+          <div className="text-3xl font-black mt-1 mb-1">{totalQualificados}</div>
           <div className="text-[11px] text-muted-foreground font-medium">leads válidos</div>
         </CardContent>
       </Card>
