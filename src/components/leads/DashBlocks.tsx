@@ -45,14 +45,41 @@ export function SummaryCards({
     return aggregateLeads(filteredLeads, year, campaign)
   }, [filteredLeads, year, campaign])
 
-  const agg = useMemo(() => calculateLeadRow(anoLeads), [anoLeads])
-
   const selectedCampaignRotulo = useMemo(
     () =>
       campaign === 'Todas'
         ? 'Todas'
         : configs?.find((c: any) => c.slug === campaign)?.rotulo || 'Todas',
     [campaign, configs],
+  )
+
+  const totalLeadsCalculated = useMemo(() => {
+    let countRegistro = leadsRegistro.filter((lead: any) => {
+      if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
+      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo.toUpperCase())
+        return false
+      return true
+    }).length
+
+    if (campaign === 'Todas') {
+      return countRegistro + (anoLeads?.google || 0)
+    }
+    return countRegistro
+  }, [
+    leadsRegistro,
+    month,
+    day,
+    year,
+    startMonth,
+    endMonth,
+    campaign,
+    selectedCampaignRotulo,
+    anoLeads,
+  ])
+
+  const agg = useMemo(
+    () => calculateLeadRow(anoLeads, totalLeadsCalculated),
+    [anoLeads, totalLeadsCalculated],
   )
 
   const filteredContratos = useMemo(() => {
@@ -77,7 +104,8 @@ export function SummaryCards({
   const total_desq = useMemo(() => {
     return leadsRegistro.filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== campaign.toUpperCase()) return false
+      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo.toUpperCase())
+        return false
 
       const cls = lead.classificacao || ''
       const excluded = ['', 'Qualificando', 'Qualificado', 'Contrato Fechado']
@@ -85,16 +113,17 @@ export function SummaryCards({
 
       return true
     }).length
-  }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign])
+  }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign, selectedCampaignRotulo])
 
   const totalQualificados = useMemo(() => {
     return leadsRegistro.filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== campaign.toUpperCase()) return false
+      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo.toUpperCase())
+        return false
 
       return lead.classificacao === 'Qualificado'
     }).length
-  }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign])
+  }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign, selectedCampaignRotulo])
 
   const desqual_pct = agg.total_leads > 0 ? total_desq / agg.total_leads : 0
 

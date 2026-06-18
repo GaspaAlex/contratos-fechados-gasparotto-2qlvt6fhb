@@ -101,7 +101,7 @@ export function filterLeadsByPeriod(
   return filtered
 }
 
-export function calculateLeadRow(raw: any) {
+export function calculateLeadRow(raw: any, overrideTotalLeads?: number) {
   const v = (k: string) => Number(raw[k] || 0)
 
   let google = v('google')
@@ -116,7 +116,7 @@ export function calculateLeadRow(raw: any) {
   let sem_interesse = v('sem_interesse')
   let engano = v('engano')
 
-  let total_leads = google + meta_ads
+  let total_leads = overrideTotalLeads !== undefined ? overrideTotalLeads : google + meta_ads
 
   const fechado_direto = v('fechado_direto')
   const fechado_fup = v('fechado_fup'),
