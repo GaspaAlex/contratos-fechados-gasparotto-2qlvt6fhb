@@ -44,36 +44,6 @@ const schema = z.object({
   qualif_c3: numSchema.optional(),
   qualif_c4: numSchema.optional(),
   qualif_c5: numSchema.optional(),
-  sem_qualidade_c1: numSchema.optional(),
-  sem_qualidade_c2: numSchema.optional(),
-  sem_qualidade_c3: numSchema.optional(),
-  sem_qualidade_c4: numSchema.optional(),
-  sem_qualidade_c5: numSchema.optional(),
-  aposentado_c1: numSchema.optional(),
-  aposentado_c2: numSchema.optional(),
-  aposentado_c3: numSchema.optional(),
-  aposentado_c4: numSchema.optional(),
-  aposentado_c5: numSchema.optional(),
-  carne_c1: numSchema.optional(),
-  carne_c2: numSchema.optional(),
-  carne_c3: numSchema.optional(),
-  carne_c4: numSchema.optional(),
-  carne_c5: numSchema.optional(),
-  outros_c1: numSchema.optional(),
-  outros_c2: numSchema.optional(),
-  outros_c3: numSchema.optional(),
-  outros_c4: numSchema.optional(),
-  outros_c5: numSchema.optional(),
-  sem_interesse_c1: numSchema.optional(),
-  sem_interesse_c2: numSchema.optional(),
-  sem_interesse_c3: numSchema.optional(),
-  sem_interesse_c4: numSchema.optional(),
-  sem_interesse_c5: numSchema.optional(),
-  engano_c1: numSchema.optional(),
-  engano_c2: numSchema.optional(),
-  engano_c3: numSchema.optional(),
-  engano_c4: numSchema.optional(),
-  engano_c5: numSchema.optional(),
   em_qualif: numSchema,
   sem_qualidade: numSchema,
   aposentado: numSchema,
@@ -99,36 +69,6 @@ const campaignDefaults = {
   qualif_c3: 0,
   qualif_c4: 0,
   qualif_c5: 0,
-  sem_qualidade_c1: 0,
-  sem_qualidade_c2: 0,
-  sem_qualidade_c3: 0,
-  sem_qualidade_c4: 0,
-  sem_qualidade_c5: 0,
-  aposentado_c1: 0,
-  aposentado_c2: 0,
-  aposentado_c3: 0,
-  aposentado_c4: 0,
-  aposentado_c5: 0,
-  carne_c1: 0,
-  carne_c2: 0,
-  carne_c3: 0,
-  carne_c4: 0,
-  carne_c5: 0,
-  outros_c1: 0,
-  outros_c2: 0,
-  outros_c3: 0,
-  outros_c4: 0,
-  outros_c5: 0,
-  sem_interesse_c1: 0,
-  sem_interesse_c2: 0,
-  sem_interesse_c3: 0,
-  sem_interesse_c4: 0,
-  sem_interesse_c5: 0,
-  engano_c1: 0,
-  engano_c2: 0,
-  engano_c3: 0,
-  engano_c4: 0,
-  engano_c5: 0,
 }
 
 const TableCellInput = ({ control, name, readOnly }: any) => (
@@ -291,16 +231,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
     }
   }
 
-  const getSum = (prefix: string) => {
-    return (
-      (form.watch(`${prefix}_c1` as any) || 0) +
-      (form.watch(`${prefix}_c2` as any) || 0) +
-      (form.watch(`${prefix}_c3` as any) || 0) +
-      (form.watch(`${prefix}_c4` as any) || 0) +
-      (form.watch(`${prefix}_c5` as any) || 0)
-    )
-  }
-
   const meta_c1 = form.watch('meta_c1') || 0
   const meta_c2 = form.watch('meta_c2') || 0
   const meta_c3 = form.watch('meta_c3') || 0
@@ -312,21 +242,20 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
     ? meta_c1 + meta_c2 + meta_c3 + meta_c4 + meta_c5
     : vals.meta_ads || 0
 
-  const em_qualif_sum = getSum('qualif')
-  const sem_qualidade_sum = getSum('sem_qualidade')
-  const aposentado_sum = getSum('aposentado')
-  const carne_sum = getSum('carne')
-  const outros_sum = getSum('outros')
-  const sem_interesse_sum = getSum('sem_interesse')
-  const engano_sum = getSum('engano')
+  const em_qualif_sum =
+    (form.watch('qualif_c1') || 0) +
+    (form.watch('qualif_c2') || 0) +
+    (form.watch('qualif_c3') || 0) +
+    (form.watch('qualif_c4') || 0) +
+    (form.watch('qualif_c5') || 0)
 
   const currentEmQualif = hasCampaignLeads ? em_qualif_sum : vals.em_qualif || 0
-  const currentSemQualidade = hasCampaignLeads ? sem_qualidade_sum : vals.sem_qualidade || 0
-  const currentAposentado = hasCampaignLeads ? aposentado_sum : vals.aposentado || 0
-  const currentCarne = hasCampaignLeads ? carne_sum : vals.contribuinte_carne || 0
-  const currentOutros = hasCampaignLeads ? outros_sum : vals.outros || 0
-  const currentSemInteresse = hasCampaignLeads ? sem_interesse_sum : vals.sem_interesse || 0
-  const currentEngano = hasCampaignLeads ? engano_sum : vals.engano || 0
+  const currentSemQualidade = vals.sem_qualidade || 0
+  const currentAposentado = vals.aposentado || 0
+  const currentCarne = vals.contribuinte_carne || 0
+  const currentOutros = vals.outros || 0
+  const currentSemInteresse = vals.sem_interesse || 0
+  const currentEngano = vals.engano || 0
 
   const currentTotalDesq =
     currentSemQualidade +
@@ -363,10 +292,8 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
             const slot = c.slug.replace('meta_c', '')
             const metaName = `meta_c${slot}`
             const qualifName = `qualif_c${slot}`
-            const semQualidadeName = `sem_qualidade_c${slot}`
 
             let qualifCount = 0
-            let semQualidadeCount = 0
 
             const filterStr = `data ~ "${dateStr}" && campanha = "${c.rotulo.toUpperCase()}"`
 
@@ -380,19 +307,11 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
               const classif = lr.classificacao || ''
               if (classif === '' || classif === 'Qualificando') {
                 qualifCount++
-              } else if (
-                classif !== '' &&
-                classif !== 'Qualificado' &&
-                classif !== 'Contrato Fechado' &&
-                classif !== 'Qualificando'
-              ) {
-                semQualidadeCount++
               }
             })
 
             form.setValue(metaName as any, metaCount, { shouldDirty: true })
             form.setValue(qualifName as any, qualifCount, { shouldDirty: true })
-            form.setValue(semQualidadeName as any, semQualidadeCount, { shouldDirty: true })
           }
         } catch (err) {
           console.error(err)
@@ -543,15 +462,10 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     <table className="w-full text-xs text-left bg-[#FAF8F2] dark:bg-amber-950/10 table-fixed">
                       <thead className="bg-muted text-xs text-muted-foreground uppercase whitespace-nowrap">
                         <tr>
-                          <th className="px-1 py-2 font-semibold w-[30%] text-left">CAMPANHA</th>
-                          <th className="px-0.5 py-2 font-semibold text-center w-[20%]">LEADS</th>
-                          <th className="px-0.5 py-2 font-semibold text-center w-[20%]">
+                          <th className="px-1 py-2 font-semibold w-[45%] text-left">CAMPANHA</th>
+                          <th className="px-0.5 py-2 font-semibold text-center w-[25%]">LEADS</th>
+                          <th className="px-0.5 py-2 font-semibold text-center w-[25%]">
                             EM QUALIF.
-                          </th>
-                          <th className="px-0.5 py-2 font-semibold text-center w-[25%] leading-tight">
-                            TOTAL
-                            <br />
-                            DESQUALIF.
                           </th>
                           <th className="px-1 py-2 w-[5%]"></th>
                         </tr>
@@ -561,19 +475,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           const slot = c.slug.replace('meta_c', '')
                           const metaName = `meta_c${slot}`
                           const qualifName = `qualif_c${slot}`
-                          const semQualidadeName = `sem_qualidade_c${slot}`
-                          const aposentadoName = `aposentado_c${slot}`
-                          const carneName = `carne_c${slot}`
-                          const outrosName = `outros_c${slot}`
-                          const semInteresseName = `sem_interesse_c${slot}`
-                          const enganoName = `engano_c${slot}`
-
-                          const semQualidade = form.watch(semQualidadeName) || 0
-                          const aposentado = form.watch(aposentadoName) || 0
-                          const carne = form.watch(carneName) || 0
-                          const outros = form.watch(outrosName) || 0
-                          const semInteresse = form.watch(semInteresseName) || 0
-                          const engano = form.watch(enganoName) || 0
 
                           return (
                             <tr key={c.id}>
@@ -588,13 +489,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                               </td>
                               <td className="px-0.5 py-1 align-middle">
                                 <TableCellInput control={form.control} name={qualifName} readOnly />
-                              </td>
-                              <td className="px-0.5 py-1 align-middle">
-                                <TableCellInput
-                                  control={form.control}
-                                  name={semQualidadeName}
-                                  readOnly
-                                />
                               </td>
                               <td className="px-1 py-1 align-middle text-right">
                                 <button
@@ -612,7 +506,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                       </tbody>
                       <tfoot className="bg-blue-50/80 dark:bg-blue-900/30 border-t-2 border-blue-200 dark:border-blue-800">
                         <tr>
-                          <td colSpan={4} className="px-2 py-2 text-right align-middle">
+                          <td colSpan={3} className="px-2 py-2 text-right align-middle">
                             <span className="text-[10px] font-bold uppercase text-blue-800 dark:text-blue-300 mr-2">
                               Total Leads (Google + Meta)
                             </span>
