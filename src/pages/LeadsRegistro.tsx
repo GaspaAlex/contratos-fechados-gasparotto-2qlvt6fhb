@@ -43,9 +43,39 @@ export default function LeadsRegistro() {
   const [leadToEdit, setLeadToEdit] = useState<any>(null)
   const [searchTel, setSearchTel] = useState('')
   const [searchDate, setSearchDate] = useState('')
+  const [diaInicio, setDiaInicio] = useState<string | null>(null)
+  const [diaFim, setDiaFim] = useState<string | null>(null)
+
+  useEffect(() => {
+    setDiaInicio(null)
+    setDiaFim(null)
+  }, [selectedMonth])
+
+  const daysInMonth = useMemo(() => {
+    const [yearStr, monthStr] = selectedMonth.split('-')
+    return new Date(parseInt(yearStr, 10), parseInt(monthStr, 10), 0).getDate()
+  }, [selectedMonth])
+
+  const daysOptions = useMemo(() => {
+    return Array.from({ length: daysInMonth }).map((_, i) => String(i + 1).padStart(2, '0'))
+  }, [daysInMonth])
 
   const filteredLeads = useMemo(() => {
     let result = leads
+
+    if (diaInicio) {
+      result = result.filter((lead) => {
+        const dayStr = lead.data.split(' ')[0].split('-')[2]
+        return dayStr >= diaInicio
+      })
+    }
+
+    if (diaFim) {
+      result = result.filter((lead) => {
+        const dayStr = lead.data.split(' ')[0].split('-')[2]
+        return dayStr <= diaFim
+      })
+    }
 
     if (searchTel.trim()) {
       const searchDigits = searchTel.replace(/\D/g, '')
@@ -72,7 +102,7 @@ export default function LeadsRegistro() {
     }
 
     return result
-  }, [leads, searchTel, searchDate])
+  }, [leads, searchTel, searchDate, diaInicio, diaFim])
 
   const months = Array.from({ length: 12 }).map((_, i) => {
     const d = new Date()
@@ -310,7 +340,7 @@ export default function LeadsRegistro() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-[160px] bg-white border-muted font-sans">
               <SelectValue placeholder="Selecione o mês" />
@@ -327,6 +357,62 @@ export default function LeadsRegistro() {
               })}
             </SelectContent>
           </Select>
+
+          <div className="flex items-center gap-2">
+            <Select
+              value={diaInicio || 'all'}
+              onValueChange={(val) => setDiaInicio(val === 'all' ? null : val)}
+            >
+              <SelectTrigger className="w-[70px] bg-white border-muted font-sans text-sm h-10">
+                <SelectValue placeholder="De" />
+              </SelectTrigger>
+              <SelectContent className="font-sans max-h-64">
+                <SelectItem value="all">De</SelectItem>
+                {daysOptions.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <span className="text-muted-foreground text-sm font-sans">até</span>
+
+            <Select
+              value={diaFim || 'all'}
+              onValueChange={(val) => setDiaFim(val === 'all' ? null : val)}
+            >
+              <SelectTrigger className="w-[70px] bg-white border-muted font-sans text-sm h-10">
+                <SelectValue placeholder="Até" />
+              </SelectTrigger>
+              <SelectContent className="font-sans max-h-64">
+                <SelectItem value="all">Até</SelectItem>
+                {daysOptions.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {(diaInicio || diaFim) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDiaInicio(null)
+                  setDiaFim(null)
+                }}
+                className={`font-sans text-xs px-2 h-8 transition-colors ${
+                  diaInicio && diaFim && diaInicio > diaFim
+                    ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                    : 'text-amber-700 hover:text-amber-800 hover:bg-amber-50'
+                }`}
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
 
           <Button
             className="bg-[#C9922A] hover:bg-[#b07d22] text-white font-sans font-medium"
