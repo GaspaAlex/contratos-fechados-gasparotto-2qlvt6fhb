@@ -288,6 +288,10 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
           const dateStr = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(vals.dia).padStart(2, '0')}`
           const active = (campaignConfigs || []).filter((c: any) => c.ativo)
 
+          const registrosDoDia = await pb.collection('leads_registro').getFullList({
+            filter: `data ~ "${dateStr}"`,
+          })
+
           for (const c of active) {
             const slot = c.slug.replace('meta_c', '')
             const metaName = `meta_c${slot}`
@@ -295,11 +299,9 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
 
             let qualifCount = 0
 
-            const filterStr = `data ~ "${dateStr}" && campanha = "${c.rotulo?.toUpperCase()}"`
-
-            const registros = await pb.collection('leads_registro').getFullList({
-              filter: filterStr,
-            })
+            const registros = registrosDoDia.filter(
+              (r) => r.campanha?.toUpperCase() === c.rotulo?.toUpperCase(),
+            )
 
             const metaCount = registros.length
 
@@ -346,11 +348,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
       fetchContratos()
     }
   }, [open, vals.mes])
-
-  const auxAcidenteCount = contratosCampanha.filter((c) => c.beneficio === 'Aux. Acidente').length
-  const derCount = contratosCampanha.filter((c) => c.beneficio === 'DER').length
-  const benAnaliseCount = contratosCampanha.filter((c) => c.beneficio === 'Ben. Análise').length
-  const totalCampanhaCount = auxAcidenteCount + derCount + benAnaliseCount
 
   const diretoCampanhaCount = contratosCampanha.filter((c) => c.fup === false).length
   const fupCampanhaCount = contratosCampanha.filter((c) => c.fup === true).length
@@ -483,7 +480,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                                 title={c.rotulo}
                               >
                                 {c.rotulo?.toUpperCase()}{' '}
-                                {c.rotulo?.toUpperCase() === 'DER' ? '(GOOGLE)' : '(META)'}
+                                {c.rotulo?.toUpperCase() === 'DER' ? '(GOOGLE)' : ''}
                               </td>
                               <td className="px-0.5 py-1 align-middle">
                                 <TableCellInput control={form.control} name={metaName} readOnly />
@@ -585,10 +582,17 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     <CalcBox label="Direto" val={diretoCampanhaCount} />
                     <CalcBox label="FUP" val={fupCampanhaCount} />
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <CalcBox label="Aux. Acidente" val={auxAcidenteCount} />
-                    <CalcBox label="DER" val={derCount} />
-                    <CalcBox label="Ben. Análise" val={benAnaliseCount} />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {activeConfigs.map((c: any) => {
+                      const count = contratosCampanha.filter((contrato) => {
+                        const campOrigem = contrato.campanha_origem || 'Aux. Acidente'
+                        return (
+                          campOrigem?.toUpperCase() === c.rotulo?.toUpperCase() ||
+                          contrato.beneficio?.toUpperCase() === c.rotulo?.toUpperCase()
+                        )
+                      }).length
+                      return <CalcBox key={c.id} label={c.rotulo} val={count} />
+                    })}
                   </div>
                 </div>
               </div>

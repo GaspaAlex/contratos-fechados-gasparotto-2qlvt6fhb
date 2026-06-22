@@ -56,7 +56,10 @@ export function SummaryCards({
   const totalLeadsCalculated = useMemo(() => {
     let countRegistro = (leadsRegistro ?? []).filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo?.toUpperCase())
+      if (
+        campaign !== 'Todas' &&
+        lead.campanha?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase()
+      )
         return false
       return true
     }).length
@@ -89,7 +92,11 @@ export function SummaryCards({
       if (c.origem !== 'Campanha') return false
       if (selectedCampaignRotulo !== 'Todas') {
         const campOrigem = c.campanha_origem || 'Aux. Acidente'
-        if (campOrigem !== selectedCampaignRotulo && c.campanha_origem !== campaign) return false
+        if (
+          campOrigem?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase() &&
+          c.campanha_origem?.toUpperCase() !== campaign?.toUpperCase()
+        )
+          return false
       }
       return isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth)
     })
@@ -104,7 +111,10 @@ export function SummaryCards({
   const total_desq = useMemo(() => {
     return (leadsRegistro ?? []).filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo?.toUpperCase())
+      if (
+        campaign !== 'Todas' &&
+        lead.campanha?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase()
+      )
         return false
 
       const cls = lead.classificacao || ''
@@ -118,7 +128,10 @@ export function SummaryCards({
   const totalQualificados = useMemo(() => {
     return (leadsRegistro ?? []).filter((lead: any) => {
       if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (campaign !== 'Todas' && lead.campanha !== selectedCampaignRotulo?.toUpperCase())
+      if (
+        campaign !== 'Todas' &&
+        lead.campanha?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase()
+      )
         return false
 
       return lead.classificacao === 'Qualificado'
@@ -372,7 +385,11 @@ export function CACCPLTable({
         if (c.origem !== 'Campanha') return false
         if (selectedCampaignRotulo !== 'Todas') {
           const campOrigem = c.campanha_origem || 'Aux. Acidente'
-          if (campOrigem !== selectedCampaignRotulo && c.campanha_origem !== campaign) return false
+          if (
+            campOrigem?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase() &&
+            c.campanha_origem?.toUpperCase() !== campaign?.toUpperCase()
+          )
+            return false
         }
         if (m && d) return isDateInPeriod(c.dcontrato, m, d, year, '', '')
         if (m) return isDateInPeriod(c.dcontrato, m, 'Todos', year, '', '')
