@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/table'
 
 export default function LeadsRegistro() {
-  const [activeTab, setActiveTab] = useState<'DER' | 'AUX. ACIDENTE'>('DER')
+  const [activeTab, setActiveTab] = useState<'DER' | 'AUX. ACIDENTE' | 'DER CANAL'>('DER')
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(() => format(new Date(), 'yyyy-MM'))
 
@@ -434,7 +434,7 @@ export default function LeadsRegistro() {
             activeTab === 'DER' ? 'text-[#C9922A]' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          DER
+          DER Campanha
           {activeTab === 'DER' && (
             <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#C9922A] rounded-t-full" />
           )}
@@ -449,6 +449,19 @@ export default function LeadsRegistro() {
         >
           AUX. ACIDENTE
           {activeTab === 'AUX. ACIDENTE' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#C9922A] rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('DER CANAL')}
+          className={`pb-3 px-4 text-sm font-semibold tracking-wide transition-colors relative font-sans ${
+            activeTab === 'DER CANAL'
+              ? 'text-[#C9922A]'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          DER Canal
+          {activeTab === 'DER CANAL' && (
             <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#C9922A] rounded-t-full" />
           )}
         </button>
