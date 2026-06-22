@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createProtocolo, updateProtocolo, deleteProtocolo } from '@/services/protocolo'
+import { getTiposAcao, createTipoAcao, updateTipoAcao, deleteTipoAcao } from '@/services/contratos'
+import { DynamicSelect } from '@/components/dashboard/DynamicSelect'
 import { toast } from 'sonner'
 
 const baseSchema = z.object({
@@ -97,6 +99,16 @@ const formatCurrencyForInput = (num?: number) => {
 
 export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis, onSaved }: any) {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+  const [tiposAcao, setTiposAcao] = useState<any[]>(tipos || [])
+
+  const loadTiposAcao = async () => {
+    try {
+      const res = await getTiposAcao()
+      setTiposAcao(res.map((x: any) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -125,6 +137,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
   useEffect(() => {
     if (open) {
       setDuplicateWarning(null)
+      loadTiposAcao()
       if (item) {
         const { prazo: _prazo, ...restItem } = item
         form.reset({
@@ -165,6 +178,47 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       }
     }
   }, [open, item, form])
+
+  const handleAddTipoAcao = async (nome: string) => {
+    try {
+      const newRecord = await createTipoAcao({ nome })
+      await loadTiposAcao()
+      form.setValue('tipo_acao', newRecord.id)
+    } catch (e) {
+      toast.error('Erro ao adicionar')
+    }
+  }
+
+  const handleEditTipoAcao = async (id: string, oldName: string, newName: string) => {
+    try {
+      await updateTipoAcao(id, { nome: newName })
+      await loadTiposAcao()
+    } catch (e) {
+      toast.error('Erro ao editar')
+    }
+  }
+
+  const handleDelTipoAcao = async (id: string, nome: string) => {
+    try {
+      if (!window.confirm(`Excluir o tipo de ação '${nome}'? Esta ação não pode ser desfeita.`))
+        return
+      await deleteTipoAcao(id)
+
+      const linkedProtocolos = await pb.collection('protocolo').getFullList({
+        filter: pb.filter('tipo_acao = {:id}', { id }),
+      })
+      for (const p of linkedProtocolos) {
+        await pb.collection('protocolo').update(p.id, { tipo_acao: '' })
+      }
+
+      await loadTiposAcao()
+      if (form.getValues('tipo_acao') === id) {
+        form.setValue('tipo_acao', '')
+      }
+    } catch (e) {
+      toast.error('Erro ao deletar')
+    }
+  }
 
   const onSubmit = async (values: any, forceSave = false) => {
     if (forceSave !== true) {
@@ -265,20 +319,17 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de Ação</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tipos.map((t: any) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <DynamicSelect
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      items={tiposAcao}
+                      onAdd={handleAddTipoAcao}
+                      onEdit={handleEditTipoAcao}
+                      onDelete={handleDelTipoAcao}
+                      placeholder="Selecione..."
+                      valueKey="id"
+                    />
+                    <FormMessage />
                   </FormItem>
                 )}
               />

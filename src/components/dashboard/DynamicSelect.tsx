@@ -18,6 +18,7 @@ export function DynamicSelect({
   onEdit,
   onDelete,
   placeholder,
+  valueKey = 'nome',
 }: {
   value: string
   onChange: (v: string) => void
@@ -26,6 +27,7 @@ export function DynamicSelect({
   onEdit?: (id: string, oldName: string, newName: string) => Promise<void>
   onDelete: (id: string, name: string) => Promise<void>
   placeholder: string
+  valueKey?: 'id' | 'nome'
 }) {
   const [isAdding, setIsAdding] = useState(false)
   const [newItem, setNewItem] = useState('')
@@ -127,7 +129,7 @@ export function DynamicSelect({
 
                 return (
                   <div key={item.id} className="relative group">
-                    <SelectItem value={item.nome} className="pr-16 cursor-pointer">
+                    <SelectItem value={item[valueKey]} className="pr-16 cursor-pointer">
                       {item.nome}
                     </SelectItem>
                     {!isDefault && (
