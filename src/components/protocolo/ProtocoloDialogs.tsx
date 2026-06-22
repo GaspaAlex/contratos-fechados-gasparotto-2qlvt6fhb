@@ -31,7 +31,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createProtocolo, updateProtocolo, deleteProtocolo } from '@/services/protocolo'
-import { getTiposAcao, createTipoAcao, updateTipoAcao, deleteTipoAcao } from '@/services/contratos'
+import {
+  getTiposAcao,
+  createTipoAcao,
+  updateTipoAcao,
+  deleteTipoAcao,
+  getResponsaveis,
+  createResponsavel,
+  updateResponsavel,
+  deleteResponsavel,
+} from '@/services/contratos'
 import { DynamicSelect } from '@/components/dashboard/DynamicSelect'
 import { toast } from 'sonner'
 
@@ -100,11 +109,21 @@ const formatCurrencyForInput = (num?: number) => {
 export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis, onSaved }: any) {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
   const [tiposAcao, setTiposAcao] = useState<any[]>(tipos || [])
+  const [responsaveisList, setResponsaveisList] = useState<any[]>(responsaveis || [])
 
   const loadTiposAcao = async () => {
     try {
       const res = await getTiposAcao()
       setTiposAcao(res.map((x: any) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const loadResponsaveis = async () => {
+    try {
+      const res = await getResponsaveis()
+      setResponsaveisList(res.map((x: any) => ({ id: x.id, nome: x.nome })))
     } catch (e) {
       console.error(e)
     }
@@ -138,6 +157,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
     if (open) {
       setDuplicateWarning(null)
       loadTiposAcao()
+      loadResponsaveis()
       if (item) {
         const { prazo: _prazo, ...restItem } = item
         form.reset({
@@ -214,6 +234,65 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       await loadTiposAcao()
       if (form.getValues('tipo_acao') === id) {
         form.setValue('tipo_acao', '')
+      }
+    } catch (e) {
+      toast.error('Erro ao deletar')
+    }
+  }
+
+  const handleAddResp = async (nome: string) => {
+    try {
+      const newRecord = await createResponsavel({ nome })
+      await loadResponsaveis()
+      form.setValue('responsavel', newRecord.id)
+    } catch (e) {
+      toast.error('Erro ao adicionar')
+    }
+  }
+
+  const handleEditResp = async (id: string, oldName: string, newName: string) => {
+    try {
+      await updateResponsavel(id, { nome: newName })
+
+      const linked = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('responsavel = {:oldName}', { oldName }),
+      })
+      for (const c of linked) {
+        await pb.collection('contratos_fechados').update(c.id, { responsavel: newName })
+      }
+
+      await loadResponsaveis()
+    } catch (e) {
+      toast.error('Erro ao editar')
+    }
+  }
+
+  const handleDelResp = async (id: string, nome: string) => {
+    try {
+      if (
+        !window.confirm(`Deseja excluir o responsável '${nome}'? Esta ação não pode ser desfeita.`)
+      )
+        return
+
+      await deleteResponsavel(id)
+
+      const linkedProtocolos = await pb.collection('protocolo').getFullList({
+        filter: pb.filter('responsavel = {:id}', { id }),
+      })
+      for (const p of linkedProtocolos) {
+        await pb.collection('protocolo').update(p.id, { responsavel: '' })
+      }
+
+      const linkedContratos = await pb.collection('contratos_fechados').getFullList({
+        filter: pb.filter('responsavel = {:nome}', { nome }),
+      })
+      for (const c of linkedContratos) {
+        await pb.collection('contratos_fechados').update(c.id, { responsavel: '' })
+      }
+
+      await loadResponsaveis()
+      if (form.getValues('responsavel') === id) {
+        form.setValue('responsavel', '')
       }
     } catch (e) {
       toast.error('Erro ao deletar')
@@ -339,20 +418,17 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsável</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {responsaveis.map((r: any) => (
-                          <SelectItem key={r.id} value={r.id}>
-                            {r.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <DynamicSelect
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      items={responsaveisList}
+                      onAdd={handleAddResp}
+                      onEdit={handleEditResp}
+                      onDelete={handleDelResp}
+                      placeholder="Selecione..."
+                      valueKey="id"
+                    />
+                    <FormMessage />
                   </FormItem>
                 )}
               />

@@ -51,6 +51,8 @@ export const getContratosByBeneficio = async (beneficio: string) =>
 export const getResponsaveis = async () =>
   pb.collection('responsaveis').getFullList({ sort: 'nome' })
 export const createResponsavel = async (data: any) => pb.collection('responsaveis').create(data)
+export const updateResponsavel = async (id: string, data: any) =>
+  pb.collection('responsaveis').update(id, data)
 export const deleteResponsavel = async (id: string) => pb.collection('responsaveis').delete(id)
 
 export const toPBDate = (ymd?: string) => {
