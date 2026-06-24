@@ -93,10 +93,6 @@ export function ProtocoloDashboard({
     ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(d.status),
   ).length
 
-  const projHonorarios = filteredByStatus
-    .filter((d) => d.decisao !== 'Improcedente')
-    .reduce((sum, d) => sum + (d.valor || 0) * (d.parceiro ? 0.15 : 0.3), 0)
-
   const projHonorariosTicketMedio = filteredData
     .filter(
       (d) =>
@@ -210,7 +206,7 @@ export function ProtocoloDashboard({
             </div>
             <div>
               <p className="text-sm font-semibold text-muted-foreground">PROJEÇÃO DE HONORÁRIOS</p>
-              <p className="text-4xl font-bold text-[#C9922A]">{formatCurrency(projHonorarios)}</p>
+              <p className="text-4xl font-bold text-[#C9922A]">{formatCurrency(tVal)}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-4 mt-6 text-sm">
