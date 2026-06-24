@@ -60,6 +60,7 @@ export default function Protocolo() {
         year={year}
         monthStart={monthStart}
         monthEnd={monthEnd}
+        status={status}
       />
 
       <ProtocoloTable

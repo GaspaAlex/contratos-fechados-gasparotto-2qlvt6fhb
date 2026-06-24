@@ -20,6 +20,7 @@ export function ProtocoloDashboard({
   year,
   monthStart,
   monthEnd,
+  status,
 }: {
   data: any[]
   tipo: string
@@ -29,6 +30,7 @@ export function ProtocoloDashboard({
   year: string
   monthStart: string
   monthEnd: string
+  status: string
 }) {
   const filteredData = useMemo(() => {
     return data.filter((d) => {
@@ -43,35 +45,64 @@ export function ProtocoloDashboard({
       const respName = d.expand?.responsavel?.nome || d.responsavel || ''
       if (responsavel !== 'Todos' && respName !== responsavel) return false
       if (year !== 'Todos') {
-        if (!d.dprotocolo || d.dprotocolo.substring(0, 4) !== year) return false
+        const recYear = d.dprotocolo
+          ? d.dprotocolo.substring(0, 4)
+          : d.dcalculo
+            ? d.dcalculo.substring(0, 4)
+            : null
+        if (recYear !== year) return false
       }
 
       const hasRange = monthStart !== 'Todos' && monthEnd !== 'Todos'
 
       if (hasRange) {
-        const dMonth = d.dprotocolo ? parseInt(d.dprotocolo.substring(5, 7), 10) - 1 : -1
+        const dMonthStr = d.dprotocolo
+          ? d.dprotocolo.substring(5, 7)
+          : d.dcalculo
+            ? d.dcalculo.substring(5, 7)
+            : null
+        const dMonth = dMonthStr ? parseInt(dMonthStr, 10) - 1 : -1
         const start = parseInt(monthStart, 10)
         const end = parseInt(monthEnd, 10)
         if (dMonth < start || dMonth > end) return false
       } else if (month !== 'Todos') {
-        const dMonth = d.dprotocolo
-          ? (parseInt(d.dprotocolo.substring(5, 7), 10) - 1).toString()
-          : ''
+        const dMonthStr = d.dprotocolo
+          ? d.dprotocolo.substring(5, 7)
+          : d.dcalculo
+            ? d.dcalculo.substring(5, 7)
+            : null
+        const dMonth = dMonthStr ? (parseInt(dMonthStr, 10) - 1).toString() : ''
         if (dMonth !== month) return false
       }
       return true
     })
   }, [data, tipo, responsavel, origem, year, month, monthStart, monthEnd])
 
+  const filteredByStatus = useMemo(() => {
+    return filteredData.filter((d) => {
+      if (status === 'Todos') {
+        return ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(
+          d.status,
+        )
+      }
+      return d.status === status
+    })
+  }, [filteredData, status])
+
   const totalAcoes = filteredData.filter((d) =>
-    ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status),
+    ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(d.status),
   ).length
 
-  const projHonorarios = filteredData
+  const projHonorarios = filteredByStatus
+    .filter((d) => d.decisao !== 'Improcedente')
+    .reduce((sum, d) => sum + (d.valor || 0) * (d.parceiro ? 0.15 : 0.3), 0)
+
+  const projHonorariosTicketMedio = filteredData
     .filter(
       (d) =>
-        ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status) &&
-        d.decisao !== 'Improcedente',
+        ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(
+          d.status,
+        ) && d.decisao !== 'Improcedente',
     )
     .reduce((sum, d) => sum + (d.valor || 0) * (d.parceiro ? 0.15 : 0.3), 0)
 
@@ -79,15 +110,16 @@ export function ProtocoloDashboard({
   const cReqAdm = filteredData.filter((d) => d.status === 'Requerimento Adm.').length
   const cProv = filteredData.filter((d) => d.status === 'Prov. Inicial').length
   const cDocs = filteredData.filter((d) => d.status === 'R. Docs').length
+  const cCalc = filteredData.filter((d) => d.status === 'Calculado').length
 
   const monthlyData = useMemo(() => {
     const groups: Record<string, { count: number; val: number }> = {}
 
-    filteredData.forEach((d) => {
-      if (!d.dprotocolo) return
-      if (!['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status)) return
+    filteredByStatus.forEach((d) => {
+      const recordDate = d.dprotocolo || d.dcalculo
+      if (!recordDate) return
 
-      const ym = d.dprotocolo.substring(0, 7) // "YYYY-MM"
+      const ym = recordDate.substring(0, 7) // "YYYY-MM"
       if (!groups[ym]) {
         groups[ym] = { count: 0, val: 0 }
       }
@@ -108,7 +140,7 @@ export function ProtocoloDashboard({
           val: item.val,
         }
       })
-  }, [filteredData])
+  }, [filteredByStatus])
 
   const tCount = monthlyData.reduce((s, m) => s + m.count, 0)
   const tVal = monthlyData.reduce((s, m) => s + m.val, 0)
@@ -151,6 +183,8 @@ export function ProtocoloDashboard({
     const exclusions = ['IA', 'Dr. Caio', 'Dr. Alex']
 
     filteredByCalculoData.forEach((d) => {
+      if (!['Protocolado Judicial', 'Requerimento Adm.'].includes(d.status)) return
+
       const respName = d.expand?.responsavel?.nome || d.responsavel || 'Sem responsável'
       if (exclusions.includes(respName)) return
       groups[respName] = (groups[respName] || 0) + 1
@@ -180,6 +214,7 @@ export function ProtocoloDashboard({
             </div>
           </div>
           <div className="flex flex-wrap gap-4 mt-6 text-sm">
+            <span className="font-medium text-purple-600">Calculado: {cCalc}</span>
             <span className="font-medium text-emerald-600">Prot. Judicial: {cProtJud}</span>
             <span className="font-medium text-teal-600">Req. Adm.: {cReqAdm}</span>
             <span className="font-medium text-blue-600">Prov. Inicial: {cProv}</span>
@@ -197,7 +232,7 @@ export function ProtocoloDashboard({
           <div className="flex gap-8 mt-4">
             <div>
               <p className="text-4xl font-bold text-[#C9922A]">
-                {totalAcoes > 0 ? formatCurrency(projHonorarios / totalAcoes) : '—'}
+                {totalAcoes > 0 ? formatCurrency(projHonorariosTicketMedio / totalAcoes) : '—'}
               </p>
             </div>
           </div>

@@ -71,7 +71,13 @@ export function ProtocoloTable({
   onDelete,
 }: any) {
   const availableYears = useMemo(() => {
-    const years = new Set(data.map((d: any) => (d.dprotocolo ? d.dprotocolo.substring(0, 4) : '')))
+    const years = new Set(
+      data.map((d: any) => {
+        if (d.dprotocolo) return d.dprotocolo.substring(0, 4)
+        if (d.dcalculo) return d.dcalculo.substring(0, 4)
+        return ''
+      }),
+    )
     years.delete('')
     const currentYear = new Date().getFullYear().toString()
     years.add(currentYear)
@@ -116,18 +122,33 @@ export function ProtocoloTable({
     if (responsavel !== 'Todos' && respName !== responsavel) return false
 
     if (year !== 'Todos') {
-      if (!d.dprotocolo || d.dprotocolo.substring(0, 4) !== year) return false
+      const recYear = d.dprotocolo
+        ? d.dprotocolo.substring(0, 4)
+        : d.dcalculo
+          ? d.dcalculo.substring(0, 4)
+          : null
+      if (recYear !== year) return false
     }
 
     const hasRange = monthStart !== 'Todos' && monthEnd !== 'Todos'
 
     if (hasRange) {
-      const dMonth = d.dprotocolo ? parseInt(d.dprotocolo.substring(5, 7), 10) - 1 : -1
+      const dMonthStr = d.dprotocolo
+        ? d.dprotocolo.substring(5, 7)
+        : d.dcalculo
+          ? d.dcalculo.substring(5, 7)
+          : null
+      const dMonth = dMonthStr ? parseInt(dMonthStr, 10) - 1 : -1
       const start = parseInt(monthStart, 10)
       const end = parseInt(monthEnd, 10)
       if (dMonth < start || dMonth > end) return false
     } else if (month !== 'Todos') {
-      const dMonth = d.dprotocolo ? (parseInt(d.dprotocolo.substring(5, 7), 10) - 1).toString() : ''
+      const dMonthStr = d.dprotocolo
+        ? d.dprotocolo.substring(5, 7)
+        : d.dcalculo
+          ? d.dcalculo.substring(5, 7)
+          : null
+      const dMonth = dMonthStr ? (parseInt(dMonthStr, 10) - 1).toString() : ''
       if (dMonth !== month) return false
     }
 
@@ -137,8 +158,10 @@ export function ProtocoloTable({
   // Chronological Sorting: ascending
   const sortedFiltered = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      const dateA = a.dprotocolo ? new Date(a.dprotocolo).getTime() : 0
-      const dateB = b.dprotocolo ? new Date(b.dprotocolo).getTime() : 0
+      const dateAStr = a.dprotocolo || a.dcalculo
+      const dateBStr = b.dprotocolo || b.dcalculo
+      const dateA = dateAStr ? new Date(dateAStr).getTime() : 0
+      const dateB = dateBStr ? new Date(dateBStr).getTime() : 0
       return dateA - dateB
     })
   }, [filtered])
@@ -154,13 +177,15 @@ export function ProtocoloTable({
   const grouped = useMemo(() => {
     const groups: Record<string, any[]> = {}
     sortedFiltered.forEach((d: any) => {
-      const m = d.dprotocolo ? d.dprotocolo.substring(0, 7) : '0000-00'
+      const recDate = d.dprotocolo || d.dcalculo
+      const m = recDate ? recDate.substring(0, 7) : '0000-00'
       if (!groups[m]) groups[m] = []
       groups[m].push(d)
     })
     return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
   }, [sortedFiltered])
 
+  const cCalc = filtered.filter((d: any) => d.status === 'Calculado').length
   const cProtJud = filtered.filter((d: any) => d.status === 'Protocolado Judicial').length
   const cReqAdm = filtered.filter((d: any) => d.status === 'Requerimento Adm.').length
   const cProv = filtered.filter((d: any) => d.status === 'Prov. Inicial').length
@@ -173,8 +198,8 @@ export function ProtocoloTable({
     <div className="space-y-4">
       <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
         <p>
-          Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial: {cProv} | R. Docs:{' '}
-          {cDocs} | Total: {filtered.length}
+          Calculado: {cCalc} | Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial:{' '}
+          {cProv} | R. Docs: {cDocs} | Total: {filtered.length}
         </p>
       </div>
 
@@ -286,6 +311,7 @@ export function ProtocoloTable({
           <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap items-center">
             {[
               { value: 'Todos', label: 'Todos' },
+              { value: 'Calculado', label: 'Calculado' },
               { value: 'Protocolado Judicial', label: 'Judicial' },
               { value: 'Requerimento Adm.', label: 'Administrativo' },
               { value: 'Prov. Inicial', label: 'Inicial' },
@@ -344,9 +370,12 @@ export function ProtocoloTable({
             {grouped.map(([monthStr, items]) => {
               const projCount = items.filter(
                 (i) =>
-                  ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(
-                    i.status,
-                  ) && i.decisao !== 'Improcedente',
+                  [
+                    'Protocolado Judicial',
+                    'Requerimento Adm.',
+                    'Prov. Inicial',
+                    'Calculado',
+                  ].includes(i.status) && i.decisao !== 'Improcedente',
               ).length
               const label =
                 monthStr !== '0000-00'
