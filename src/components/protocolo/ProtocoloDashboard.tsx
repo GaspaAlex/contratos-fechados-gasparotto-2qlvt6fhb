@@ -89,11 +89,11 @@ export function ProtocoloDashboard({
     })
   }, [filteredData, status])
 
-  const totalAcoes = filteredData.filter((d) =>
+  const totalAcoes = filteredByStatus.filter((d) =>
     ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(d.status),
   ).length
 
-  const projHonorariosTicketMedio = filteredData
+  const projHonorariosTicketMedio = filteredByStatus
     .filter(
       (d) =>
         ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(
@@ -136,6 +136,7 @@ export function ProtocoloDashboard({
           val: item.val,
         }
       })
+    // REPORT: The dependency filteredByStatus is already correctly set.
   }, [filteredByStatus])
 
   const tCount = monthlyData.reduce((s, m) => s + m.count, 0)
