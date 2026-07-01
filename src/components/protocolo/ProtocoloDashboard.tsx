@@ -144,7 +144,8 @@ export function ProtocoloDashboard({
 
   const filteredByCalculoData = useMemo(() => {
     return data.filter((d) => {
-      if (!d.dcalculo) return false
+      const calculoDate = d.dcalculo || d.dprotocolo
+      if (!calculoDate) return false
 
       if (origem !== 'Todos') {
         if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
@@ -157,18 +158,18 @@ export function ProtocoloDashboard({
       const respName = d.expand?.responsavel?.nome || d.responsavel || ''
       if (responsavel !== 'Todos' && respName !== responsavel) return false
       if (year !== 'Todos') {
-        if (!d.dcalculo || d.dcalculo.substring(0, 4) !== year) return false
+        if (calculoDate.substring(0, 4) !== year) return false
       }
 
       const hasRange = monthStart !== 'Todos' && monthEnd !== 'Todos'
 
       if (hasRange) {
-        const dMonth = d.dcalculo ? parseInt(d.dcalculo.substring(5, 7), 10) - 1 : -1
+        const dMonth = parseInt(calculoDate.substring(5, 7), 10) - 1
         const start = parseInt(monthStart, 10)
         const end = parseInt(monthEnd, 10)
         if (dMonth < start || dMonth > end) return false
       } else if (month !== 'Todos') {
-        const dMonth = d.dcalculo ? (parseInt(d.dcalculo.substring(5, 7), 10) - 1).toString() : ''
+        const dMonth = (parseInt(calculoDate.substring(5, 7), 10) - 1).toString()
         if (dMonth !== month) return false
       }
       return true
