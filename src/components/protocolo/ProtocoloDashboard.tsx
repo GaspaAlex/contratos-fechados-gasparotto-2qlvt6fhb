@@ -146,12 +146,6 @@ export function ProtocoloDashboard({
     return data.filter((d) => {
       if (!d.dcalculo) return false
 
-      console.log('[DIAG dcalculo]', {
-        raw: d.dcalculo,
-        substring57: d.dcalculo.substring(5, 7),
-        parsedMinus1: parseInt(d.dcalculo.substring(5, 7), 10) - 1,
-      })
-
       if (origem !== 'Todos') {
         if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
           if (d.parceiro !== origem) return false
