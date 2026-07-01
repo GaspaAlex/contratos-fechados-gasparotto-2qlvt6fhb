@@ -180,7 +180,7 @@ export function ProtocoloDashboard({
     const exclusions = ['IA', 'Dr. Caio', 'Dr. Alex']
 
     filteredByCalculoData.forEach((d) => {
-      if (!['Protocolado Judicial', 'Requerimento Adm.'].includes(d.status)) return
+      if (!['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(d.status)) return
 
       const respName = d.expand?.responsavel?.nome || d.responsavel || 'Sem responsável'
       if (exclusions.includes(respName)) return
