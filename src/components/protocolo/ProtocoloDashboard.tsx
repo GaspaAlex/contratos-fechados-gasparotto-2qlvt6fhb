@@ -112,7 +112,9 @@ export function ProtocoloDashboard({
             </div>
             <div>
               <p className="text-sm font-semibold text-muted-foreground">PROJEÇÃO DE HONORÁRIOS</p>
-              <p className="text-4xl font-bold text-[#C9922A]">{formatCurrency(tVal)}</p>
+              <p className="text-4xl font-bold text-[#C9922A]">
+                {formatCurrency(projHonorariosTicketMedio)}
+              </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-4 mt-6 text-sm">
