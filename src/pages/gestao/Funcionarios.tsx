@@ -200,7 +200,7 @@ export default function Funcionarios() {
     const [hS, mS] = saida.split(':').map(Number)
     let diff = hS * 60 + mS - (hE * 60 + mE)
     if (diff < 0) diff += 24 * 60
-    return Math.max(0, diff - 60)
+    return Math.max(0, diff - 90)
   }
 
   const handleSave = async (data: any, fotoFile: File | null) => {
