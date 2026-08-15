@@ -61,7 +61,6 @@ export function EditRegistroModal({
       const cargaMins = funcionario.carga_diaria || 480
       const hAtestado = formData.tipo_dia === 'atestado' ? Number(formData.horas_atestado) || 0 : 0
 
-      console.log('EditRegistroModal funcionario:', funcionario)
       const {
         horas_trabalhadas: hTrab,
         saldo_dia: saldo,
@@ -75,6 +74,8 @@ export function EditRegistroModal({
         formData.tipo_dia,
         hAtestado * 60,
         rowData.date,
+        funcionario.horario_entrada,
+        funcionario.horario_saida,
       )
 
       const dataToSave = {

@@ -25,10 +25,25 @@ export const calculateDailyBalance = (
   tipoDia: string = 'normal',
   horasAtestadoMins: number = 0,
   recordDate?: Date | string,
+  horarioEntrada?: string,
+  horarioSaida?: string,
 ): { horas_trabalhadas: number; saldo_dia: number; tipo_dia_sugerido?: string } => {
   const horas_trabalhadas = calculateWorkedMinutes(e1, s1, e2, s2)
   let saldo_dia = 0
   let tipo_dia_sugerido = tipoDia
+
+  const calcularToleranciaMinutos = (): number => {
+    if (!horarioEntrada || !horarioSaida) return 0
+    const ultimaSaida = s2 || s1
+    let variacao = 0
+    if (e1) {
+      variacao += Math.max(0, timeToMinutes(horarioEntrada) - timeToMinutes(e1))
+    }
+    if (ultimaSaida) {
+      variacao += Math.max(0, timeToMinutes(ultimaSaida) - timeToMinutes(horarioSaida))
+    }
+    return Math.min(variacao, 5)
+  }
 
   const isTodayOrFuture = () => {
     if (!recordDate) return false
@@ -38,9 +53,7 @@ export const calculateDailyBalance = (
     d.setHours(0, 0, 0, 0)
     return d.getTime() >= today.getTime()
   }
-
   const hasNoHours = !e1 && !s1 && !e2 && !s2
-
   if (tipoDia === 'normal') {
     if (hasNoHours) {
       if (isTodayOrFuture()) {
@@ -50,12 +63,12 @@ export const calculateDailyBalance = (
         tipo_dia_sugerido = 'falta'
       }
     } else {
-      saldo_dia = horas_trabalhadas - cargaMins
+      saldo_dia = horas_trabalhadas - calcularToleranciaMinutos() - cargaMins
     }
   } else if (tipoDia === 'falta') {
     if (!hasNoHours) {
       tipo_dia_sugerido = 'normal'
-      saldo_dia = horas_trabalhadas - cargaMins
+      saldo_dia = horas_trabalhadas - calcularToleranciaMinutos() - cargaMins
     } else {
       saldo_dia = -cargaMins
     }
@@ -64,9 +77,8 @@ export const calculateDailyBalance = (
   } else if (tipoDia === 'atestado') {
     saldo_dia = 0
   } else if (tipoDia === 'fim_de_semana') {
-    saldo_dia = horas_trabalhadas
+    saldo_dia = horas_trabalhadas - calcularToleranciaMinutos()
   }
-
   return { horas_trabalhadas, saldo_dia, tipo_dia_sugerido }
 }
 
