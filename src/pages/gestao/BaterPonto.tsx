@@ -166,6 +166,7 @@ export default function BaterPonto() {
       let s2 = field === 'saida2' ? time : todayRecord?.saida2
 
       const cargaMins = session.carga_diaria || 480
+      console.log('BaterPonto session:', session)
       const { horas_trabalhadas, saldo_dia, tipo_dia_sugerido } = calculateDailyBalance(
         e1,
         s1,
