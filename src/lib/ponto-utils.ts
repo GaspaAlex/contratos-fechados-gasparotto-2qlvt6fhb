@@ -42,7 +42,7 @@ export const calculateDailyBalance = (
     if (ultimaSaida) {
       variacao += Math.max(0, timeToMinutes(ultimaSaida) - timeToMinutes(horarioSaida))
     }
-    return Math.min(variacao, 5)
+    return Math.min(variacao, 10)
   }
 
   const isTodayOrFuture = () => {
