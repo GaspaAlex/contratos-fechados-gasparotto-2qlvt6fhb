@@ -14,6 +14,7 @@ import {
   Scale,
   Camera,
   ClipboardList,
+  KeyRound,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useState, useRef, useEffect } from 'react'
@@ -77,6 +78,7 @@ export default function Layout() {
     {
       label: 'GESTÃO DE PESSOAS',
       items: [
+        { name: 'Acesso Sistemas', path: '/gestao/acessos', icon: KeyRound },
         { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
         { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
       ].filter((item) => item.path !== '/gestao/funcionarios' || isGestor),
