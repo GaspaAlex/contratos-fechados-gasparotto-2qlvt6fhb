@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Plus, Lock, Delete, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRealtime } from '@/hooks/use-realtime'
+import { useAuth } from '@/hooks/use-auth'
 import {
   getFuncionarios,
   createFuncionario,
   updateFuncionario,
   checkPinUnique,
   deleteFuncionario,
-  getFuncionarioByPin,
 } from '@/services/funcionarios'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -27,17 +27,15 @@ import { FuncionarioCard } from './components/FuncionarioCard'
 import { FuncionarioFormDialog } from './components/FuncionarioFormDialog'
 
 export default function Funcionarios() {
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { user } = useAuth()
   const [funcionarios, setFuncionarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
   const [selectedFuncionario, setSelectedFuncionario] = useState<any>(null)
-  const [session, setSession] = useState<any>(null)
 
-  const [pin, setPin] = useState('')
-  const [isCheckingPin, setIsCheckingPin] = useState(false)
+  const isGestor = user?.perfil === 'gestor'
 
   const loadData = async () => {
     try {
@@ -51,144 +49,24 @@ export default function Funcionarios() {
   }
 
   useEffect(() => {
-    // Remove persistent session checks to require PIN every time the tab is accessed.
-    setLoading(false)
-  }, [])
+    if (isGestor) {
+      loadData()
+    } else {
+      setLoading(false)
+    }
+  }, [isGestor])
 
   useRealtime('funcionarios', () => {
-    if (isAdmin) loadData()
+    if (isGestor) loadData()
   })
 
-  const checkPin = useCallback(async (enteredPin: string) => {
-    if (enteredPin.length !== 4) return
-    setIsCheckingPin(true)
-    try {
-      const func = await getFuncionarioByPin(enteredPin)
-      if (!func) {
-        toast.error('PIN incorreto.')
-        setPin('')
-        return
-      }
-      if ((func.perfil !== 'admin' && func.perfil !== 'lider') || !func.ativo) {
-        toast.error('Acesso não autorizado.')
-        setPin('')
-        return
-      }
-      setSession(func)
-      setIsAdmin(true)
-      setLoading(true)
-      loadData()
-    } catch {
-      toast.error('Erro ao verificar PIN.')
-      setPin('')
-    } finally {
-      setIsCheckingPin(false)
-    }
-  }, [])
-
-  const handlePinInput = useCallback(
-    (digit: string) => {
-      if (pin.length < 4 && !isCheckingPin) setPin((p) => p + digit)
-    },
-    [pin, isCheckingPin],
-  )
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isAdmin || isCheckingPin) return
-      if (/^[0-9]$/.test(e.key)) {
-        handlePinInput(e.key)
-      } else if (e.key === 'Backspace') {
-        setPin((p) => p.slice(0, -1))
-      } else if (e.key === 'Escape' || e.key === 'Delete') {
-        setPin('')
-      } else if (e.key === 'Enter' && pin.length === 4) {
-        checkPin(pin)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isAdmin, isCheckingPin, handlePinInput, pin, checkPin])
-
-  if (!isAdmin) {
+  if (!isGestor) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4 md:p-8">
-        <Card className="relative w-full max-w-sm overflow-hidden rounded-[24px] border-0 bg-card shadow-xl animate-in fade-in zoom-in duration-500">
-          {isCheckingPin && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-              <Loader2 className="h-10 w-10 animate-spin text-[#C8922A]" />
-            </div>
-          )}
-
-          <div className="bg-primary px-6 py-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-card shadow-sm">
-              <Lock className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold text-primary-foreground">Acesso Restrito</h2>
-            <p className="mt-1 text-primary-foreground/90">Insira seu PIN para continuar</p>
-          </div>
-
-          <div className="p-8">
-            <div className="mb-8 flex justify-center space-x-3">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className={`flex h-14 w-12 items-center justify-center rounded-xl border-2 text-2xl font-bold transition-all ${
-                    pin.length > i
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-muted text-transparent'
-                  }`}
-                >
-                  {pin.length > i ? '•' : ''}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <Button
-                  key={num}
-                  variant="outline"
-                  className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
-                  onClick={() => handlePinInput(num.toString())}
-                  disabled={isCheckingPin}
-                >
-                  {num}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                className="h-14 rounded-xl border-border bg-card text-muted-foreground text-lg font-semibold transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
-                onClick={() => setPin('')}
-                disabled={isCheckingPin || pin.length === 0}
-              >
-                C
-              </Button>
-              <Button
-                variant="outline"
-                className="h-14 rounded-xl border-border bg-card text-foreground text-xl font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
-                onClick={() => handlePinInput('0')}
-                disabled={isCheckingPin}
-              >
-                0
-              </Button>
-              <Button
-                variant="outline"
-                className="h-14 rounded-xl border-border bg-card text-foreground transition-colors hover:bg-muted"
-                onClick={() => setPin((p) => p.slice(0, -1))}
-                disabled={isCheckingPin || pin.length === 0}
-              >
-                <Delete className="h-6 w-6" />
-              </Button>
-            </div>
-
-            <Button
-              className="mt-6 h-14 w-full rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-              onClick={() => checkPin(pin)}
-              disabled={pin.length < 4 || isCheckingPin}
-            >
-              ENTRAR
-            </Button>
+        <Card className="w-full max-w-sm border-0 bg-card shadow-xl">
+          <div className="flex flex-col items-center gap-3 p-8 text-center">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Acesso restrito</h2>
+            <p className="text-sm text-muted-foreground">Acesso restrito a gestores.</p>
           </div>
         </Card>
       </div>
@@ -256,11 +134,6 @@ export default function Funcionarios() {
 
   const handleDelete = async () => {
     if (!selectedFuncionario) return
-    if (selectedFuncionario.id === session?.id) {
-      toast.error('Você não pode excluir sua própria conta.')
-      setIsDeleteAlertOpen(false)
-      return
-    }
     try {
       await deleteFuncionario(selectedFuncionario.id)
       toast.success('Funcionário excluído com sucesso!')

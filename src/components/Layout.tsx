@@ -44,41 +44,44 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
-
-const navSections = [
-  {
-    label: 'VISÃO GERAL',
-    items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }],
-  },
-  {
-    label: 'GESTÃO DE CASOS',
-    items: [
-      { name: 'RPV/Precatório', path: '/rpv', icon: Scale },
-      { name: 'Protocolo', path: '/protocolo', icon: FileText },
-      { name: 'Contratos Fechados', path: '/dashboard', icon: Folder },
-      { name: 'Perícias', path: '/pericias', icon: Clock },
-    ],
-  },
-  {
-    label: 'CAPTAÇÃO DE LEADS',
-    items: [
-      { name: 'Leads Campanha', path: '/leads', icon: LineChart },
-      { name: 'Registro de Leads', path: '/leads-registro', icon: ClipboardList },
-    ],
-  },
-  {
-    label: 'GESTÃO DE PESSOAS',
-    items: [
-      { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
-      { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
-    ],
-  },
-]
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Layout() {
   const location = useLocation()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isGestor = user?.perfil === 'gestor'
+
+  const navSections = [
+    {
+      label: 'VISÃO GERAL',
+      items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }],
+    },
+    {
+      label: 'GESTÃO DE CASOS',
+      items: [
+        { name: 'RPV/Precatório', path: '/rpv', icon: Scale },
+        { name: 'Protocolo', path: '/protocolo', icon: FileText },
+        { name: 'Contratos Fechados', path: '/dashboard', icon: Folder },
+        { name: 'Perícias', path: '/pericias', icon: Clock },
+      ].filter((item) => item.path !== '/rpv' || isGestor),
+    },
+    {
+      label: 'CAPTAÇÃO DE LEADS',
+      items: [
+        { name: 'Leads Campanha', path: '/leads', icon: LineChart },
+        { name: 'Registro de Leads', path: '/leads-registro', icon: ClipboardList },
+      ],
+    },
+    {
+      label: 'GESTÃO DE PESSOAS',
+      items: [
+        { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
+        { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
+      ].filter((item) => item.path !== '/gestao/funcionarios' || isGestor),
+    },
+  ]
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
