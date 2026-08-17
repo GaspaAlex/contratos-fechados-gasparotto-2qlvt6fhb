@@ -30,11 +30,11 @@ import {
   getStatusContrato,
   createStatusContrato,
   deleteStatusContrato,
-  getResponsaveis,
   createResponsavel,
   deleteResponsavel,
   getContratosByStatus,
 } from '@/services/contratos'
+import { getResponsaveisAtivos } from '@/services/responsaveis'
 import { toast } from 'sonner'
 import { DynamicSelect } from './DynamicSelect'
 import pb from '@/lib/pocketbase/client'
@@ -166,7 +166,7 @@ export function ContractModal({
       const [bRes, sRes, rRes, cRes] = await Promise.all([
         getTiposAcao(),
         getStatusContrato(),
-        getResponsaveis(),
+        getResponsaveisAtivos(),
         getCampaignConfigs(),
       ])
       setBeneficios(bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))

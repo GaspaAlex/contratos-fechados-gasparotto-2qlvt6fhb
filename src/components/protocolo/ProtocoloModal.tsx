@@ -25,10 +25,10 @@ import {
   createTipoAcao,
   updateTipoAcao,
   deleteTipoAcao,
-  getResponsaveis,
-  createResponsavel,
+  createResponsavel as createContratoResponsavel,
   deleteResponsavel,
 } from '@/services/contratos'
+import { getResponsaveisAtivos } from '@/services/responsaveis'
 import { toast } from 'sonner'
 import { DynamicSelect } from '@/components/dashboard/DynamicSelect'
 import pb from '@/lib/pocketbase/client'
@@ -101,7 +101,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const loadDependencies = async () => {
     try {
-      const [bRes, rRes] = await Promise.all([getTiposAcao(), getResponsaveis()])
+      const [bRes, rRes] = await Promise.all([getTiposAcao(), getResponsaveisAtivos()])
       setBeneficios(bRes.map((x) => ({ id: x.id, nome: x.nome, is_default: x.is_default })))
       setResponsaveis(rRes)
     } catch (e) {
@@ -167,7 +167,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
 
   const handleAddResp = async (nome: string) => {
     try {
-      await createResponsavel({ nome })
+      await createContratoResponsavel({ nome })
       await loadDependencies()
       setFormData((f) => ({ ...f, responsavel: nome }))
     } catch (e) {

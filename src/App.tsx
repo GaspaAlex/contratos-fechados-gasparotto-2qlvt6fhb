@@ -17,6 +17,7 @@ import Login from './pages/Login'
 import Ponto from './pages/gestao/Ponto'
 import BaterPonto from './pages/gestao/BaterPonto'
 import Funcionarios from './pages/gestao/Funcionarios'
+import Responsaveis from './pages/gestao/Responsaveis'
 import DashboardPonto from './pages/gestao/DashboardPonto'
 import CartaoPonto from './pages/gestao/CartaoPonto'
 import AcessosSistemas from '@/pages/gestao/AcessosSistemas'
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/gestao/ponto/dashboard" element={<DashboardPonto />} />
                 <Route path="/gestao/ponto/cartao/:funcionarioId" element={<CartaoPonto />} />
                 <Route path="/gestao/funcionarios" element={<Funcionarios />} />
+                <Route path="/gestao/responsaveis" element={<Responsaveis />} />
                 <Route path="/gestao/acessos" element={<AcessosSistemas />} />
               </Route>
             </Route>

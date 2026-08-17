@@ -15,6 +15,7 @@ import {
   Camera,
   ClipboardList,
   KeyRound,
+  UserCog,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useState, useRef, useEffect } from 'react'
@@ -81,6 +82,7 @@ export default function Layout() {
         { name: 'Acesso Sistemas', path: '/gestao/acessos', icon: KeyRound },
         { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
         { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
+        { name: 'Responsáveis', path: '/gestao/responsaveis', icon: UserCog },
       ].filter((item) => item.path !== '/gestao/funcionarios' || isGestor),
     },
   ]

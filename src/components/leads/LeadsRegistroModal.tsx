@@ -36,6 +36,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { cn } from '@/lib/utils'
 
 import pb from '@/lib/pocketbase/client'
+import { getResponsaveisAtivos } from '@/services/responsaveis'
 
 const schema = z.object({
   data: z.date({ required_error: 'A data é obrigatória.' }),
@@ -67,6 +68,7 @@ export function LeadsRegistroModal({
   const [dateOpen, setDateOpen] = useState(false)
   const [duplicateWarning, setDuplicateWarning] = useState(false)
   const [classificacaoItems, setClassificacaoItems] = useState<{ id: string; nome: string }[]>([])
+  const [responsavelItems, setResponsavelItems] = useState<{ id: string; nome: string }[]>([])
 
   const activeCampanha = lead ? lead.campanha : campanha
 
@@ -112,6 +114,21 @@ export function LeadsRegistroModal({
       form.setValue('classificacao', 'none')
     }
   }, [campanha, form, open, lead])
+
+  useEffect(() => {
+    const fetchResponsaveis = async () => {
+      try {
+        const res = await getResponsaveisAtivos()
+        setResponsavelItems(res.map((r) => ({ id: r.id, nome: r.nome })))
+      } catch (err) {
+        console.error('Error fetching responsaveis', err)
+      }
+    }
+
+    if (open) {
+      fetchResponsaveis()
+    }
+  }, [open])
 
   useEffect(() => {
     const fetchClassificacoes = async () => {
@@ -345,10 +362,11 @@ export function LeadsRegistroModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Giulianna">Giulianna</SelectItem>
-                      <SelectItem value="Nataly">Nataly</SelectItem>
-                      <SelectItem value="Kaique">Kaique</SelectItem>
-                      <SelectItem value="IA">IA</SelectItem>
+                      {responsavelItems.map((r) => (
+                        <SelectItem key={r.id} value={r.nome}>
+                          {r.nome}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
