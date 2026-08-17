@@ -41,7 +41,6 @@ export const deleteBloco = async (id: string) => {
 
 export const getColaboradores = async () => {
   return await pb.collection('users').getFullList({
-    filter: "perfil = 'colaborador'",
     sort: 'name',
   })
 }
