@@ -178,7 +178,12 @@ export default function AcessosSistemas() {
                 <CardContent className="flex-1">
                   {Array.isArray(blocos) &&
                     blocos.map((bloco: any, bIndex: number) => {
-                      const campos = Array.isArray(bloco.campos) ? bloco.campos : []
+                      const loginKey = `${bloco.id ?? bIndex}-login`
+                      const senhaKey = `${bloco.id ?? bIndex}-senha`
+                      const loginValor = bloco.login ?? ''
+                      const senhaValor = bloco.senha ?? ''
+                      const observacoesValor = bloco.observacoes ?? ''
+                      const senhaVisivel = visiblePasswords[senhaKey]
                       return (
                         <div key={bloco.id ?? bIndex}>
                           {bloco.rotulo && (
@@ -186,52 +191,62 @@ export default function AcessosSistemas() {
                               {bloco.rotulo}
                             </h4>
                           )}
-                          {campos.length > 0 && (
+                          {(loginValor || senhaValor) && (
                             <div className="space-y-2">
-                              {campos.map((campo: any, index: number) => {
-                                const key = `${bloco.id}-${index}`
-                                const isSenha = (campo.rotulo || '').toLowerCase().includes('senha')
-                                const isVisible = visiblePasswords[key]
-                                const valor = campo.valor ?? ''
-                                return (
-                                  <div
-                                    key={key}
-                                    className="flex items-center justify-between gap-2"
-                                  >
-                                    <span className="text-muted-foreground text-sm">
-                                      {campo.rotulo}
+                              {loginValor && (
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-muted-foreground text-sm">Login</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-foreground">
+                                      {loginValor}
                                     </span>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium text-foreground">
-                                        {isSenha && !isVisible ? maskValue(valor) : valor}
-                                      </span>
-                                      {isSenha && (
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => togglePassword(key)}
-                                        >
-                                          {isVisible ? (
-                                            <EyeOff className="h-4 w-4" />
-                                          ) : (
-                                            <Eye className="h-4 w-4" />
-                                          )}
-                                        </Button>
-                                      )}
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => handleCopy(valor)}
-                                      >
-                                        <Copy className="h-4 w-4" />
-                                      </Button>
-                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => handleCopy(loginValor)}
+                                    >
+                                      <Copy className="h-4 w-4" />
+                                    </Button>
                                   </div>
-                                )
-                              })}
+                                </div>
+                              )}
+                              {senhaValor && (
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-muted-foreground text-sm">Senha</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-foreground">
+                                      {senhaVisivel ? senhaValor : maskValue(senhaValor)}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => togglePassword(senhaKey)}
+                                    >
+                                      {senhaVisivel ? (
+                                        <EyeOff className="h-4 w-4" />
+                                      ) : (
+                                        <Eye className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => handleCopy(senhaValor)}
+                                    >
+                                      <Copy className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
+                          )}
+                          {observacoesValor && (
+                            <p className="text-sm text-muted-foreground italic mt-2">
+                              {observacoesValor}
+                            </p>
                           )}
                         </div>
                       )

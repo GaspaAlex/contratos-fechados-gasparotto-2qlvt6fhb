@@ -23,14 +23,22 @@ export const createBloco = async (data: {
   grupo: string
   rotulo?: string
   colaborador?: string
-  campos: any[]
+  login?: string
+  senha?: string
+  observacoes?: string
 }) => {
   return await pb.collection('acessos_blocos').create(data)
 }
 
 export const updateBloco = async (
   id: string,
-  data: { rotulo?: string; colaborador?: string; campos: any[] },
+  data: {
+    rotulo?: string
+    colaborador?: string
+    login?: string
+    senha?: string
+    observacoes?: string
+  },
 ) => {
   return await pb.collection('acessos_blocos').update(id, data)
 }

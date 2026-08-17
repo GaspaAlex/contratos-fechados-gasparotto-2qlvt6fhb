@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, Plus, Trash2, Upload, X } from 'lucide-react'
+import { Loader2, Plus, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -22,16 +22,13 @@ import {
   updateGrupo,
 } from '@/services/acessos'
 
-interface CampoBloco {
-  rotulo: string
-  valor: string
-}
-
 interface BlocoLocal {
   id?: string
   rotulo: string
   colaborador: string
-  campos: CampoBloco[]
+  login: string
+  senha: string
+  observacoes: string
 }
 
 interface AcessoModalProps {
@@ -69,9 +66,9 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
           id: b.id,
           rotulo: b.rotulo ?? '',
           colaborador: b.colaborador ?? '',
-          campos: Array.isArray(b.campos)
-            ? b.campos.map((c: any) => ({ rotulo: c.rotulo ?? '', valor: c.valor ?? '' }))
-            : [],
+          login: b.login ?? '',
+          senha: b.senha ?? '',
+          observacoes: b.observacoes ?? '',
         })),
       )
     } else {
@@ -103,7 +100,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
   const adicionarBloco = () => {
     setBlocos((prev) => [
       ...prev,
-      { rotulo: '', colaborador: '', campos: [{ rotulo: '', valor: '' }] },
+      { rotulo: '', colaborador: '', login: '', senha: '', observacoes: '' },
     ])
   }
 
@@ -115,49 +112,16 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
     setBlocos((prev) => prev.map((b, i) => (i === index ? { ...b, ...patch } : b)))
   }
 
-  const adicionarCampo = (blocoIndex: number) => {
-    setBlocos((prev) =>
-      prev.map((b, i) =>
-        i === blocoIndex ? { ...b, campos: [...b.campos, { rotulo: '', valor: '' }] } : b,
-      ),
-    )
-  }
-
-  const removerCampo = (blocoIndex: number, campoIndex: number) => {
-    setBlocos((prev) =>
-      prev.map((b, i) =>
-        i === blocoIndex ? { ...b, campos: b.campos.filter((_, j) => j !== campoIndex) } : b,
-      ),
-    )
-  }
-
-  const atualizarCampo = (blocoIndex: number, campoIndex: number, patch: Partial<CampoBloco>) => {
-    setBlocos((prev) =>
-      prev.map((b, i) =>
-        i === blocoIndex
-          ? {
-              ...b,
-              campos: b.campos.map((c, j) => (j === campoIndex ? { ...c, ...patch } : c)),
-            }
-          : b,
-      ),
-    )
-  }
-
   const validar = (): boolean => {
     if (!titulo.trim()) {
       setErroValidacao('O título é obrigatório.')
       return false
     }
     for (const bloco of blocos) {
-      if (bloco.campos.length === 0) {
-        setErroValidacao('Cada bloco precisa ter pelo menos um campo preenchido.')
-        return false
-      }
-      const temCampoPreenchido = bloco.campos.some((c) => c.rotulo.trim() && c.valor.trim())
-      if (!temCampoPreenchido) {
+      const temConteudo = bloco.login.trim() || bloco.senha.trim() || bloco.observacoes.trim()
+      if (!temConteudo) {
         setErroValidacao(
-          'Cada bloco precisa ter pelo menos um campo com rótulo e valor preenchidos.',
+          'Cada bloco precisa ter pelo menos um entre login, senha ou observações preenchido.',
         )
         return false
       }
@@ -194,13 +158,11 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
       // Sincroniza blocos
       const idsMantidos = new Set<string>()
       for (const bloco of blocos) {
-        const camposLimpos = bloco.campos
-          .filter((c) => c.rotulo.trim() || c.valor.trim())
-          .map((c) => ({ rotulo: c.rotulo.trim(), valor: c.valor.trim() }))
-
         const payload: any = {
           rotulo: bloco.rotulo.trim(),
-          campos: camposLimpos,
+          login: bloco.login.trim(),
+          senha: bloco.senha.trim(),
+          observacoes: bloco.observacoes.trim(),
         }
         if (bloco.colaborador) {
           payload.colaborador = bloco.colaborador
@@ -354,48 +316,34 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                     </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    {bloco.campos.map((campo, cIndex) => (
-                      <div key={cIndex} className="flex items-end gap-2">
-                        <div className="flex-1 space-y-1.5">
-                          <Label className="text-xs">Email</Label>
-                          <Input
-                            value={campo.rotulo}
-                            onChange={(e) =>
-                              atualizarCampo(bIndex, cIndex, { rotulo: e.target.value })
-                            }
-                            placeholder="Ex: Login"
-                          />
-                        </div>
-                        <div className="flex-1 space-y-1.5">
-                          <Label className="text-xs">Senha</Label>
-                          <Input
-                            value={campo.valor}
-                            onChange={(e) =>
-                              atualizarCampo(bIndex, cIndex, { valor: e.target.value })
-                            }
-                            placeholder="Ex: usuario@email.com"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-destructive hover:text-destructive shrink-0"
-                          onClick={() => removerCampo(bIndex, cIndex)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Login</Label>
+                        <Input
+                          value={bloco.login}
+                          onChange={(e) => atualizarBloco(bIndex, { login: e.target.value })}
+                          placeholder="Login (opcional)"
+                        />
                       </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => adicionarCampo(bIndex)}
-                    >
-                      <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar campo
-                    </Button>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Senha</Label>
+                        <Input
+                          value={bloco.senha}
+                          onChange={(e) => atualizarBloco(bIndex, { senha: e.target.value })}
+                          placeholder="Senha (opcional)"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Observações</Label>
+                      <Textarea
+                        value={bloco.observacoes}
+                        onChange={(e) => atualizarBloco(bIndex, { observacoes: e.target.value })}
+                        placeholder="Observações (opcional)"
+                        rows={2}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
