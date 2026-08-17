@@ -88,7 +88,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
     getColaboradores()
       .then(setColaboradores)
       .catch(() => {
-        /* silencioso: select apenas não mostra opções extras */
+        toast.error('Não foi possível carregar a lista de colaboradores.')
       })
   }, [isOpen])
 
