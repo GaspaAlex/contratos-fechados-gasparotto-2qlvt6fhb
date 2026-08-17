@@ -25,6 +25,7 @@ export const createBloco = async (data: {
   colaborador?: string
   login?: string
   senha?: string
+  link?: string
   observacoes?: string
 }) => {
   return await pb.collection('acessos_blocos').create(data)
@@ -37,6 +38,7 @@ export const updateBloco = async (
     colaborador?: string
     login?: string
     senha?: string
+    link?: string
     observacoes?: string
   },
 ) => {

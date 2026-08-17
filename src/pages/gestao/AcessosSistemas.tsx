@@ -188,8 +188,20 @@ export default function AcessosSistemas() {
                         <div key={bloco.id ?? bIndex}>
                           {bloco.rotulo && (
                             <h4 className="font-semibold text-sm text-foreground mt-4 mb-2">
-                              {bloco.rotulo}
+                              <span className="inline-block rounded bg-[#C9922A]/15 px-2 py-0.5 text-[#C9922A] font-semibold">
+                                {bloco.rotulo}
+                              </span>
                             </h4>
+                          )}
+                          {bloco.link && (
+                            <a
+                              href={bloco.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block underline text-primary text-sm mb-2"
+                            >
+                              {bloco.link}
+                            </a>
                           )}
                           {(loginValor || senhaValor) && (
                             <div className="space-y-2">
@@ -244,7 +256,7 @@ export default function AcessosSistemas() {
                             </div>
                           )}
                           {observacoesValor && (
-                            <p className="text-sm text-muted-foreground italic mt-2">
+                            <p className="text-sm text-muted-foreground italic whitespace-pre-line mt-2">
                               {observacoesValor}
                             </p>
                           )}

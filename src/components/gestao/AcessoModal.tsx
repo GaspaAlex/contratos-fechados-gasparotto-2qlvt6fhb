@@ -28,6 +28,7 @@ interface BlocoLocal {
   colaborador: string
   login: string
   senha: string
+  link: string
   observacoes: string
 }
 
@@ -68,6 +69,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
           colaborador: b.colaborador ?? '',
           login: b.login ?? '',
           senha: b.senha ?? '',
+          link: b.link ?? '',
           observacoes: b.observacoes ?? '',
         })),
       )
@@ -100,7 +102,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
   const adicionarBloco = () => {
     setBlocos((prev) => [
       ...prev,
-      { rotulo: '', colaborador: '', login: '', senha: '', observacoes: '' },
+      { rotulo: '', colaborador: '', login: '', senha: '', link: '', observacoes: '' },
     ])
   }
 
@@ -162,6 +164,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
           rotulo: bloco.rotulo.trim(),
           login: bloco.login.trim(),
           senha: bloco.senha.trim(),
+          link: bloco.link.trim(),
           observacoes: bloco.observacoes.trim(),
         }
         if (bloco.colaborador) {
@@ -334,6 +337,14 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                           placeholder="Senha (opcional)"
                         />
                       </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Link de acesso</Label>
+                      <Input
+                        value={bloco.link}
+                        onChange={(e) => atualizarBloco(bIndex, { link: e.target.value })}
+                        placeholder="Link de acesso (opcional)"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Observações</Label>
