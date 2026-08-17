@@ -320,7 +320,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                   <div className="flex items-start justify-between gap-2">
                     <div className="grid flex-1 gap-3 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <Label className="text-xs">Rótulo do bloco</Label>
+                        <Label className="text-xs">Nome</Label>
                         <Input
                           value={bloco.rotulo}
                           onChange={(e) => atualizarBloco(bIndex, { rotulo: e.target.value })}
@@ -358,7 +358,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                     {bloco.campos.map((campo, cIndex) => (
                       <div key={cIndex} className="flex items-end gap-2">
                         <div className="flex-1 space-y-1.5">
-                          <Label className="text-xs">Rótulo do campo</Label>
+                          <Label className="text-xs">Email</Label>
                           <Input
                             value={campo.rotulo}
                             onChange={(e) =>
@@ -368,7 +368,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                           />
                         </div>
                         <div className="flex-1 space-y-1.5">
-                          <Label className="text-xs">Valor do campo</Label>
+                          <Label className="text-xs">Senha</Label>
                           <Input
                             value={campo.valor}
                             onChange={(e) =>
