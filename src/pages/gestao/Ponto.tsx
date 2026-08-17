@@ -1,15 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getFuncionarioByPin } from '@/services/funcionarios'
 import { Loader2, KeyRound } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Ponto() {
   const [pin, setPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { user, loading: authLoading } = useAuth()
+
+  useEffect(() => {
+    if (authLoading) return
+    if (user?.perfil === 'gestor') {
+      sessionStorage.setItem(
+        'ponto_session',
+        JSON.stringify({ id: user.id, nome: user.name, perfil: 'admin' }),
+      )
+      navigate('/gestao/ponto/dashboard')
+    }
+  }, [user, authLoading, navigate])
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -58,6 +71,14 @@ export default function Ponto() {
 
   const handleClear = () => {
     setPin('')
+  }
+
+  if (authLoading || user?.perfil === 'gestor') {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
