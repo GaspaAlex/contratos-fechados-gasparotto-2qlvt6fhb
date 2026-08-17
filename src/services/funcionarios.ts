@@ -15,6 +15,14 @@ export const getFuncionarioByPin = async (pin: string) => {
   }
 }
 
+export const getFuncionarioByUserId = async (userId: string) => {
+  try {
+    return await pb.collection('funcionarios').getFirstListItem(`user_id = '${userId}'`)
+  } catch {
+    return null
+  }
+}
+
 export const checkPinUnique = async (pin: string, excludeId?: string) => {
   try {
     const res = await pb.collection('funcionarios').getFirstListItem(`pin = '${pin}'`)

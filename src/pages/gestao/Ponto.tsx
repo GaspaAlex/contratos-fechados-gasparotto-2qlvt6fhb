@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { getFuncionarioByPin } from '@/services/funcionarios'
+import { getFuncionarioByPin, getFuncionarioByUserId } from '@/services/funcionarios'
 import { Loader2, KeyRound } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Ponto() {
   const [pin, setPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [colaboradorCheckDone, setColaboradorCheckDone] = useState(false)
   const navigate = useNavigate()
   const { user, loading: authLoading } = useAuth()
 
@@ -21,6 +22,24 @@ export default function Ponto() {
         JSON.stringify({ id: user.id, nome: user.name, perfil: 'admin' }),
       )
       navigate('/gestao/ponto/dashboard')
+    }
+    if (user?.perfil === 'colaborador' && !colaboradorCheckDone) {
+      getFuncionarioByUserId(user.id)
+        .then((func) => {
+          if (func && func.ativo) {
+            sessionStorage.setItem('ponto_session', JSON.stringify(func))
+            navigate('/gestao/ponto/registrar')
+          } else {
+            setColaboradorCheckDone(true)
+          }
+        })
+        .catch(() => {
+          setColaboradorCheckDone(true)
+        })
+      return // importante: não continua
+    }
+    if (user?.perfil !== 'gestor' && user?.perfil !== 'colaborador') {
+      if (!colaboradorCheckDone) setColaboradorCheckDone(true)
     }
   }, [user, authLoading, navigate])
 
@@ -73,7 +92,11 @@ export default function Ponto() {
     setPin('')
   }
 
-  if (authLoading || user?.perfil === 'gestor') {
+  if (
+    authLoading ||
+    user?.perfil === 'gestor' ||
+    (user?.perfil === 'colaborador' && !colaboradorCheckDone)
+  ) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

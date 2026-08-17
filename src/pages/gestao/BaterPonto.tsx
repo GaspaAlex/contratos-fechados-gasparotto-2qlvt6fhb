@@ -133,7 +133,7 @@ export default function BaterPonto() {
       navigate('/gestao/ponto/dashboard')
     } else {
       sessionStorage.removeItem('ponto_session')
-      navigate('/gestao/ponto')
+      navigate('/')
     }
   }
 
