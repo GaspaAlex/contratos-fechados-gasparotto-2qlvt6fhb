@@ -17,11 +17,26 @@ export default function Ponto() {
   useEffect(() => {
     if (authLoading) return
     if (user?.perfil === 'gestor') {
-      sessionStorage.setItem(
-        'ponto_session',
-        JSON.stringify({ id: user.id, nome: user.name, perfil: 'admin' }),
-      )
-      navigate('/gestao/ponto/dashboard')
+      getFuncionarioByUserId(user.id)
+        .then((func) => {
+          if (func) {
+            sessionStorage.setItem('ponto_session', JSON.stringify(func))
+          } else {
+            sessionStorage.setItem(
+              'ponto_session',
+              JSON.stringify({ id: user.id, nome: user.name, perfil: 'admin' }),
+            )
+          }
+          navigate('/gestao/ponto/dashboard')
+        })
+        .catch(() => {
+          sessionStorage.setItem(
+            'ponto_session',
+            JSON.stringify({ id: user.id, nome: user.name, perfil: 'admin' }),
+          )
+          navigate('/gestao/ponto/dashboard')
+        })
+      return
     }
     if (user?.perfil === 'colaborador' && !colaboradorCheckDone) {
       getFuncionarioByUserId(user.id)
