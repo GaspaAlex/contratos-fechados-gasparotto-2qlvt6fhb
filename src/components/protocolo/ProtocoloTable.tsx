@@ -22,6 +22,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
+import { monthsArray } from '@/lib/months'
+
 const normalizeText = (text: string) => {
   if (!text) return ''
   return text
@@ -29,21 +31,6 @@ const normalizeText = (text: string) => {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
 }
-
-const monthsArray = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro',
-]
 
 export function ProtocoloTable({
   data,

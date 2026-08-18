@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/formatters'
+import { monthsArray } from '@/lib/months'
 export function ProtocoloDashboard({
   data,
   tipo,
@@ -102,7 +103,20 @@ export function ProtocoloDashboard({
     <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
       <Card className="md:col-span-1">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xl font-bold">Dashboard — Protocolo</CardTitle>
+          <CardTitle className="text-xl font-bold">
+            Dashboard — Protocolo
+            {month !== 'Todos' ? (
+              <span className="font-bold" style={{ color: '#C9922A' }}>
+                {' '}
+                ({monthsArray[parseInt(month, 10)]})
+              </span>
+            ) : monthStart !== 'Todos' && monthEnd !== 'Todos' ? (
+              <span className="font-bold" style={{ color: '#C9922A' }}>
+                {' '}
+                ({monthsArray[parseInt(monthStart, 10)]} - {monthsArray[parseInt(monthEnd, 10)]})
+              </span>
+            ) : null}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-8 mt-4">
