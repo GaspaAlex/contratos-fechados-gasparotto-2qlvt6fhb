@@ -108,7 +108,14 @@ export default function AcessosSistemas() {
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {grupos.map((grupo) => {
-            const blocos = grupo.expand?.acessos_blocos_via_grupo ?? []
+            const blocos = [...(grupo.expand?.acessos_blocos_via_grupo ?? [])].sort((a, b) => {
+              const ra = a.rotulo?.trim()
+              const rb = b.rotulo?.trim()
+              if (!ra && !rb) return 0
+              if (!ra) return 1
+              if (!rb) return -1
+              return ra.localeCompare(rb, 'pt-BR', { sensitivity: 'base' })
+            })
             return (
               <Card key={grupo.id} className="flex flex-col">
                 <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
