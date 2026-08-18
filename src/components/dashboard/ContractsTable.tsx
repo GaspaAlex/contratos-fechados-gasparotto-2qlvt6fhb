@@ -21,9 +21,11 @@ import {
   AlertTriangle,
   UserCheck,
   Printer,
+  Copy,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useToast } from '@/hooks/use-toast'
 import {
   Select,
   SelectContent,
@@ -88,6 +90,12 @@ export function ContractsTable({
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
   const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
+  const { toast } = useToast()
+
+  const copyToClipboard = (value: string, label: string) => {
+    navigator.clipboard.writeText(value)
+    toast({ description: label })
+  }
 
   const responsaveisList = useMemo(() => {
     const resps = new Set<string>()
@@ -632,10 +640,34 @@ export function ContractsTable({
                                       </TooltipContent>
                                     </Tooltip>
                                   )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 shrink-0"
+                                    onClick={() => copyToClipboard(contract.nome, 'Nome copiado!')}
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </Button>
                                 </div>
                               </TableCell>
                               <TableCell className="text-muted-foreground whitespace-nowrap">
-                                {contract.fone || '-'}
+                                {contract.fone ? (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    {contract.fone}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 shrink-0"
+                                      onClick={() =>
+                                        copyToClipboard(contract.fone, 'Telefone copiado!')
+                                      }
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </span>
+                                ) : (
+                                  '-'
+                                )}
                               </TableCell>
                               <TableCell className="whitespace-nowrap">
                                 {contract.beneficio || '-'}
