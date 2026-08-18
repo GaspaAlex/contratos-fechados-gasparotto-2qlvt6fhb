@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-17T18:18:37.499Z",
+  "generatedAt": "2026-08-18T14:30:45.016Z",
   "collections": [
     {
       "name": "users",
@@ -1802,8 +1802,8 @@
       "name": "acessos_grupos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.perfil = 'gestor' || nivel_acesso = 'todos')",
-        "view": "@request.auth.id != '' && (@request.auth.perfil = 'gestor' || nivel_acesso = 'todos')",
+        "list": "@request.auth.id != '' && ((nivel_acesso = 'restrito' && usuario_restrito = @request.auth.id) || (nivel_acesso != 'restrito' && (@request.auth.perfil = 'gestor' || nivel_acesso = 'todos')))",
+        "view": "@request.auth.id != '' && ((nivel_acesso = 'restrito' && usuario_restrito = @request.auth.id) || (nivel_acesso != 'restrito' && (@request.auth.perfil = 'gestor' || nivel_acesso = 'todos')))",
         "create": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
         "update": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
         "delete": "@request.auth.id != '' && @request.auth.perfil = 'gestor'"
@@ -1826,7 +1826,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["todos", "gestores"]
+          "selectValues": ["todos", "gestores", "restrito"]
         },
         {
           "name": "anexo",
@@ -1847,6 +1847,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "usuario_restrito",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
         }
       ],
       "indexes": []
@@ -1855,8 +1862,8 @@
       "name": "acessos_blocos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (@request.auth.perfil = 'gestor' || (grupo.nivel_acesso = 'todos' && (colaborador = '' || colaborador = @request.auth.id)))",
-        "view": "@request.auth.id != '' && (@request.auth.perfil = 'gestor' || (grupo.nivel_acesso = 'todos' && (colaborador = '' || colaborador = @request.auth.id)))",
+        "list": "@request.auth.id != '' && ((grupo.nivel_acesso = 'restrito' && grupo.usuario_restrito = @request.auth.id) || (grupo.nivel_acesso != 'restrito' && (@request.auth.perfil = 'gestor' || (grupo.nivel_acesso = 'todos' && (colaborador = '' || colaborador = @request.auth.id)))))",
+        "view": "@request.auth.id != '' && ((grupo.nivel_acesso = 'restrito' && grupo.usuario_restrito = @request.auth.id) || (grupo.nivel_acesso != 'restrito' && (@request.auth.perfil = 'gestor' || (grupo.nivel_acesso = 'todos' && (colaborador = '' || colaborador = @request.auth.id)))))",
         "create": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
         "update": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
         "delete": "@request.auth.id != '' && @request.auth.perfil = 'gestor'"

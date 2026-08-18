@@ -41,7 +41,8 @@ interface AcessoModalProps {
 
 export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: AcessoModalProps) {
   const [titulo, setTitulo] = useState('')
-  const [nivelAcesso, setNivelAcesso] = useState<'todos' | 'gestores'>('todos')
+  const [nivelAcesso, setNivelAcesso] = useState<'todos' | 'gestores' | 'restrito'>('todos')
+  const [usuarioRestrito, setUsuarioRestrito] = useState('')
   const [observacoes, setObservacoes] = useState('')
   const [anexoFile, setAnexoFile] = useState<File | null>(null)
   const [anexoAtual, setAnexoAtual] = useState<string>('')
@@ -57,7 +58,9 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
     setAnexoFile(null)
     if (grupoExistente) {
       setTitulo(grupoExistente.titulo ?? '')
-      setNivelAcesso((grupoExistente.nivel_acesso as 'todos' | 'gestores') ?? 'todos')
+      setNivelAcesso((grupoExistente.nivel_acesso as 'todos' | 'gestores' | 'restrito') ?? 'todos')
+      const ur = grupoExistente.usuario_restrito
+      setUsuarioRestrito(Array.isArray(ur) ? (ur[0] ?? '') : ((ur as string) ?? ''))
       setObservacoes(grupoExistente.observacoes ?? '')
       const nomeAnexo = grupoExistente.anexo
       setAnexoAtual(Array.isArray(nomeAnexo) ? (nomeAnexo[0] ?? '') : ((nomeAnexo as string) ?? ''))
@@ -76,6 +79,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
     } else {
       setTitulo('')
       setNivelAcesso('todos')
+      setUsuarioRestrito('')
       setObservacoes('')
       setAnexoAtual('')
       setBlocos([])
@@ -119,6 +123,10 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
       setErroValidacao('O título é obrigatório.')
       return false
     }
+    if (nivelAcesso === 'restrito' && !usuarioRestrito) {
+      setErroValidacao('Selecione para qual usuário o acesso restrito será visível.')
+      return false
+    }
     for (const bloco of blocos) {
       const temConteudo = bloco.login.trim() || bloco.senha.trim() || bloco.observacoes.trim()
       if (!temConteudo) {
@@ -139,6 +147,7 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
       const formData = new FormData()
       formData.append('titulo', titulo.trim())
       formData.append('nivel_acesso', nivelAcesso)
+      formData.append('usuario_restrito', nivelAcesso === 'restrito' ? usuarioRestrito : '')
       formData.append('observacoes', observacoes)
       if (anexoFile) {
         formData.append('anexo', anexoFile)
@@ -220,13 +229,40 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
             <select
               id="nivel_acesso"
               value={nivelAcesso}
-              onChange={(e) => setNivelAcesso(e.target.value as 'todos' | 'gestores')}
+              onChange={(e) => setNivelAcesso(e.target.value as 'todos' | 'gestores' | 'restrito')}
               className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="todos">Todos os colaboradores</option>
               <option value="gestores">Somente gestores</option>
+              <option value="restrito">Restrito</option>
             </select>
           </div>
+
+          {nivelAcesso === 'restrito' && (
+            <div className="space-y-2">
+              <Label htmlFor="usuario_restrito">
+                Visível somente para <span className="text-red-500">*</span>
+              </Label>
+              <select
+                id="usuario_restrito"
+                value={usuarioRestrito}
+                onChange={(e) => setUsuarioRestrito(e.target.value)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Selecione um usuário...</option>
+                {colaboradores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {nivelAcesso === 'restrito' && !usuarioRestrito && (
+                <p className="text-xs text-red-500">
+                  É necessário selecionar um usuário para o acesso restrito.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="observacoes">Observações</Label>

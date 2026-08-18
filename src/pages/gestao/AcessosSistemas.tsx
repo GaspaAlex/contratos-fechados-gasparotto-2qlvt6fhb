@@ -121,6 +121,10 @@ export default function AcessosSistemas() {
                         <Badge variant="secondary">Todos os colaboradores</Badge>
                       ) : grupo.nivel_acesso === 'gestores' ? (
                         <Badge variant="secondary">Somente gestores</Badge>
+                      ) : grupo.nivel_acesso === 'restrito' ? (
+                        <Badge className="bg-amber-700 text-white hover:bg-amber-700">
+                          Restrito
+                        </Badge>
                       ) : null}
                       <Button
                         variant="ghost"
