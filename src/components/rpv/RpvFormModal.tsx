@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -94,6 +95,7 @@ export function RpvFormModal({
               maximumFractionDigits: 2,
             })
           : '',
+        observacoes: record?.observacoes || '',
       })
     }
   }, [open, record])
@@ -116,6 +118,7 @@ export function RpvFormModal({
         recebido: isRecebido,
         valor_recebido: isRecebido ? Number(formData.valor_recebido) || 0 : null,
         data_recebimento: isRecebido ? formData.data_recebimento : null,
+        observacoes: formData.observacoes || '',
       }
 
       if (record?.id) {
@@ -309,6 +312,26 @@ export function RpvFormModal({
               </Select>
             </div>
 
+            <div
+              className={`space-y-2 ${formData.status === 'Recebido' ? 'md:col-span-2' : 'md:col-span-2'}`}
+            >
+              <Label>Previsão Pagamento (MM/YYYY)</Label>
+              <Input
+                placeholder="Ex: 06/2026"
+                value={formData.previsao_pagamento || ''}
+                onChange={(e) => handleChange('previsao_pagamento', formatPrevisao(e.target.value))}
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>Observações</Label>
+              <Textarea
+                rows={3}
+                value={formData.observacoes || ''}
+                onChange={(e) => handleChange('observacoes', e.target.value)}
+              />
+            </div>
+
             {formData.status === 'Recebido' && (
               <>
                 <div className="space-y-2">
@@ -339,17 +362,6 @@ export function RpvFormModal({
                 </div>
               </>
             )}
-
-            <div
-              className={`space-y-2 ${formData.status === 'Recebido' ? 'md:col-span-2' : 'md:col-span-2'}`}
-            >
-              <Label>Previsão Pagamento (MM/YYYY)</Label>
-              <Input
-                placeholder="Ex: 06/2026"
-                value={formData.previsao_pagamento || ''}
-                onChange={(e) => handleChange('previsao_pagamento', formatPrevisao(e.target.value))}
-              />
-            </div>
           </div>
 
           <DialogFooter className="pt-4">
