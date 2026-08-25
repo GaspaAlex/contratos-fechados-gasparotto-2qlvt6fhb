@@ -8,8 +8,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Edit2, Trash2 } from 'lucide-react'
+import { Edit2, Trash2, StickyNote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { deleteRpv } from '@/services/rpv'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -204,7 +205,19 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
                     >
                       <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
                       <TableCell>
-                        <div className="font-bold">{item.nome}</div>
+                        <div className="font-bold flex items-center gap-1">
+                          {item.nome}
+                          {item.observacoes && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="whitespace-pre-line">{item.observacoes}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground mt-0.5">{item.cpf}</div>
                       </TableCell>
                       <TableCell
