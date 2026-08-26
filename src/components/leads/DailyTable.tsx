@@ -49,22 +49,25 @@ export function DailyTable({
   filtered = filterLeadsByPeriod(filtered, month, day, startMonth, endMonth)
 
   if (searchTerm) {
-    const s = searchTerm.toLowerCase()
+    const s = searchTerm.toLowerCase().trim()
     filtered = filtered.filter(
-      (l: any) => l.observacoes?.toLowerCase().includes(s) || l.mes.toLowerCase().includes(s),
+      (l: any) =>
+        (l?.observacoes || '').toLowerCase().includes(s) ||
+        (l?.mes || '').toLowerCase().includes(s),
     )
   }
 
   const groups: Record<string, any[]> = {}
   filtered.forEach((l: any) => {
-    const m = l.mes
+    if (!l) return
+    const m = l.mes || ''
     if (!groups[m]) groups[m] = []
     groups[m].push(l)
   })
 
   const sortedMonths = Object.keys(groups).sort((a, b) => {
-    const m1 = MONTHS.indexOf(a.split(' ')[0])
-    const m2 = MONTHS.indexOf(b.split(' ')[0])
+    const m1 = MONTHS.indexOf((a || '').split(' ')[0])
+    const m2 = MONTHS.indexOf((b || '').split(' ')[0])
     return m1 - m2
   })
 
@@ -83,37 +86,40 @@ export function DailyTable({
       let fup = 0
 
       if (isTotalGroup && leadsList.length > 0) {
-        const rowMonthStr = leadsList[0].mes
+        const rowMonthStr = leadsList[0]?.mes
         const monthContratos = (contratos || []).filter((ct: any) => {
-          if (ct.origem !== 'Campanha') return false
+          if (!ct || ct.origem !== 'Campanha') return false
           if (!ct.dcontrato) return false
           const d = new Date(ct.dcontrato)
+          if (isNaN(d.getTime())) return false
           const m = MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear()
           return m === rowMonthStr
         })
-        aux = monthContratos.filter((ct: any) => ct.beneficio === 'Aux. Acidente').length
-        der = monthContratos.filter((ct: any) => ct.beneficio === 'DER').length
-        ben = monthContratos.filter((ct: any) => ct.beneficio === 'Ben. Análise').length
-        direto = monthContratos.filter((ct: any) => ct.fup === false).length
-        fup = monthContratos.filter((ct: any) => ct.fup === true).length
+        aux = monthContratos.filter((ct: any) => ct?.beneficio === 'Aux. Acidente').length
+        der = monthContratos.filter((ct: any) => ct?.beneficio === 'DER').length
+        ben = monthContratos.filter((ct: any) => ct?.beneficio === 'Ben. Análise').length
+        direto = monthContratos.filter((ct: any) => ct?.fup === false).length
+        fup = monthContratos.filter((ct: any) => ct?.fup === true).length
         return { aux, der, ben, direto, fup, total: aux + der + ben }
       }
 
       leadsList.forEach((l) => {
+        if (!l) return
         const rowMonthStr = l.mes
         const rowDay = l.dia
         const dayContratos = (contratos || []).filter((ct: any) => {
-          if (ct.origem !== 'Campanha') return false
+          if (!ct || ct.origem !== 'Campanha') return false
           if (!ct.dcontrato) return false
           const d = new Date(ct.dcontrato)
+          if (isNaN(d.getTime())) return false
           const m = MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear()
           return m === rowMonthStr && d.getUTCDate() === rowDay
         })
-        aux += dayContratos.filter((ct: any) => ct.beneficio === 'Aux. Acidente').length
-        der += dayContratos.filter((ct: any) => ct.beneficio === 'DER').length
-        ben += dayContratos.filter((ct: any) => ct.beneficio === 'Ben. Análise').length
-        direto += dayContratos.filter((ct: any) => ct.fup === false).length
-        fup += dayContratos.filter((ct: any) => ct.fup === true).length
+        aux += dayContratos.filter((ct: any) => ct?.beneficio === 'Aux. Acidente').length
+        der += dayContratos.filter((ct: any) => ct?.beneficio === 'DER').length
+        ben += dayContratos.filter((ct: any) => ct?.beneficio === 'Ben. Análise').length
+        direto += dayContratos.filter((ct: any) => ct?.fup === false).length
+        fup += dayContratos.filter((ct: any) => ct?.fup === true).length
       })
       return { aux, der, ben, direto, fup, total: aux + der + ben }
     }

@@ -202,16 +202,17 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const [isAddingSlot, setIsAddingSlot] = useState(false)
 
   const activeConfigs = (campaignConfigs || [])
-    .filter((c: any) => c.ativo)
-    .sort((a: any, b: any) => a.ordem - b.ordem)
+    .filter((c: any) => c?.ativo)
+    .sort((a: any, b: any) => (a?.ordem || 0) - (b?.ordem || 0))
   const inactiveConfigs = (campaignConfigs || [])
-    .filter((c: any) => !c.ativo)
-    .sort((a: any, b: any) => a.ordem - b.ordem)
+    .filter((c: any) => c && !c.ativo)
+    .sort((a: any, b: any) => (a?.ordem || 0) - (b?.ordem || 0))
 
   const handleDeactivate = async (c: any) => {
     try {
+      if (!c?.id) return
       await updateCampaignConfig(c.id, { ativo: false })
-      onSuccess()
+      onSuccess?.()
     } catch (e) {
       console.error(e)
     }
@@ -224,7 +225,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
         await updateCampaignConfig(slot.id, { ativo: true, rotulo: newSlotLabel })
         setNewSlotLabel('')
         setIsAddingSlot(false)
-        onSuccess()
+        onSuccess?.()
       } catch (e) {
         console.error(e)
       }
@@ -257,14 +258,6 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const currentSemInteresse = vals.sem_interesse || 0
   const currentEngano = vals.engano || 0
 
-  const currentTotalDesq =
-    Number(currentSemQualidade) +
-    Number(currentAposentado) +
-    Number(currentCarne) +
-    Number(currentOutros) +
-    Number(currentSemInteresse) +
-    Number(currentEngano)
-
   const calc = calculateLeadRow({
     ...vals,
     meta_ads: currentMetaAds,
@@ -281,26 +274,30 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
     if (open && vals.mes && vals.dia && campaignConfigs) {
       const fetchLeadsRegistro = async () => {
         try {
-          const [selectedMonth, selectedYear] = vals.mes.split(' ')
+          const parts = (vals.mes || '').split(' ')
+          const selectedMonth = parts[0] || ''
+          const selectedYear = parts[1] || String(year || new Date().getFullYear())
           const monthIndex = MONTHS.indexOf(selectedMonth)
           if (monthIndex === -1) return
 
           const dateStr = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(vals.dia).padStart(2, '0')}`
-          const active = (campaignConfigs || []).filter((c: any) => c.ativo)
+          const active = (campaignConfigs || []).filter((c: any) => c?.ativo)
 
           const registrosDoDia = await pb.collection('leads_registro').getFullList({
             filter: `data ~ "${dateStr}"`,
           })
 
           for (const c of active) {
+            if (!c?.slug) continue
             const slot = c.slug.replace('meta_c', '')
             const metaName = `meta_c${slot}`
             const qualifName = `qualif_c${slot}`
+            const targetRotulo = (c.rotulo || '').trim().toUpperCase()
 
             let qualifCount = 0
 
             const registros = registrosDoDia.filter(
-              (r) => r.campanha?.toUpperCase() === c.rotulo?.toUpperCase(),
+              (r) => (r.campanha || '').trim().toUpperCase() === targetRotulo,
             )
 
             const metaCount = registros.length
@@ -331,11 +328,14 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
       const fetchContratos = async () => {
         try {
           const data = await getContratos()
-          const [selectedMonth, selectedYear] = vals.mes.split(' ')
-          const filtered = data.filter((c) => {
+          const parts = (vals.mes || '').split(' ')
+          const selectedMonth = parts[0] || ''
+          const selectedYear = parts[1] || String(year || new Date().getFullYear())
+          const filtered = (data || []).filter((c) => {
             if (c.origem !== 'Campanha') return false
             if (!c.dcontrato) return false
             const date = new Date(c.dcontrato)
+            if (isNaN(date.getTime())) return false
             const m = MONTHS[date.getUTCMonth()]
             const y = date.getUTCFullYear()
             return m === selectedMonth && String(y) === selectedYear
@@ -347,7 +347,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
       }
       fetchContratos()
     }
-  }, [open, vals.mes])
+  }, [open, vals.mes, year])
 
   const diretoCampanhaCount = contratosCampanha.filter((c) => c.fup === false).length
   const fupCampanhaCount = contratosCampanha.filter((c) => c.fup === true).length
@@ -369,7 +369,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
       if (isEdit) await updateLeadDiario(data.id, finalValues)
       else await createLeadDiario(finalValues)
       toast({ title: 'Sucesso', description: 'Registro salvo com sucesso.' })
-      onSuccess()
+      onSuccess?.()
       onOpenChange(false)
     } catch (err) {
       const errs = extractFieldErrors(err)
@@ -469,9 +469,10 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                       </thead>
                       <tbody className="divide-y divide-amber-100 dark:divide-amber-900/50">
                         {activeConfigs.map((c: any) => {
-                          const slot = c.slug.replace('meta_c', '')
+                          const slot = (c?.slug || '').replace('meta_c', '')
                           const metaName = `meta_c${slot}`
                           const qualifName = `qualif_c${slot}`
+                          const rotuloUpper = (c?.rotulo || '').toUpperCase()
 
                           return (
                             <tr key={c.id}>
@@ -479,8 +480,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                                 className="px-1 py-1 align-middle font-bold uppercase whitespace-nowrap text-[10px] text-amber-900 dark:text-amber-200 truncate text-left"
                                 title={c.rotulo}
                               >
-                                {c.rotulo?.toUpperCase()}{' '}
-                                {c.rotulo?.toUpperCase() === 'DER' ? '(GOOGLE)' : ''}
+                                {rotuloUpper} {rotuloUpper === 'DER' ? '(GOOGLE)' : ''}
                               </td>
                               <td className="px-0.5 py-1 align-middle">
                                 <TableCellInput control={form.control} name={metaName} readOnly />
@@ -584,14 +584,15 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {activeConfigs.map((c: any) => {
+                      const targetRotulo = (c.rotulo || '').trim().toUpperCase()
                       const count = contratosCampanha.filter((contrato) => {
-                        const campOrigem = contrato.campanha_origem || 'Aux. Acidente'
-                        return (
-                          campOrigem?.toUpperCase() === c.rotulo?.toUpperCase() ||
-                          contrato.beneficio?.toUpperCase() === c.rotulo?.toUpperCase()
-                        )
+                        const campOrigem = (contrato.campanha_origem || 'Aux. Acidente')
+                          .trim()
+                          .toUpperCase()
+                        const beneficio = (contrato.beneficio || '').trim().toUpperCase()
+                        return campOrigem === targetRotulo || beneficio === targetRotulo
                       }).length
-                      return <CalcBox key={c.id} label={c.rotulo} val={count} />
+                      return <CalcBox key={c.id} label={c.rotulo || 'Campanha'} val={count} />
                     })}
                   </div>
                 </div>

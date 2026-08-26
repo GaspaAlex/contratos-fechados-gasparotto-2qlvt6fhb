@@ -55,24 +55,35 @@ export default function LeadsCampanha() {
 
   const { toast } = useToast()
 
+  const [loading, setLoading] = useState(false)
+
   const loadData = async () => {
     try {
+      setLoading(true)
       const [data, configs, conts, registros] = await Promise.all([
-        getLeadsByYear(year),
-        getCampaignConfigs(),
-        pb.collection('contratos_fechados').getFullList({
-          filter: `dcontrato >= "${year}-01-01 00:00:00" && dcontrato <= "${year}-12-31 23:59:59"`,
-        }),
-        pb.collection('leads_registro').getFullList({
-          filter: `data >= "${year}-01-01 00:00:00" && data <= "${year}-12-31 23:59:59"`,
-        }),
+        getLeadsByYear(year).catch(() => []),
+        getCampaignConfigs().catch(() => []),
+        pb
+          .collection('contratos_fechados')
+          .getFullList({
+            filter: `dcontrato >= "${year}-01-01 00:00:00" && dcontrato <= "${year}-12-31 23:59:59"`,
+          })
+          .catch(() => []),
+        pb
+          .collection('leads_registro')
+          .getFullList({
+            filter: `data >= "${year}-01-01 00:00:00" && data <= "${year}-12-31 23:59:59"`,
+          })
+          .catch(() => []),
       ])
-      setLeads(data ?? [])
-      setCampaignConfigs(configs ?? [])
-      setContratos(conts ?? [])
-      setLeadsRegistro(registros ?? [])
+      setLeads(Array.isArray(data) ? data : [])
+      setCampaignConfigs(Array.isArray(configs) ? configs : [])
+      setContratos(Array.isArray(conts) ? conts : [])
+      setLeadsRegistro(Array.isArray(registros) ? registros : [])
     } catch (e) {
       console.error(e)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -131,11 +142,11 @@ export default function LeadsCampanha() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todas">Todas as Campanhas</SelectItem>
-              {campaignConfigs
-                .filter((c) => c.ativo)
+              {(campaignConfigs || [])
+                .filter((c) => c?.ativo)
                 .map((c) => (
                   <SelectItem key={c.slug} value={c.slug}>
-                    {c.rotulo}
+                    {c.rotulo || c.slug}
                   </SelectItem>
                 ))}
             </SelectContent>

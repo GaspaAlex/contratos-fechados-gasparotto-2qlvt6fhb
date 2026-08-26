@@ -59,50 +59,72 @@ export function CACCPLTable({
   const tableData = useMemo(() => {
     const monthsToProcess = getDisplayMonths(month, startMonth || '', endMonth || '')
     const isRange = Boolean(startMonth && endMonth)
+    const selectedRotulo =
+      campaign && campaign !== 'Todas'
+        ? configs?.find((c) => c?.slug === campaign)?.rotulo || campaign
+        : 'Todas'
+    const targetRotulo = (selectedRotulo || 'Todas').trim().toUpperCase()
+    const targetCampaign = (campaign || '').trim().toUpperCase()
+    const isSpecificCampaign = Boolean(campaign && campaign !== 'Todas')
+    const campaignKey = isSpecificCampaign ? campaign.replace(/^meta_/, '') : campaign
 
     const data = monthsToProcess
       .map((m) => {
-        const mLeads = leads.filter((l) => {
-          return l.mes === `${m} ${year}` || l.mes === m
+        const monthIndex = MONTHS.indexOf(m)
+        const monthNum = String(monthIndex + 1).padStart(2, '0')
+
+        const mLeads = (leads || []).filter((l) => {
+          if (!l || !l.mes) return false
+          return l.mes === `${m} ${year}` || l.mes === m || String(l.mes).startsWith(m)
         })
         const filteredLeads =
-          day === 'Todos' || isRange ? mLeads : mLeads.filter((l) => l.dia.toString() === day)
+          day === 'Todos' || isRange
+            ? mLeads
+            : mLeads.filter((l) => l && String(l.dia) === String(day))
 
         let sumLeads = 0
-        if (campaign !== 'Todas') {
-          sumLeads = filteredLeads.reduce((acc, l) => acc + (Number(l[`meta_${campaign}`]) || 0), 0)
+        if (isSpecificCampaign) {
+          sumLeads = filteredLeads.reduce(
+            (acc, l) =>
+              acc +
+              (Number(l?.[`meta_${campaignKey}`]) ||
+                Number(l?.[`meta_${campaign}`]) ||
+                Number(l?.[campaign]) ||
+                0),
+            0,
+          )
         } else {
           sumLeads = filteredLeads.reduce(
             (acc, l) =>
               acc +
-              (Number(l.google) || 0) +
-              (Number(l.meta_ads) || 0) +
-              (Number(l.particular) || 0),
+              (Number(l?.google) || 0) +
+              (Number(l?.meta_ads) || 0) +
+              (Number(l?.particular) || 0),
             0,
           )
         }
 
         const sumInvestimento = filteredLeads.reduce(
-          (acc, l) => acc + (Number(l.investimento) || 0),
+          (acc, l) => acc + (Number(l?.investimento) || 0),
           0,
         )
 
         let sumFechamentos = 0
-        if (campaign !== 'Todas') {
-          const selectedRotulo = configs?.find((c) => c.slug === campaign)?.rotulo || campaign
-          sumFechamentos = contratos.filter((c) => {
-            if (!c.dcontrato) return false
+        if (isSpecificCampaign) {
+          sumFechamentos = (contratos || []).filter((c) => {
+            if (!c?.dcontrato) return false
             const [cYear, cMonth] = c.dcontrato.split('-')
             if (cYear !== year || cMonth !== monthNum) return false
             if (['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência'].includes(c.status))
               return false
             if (c.origem !== 'Campanha') return false
-            const campOrigem = c.campanha_origem || 'Aux. Acidente'
-            return campOrigem === selectedRotulo || c.campanha_origem === campaign
+            const campOrigem = (c.campanha_origem || 'Aux. Acidente').trim().toUpperCase()
+            const cCampOrigemRaw = (c.campanha_origem || '').trim().toUpperCase()
+            return campOrigem === targetRotulo || cCampOrigemRaw === targetCampaign
           }).length
         } else {
           sumFechamentos = filteredLeads.reduce(
-            (acc, l) => acc + (Number(l.fechado_direto) || 0) + (Number(l.fechado_fup) || 0),
+            (acc, l) => acc + (Number(l?.fechado_direto) || 0) + (Number(l?.fechado_fup) || 0),
             0,
           )
         }
@@ -110,29 +132,23 @@ export function CACCPLTable({
         const cpl = sumLeads > 0 ? sumInvestimento / sumLeads : null
         const cac = sumFechamentos > 0 ? sumInvestimento / sumFechamentos : null
 
-        const monthNum = String(MONTHS.indexOf(m) + 1).padStart(2, '0')
-
-        const selectedRotulo =
-          campaign !== 'Todas'
-            ? configs?.find((c) => c.slug === campaign)?.rotulo || campaign
-            : 'Todas'
-
-        const descartesCount = contratos.filter((c) => {
-          if (!c.dcontrato) return false
+        const descartesCount = (contratos || []).filter((c) => {
+          if (!c?.dcontrato) return false
           const [cYear, cMonth] = c.dcontrato.split('-')
           if (cYear !== year || cMonth !== monthNum) return false
           if (!['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência'].includes(c.status))
             return false
-          if (campaign !== 'Todas') {
+          if (isSpecificCampaign) {
             if (c.origem !== 'Campanha') return false
-            const campOrigem = c.campanha_origem || 'Aux. Acidente'
-            if (campOrigem !== selectedRotulo && c.campanha_origem !== campaign) return false
+            const campOrigem = (c.campanha_origem || 'Aux. Acidente').trim().toUpperCase()
+            const cCampOrigemRaw = (c.campanha_origem || '').trim().toUpperCase()
+            if (campOrigem !== targetRotulo && cCampOrigemRaw !== targetCampaign) return false
           }
           return true
         }).length
 
-        const protocolosCount = protocolos.filter((p) => {
-          if (!p.dprotocolo) return false
+        const protocolosCount = (protocolos || []).filter((p) => {
+          if (!p?.dprotocolo) return false
           if (p.origem !== 'Campanha') return false
           const [pYear, pMonth] = p.dprotocolo.split('-')
           return pYear === year && pMonth === monthNum
@@ -162,7 +178,7 @@ export function CACCPLTable({
       )
 
     return data
-  }, [leads, month, day, year, startMonth, endMonth, contratos, protocolos])
+  }, [leads, month, day, year, startMonth, endMonth, contratos, protocolos, campaign, configs])
 
   const totals = useMemo(() => {
     const sumLeads = tableData.reduce((acc, r) => acc + r.leads, 0)

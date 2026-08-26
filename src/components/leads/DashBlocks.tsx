@@ -45,26 +45,26 @@ export function SummaryCards({
     return aggregateLeads(filteredLeads, year, campaign)
   }, [filteredLeads, year, campaign])
 
-  const selectedCampaignRotulo = useMemo(
-    () =>
-      campaign === 'Todas'
-        ? 'Todas'
-        : configs?.find((c: any) => c.slug === campaign)?.rotulo || 'Todas',
-    [campaign, configs],
-  )
+  const selectedCampaignRotulo = useMemo(() => {
+    if (!campaign || campaign === 'Todas') return 'Todas'
+    const found = configs?.find((c: any) => c && c.slug === campaign)
+    return found?.rotulo || campaign || 'Todas'
+  }, [campaign, configs])
 
   const totalLeadsCalculated = useMemo(() => {
+    const targetRotulo = (selectedCampaignRotulo || 'Todas').trim().toUpperCase()
     let countRegistro = (leadsRegistro ?? []).filter((lead: any) => {
-      if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (
-        campaign !== 'Todas' &&
-        lead.campanha?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase()
-      )
-        return false
+      if (!lead || !isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
+      if (campaign && campaign !== 'Todas') {
+        const leadCamp = (lead.campanha || '').trim().toUpperCase()
+        if (leadCamp !== targetRotulo && leadCamp !== (campaign || '').trim().toUpperCase()) {
+          return false
+        }
+      }
       return true
     }).length
 
-    if (campaign === 'Todas') {
+    if (campaign === 'Todas' || !campaign) {
       return countRegistro + (anoLeads?.google || 0)
     }
     return countRegistro
@@ -86,17 +86,19 @@ export function SummaryCards({
   )
 
   const filteredContratos = useMemo(() => {
+    const targetRotulo = (selectedCampaignRotulo || 'Todas').trim().toUpperCase()
+    const targetCampaign = (campaign || '').trim().toUpperCase()
     return (contratos || []).filter((c: any) => {
+      if (!c) return false
       const excludedStatuses = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
       if (excludedStatuses.includes(c.status)) return false
       if (c.origem !== 'Campanha') return false
-      if (selectedCampaignRotulo !== 'Todas') {
-        const campOrigem = c.campanha_origem || 'Aux. Acidente'
-        if (
-          campOrigem?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase() &&
-          c.campanha_origem?.toUpperCase() !== campaign?.toUpperCase()
-        )
+      if (targetRotulo !== 'TODAS') {
+        const campOrigem = (c.campanha_origem || 'Aux. Acidente').trim().toUpperCase()
+        const cCampOrigemRaw = (c.campanha_origem || '').trim().toUpperCase()
+        if (campOrigem !== targetRotulo && cCampOrigemRaw !== targetCampaign) {
           return false
+        }
       }
       return isDateInPeriod(c.dcontrato, month, day, year, startMonth, endMonth)
     })
@@ -109,13 +111,16 @@ export function SummaryCards({
   )
 
   const total_desq = useMemo(() => {
+    const targetRotulo = (selectedCampaignRotulo || 'Todas').trim().toUpperCase()
+    const targetCampaign = (campaign || '').trim().toUpperCase()
     return (leadsRegistro ?? []).filter((lead: any) => {
-      if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (
-        campaign !== 'Todas' &&
-        lead.campanha?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase()
-      )
-        return false
+      if (!lead || !isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
+      if (campaign && campaign !== 'Todas') {
+        const leadCamp = (lead.campanha || '').trim().toUpperCase()
+        if (leadCamp !== targetRotulo && leadCamp !== targetCampaign) {
+          return false
+        }
+      }
 
       const cls = lead.classificacao || ''
       const excluded = ['', 'Qualificando', 'Qualificado', 'Contrato Fechado']
@@ -126,13 +131,16 @@ export function SummaryCards({
   }, [leadsRegistro, month, day, year, startMonth, endMonth, campaign, selectedCampaignRotulo])
 
   const totalQualificados = useMemo(() => {
+    const targetRotulo = (selectedCampaignRotulo || 'Todas').trim().toUpperCase()
+    const targetCampaign = (campaign || '').trim().toUpperCase()
     return (leadsRegistro ?? []).filter((lead: any) => {
-      if (!isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
-      if (
-        campaign !== 'Todas' &&
-        lead.campanha?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase()
-      )
-        return false
+      if (!lead || !isDateInPeriod(lead.data, month, day, year, startMonth, endMonth)) return false
+      if (campaign && campaign !== 'Todas') {
+        const leadCamp = (lead.campanha || '').trim().toUpperCase()
+        if (leadCamp !== targetRotulo && leadCamp !== targetCampaign) {
+          return false
+        }
+      }
 
       return lead.classificacao === 'Qualificado'
     }).length
@@ -369,27 +377,27 @@ export function CACCPLTable({
     [filteredLeads, year, campaign],
   )
 
-  const selectedCampaignRotulo = useMemo(
-    () =>
-      campaign === 'Todas'
-        ? 'Todas'
-        : configs?.find((c: any) => c.slug === campaign)?.rotulo || 'Todas',
-    [campaign, configs],
-  )
+  const selectedCampaignRotulo = useMemo(() => {
+    if (!campaign || campaign === 'Todas') return 'Todas'
+    const found = configs?.find((c: any) => c && c.slug === campaign)
+    return found?.rotulo || campaign || 'Todas'
+  }, [campaign, configs])
 
   const getFechamentosCount = useCallback(
     (mLeads: any[], m: string | null = null, d: string | null = null) => {
+      const targetRotulo = (selectedCampaignRotulo || 'Todas').trim().toUpperCase()
+      const targetCampaign = (campaign || '').trim().toUpperCase()
       return (contratos || []).filter((c: any) => {
+        if (!c) return false
         const excludedStatuses = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
         if (excludedStatuses.includes(c.status)) return false
         if (c.origem !== 'Campanha') return false
-        if (selectedCampaignRotulo !== 'Todas') {
-          const campOrigem = c.campanha_origem || 'Aux. Acidente'
-          if (
-            campOrigem?.toUpperCase() !== selectedCampaignRotulo?.toUpperCase() &&
-            c.campanha_origem?.toUpperCase() !== campaign?.toUpperCase()
-          )
+        if (targetRotulo !== 'TODAS') {
+          const campOrigem = (c.campanha_origem || 'Aux. Acidente').trim().toUpperCase()
+          const cCampOrigemRaw = (c.campanha_origem || '').trim().toUpperCase()
+          if (campOrigem !== targetRotulo && cCampOrigemRaw !== targetCampaign) {
             return false
+          }
         }
         if (m && d) return isDateInPeriod(c.dcontrato, m, d, year, '', '')
         if (m) return isDateInPeriod(c.dcontrato, m, 'Todos', year, '', '')
@@ -430,7 +438,9 @@ export function CACCPLTable({
           <TableBody>
             {isMultiMonth
               ? displayMonths.map((m) => {
-                  const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
+                  const mLeads = filteredLeads.filter(
+                    (l: any) => l?.mes && String(l.mes).startsWith(m),
+                  )
                   if (mLeads.length === 0) return null
                   const agg = calculateLeadRow(aggregateLeads(mLeads, year, campaign))
                   agg.total_fechados = getFechamentosCount(mLeads, m)
@@ -439,7 +449,7 @@ export function CACCPLTable({
                   return (
                     <TableRow key={m}>
                       <TableCell className="font-medium text-xs uppercase text-muted-foreground">
-                        {m.substring(0, 3)}
+                        {(m || '').substring(0, 3)}
                       </TableCell>
                       <TableCell className="text-right">{fmtMon(agg.investimento)}</TableCell>
                       <TableCell className="text-right">{agg.total_leads}</TableCell>
@@ -470,7 +480,7 @@ export function CACCPLTable({
                     return (
                       <TableRow>
                         <TableCell className="font-medium text-xs uppercase text-muted-foreground">
-                          {month.substring(0, 3)}
+                          {(month || '').substring(0, 3)}
                         </TableCell>
                         <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
                         <TableCell className="text-right">{aggAno.total_leads}</TableCell>
@@ -502,7 +512,7 @@ export function CACCPLTable({
                     return (
                       <TableRow>
                         <TableCell className="font-medium text-xs uppercase text-muted-foreground">
-                          Dia {day} de {month.substring(0, 3)} {year}
+                          Dia {day} de {(month || '').substring(0, 3)} {year}
                         </TableCell>
                         <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
                         <TableCell className="text-right">{aggAno.total_leads}</TableCell>
@@ -665,13 +675,15 @@ export function DisqualificationAnalysis({
             <TableBody>
               {isMultiMonth
                 ? displayMonths.map((m) => {
-                    const mLeads = filteredLeads.filter((l: any) => l.mes.startsWith(m))
+                    const mLeads = filteredLeads.filter(
+                      (l: any) => l?.mes && String(l.mes).startsWith(m),
+                    )
                     if (mLeads.length === 0) return null
                     const agg = calculateLeadRow(aggregateLeads(mLeads, year, campaign))
                     return (
                       <TableRow key={m}>
                         <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
-                          {m.substring(0, 3)}
+                          {(m || '').substring(0, 3)}
                         </TableCell>
                         <TableCell className="text-right">{agg.sem_qualidade}</TableCell>
                         <TableCell className="text-right">{agg.aposentado}</TableCell>
@@ -689,7 +701,7 @@ export function DisqualificationAnalysis({
                   ? filteredLeads.length > 0 && (
                       <TableRow>
                         <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
-                          {month.substring(0, 3)}
+                          {(month || '').substring(0, 3)}
                         </TableCell>
                         <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
                         <TableCell className="text-right">{aggAno.aposentado}</TableCell>

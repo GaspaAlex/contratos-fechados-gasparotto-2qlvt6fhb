@@ -29,7 +29,7 @@ export function getDisplayMonths(month: string, startMonth: string, endMonth: st
   if (startMonth && endMonth) {
     return getMonthsInRange(startMonth, endMonth)
   }
-  return month === 'Todos' ? MONTHS : [month]
+  return !month || month === 'Todos' ? MONTHS : [month]
 }
 
 export function isDateInPeriod(
@@ -47,7 +47,7 @@ export function isDateInPeriod(
   const dMonthNum = String(d.getUTCMonth() + 1).padStart(2, '0')
   const dDay = d.getUTCDate()
 
-  if (dYear !== String(year)) return false
+  if (year && dYear !== String(year)) return false
 
   const monthToNum = (m: string) => {
     const idx = MONTHS.indexOf(m)
@@ -60,10 +60,10 @@ export function isDateInPeriod(
     return dMonthNum >= sNum && dMonthNum <= eNum
   }
 
-  if (month !== 'Todos') {
+  if (month && month !== 'Todos') {
     const mNum = monthToNum(month)
     if (dMonthNum !== mNum) return false
-    if (day !== 'Todos' && dDay !== parseInt(day)) return false
+    if (day && day !== 'Todos' && dDay !== parseInt(day)) return false
   }
 
   return true
@@ -89,19 +89,24 @@ export function filterLeadsByPeriod(
   startMonth: string,
   endMonth: string,
 ): any[] {
+  if (!Array.isArray(leads)) return []
   if (startMonth && endMonth) {
     const range = getMonthsInRange(startMonth, endMonth)
-    return leads.filter((l) => range.some((m) => l.mes.startsWith(m)))
+    return leads.filter((l) => l?.mes && range.some((m) => String(l.mes).startsWith(m)))
   }
 
-  let filtered = month === 'Todos' ? leads : leads.filter((l: any) => l.mes.startsWith(month))
-  if (month !== 'Todos' && day !== 'Todos') {
-    filtered = filtered.filter((l: any) => l.dia === parseInt(day))
+  let filtered =
+    !month || month === 'Todos'
+      ? leads
+      : leads.filter((l: any) => l?.mes && String(l.mes).startsWith(month))
+  if (month && month !== 'Todos' && day && day !== 'Todos') {
+    filtered = filtered.filter((l: any) => l && Number(l.dia) === parseInt(day))
   }
   return filtered
 }
 
 export function calculateLeadRow(raw: any, overrideTotalLeads?: number) {
+  if (!raw) raw = {}
   const v = (k: string) => Number(raw[k] || 0)
 
   let google = v('google')
@@ -160,19 +165,49 @@ export function calculateLeadRow(raw: any, overrideTotalLeads?: number) {
 }
 
 export function aggregateLeads(leads: any[], year?: string | number, campaign: string = 'Todas') {
+  const initial = {
+    google: 0,
+    meta_ads: 0,
+    particular: 0,
+    em_qualif: 0,
+    sem_qualidade: 0,
+    aposentado: 0,
+    contribuinte_carne: 0,
+    outros: 0,
+    sem_interesse: 0,
+    engano: 0,
+    fechado_direto: 0,
+    fechado_fup: 0,
+    fup_ativo: 0,
+    investimento: 0,
+  }
+
+  if (!Array.isArray(leads) || leads.length === 0) {
+    return initial
+  }
+
   const result = leads.reduce(
     (acc: any, l: any) => {
+      if (!l) return acc
       const isSpecificCampaign = campaign && campaign !== 'Todas' && campaign !== 'all'
       const campaignKey = isSpecificCampaign ? campaign.replace(/^meta_/, '') : campaign
       if (isSpecificCampaign) {
-        acc.meta_ads += Number(l[`meta_${campaignKey}`]) || 0
-        acc.em_qualif += Number(l[`qualif_${campaignKey}`]) || 0
-        acc.sem_qualidade += Number(l[`sem_qualidade_${campaignKey}`]) || 0
-        acc.aposentado += Number(l[`aposentado_${campaignKey}`]) || 0
-        acc.contribuinte_carne += Number(l[`carne_${campaignKey}`]) || 0
-        acc.outros += Number(l[`outros_${campaignKey}`]) || 0
-        acc.sem_interesse += Number(l[`sem_interesse_${campaignKey}`]) || 0
-        acc.engano += Number(l[`engano_${campaignKey}`]) || 0
+        acc.meta_ads +=
+          Number(l[`meta_${campaignKey}`]) ||
+          Number(l[`meta_${campaign}`]) ||
+          Number(l[campaign]) ||
+          0
+        acc.em_qualif += Number(l[`qualif_${campaignKey}`]) || Number(l[`qualif_${campaign}`]) || 0
+        acc.sem_qualidade +=
+          Number(l[`sem_qualidade_${campaignKey}`]) || Number(l[`sem_qualidade_${campaign}`]) || 0
+        acc.aposentado +=
+          Number(l[`aposentado_${campaignKey}`]) || Number(l[`aposentado_${campaign}`]) || 0
+        acc.contribuinte_carne +=
+          Number(l[`carne_${campaignKey}`]) || Number(l[`carne_${campaign}`]) || 0
+        acc.outros += Number(l[`outros_${campaignKey}`]) || Number(l[`outros_${campaign}`]) || 0
+        acc.sem_interesse +=
+          Number(l[`sem_interesse_${campaignKey}`]) || Number(l[`sem_interesse_${campaign}`]) || 0
+        acc.engano += Number(l[`engano_${campaignKey}`]) || Number(l[`engano_${campaign}`]) || 0
 
         acc.google += 0
         acc.particular += 0
@@ -181,82 +216,67 @@ export function aggregateLeads(leads: any[], year?: string | number, campaign: s
         acc.fup_ativo += 0
         acc.investimento += Number(l.investimento) || 0
       } else {
-        acc.google += l.google || 0
-        acc.meta_ads += l.meta_ads || 0
-        acc.particular += l.particular || 0
-        acc.em_qualif += l.em_qualif || 0
+        acc.google += Number(l.google) || 0
+        acc.meta_ads += Number(l.meta_ads) || 0
+        acc.particular += Number(l.particular) || 0
+        acc.em_qualif += Number(l.em_qualif) || 0
 
-        const isModern = isAfterMay2026(l.mes, year || 2026)
+        const isModern = isAfterMay2026(l.mes || '', year || 2026)
 
         if (isModern) {
           acc.sem_qualidade +=
-            (l.sem_qualidade_c1 || 0) +
-            (l.sem_qualidade_c2 || 0) +
-            (l.sem_qualidade_c3 || 0) +
-            (l.sem_qualidade_c4 || 0) +
-            (l.sem_qualidade_c5 || 0)
+            (Number(l.sem_qualidade_c1) || 0) +
+            (Number(l.sem_qualidade_c2) || 0) +
+            (Number(l.sem_qualidade_c3) || 0) +
+            (Number(l.sem_qualidade_c4) || 0) +
+            (Number(l.sem_qualidade_c5) || 0)
           acc.aposentado +=
-            (l.aposentado_c1 || 0) +
-            (l.aposentado_c2 || 0) +
-            (l.aposentado_c3 || 0) +
-            (l.aposentado_c4 || 0) +
-            (l.aposentado_c5 || 0)
+            (Number(l.aposentado_c1) || 0) +
+            (Number(l.aposentado_c2) || 0) +
+            (Number(l.aposentado_c3) || 0) +
+            (Number(l.aposentado_c4) || 0) +
+            (Number(l.aposentado_c5) || 0)
           acc.contribuinte_carne +=
-            (l.carne_c1 || 0) +
-            (l.carne_c2 || 0) +
-            (l.carne_c3 || 0) +
-            (l.carne_c4 || 0) +
-            (l.carne_c5 || 0)
+            (Number(l.carne_c1) || 0) +
+            (Number(l.carne_c2) || 0) +
+            (Number(l.carne_c3) || 0) +
+            (Number(l.carne_c4) || 0) +
+            (Number(l.carne_c5) || 0)
           acc.outros +=
-            (l.outros_c1 || 0) +
-            (l.outros_c2 || 0) +
-            (l.outros_c3 || 0) +
-            (l.outros_c4 || 0) +
-            (l.outros_c5 || 0)
+            (Number(l.outros_c1) || 0) +
+            (Number(l.outros_c2) || 0) +
+            (Number(l.outros_c3) || 0) +
+            (Number(l.outros_c4) || 0) +
+            (Number(l.outros_c5) || 0)
           acc.sem_interesse +=
-            (l.sem_interesse_c1 || 0) +
-            (l.sem_interesse_c2 || 0) +
-            (l.sem_interesse_c3 || 0) +
-            (l.sem_interesse_c4 || 0) +
-            (l.sem_interesse_c5 || 0)
+            (Number(l.sem_interesse_c1) || 0) +
+            (Number(l.sem_interesse_c2) || 0) +
+            (Number(l.sem_interesse_c3) || 0) +
+            (Number(l.sem_interesse_c4) || 0) +
+            (Number(l.sem_interesse_c5) || 0)
           acc.engano +=
-            (l.engano_c1 || 0) +
-            (l.engano_c2 || 0) +
-            (l.engano_c3 || 0) +
-            (l.engano_c4 || 0) +
-            (l.engano_c5 || 0)
+            (Number(l.engano_c1) || 0) +
+            (Number(l.engano_c2) || 0) +
+            (Number(l.engano_c3) || 0) +
+            (Number(l.engano_c4) || 0) +
+            (Number(l.engano_c5) || 0)
         } else {
-          acc.sem_qualidade += l.sem_qualidade || 0
-          acc.aposentado += l.aposentado || 0
-          acc.contribuinte_carne += l.contribuinte_carne || 0
-          acc.outros += l.outros || 0
-          acc.sem_interesse += l.sem_interesse || 0
-          acc.engano += l.engano || 0
+          acc.sem_qualidade += Number(l.sem_qualidade) || 0
+          acc.aposentado += Number(l.aposentado) || 0
+          acc.contribuinte_carne += Number(l.contribuinte_carne) || 0
+          acc.outros += Number(l.outros) || 0
+          acc.sem_interesse += Number(l.sem_interesse) || 0
+          acc.engano += Number(l.engano) || 0
         }
 
-        acc.fechado_direto += l.fechado_direto || 0
-        acc.fechado_fup += l.fechado_fup || 0
-        acc.fup_ativo += l.fup_ativo || 0
-        acc.investimento += l.investimento || 0
+        acc.fechado_direto += Number(l.fechado_direto) || 0
+        acc.fechado_fup += Number(l.fechado_fup) || 0
+        acc.fup_ativo += Number(l.fup_ativo) || 0
+        acc.investimento += Number(l.investimento) || 0
       }
       return acc
     },
-    {
-      google: 0,
-      meta_ads: 0,
-      particular: 0,
-      em_qualif: 0,
-      sem_qualidade: 0,
-      aposentado: 0,
-      contribuinte_carne: 0,
-      outros: 0,
-      sem_interesse: 0,
-      engano: 0,
-      fechado_direto: 0,
-      fechado_fup: 0,
-      fup_ativo: 0,
-      investimento: 0,
-    } as any,
+    { ...initial } as any,
   )
 
   return result
