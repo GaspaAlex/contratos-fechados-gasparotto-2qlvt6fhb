@@ -299,7 +299,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
     }
   }
 
-  const onSubmit = async (values: any, forceSave = false) => {
+  const handleSave = async (values: any, forceSave = false) => {
     if (forceSave !== true) {
       try {
         const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
@@ -349,6 +349,8 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       toast.error('Erro ao salvar')
     }
   }
+
+  const onSubmit = (values: any) => handleSave(values, false)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -568,7 +570,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                         placeholder="0,00"
                         value={
                           field.value !== undefined && field.value !== null
-                            ? formatCurrencyForInput(field.value)
+                            ? formatCurrencyForInput(Number(field.value))
                             : ''
                         }
                         onChange={(e) => {
@@ -732,7 +734,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                     className="bg-amber-600 hover:bg-amber-700 text-white"
                     onClick={() => {
                       setDuplicateWarning(null)
-                      onSubmit(form.getValues(), true)
+                      handleSave(form.getValues(), true)
                     }}
                   >
                     Salvar mesmo assim

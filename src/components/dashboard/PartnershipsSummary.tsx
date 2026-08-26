@@ -65,9 +65,9 @@ export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {
   const partnerships = Object.entries(grouped).map(([parceiro, data]) => ({
     id: parceiro,
     parceiro,
-    casos: data.casos,
-    total: data.total,
-    contratos: data.contratos,
+    casos: (data as any).casos,
+    total: (data as any).total,
+    contratos: (data as any).contratos,
   }))
 
   const totalGeralCasos = partnerships.reduce((sum, p) => sum + p.casos, 0)

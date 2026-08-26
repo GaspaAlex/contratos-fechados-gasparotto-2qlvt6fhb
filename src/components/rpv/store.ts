@@ -80,7 +80,9 @@ export function useRpvFilters() {
         anoFilter: rpvFilterStore.anoFilter,
       })
     })
-    return unsubscribe
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   return state

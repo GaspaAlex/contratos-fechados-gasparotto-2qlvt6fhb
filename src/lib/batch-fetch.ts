@@ -21,7 +21,7 @@ export async function fetchAllBatched<T = any>(
       onFirstBatch(allItems, true)
     }
 
-    const promises: ReturnType<(typeof pb.collection<T>)['getList']>[] = []
+    const promises: Promise<any>[] = []
     for (let p = 2; p <= firstPage.totalPages; p++) {
       promises.push(pb.collection(collection).getList<T>(p, perPage, options))
     }

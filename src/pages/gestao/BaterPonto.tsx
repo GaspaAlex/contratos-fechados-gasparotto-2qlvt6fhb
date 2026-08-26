@@ -24,6 +24,7 @@ import { LogOut, Clock, CalendarDays, Loader2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { calculateDailyBalance } from '@/lib/ponto-utils'
 
@@ -43,6 +44,7 @@ const formatHoursMins = (mins: number) => {
 }
 
 export default function BaterPonto() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [session, setSession] = useState<any>(null)
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -246,6 +248,10 @@ export default function BaterPonto() {
         </span>
       </div>
     )
+  }
+
+  if (!user) {
+    return null
   }
 
   if (!session || loading) {

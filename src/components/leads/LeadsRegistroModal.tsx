@@ -39,7 +39,7 @@ import pb from '@/lib/pocketbase/client'
 import { getResponsaveisAtivos } from '@/services/responsaveis'
 
 const schema = z.object({
-  data: z.date({ required_error: 'A data é obrigatória.' }),
+  data: z.date({ error: 'A data é obrigatória.' }),
   telefone: z.string().min(1, 'O telefone é obrigatório.'),
   responsavel: z.string().min(1, 'O responsável é obrigatório.'),
   classificacao: z.string().optional(),

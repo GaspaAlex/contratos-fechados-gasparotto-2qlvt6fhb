@@ -19,15 +19,17 @@ export function DynamicSelect({
   onDelete,
   placeholder,
   valueKey = 'nome',
+  disabled = false,
 }: {
   value: string
   onChange: (v: string) => void
   items: any[]
   onAdd: (name: string) => Promise<void>
   onEdit?: (id: string, oldName: string, newName: string) => Promise<void>
-  onDelete: (id: string, name: string) => Promise<void>
+  onDelete?: (id: string, name: string) => Promise<void>
   placeholder: string
   valueKey?: 'id' | 'nome'
+  disabled?: boolean
 }) {
   const [isAdding, setIsAdding] = useState(false)
   const [newItem, setNewItem] = useState('')
@@ -83,7 +85,7 @@ export function DynamicSelect({
         </div>
       ) : (
         <>
-          <Select value={value} onValueChange={onChange}>
+          <Select value={value} onValueChange={onChange} disabled={disabled}>
             <SelectTrigger className="flex-1 h-10 border-[#C9922A]/30 focus:ring-[#C9922A]">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
@@ -151,20 +153,22 @@ export function DynamicSelect({
                             <Pencil className="h-3 w-3" />
                           </Button>
                         )}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-[#E84040] hover:bg-[#E84040]/10"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            onDelete(item.id, item.nome)
-                          }}
-                          onPointerDown={(e) => e.stopPropagation()}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        {onDelete && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-[#E84040] hover:bg-[#E84040]/10"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              onDelete(item.id, item.nome)
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -176,6 +180,7 @@ export function DynamicSelect({
             type="button"
             variant="outline"
             size="icon"
+            disabled={disabled}
             className="h-10 w-10 shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
             onClick={() => setIsAdding(true)}
           >

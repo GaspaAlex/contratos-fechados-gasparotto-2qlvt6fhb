@@ -101,6 +101,7 @@ export function ContractModal({
     parceiro_nome: '',
     parceiro_comissao: 0,
     origem: '',
+    campanha_origem: '',
     representante: false,
     representante_nome: '',
     representante_cpf: '',

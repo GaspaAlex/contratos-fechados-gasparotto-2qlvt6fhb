@@ -231,23 +231,23 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
     }
   }
 
-  const meta_c1 = form.watch('meta_c1') || 0
-  const meta_c2 = form.watch('meta_c2') || 0
-  const meta_c3 = form.watch('meta_c3') || 0
-  const meta_c4 = form.watch('meta_c4') || 0
-  const meta_c5 = form.watch('meta_c5') || 0
+  const meta_c1 = Number(form.watch('meta_c1')) || 0
+  const meta_c2 = Number(form.watch('meta_c2')) || 0
+  const meta_c3 = Number(form.watch('meta_c3')) || 0
+  const meta_c4 = Number(form.watch('meta_c4')) || 0
+  const meta_c5 = Number(form.watch('meta_c5')) || 0
   const hasCampaignLeads = meta_c1 > 0 || meta_c2 > 0 || meta_c3 > 0 || meta_c4 > 0 || meta_c5 > 0
 
   const currentMetaAds = hasCampaignLeads
     ? meta_c1 + meta_c2 + meta_c3 + meta_c4 + meta_c5
-    : vals.meta_ads || 0
+    : Number(vals.meta_ads) || 0
 
   const em_qualif_sum =
-    (form.watch('qualif_c1') || 0) +
-    (form.watch('qualif_c2') || 0) +
-    (form.watch('qualif_c3') || 0) +
-    (form.watch('qualif_c4') || 0) +
-    (form.watch('qualif_c5') || 0)
+    (Number(form.watch('qualif_c1')) || 0) +
+    (Number(form.watch('qualif_c2')) || 0) +
+    (Number(form.watch('qualif_c3')) || 0) +
+    (Number(form.watch('qualif_c4')) || 0) +
+    (Number(form.watch('qualif_c5')) || 0)
 
   const currentEmQualif = hasCampaignLeads ? em_qualif_sum : vals.em_qualif || 0
   const currentSemQualidade = vals.sem_qualidade || 0
@@ -258,12 +258,12 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
   const currentEngano = vals.engano || 0
 
   const currentTotalDesq =
-    currentSemQualidade +
-    currentAposentado +
-    currentCarne +
-    currentOutros +
-    currentSemInteresse +
-    currentEngano
+    Number(currentSemQualidade) +
+    Number(currentAposentado) +
+    Number(currentCarne) +
+    Number(currentOutros) +
+    Number(currentSemInteresse) +
+    Number(currentEngano)
 
   const calc = calculateLeadRow({
     ...vals,

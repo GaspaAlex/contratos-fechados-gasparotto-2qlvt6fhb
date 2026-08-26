@@ -1,9 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ThemeProvider } from './components/ThemeProvider'
 import { AuthProvider } from './hooks/use-auth'
+import { SessionRecovery } from './hooks/use-session-recovery'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import NotFound from './pages/NotFound'
 import Index from './pages/Index'
@@ -26,34 +28,38 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/rpv" element={<Rpv />} />
-                <Route path="/protocolo" element={<Protocolo />} />
-                <Route path="/pericias" element={<Pericias />} />
-                <Route path="/leads" element={<LeadsCampanha />} />
-                <Route path="/leads-registro" element={<LeadsRegistro />} />
-                <Route path="/gestao/ponto" element={<Ponto />} />
-                <Route path="/gestao/ponto/registrar" element={<BaterPonto />} />
-                <Route path="/gestao/ponto/dashboard" element={<DashboardPonto />} />
-                <Route path="/gestao/ponto/cartao/:funcionarioId" element={<CartaoPonto />} />
-                <Route path="/gestao/funcionarios" element={<Funcionarios />} />
-                <Route path="/gestao/responsaveis" element={<Responsaveis />} />
-                <Route path="/gestao/acessos" element={<AcessosSistemas />} />
-              </Route>
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </BrowserRouter>
+      <SessionRecovery>
+        <BrowserRouter>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/rpv" element={<Rpv />} />
+                    <Route path="/protocolo" element={<Protocolo />} />
+                    <Route path="/pericias" element={<Pericias />} />
+                    <Route path="/leads" element={<LeadsCampanha />} />
+                    <Route path="/leads-registro" element={<LeadsRegistro />} />
+                    <Route path="/gestao/ponto" element={<Ponto />} />
+                    <Route path="/gestao/ponto/registrar" element={<BaterPonto />} />
+                    <Route path="/gestao/ponto/dashboard" element={<DashboardPonto />} />
+                    <Route path="/gestao/ponto/cartao/:funcionarioId" element={<CartaoPonto />} />
+                    <Route path="/gestao/funcionarios" element={<Funcionarios />} />
+                    <Route path="/gestao/responsaveis" element={<Responsaveis />} />
+                    <Route path="/gestao/acessos" element={<AcessosSistemas />} />
+                  </Route>
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ErrorBoundary>
+          </TooltipProvider>
+        </BrowserRouter>
+      </SessionRecovery>
     </AuthProvider>
   </ThemeProvider>
 )
