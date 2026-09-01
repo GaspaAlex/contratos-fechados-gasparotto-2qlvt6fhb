@@ -136,7 +136,7 @@ export function ProtocoloDashboard({
             <span className="font-medium text-emerald-600">Prot. Judicial: {cProtJud}</span>
             <span className="font-medium text-teal-600">Req. Adm.: {cReqAdm}</span>
             <span className="font-medium text-blue-600">Prov. Inicial: {cProv}</span>
-            <span className="font-medium text-red-600">R. Docs: {cDocs}</span>
+            <span className="font-medium text-red-600">Falt. Docs: {cDocs}</span>
           </div>
         </CardContent>
       </Card>

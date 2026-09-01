@@ -126,7 +126,7 @@ export function RDocsDashboard({
               {metrics.pendentes}
             </div>
             <div className="text-sm text-red-800 dark:text-red-400 font-medium uppercase tracking-wide">
-              Pendentes R. Docs
+              Pendentes Faltando Docs
             </div>
           </div>
         </div>

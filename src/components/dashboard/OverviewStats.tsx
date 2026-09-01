@@ -171,7 +171,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
       <Card className="border-t-2 border-t-red-500 shadow-sm dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-            Casos em R. Docs
+            Casos em Faltando Documentos
           </CardTitle>
           <select
             className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"

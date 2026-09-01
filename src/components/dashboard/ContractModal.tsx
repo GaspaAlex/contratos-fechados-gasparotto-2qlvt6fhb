@@ -297,7 +297,7 @@ export function ContractModal({
       if (totalLinked > 0) {
         if (
           !window.confirm(
-            `Existem ${totalLinked} registros com este status. Ao excluir, serão alterados automaticamente para R. Docs. Confirmar?`,
+            `Existem ${totalLinked} registros com este status. Ao excluir, serão alterados automaticamente para Faltando Documentos. Confirmar?`,
           )
         )
           return

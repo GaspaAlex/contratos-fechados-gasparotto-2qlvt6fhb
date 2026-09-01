@@ -567,7 +567,7 @@ export function ContractsTable({
                     : 'text-muted-foreground',
                 )}
               >
-                {status}
+                {status === 'R. Docs' ? 'Falt. Docs' : status}
               </Button>
             ))}
           </div>
@@ -691,9 +691,9 @@ export function ContractsTable({
                                 ) : contract.status === 'R. Docs' ? (
                                   <Badge
                                     variant="outline"
-                                    className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
+                                    className="bg-[#C9922A]/10 text-[#C9922A] border-[#C9922A]/30 gap-1.5 whitespace-nowrap px-2 py-0.5"
                                   >
-                                    <FileText className="h-3 w-3" /> R. Docs
+                                    <FileText className="h-3 w-3" /> Faltando Documentos
                                   </Badge>
                                 ) : ARCHIVED_STATUSES.includes(contract.status) ? (
                                   <Badge

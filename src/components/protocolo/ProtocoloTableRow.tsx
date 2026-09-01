@@ -26,6 +26,11 @@ const isOverdue = (dateStr: string) => {
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
   // Highlight strictly if status is "Prov. Inicial" and it's overdue
   const overdue = item.status === 'Prov. Inicial' && isOverdue(item.dprotocolo)
+  const faltaDocs = item.status === 'R. Docs'
+
+  const STATUS_LABELS: Record<string, string> = {
+    'R. Docs': 'Faltando Documentos',
+  }
 
   const statusConfig: any = {
     'Protocolado Judicial': {
@@ -41,7 +46,7 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       icon: FileText,
     },
     'R. Docs': {
-      color: 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-400',
+      color: 'text-[#C9922A] bg-[#C9922A]/[0.13]',
       icon: AlertTriangle,
     },
   }
@@ -62,9 +67,11 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
 
   return (
     <TableRow
-      className={`group transition-colors ${overdue ? 'bg-rose-50/60 hover:bg-rose-50/80 dark:bg-rose-950/20 dark:hover:bg-rose-950/30' : ''}`}
+      className={`group transition-colors ${overdue ? 'bg-rose-50/60 hover:bg-rose-50/80 dark:bg-rose-950/20 dark:hover:bg-rose-950/30' : faltaDocs ? 'bg-[#C9922A]/10 hover:bg-[#C9922A]/15 dark:bg-[#C9922A]/10 dark:hover:bg-[#C9922A]/15' : ''}`}
     >
-      <TableCell className={`w-10 font-medium ${overdue ? 'border-l-2 border-l-rose-500' : ''}`}>
+      <TableCell
+        className={`w-10 font-medium ${overdue ? 'border-l-2 border-l-rose-500' : faltaDocs ? 'border-l-2 border-l-[#C9922A]' : ''}`}
+      >
         {index}
       </TableCell>
       <TableCell className="font-semibold whitespace-nowrap">
@@ -93,7 +100,7 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap ${st.color}`}
         >
           <StatusIcon className="h-3 w-3" />
-          {item.status}
+          {STATUS_LABELS[item.status] || item.status}
         </span>
       </TableCell>
       <TableCell>

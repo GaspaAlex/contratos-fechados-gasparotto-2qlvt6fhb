@@ -186,7 +186,7 @@ export function ProtocoloTable({
       <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
         <p>
           Calculado: {cCalc} | Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial:{' '}
-          {cProv} | R. Docs: {cDocs} | Total: {filtered.length}
+          {cProv} | Falt. Docs: {cDocs} | Total: {filtered.length}
         </p>
       </div>
 
@@ -302,7 +302,7 @@ export function ProtocoloTable({
               { value: 'Protocolado Judicial', label: 'Judicial' },
               { value: 'Requerimento Adm.', label: 'Administrativo' },
               { value: 'Prov. Inicial', label: 'Inicial' },
-              { value: 'R. Docs', label: 'Docs' },
+              { value: 'R. Docs', label: 'Falt. Docs' },
             ].map((s) => (
               <button
                 key={s.value}
