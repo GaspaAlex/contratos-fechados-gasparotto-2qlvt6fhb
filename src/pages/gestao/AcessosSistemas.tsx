@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Copy, Eye, EyeOff, KeyRound, Lock, Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Copy, Eye, EyeOff, Lock, Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { getGrupos, deleteGrupo } from '@/services/acessos'
@@ -7,6 +7,8 @@ import { AcessoModal } from '@/components/gestao/AcessoModal'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { normalizeSearchText } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -25,6 +27,7 @@ export default function AcessosSistemas() {
 
   const [grupos, setGrupos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
@@ -77,6 +80,30 @@ export default function AcessosSistemas() {
     return '•'.repeat(valor.length)
   }
 
+  const normalizedQuery = normalizeSearchText(searchTerm)
+
+  const gruposFiltrados = grupos.filter((grupo) => {
+    if (!normalizedQuery) return true
+
+    if (normalizeSearchText(grupo.titulo).includes(normalizedQuery)) {
+      return true
+    }
+
+    if (normalizeSearchText(grupo.observacoes).includes(normalizedQuery)) {
+      return true
+    }
+
+    const blocos = grupo.expand?.acessos_blocos_via_grupo ?? []
+    return blocos.some((bloco: any) => {
+      return (
+        normalizeSearchText(bloco.rotulo).includes(normalizedQuery) ||
+        normalizeSearchText(bloco.login).includes(normalizedQuery) ||
+        normalizeSearchText(bloco.link).includes(normalizedQuery) ||
+        normalizeSearchText(bloco.observacoes).includes(normalizedQuery)
+      )
+    })
+  })
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -94,6 +121,17 @@ export default function AcessosSistemas() {
         )}
       </div>
 
+      <div className="relative w-full max-w-sm">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Buscar acesso..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -105,9 +143,13 @@ export default function AcessosSistemas() {
           <h3 className="text-lg font-semibold text-foreground">Nenhum acesso cadastrado</h3>
           <p className="text-sm text-muted-foreground">Os acessos cadastrados aparecerão aqui.</p>
         </Card>
+      ) : gruposFiltrados.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+          <p className="text-sm text-muted-foreground">Nenhum acesso encontrado.</p>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {grupos.map((grupo) => {
+          {gruposFiltrados.map((grupo) => {
             const blocos = [...(grupo.expand?.acessos_blocos_via_grupo ?? [])].sort((a, b) => {
               const ra = a.rotulo?.trim()
               const rb = b.rotulo?.trim()

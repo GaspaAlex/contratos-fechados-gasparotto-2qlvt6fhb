@@ -24,3 +24,16 @@ export function normalizeText(str: string | null | undefined): string {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
 }
+
+/**
+ * Normaliza o texto removendo acentos, caracteres especiais, pontuação,
+ * espaços em branco e convertendo para minúsculas, para buscas ultra flexíveis.
+ */
+export function normalizeSearchText(str: string | null | undefined): string {
+  if (!str) return ''
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+}
