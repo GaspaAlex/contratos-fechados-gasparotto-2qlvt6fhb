@@ -1,6 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { Megaphone } from 'lucide-react'
 import { RDocsDashboard } from '@/components/dashboard/RDocsDashboard'
 
 const MONTHS = [
@@ -52,8 +51,21 @@ export function MonthlyGrid({
     const activeCount = activeContratos.length
     const campanhaCount = activeContratos.filter((c) => c.origem === 'Campanha').length
     const particularCount = activeContratos.filter((c) => c.origem === 'Particular').length
+    const macohinCount = activeContratos.filter((c) => c.origem === 'Macohin').length
+    const indicacaoMacohinCount = activeContratos.filter(
+      (c) => c.origem === 'Indicação Macohin',
+    ).length
+    const totalMacohin = macohinCount + indicacaoMacohinCount
 
-    return { name, count: activeCount, campanhaCount, particularCount }
+    return {
+      name,
+      count: activeCount,
+      campanhaCount,
+      particularCount,
+      macohinCount,
+      indicacaoMacohinCount,
+      totalMacohin,
+    }
   }).filter((m) => month === 'Todos os meses' || m.name === month)
 
   const totalActive = yearContratos.filter((c) => !isArchived(c)).length
@@ -105,18 +117,48 @@ export function MonthlyGrid({
                       : 'sem registro'}
                 </span>{' '}
               </div>
-              {month.count > 0 && (month.campanhaCount > 0 || month.particularCount > 0) && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {month.campanhaCount > 0 && (
-                    <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                      <Megaphone className="w-3 h-3" /> {month.campanhaCount} campanha
+              {month.count > 0 && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex flex-wrap gap-1">
+                    <span
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
+                      style={{ color: '#52B86E', backgroundColor: 'rgba(82, 184, 110, 0.13)' }}
+                    >
+                      {month.campanhaCount} Campanha
                     </span>
-                  )}
-                  {month.particularCount > 0 && (
-                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                      {month.particularCount} particular
+                    <span
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
+                      style={{ color: '#5A9FD4', backgroundColor: 'rgba(90, 159, 212, 0.13)' }}
+                    >
+                      {month.particularCount} Particular
                     </span>
-                  )}
+                    <span
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
+                      style={{ color: '#8B5CF6', backgroundColor: 'rgba(139, 92, 246, 0.13)' }}
+                    >
+                      {month.macohinCount} Macohin
+                    </span>
+                    <span
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
+                      style={{ color: '#D97706', backgroundColor: 'rgba(217, 119, 6, 0.13)' }}
+                    >
+                      {month.indicacaoMacohinCount} Indicação Macohin
+                    </span>
+                  </div>
+
+                  <div className="pt-1.5 border-t border-border/40 flex items-center justify-between text-[11px]">
+                    <span className="text-muted-foreground font-medium">Total Macohin:</span>
+                    <span
+                      className="font-bold px-1.5 py-0.5 rounded text-[11px] leading-none border"
+                      style={{
+                        color: '#8B5CF6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.12)',
+                        borderColor: 'rgba(139, 92, 246, 0.3)',
+                      }}
+                    >
+                      {month.totalMacohin}
+                    </span>
+                  </div>
                 </div>
               )}
             </CardContent>
