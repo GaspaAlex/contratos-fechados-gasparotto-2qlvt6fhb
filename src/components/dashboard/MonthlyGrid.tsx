@@ -92,13 +92,14 @@ export function MonthlyGrid({
             style={{ animationFillMode: 'both', animationDelay: `${index * 50}ms` }}
           >
             <CardContent className="p-3">
-              <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground">
+              <h3 className="text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase mb-1">
                 {month.name}
               </h3>
-              <div className="flex items-baseline gap-2">
+
+              <div className="flex items-baseline gap-1.5">
                 <span
                   className={cn(
-                    'text-4xl font-black',
+                    'text-3xl sm:text-4xl font-black leading-none tracking-tight',
                     month.count > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
                   )}
                 >
@@ -106,7 +107,7 @@ export function MonthlyGrid({
                 </span>
                 <span
                   className={cn(
-                    'text-sm font-medium',
+                    'text-xs font-medium',
                     month.count > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
                   )}
                 >
@@ -115,47 +116,84 @@ export function MonthlyGrid({
                     : month.count > 0
                       ? 'fechamentos'
                       : 'sem registro'}
-                </span>{' '}
+                </span>
               </div>
-              {month.count > 0 && (
-                <div className="mt-3 space-y-2">
-                  <div className="flex flex-wrap gap-1">
-                    <span
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
-                      style={{ color: '#52B86E', backgroundColor: 'rgba(82, 184, 110, 0.13)' }}
-                    >
-                      {month.campanhaCount} Campanha
-                    </span>
-                    <span
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
-                      style={{ color: '#5A9FD4', backgroundColor: 'rgba(90, 159, 212, 0.13)' }}
-                    >
-                      {month.particularCount} Particular
-                    </span>
-                    <span
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
-                      style={{ color: '#8B5CF6', backgroundColor: 'rgba(139, 92, 246, 0.13)' }}
-                    >
-                      {month.macohinCount} Macohin
-                    </span>
-                    <span
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-tight whitespace-nowrap"
-                      style={{ color: '#D97706', backgroundColor: 'rgba(217, 119, 6, 0.13)' }}
-                    >
-                      {month.indicacaoMacohinCount} Indicação Macohin
-                    </span>
-                  </div>
 
-                  <div className="pt-1.5 border-t border-border/40 flex items-center justify-between text-[11px]">
-                    <span className="text-muted-foreground font-medium">Total Macohin:</span>
-                    <span
-                      className="font-bold px-1.5 py-0.5 rounded text-[11px] leading-none border"
+              {month.count > 0 && (
+                <div className="mt-2.5 space-y-2">
+                  {/* Grade 2x2 das 4 origens */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {/* Linha 1: Campanha | Particular */}
+                    <div
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
                       style={{
-                        color: '#8B5CF6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.12)',
-                        borderColor: 'rgba(139, 92, 246, 0.3)',
+                        backgroundColor: 'rgba(82, 184, 110, 0.12)',
+                        color: '#52B86E',
                       }}
                     >
+                      <span className="font-extrabold text-[12px] shrink-0">
+                        {month.campanhaCount}
+                      </span>
+                      <span className="truncate">Campanha</span>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      style={{
+                        backgroundColor: 'rgba(90, 159, 212, 0.12)',
+                        color: '#5A9FD4',
+                      }}
+                    >
+                      <span className="font-extrabold text-[12px] shrink-0">
+                        {month.particularCount}
+                      </span>
+                      <span className="truncate">Particular</span>
+                    </div>
+
+                    {/* Linha 2: Macohin | Indicação Macohin */}
+                    <div
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      style={{
+                        backgroundColor: 'rgba(139, 92, 246, 0.12)',
+                        color: '#8B5CF6',
+                      }}
+                    >
+                      <span className="font-extrabold text-[12px] shrink-0">
+                        {month.macohinCount}
+                      </span>
+                      <span className="truncate">Macohin</span>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      title={`${month.indicacaoMacohinCount} Indicação Macohin`}
+                      style={{
+                        backgroundColor: 'rgba(217, 119, 6, 0.12)',
+                        color: '#D97706',
+                      }}
+                    >
+                      <span className="font-extrabold text-[12px] shrink-0">
+                        {month.indicacaoMacohinCount}
+                      </span>
+                      <span className="truncate">Indicação Macohin</span>
+                    </div>
+                  </div>
+
+                  {/* Linha divisória horizontal discreta */}
+                  <div className="border-t border-border/40" />
+
+                  {/* Área de destaque próprio para Total Macohin */}
+                  <div
+                    className="flex items-center justify-between rounded-md px-2.5 py-1.5 border"
+                    style={{
+                      backgroundColor: 'rgba(201, 146, 42, 0.08)',
+                      borderColor: 'rgba(201, 146, 42, 0.22)',
+                    }}
+                  >
+                    <span className="text-[11px] font-semibold text-foreground/80 tracking-tight">
+                      Total Macohin
+                    </span>
+                    <span className="text-base font-black text-[#C9922A] leading-none">
                       {month.totalMacohin}
                     </span>
                   </div>
