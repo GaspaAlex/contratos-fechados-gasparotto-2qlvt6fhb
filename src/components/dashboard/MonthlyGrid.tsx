@@ -74,9 +74,26 @@ export function MonthlyGrid({
 
   const today = new Date()
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const todayActive = yearContratos.filter(
+  const todayActiveContratos = yearContratos.filter(
     (c) => !isArchived(c) && c.dcontrato.startsWith(todayStr),
+  )
+  const todayActive = todayActiveContratos.length
+  const todayCampanhaCount = todayActiveContratos.filter((c) => c.origem === 'Campanha').length
+  const todayParticularCount = todayActiveContratos.filter((c) => c.origem === 'Particular').length
+  const todayMacohinCount = todayActiveContratos.filter((c) => c.origem === 'Macohin').length
+  const todayIndicacaoMacohinCount = todayActiveContratos.filter(
+    (c) => c.origem === 'Indicação Macohin',
   ).length
+  const todayTotalMacohin = todayMacohinCount + todayIndicacaoMacohinCount
+
+  const totalActiveContratos = yearContratos.filter((c) => !isArchived(c))
+  const totalCampanhaCount = totalActiveContratos.filter((c) => c.origem === 'Campanha').length
+  const totalParticularCount = totalActiveContratos.filter((c) => c.origem === 'Particular').length
+  const totalMacohinCount = totalActiveContratos.filter((c) => c.origem === 'Macohin').length
+  const totalIndicacaoMacohinCount = totalActiveContratos.filter(
+    (c) => c.origem === 'Indicação Macohin',
+  ).length
+  const totalTotalMacohin = totalMacohinCount + totalIndicacaoMacohinCount
 
   return (
     <div>
@@ -212,13 +229,13 @@ export function MonthlyGrid({
           style={{ animationFillMode: 'both', animationDelay: '550ms' }}
         >
           <CardContent className="p-3">
-            <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground uppercase">
+            <h3 className="text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase mb-1">
               HOJE
             </h3>
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-1.5">
               <span
                 className={cn(
-                  'text-4xl font-black',
+                  'text-3xl sm:text-4xl font-black leading-none tracking-tight',
                   todayActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
                 )}
               >
@@ -226,20 +243,84 @@ export function MonthlyGrid({
               </span>
               <span
                 className={cn(
-                  'text-sm font-medium',
-                  todayActive > 0 ? 'text-foreground' : 'text-muted-foreground/40',
+                  'text-xs font-medium',
+                  todayActive > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
                 )}
               >
-                fechados hoje
+                {todayActive === 1 ? 'fechamento hoje' : 'fechamentos hoje'}
               </span>
             </div>
-            {todayActive > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                  ativos
+
+            <div className="mt-2.5 space-y-2">
+              {/* Grade 2x2 das 4 origens */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {/* Linha 1: Campanha | Particular */}
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  style={{
+                    backgroundColor: 'rgba(82, 184, 110, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">{todayCampanhaCount}</span>
+                  <span className="truncate">Campanha</span>
+                </div>
+
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  style={{
+                    backgroundColor: 'rgba(90, 159, 212, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">
+                    {todayParticularCount}
+                  </span>
+                  <span className="truncate">Particular</span>
+                </div>
+
+                {/* Linha 2: Macohin | Indicação Macohin */}
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  style={{
+                    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">{todayMacohinCount}</span>
+                  <span className="truncate">Macohin</span>
+                </div>
+
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  title={`${todayIndicacaoMacohinCount} Indicação Macohin`}
+                  style={{
+                    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">
+                    {todayIndicacaoMacohinCount}
+                  </span>
+                  <span className="truncate">Indicação Macohin</span>
+                </div>
+              </div>
+
+              {/* Linha divisória horizontal discreta */}
+              <div className="border-t border-border/40" />
+
+              {/* Área de destaque próprio para Total Macohin */}
+              <div
+                className="flex items-center justify-between rounded-md px-2.5 py-1.5 border"
+                style={{
+                  backgroundColor: 'rgba(201, 146, 42, 0.08)',
+                  borderColor: 'rgba(201, 146, 42, 0.22)',
+                }}
+              >
+                <span className="text-[11px] font-semibold text-foreground/80 tracking-tight">
+                  Total Macohin
+                </span>
+                <span className="text-base font-black text-[#C9922A] leading-none">
+                  {todayTotalMacohin}
                 </span>
               </div>
-            )}
+            </div>
             {todayActive > 0 && (
               <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
             )}
@@ -254,13 +335,13 @@ export function MonthlyGrid({
           style={{ animationFillMode: 'both', animationDelay: '600ms' }}
         >
           <CardContent className="p-3">
-            <h3 className="mb-2 text-lg font-bold tracking-wider text-muted-foreground uppercase">
+            <h3 className="text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase mb-1">
               {year === 'Todos os anos' ? 'TOTAL GERAL' : `TOTAL ${year}`}
             </h3>
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-1.5">
               <span
                 className={cn(
-                  'text-4xl font-black',
+                  'text-3xl sm:text-4xl font-black leading-none tracking-tight',
                   totalActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
                 )}
               >
@@ -268,27 +349,92 @@ export function MonthlyGrid({
               </span>
               <span
                 className={cn(
-                  'text-sm font-medium',
-                  totalActive > 0 ? 'text-foreground' : 'text-muted-foreground/40',
+                  'text-xs font-medium',
+                  totalActive > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
                 )}
               >
-                ativos
+                {totalActive === 1 ? 'ativo' : 'ativos'}
               </span>
             </div>
-            {(totalActive > 0 || totalArchived > 0) && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {totalActive > 0 && (
-                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                    {totalActive} ativos
-                  </span>
-                )}
-                {totalArchived > 0 && (
-                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                    {totalArchived} arquivados
-                  </span>
-                )}
+
+            {totalArchived > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                  {totalArchived} arquivados
+                </span>
               </div>
             )}
+
+            <div className="mt-2.5 space-y-2">
+              {/* Grade 2x2 das 4 origens */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {/* Linha 1: Campanha | Particular */}
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  style={{
+                    backgroundColor: 'rgba(82, 184, 110, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">{totalCampanhaCount}</span>
+                  <span className="truncate">Campanha</span>
+                </div>
+
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  style={{
+                    backgroundColor: 'rgba(90, 159, 212, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">
+                    {totalParticularCount}
+                  </span>
+                  <span className="truncate">Particular</span>
+                </div>
+
+                {/* Linha 2: Macohin | Indicação Macohin */}
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  style={{
+                    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">{totalMacohinCount}</span>
+                  <span className="truncate">Macohin</span>
+                </div>
+
+                <div
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  title={`${totalIndicacaoMacohinCount} Indicação Macohin`}
+                  style={{
+                    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+                  }}
+                >
+                  <span className="font-extrabold text-[12px] shrink-0">
+                    {totalIndicacaoMacohinCount}
+                  </span>
+                  <span className="truncate">Indicação Macohin</span>
+                </div>
+              </div>
+
+              {/* Linha divisória horizontal discreta */}
+              <div className="border-t border-border/40" />
+
+              {/* Área de destaque próprio para Total Macohin */}
+              <div
+                className="flex items-center justify-between rounded-md px-2.5 py-1.5 border"
+                style={{
+                  backgroundColor: 'rgba(201, 146, 42, 0.08)',
+                  borderColor: 'rgba(201, 146, 42, 0.22)',
+                }}
+              >
+                <span className="text-[11px] font-semibold text-foreground/80 tracking-tight">
+                  Total Macohin
+                </span>
+                <span className="text-base font-black text-[#C9922A] leading-none">
+                  {totalTotalMacohin}
+                </span>
+              </div>
+            </div>
             {totalActive > 0 && (
               <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
             )}
