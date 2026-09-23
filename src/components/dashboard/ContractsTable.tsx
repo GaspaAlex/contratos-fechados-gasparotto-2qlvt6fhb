@@ -53,6 +53,8 @@ const filters = [
   'Parceria',
   'Campanha',
   'Particular',
+  'Macohin',
+  'Indicação Macohin',
 ]
 const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 const ATIVOS_STATUSES = ['R. Docs', 'L. Cálculos', 'OK', 'Ag. Perícia']
@@ -276,6 +278,10 @@ export function ContractsTable({
       result = result.filter((c) => c.origem === 'Campanha')
     } else if (activeFilter === 'Particular') {
       result = result.filter((c) => c.origem === 'Particular')
+    } else if (activeFilter === 'Macohin') {
+      result = result.filter((c) => c.origem === 'Macohin')
+    } else if (activeFilter === 'Indicação Macohin') {
+      result = result.filter((c) => c.origem === 'Indicação Macohin')
     }
 
     return result
@@ -720,9 +726,17 @@ export function ContractsTable({
                                   <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#5A9FD4] bg-[#5A9FD4]/[0.13] text-xs whitespace-nowrap">
                                     Particular
                                   </span>
+                                ) : contract.origem === 'Macohin' ? (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#8B5CF6] bg-[#8B5CF6]/[0.13] text-xs whitespace-nowrap">
+                                    Macohin
+                                  </span>
+                                ) : contract.origem === 'Indicação Macohin' ? (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#D97706] bg-[#D97706]/[0.13] text-xs whitespace-nowrap">
+                                    Indicação Macohin
+                                  </span>
                                 ) : (
                                   <span className="inline-flex items-center rounded-full px-2 py-0.5 text-muted-foreground bg-gray-500/[0.08] text-[10px] italic whitespace-nowrap">
-                                    Não classificado
+                                    {contract.origem || 'Não classificado'}
                                   </span>
                                 )}
                               </TableCell>

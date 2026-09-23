@@ -127,7 +127,7 @@ export function ContractModal({
           parceria: contract.parceria || false,
           parceiro_nome: contract.parceiro_nome || '',
           parceiro_comissao: contract.parceiro_comissao || 0,
-          origem: contract.origem || 'Não classificado',
+          origem: contract.origem === 'Não classificado' ? '' : contract.origem || '',
           campanha_origem: contract.campanha_origem || '',
           representante: contract.representante || false,
           representante_nome: contract.representante_nome || '',
@@ -393,9 +393,11 @@ export function ContractModal({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
+    const validOrigins = ['Campanha', 'Particular', 'Macohin', 'Indicação Macohin']
     if (!formData.nome || !formData.dcontrato)
       return toast.error('Preencha Nome e Data do Contrato.')
-    if (!isEdit && !formData.origem) return toast.error('Selecione a origem do caso')
+    if (!formData.origem || !validOrigins.includes(formData.origem))
+      return toast.error('Selecione a origem do caso')
     if (formData.origem === 'Campanha' && !formData.campanha_origem)
       return toast.error('Selecione a campanha de origem.')
     if (formData.representante && !formData.representante_nome)
@@ -482,10 +484,10 @@ export function ContractModal({
 
             <div className="space-y-2">
               <Label className="text-[#C9922A] font-bold">
-                ORIGEM {!isEdit && <span className="text-red-500">*</span>}
+                ORIGEM <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={formData.origem || (isEdit ? 'Não classificado' : '')}
+                value={formData.origem || ''}
                 onValueChange={(v) =>
                   setFormData({
                     ...formData,
@@ -500,7 +502,8 @@ export function ContractModal({
                 <SelectContent>
                   <SelectItem value="Campanha">Campanha</SelectItem>
                   <SelectItem value="Particular">Particular</SelectItem>
-                  <SelectItem value="Não classificado">Não classificado</SelectItem>
+                  <SelectItem value="Macohin">Macohin</SelectItem>
+                  <SelectItem value="Indicação Macohin">Indicação Macohin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
