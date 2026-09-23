@@ -125,10 +125,9 @@ export function MonthlyGrid({
                   <div className="grid grid-cols-2 gap-1.5">
                     {/* Linha 1: Campanha | Particular */}
                     <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
                       style={{
                         backgroundColor: 'rgba(82, 184, 110, 0.12)',
-                        color: '#52B86E',
                       }}
                     >
                       <span className="font-extrabold text-[12px] shrink-0">
@@ -138,10 +137,9 @@ export function MonthlyGrid({
                     </div>
 
                     <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
                       style={{
                         backgroundColor: 'rgba(90, 159, 212, 0.12)',
-                        color: '#5A9FD4',
                       }}
                     >
                       <span className="font-extrabold text-[12px] shrink-0">
@@ -152,10 +150,9 @@ export function MonthlyGrid({
 
                     {/* Linha 2: Macohin | Indicação Macohin */}
                     <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
                       style={{
                         backgroundColor: 'rgba(139, 92, 246, 0.12)',
-                        color: '#8B5CF6',
                       }}
                     >
                       <span className="font-extrabold text-[12px] shrink-0">
@@ -165,11 +162,10 @@ export function MonthlyGrid({
                     </div>
 
                     <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0"
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
                       title={`${month.indicacaoMacohinCount} Indicação Macohin`}
                       style={{
                         backgroundColor: 'rgba(217, 119, 6, 0.12)',
-                        color: '#D97706',
                       }}
                     >
                       <span className="font-extrabold text-[12px] shrink-0">
