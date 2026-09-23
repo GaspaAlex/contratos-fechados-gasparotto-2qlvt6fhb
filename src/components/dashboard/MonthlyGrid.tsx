@@ -97,7 +97,7 @@ export function MonthlyGrid({
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-4">
         {monthlyCounts.map((month, index) => (
           <Card
             key={month.name}
@@ -218,9 +218,7 @@ export function MonthlyGrid({
             )}
           </Card>
         ))}
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4 mb-4 w-full">
         <Card
           className={cn(
             'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60 animate-fade-in-up',
