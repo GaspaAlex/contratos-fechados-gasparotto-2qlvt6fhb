@@ -60,6 +60,7 @@ export default function Layout() {
     if (mainRef.current) {
       mainRef.current.scrollTop = 0
     }
+    window.scrollTo(0, 0)
   }, [location.pathname])
 
   const navSections = [
