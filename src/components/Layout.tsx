@@ -54,6 +54,13 @@ export default function Layout() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isGestor = user?.perfil === 'gestor'
+  const mainRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0
+    }
+  }, [location.pathname])
 
   const navSections = [
     {
@@ -293,7 +300,7 @@ export default function Layout() {
               </Button>
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-background">
+          <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-8 bg-background">
             <Outlet />
           </main>
         </SidebarInset>
