@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { RDocsDashboard } from '@/components/dashboard/RDocsDashboard'
+import { isArchived } from '@/lib/archivedStatuses'
 
 const MONTHS = [
   'JANEIRO',
@@ -17,8 +18,6 @@ const MONTHS = [
   'DEZEMBRO',
 ]
 
-const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
-
 export function MonthlyGrid({
   contratos = [],
   year,
@@ -30,8 +29,6 @@ export function MonthlyGrid({
   month?: string
   activeFilter?: string
 }) {
-  const isArchived = (c: any) => ARCHIVED_STATUSES.includes(c.status)
-
   const yearContratos = contratos.filter((c) => {
     if (!c.dcontrato) return false
     if (year === 'Todos os anos') return true
@@ -48,6 +45,7 @@ export function MonthlyGrid({
       return c.dcontrato.startsWith(`${year}-${monthStr}`)
     })
     const activeContratos = monthContratos.filter((c) => !isArchived(c))
+    const archivedCount = monthContratos.filter((c) => isArchived(c)).length
     const activeCount = activeContratos.length
     const campanhaCount = activeContratos.filter((c) => c.origem === 'Campanha').length
     const particularCount = activeContratos.filter((c) => c.origem === 'Particular').length
@@ -60,6 +58,7 @@ export function MonthlyGrid({
     return {
       name,
       count: activeCount,
+      archivedCount,
       campanhaCount,
       particularCount,
       macohinCount,
@@ -135,6 +134,14 @@ export function MonthlyGrid({
                       : 'sem registro'}
                 </span>
               </div>
+
+              {month.archivedCount > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
+                    {month.archivedCount} {month.archivedCount === 1 ? 'arquivado' : 'arquivados'}
+                  </span>
+                </div>
+              )}
 
               {month.count > 0 && (
                 <div className="mt-2.5 space-y-2">

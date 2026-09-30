@@ -39,8 +39,7 @@ import { toast } from 'sonner'
 import { DynamicSelect } from './DynamicSelect'
 import pb from '@/lib/pocketbase/client'
 import { getCampaignConfigs } from '@/services/campaign_config'
-
-const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
+import { isArchived } from '@/lib/archivedStatuses'
 
 const normalizeText = (text: string) => {
   if (!text) return ''
@@ -424,7 +423,7 @@ export function ContractModal({
     }
   }
 
-  const isArchived = ARCHIVED_STATUSES.includes(formData.status)
+  const isCurrentArchived = isArchived(formData.status)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -603,7 +602,7 @@ export function ContractModal({
             )}
           </div>
 
-          {isArchived && (
+          {isCurrentArchived && (
             <div className="p-4 bg-[#C9922A]/10 border border-[#C9922A]/30 rounded-lg flex gap-3 text-[#C9922A]">
               <AlertTriangle className="h-5 w-5 shrink-0" />
               <p className="text-sm font-bold">

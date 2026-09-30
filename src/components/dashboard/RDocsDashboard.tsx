@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isArchived } from '@/lib/archivedStatuses'
 
 const MONTHS = [
   'JANEIRO',
@@ -18,7 +19,6 @@ const MONTHS = [
   'NOVEMBRO',
   'DEZEMBRO',
 ]
-const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 
 export function RDocsDashboard({
   contratos = [],
@@ -37,10 +37,7 @@ export function RDocsDashboard({
 
   const metrics = useMemo(() => {
     let periodContratos = contratos.filter(
-      (c) =>
-        c.dcontrato &&
-        c.dcontrato.startsWith(year.toString()) &&
-        !ARCHIVED_STATUSES.includes(c.status),
+      (c) => c.dcontrato && c.dcontrato.startsWith(year.toString()) && !isArchived(c.status),
     )
 
     if (activeFilter === 'Campanha') {

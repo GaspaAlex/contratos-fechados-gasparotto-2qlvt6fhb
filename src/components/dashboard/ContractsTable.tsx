@@ -38,6 +38,7 @@ import { ContractModal } from './ContractModal'
 import { DeleteModal } from './DeleteModal'
 import { RDocsDashboard } from './RDocsDashboard'
 import { toYMD, getTiposAcao } from '@/services/contratos'
+import { isArchived } from '@/lib/archivedStatuses'
 
 const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 
@@ -56,7 +57,6 @@ const filters = [
   'Macohin',
   'Indicação Macohin',
 ]
-const ARCHIVED_STATUSES = ['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência']
 const ATIVOS_STATUSES = ['R. Docs', 'L. Cálculos', 'OK', 'Ag. Perícia']
 
 const MONTHS = [
@@ -258,10 +258,10 @@ export function ContractsTable({
       result = result.filter(
         (c) =>
           ATIVOS_STATUSES.includes(c.status) ||
-          (!ARCHIVED_STATUSES.includes(c.status) && c.status !== ''),
+          (!isArchived(c.status) && Boolean(c.status && c.status.trim() !== '')),
       )
     } else if (activeFilter === 'FUP') {
-      result = result.filter((c) => c.fup === true && !ARCHIVED_STATUSES.includes(c.status))
+      result = result.filter((c) => c.fup === true && !isArchived(c.status))
     } else if (activeFilter === 'R. Docs') {
       result = result.filter((c) => c.status === 'R. Docs')
     } else if (activeFilter === 'L. Cálculos') {
@@ -271,9 +271,9 @@ export function ContractsTable({
     } else if (activeFilter === 'Ag. Perícia') {
       result = result.filter((c) => c.status === 'Ag. Perícia')
     } else if (activeFilter === 'Arquivados') {
-      result = result.filter((c) => ARCHIVED_STATUSES.includes(c.status))
+      result = result.filter((c) => isArchived(c.status))
     } else if (activeFilter === 'Parceria') {
-      result = result.filter((c) => c.parceria === true && !ARCHIVED_STATUSES.includes(c.status))
+      result = result.filter((c) => c.parceria === true && !isArchived(c.status))
     } else if (activeFilter === 'Campanha') {
       result = result.filter((c) => c.origem === 'Campanha')
     } else if (activeFilter === 'Particular') {
@@ -617,17 +617,19 @@ export function ContractsTable({
                           </TableCell>
                         </TableRow>
                         {group.items.map((contract: any) => {
-                          const isArchived = ARCHIVED_STATUSES.includes(contract.status)
+                          const contractArchived = isArchived(contract.status)
                           const isRDocs = contract.status === 'R. Docs'
                           return (
                             <TableRow
                               key={contract.id}
                               className={cn(
                                 'transition-colors',
-                                isArchived &&
+                                contractArchived &&
                                   'text-muted-foreground line-through opacity-70 hover:bg-muted/30',
-                                !isArchived && isRDocs && 'bg-[#E84040]/10 hover:bg-[#E84040]/20',
-                                !isArchived && !isRDocs && 'hover:bg-muted/30',
+                                !contractArchived &&
+                                  isRDocs &&
+                                  'bg-[#E84040]/10 hover:bg-[#E84040]/20',
+                                !contractArchived && !isRDocs && 'hover:bg-muted/30',
                               )}
                             >
                               <TableCell className="font-semibold">
@@ -701,7 +703,7 @@ export function ContractsTable({
                                   >
                                     <FileText className="h-3 w-3" /> Faltando Documentos
                                   </Badge>
-                                ) : ARCHIVED_STATUSES.includes(contract.status) ? (
+                                ) : contractArchived ? (
                                   <Badge
                                     variant="outline"
                                     className="bg-stone-100 text-stone-600 border-stone-300 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
@@ -743,7 +745,7 @@ export function ContractsTable({
                               <TableCell
                                 className={cn(
                                   'whitespace-nowrap',
-                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                  contractArchived ? 'text-muted-foreground' : 'text-foreground',
                                 )}
                               >
                                 {formatDate(contract.dcontrato)}
@@ -751,7 +753,7 @@ export function ContractsTable({
                               <TableCell
                                 className={cn(
                                   'whitespace-nowrap',
-                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                  contractArchived ? 'text-muted-foreground' : 'text-foreground',
                                 )}
                               >
                                 {formatDate(contract.dcalculo)}
@@ -759,7 +761,7 @@ export function ContractsTable({
                               <TableCell
                                 className={cn(
                                   'whitespace-nowrap',
-                                  isArchived ? 'text-muted-foreground' : 'text-foreground',
+                                  contractArchived ? 'text-muted-foreground' : 'text-foreground',
                                 )}
                               >
                                 {formatDate(contract.dprotocolo)}
