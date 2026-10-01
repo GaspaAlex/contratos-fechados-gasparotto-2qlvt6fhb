@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -86,6 +87,7 @@ export function ContractModal({
     representante_cpf: string
     representante_vinculo: string
     representante_telefone: string
+    observacoes: string
   }>({
     nome: '',
     fone: '',
@@ -106,6 +108,7 @@ export function ContractModal({
     representante_cpf: '',
     representante_vinculo: '',
     representante_telefone: '',
+    observacoes: '',
   })
 
   useEffect(() => {
@@ -133,6 +136,7 @@ export function ContractModal({
           representante_cpf: contract.representante_cpf || '',
           representante_vinculo: contract.representante_vinculo || '',
           representante_telefone: contract.representante_telefone || '',
+          observacoes: contract.observacoes || '',
         })
       } else {
         setFormData({
@@ -155,6 +159,7 @@ export function ContractModal({
           representante_cpf: '',
           representante_vinculo: '',
           representante_telefone: '',
+          observacoes: '',
         })
       }
       setDuplicateWarning(null)
@@ -378,6 +383,7 @@ export function ContractModal({
         representante_cpf: formData.representante ? formData.representante_cpf : '',
         representante_vinculo: formData.representante ? formData.representante_vinculo : '',
         representante_telefone: formData.representante ? formData.representante_telefone : '',
+        observacoes: formData.observacoes || '',
       }
       if (isEdit) await updateContrato(contract.id, payload)
       else await createContrato(payload)
@@ -600,6 +606,16 @@ export function ContractModal({
                 </div>
               </>
             )}
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>Pendência Protocolo / Observações</Label>
+              <Textarea
+                rows={3}
+                value={formData.observacoes || ''}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
+              />
+            </div>
           </div>
 
           {isCurrentArchived && (

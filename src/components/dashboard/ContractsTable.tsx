@@ -22,6 +22,7 @@ import {
   UserCheck,
   Printer,
   Copy,
+  StickyNote,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -635,6 +636,18 @@ export function ContractsTable({
                               <TableCell className="font-semibold">
                                 <div className="flex items-center gap-2">
                                   {contract.nome}
+                                  {contract.observacoes && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="whitespace-pre-line">
+                                          {contract.observacoes}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
                                   {contract.representante && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
