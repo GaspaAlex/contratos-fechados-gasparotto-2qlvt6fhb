@@ -25,6 +25,8 @@ import {
   StickyNote,
   CalendarClock,
   Clock,
+  Bell,
+  ArrowRight,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -42,12 +44,7 @@ import { DeleteModal } from './DeleteModal'
 import { RDocsDashboard } from './RDocsDashboard'
 import { toYMD, getTiposAcao } from '@/services/contratos'
 import { isArchived } from '@/lib/archivedStatuses'
-import {
-  getLocalTodayYMD,
-  getReviewStatus,
-  isDueForReview,
-  normalizeDateCivil,
-} from '@/lib/date-utils'
+import { getReviewStatus, isContractDueForReview, normalizeDateCivil } from '@/lib/date-utils'
 
 const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 
@@ -271,9 +268,7 @@ export function ContractsTable({
           (!isArchived(c.status) && Boolean(c.status && c.status.trim() !== '')),
       )
     } else if (activeFilter === 'Revisar') {
-      result = result.filter(
-        (c) => !isArchived(c.status) && Boolean(c.revisar_em) && isDueForReview(c.revisar_em),
-      )
+      result = result.filter((c) => isContractDueForReview(c, isArchived))
     } else if (activeFilter === 'FUP') {
       result = result.filter((c) => c.fup === true && !isArchived(c.status))
     } else if (activeFilter === 'R. Docs') {
@@ -338,6 +333,30 @@ export function ContractsTable({
       }
     })
   }, [filtered])
+
+  const reviewStats = useMemo(() => {
+    let todayCount = 0
+    let pastCount = 0
+    const pendingContracts: any[] = []
+
+    contratos.forEach((c) => {
+      if (!isContractDueForReview(c, isArchived)) return
+
+      pendingContracts.push(c)
+      const st = getReviewStatus(c.revisar_em)
+      if (st === 'today') {
+        todayCount++
+      } else if (st === 'past') {
+        pastCount++
+      }
+    })
+
+    return {
+      total: pendingContracts.length,
+      today: todayCount,
+      past: pastCount,
+    }
+  }, [contratos])
 
   const formatDate = (d: string) => {
     if (!d) return '-'
@@ -446,6 +465,63 @@ export function ContractsTable({
   return (
     <>
       {activeFilter === 'Parceria' && <PartnershipsSummary contratos={filtered} />}
+
+      {reviewStats.total > 0 && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="mt-8 relative overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/[0.12] via-amber-500/[0.08] to-amber-500/[0.03] dark:from-amber-500/[0.18] dark:via-amber-500/[0.10] dark:to-transparent p-4 sm:p-5 shadow-sm animate-fade-in-up"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                <Bell className="h-5 w-5 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 font-bold text-foreground text-sm sm:text-base tracking-tight">
+                  <span className="text-amber-600 dark:text-amber-400">ATENÇÃO</span>
+                  <span className="text-muted-foreground font-normal">&mdash;</span>
+                  <span>
+                    {reviewStats.total === 1
+                      ? '1 contrato precisa de acompanhamento'
+                      : `${reviewStats.total} contratos precisam de acompanhamento`}
+                  </span>
+                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  {reviewStats.today > 0 && (
+                    <span className="font-medium text-amber-700 dark:text-amber-300">
+                      {reviewStats.today === 1
+                        ? '1 para revisar hoje'
+                        : `${reviewStats.today} para revisar hoje`}
+                    </span>
+                  )}
+                  {reviewStats.today > 0 && reviewStats.past > 0 && (
+                    <span className="text-muted-foreground/60">&bull;</span>
+                  )}
+                  {reviewStats.past > 0 && (
+                    <span className="font-medium text-red-600 dark:text-red-400">
+                      {reviewStats.past === 1
+                        ? '1 revisão atrasada'
+                        : `${reviewStats.past} revisões atrasadas`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => setActiveFilter('Revisar')}
+              variant="outline"
+              size="sm"
+              className="self-start sm:self-center shrink-0 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 hover:text-amber-800 dark:hover:text-amber-200 font-semibold gap-1.5 shadow-none transition-colors"
+            >
+              Ver casos para revisão
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Card
         className="mt-8 border-border/60 shadow-sm animate-fade-in-up"
@@ -575,10 +651,7 @@ export function ContractsTable({
 
           <div className="flex flex-wrap gap-2 mb-6">
             {(() => {
-              const reviewDueCount = contratos.filter(
-                (c) =>
-                  !isArchived(c.status) && Boolean(c.revisar_em) && isDueForReview(c.revisar_em),
-              ).length
+              const reviewDueCount = reviewStats.total
 
               return filters.map((status) => {
                 const label =

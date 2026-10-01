@@ -69,3 +69,21 @@ export function isDueForReview(dateStr?: string | null, todayYMD = getLocalToday
   const status = getReviewStatus(dateStr, todayYMD)
   return status === 'past' || status === 'today'
 }
+
+/**
+ * Predicado canônico para verificar se um contrato precisa de revisão.
+ * Um contrato precisa de revisão quando:
+ * - Não está arquivado (!isArchived(status))
+ * - Possui data de revisão preenchida (Boolean(revisar_em))
+ * - A data de revisão está para hoje ou no passado (isDueForReview(revisar_em))
+ */
+export function isContractDueForReview(
+  contract: { status?: string | null; revisar_em?: string | null } | null | undefined,
+  isArchivedFn: (status?: string | null) => boolean,
+  todayYMD = getLocalTodayYMD(),
+): boolean {
+  if (!contract) return false
+  if (isArchivedFn(contract.status)) return false
+  if (!contract.revisar_em) return false
+  return isDueForReview(contract.revisar_em, todayYMD)
+}
