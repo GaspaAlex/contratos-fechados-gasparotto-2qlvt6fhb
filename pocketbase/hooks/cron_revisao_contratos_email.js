@@ -7,11 +7,11 @@
 // Declarações de nível superior (top-level) causam ReferenceError nos callbacks.
 
 // -------------------------------------------------------------
-// AGENDAMENTO CRON DIÁRIO ÀS 08:00 NO FUSO AMERICA/SAO_PAULO
+// AGENDAMENTO CRON DIÁRIO ÀS 08:00 DE BRASÍLIA (11:00 UTC)
 // Nome: revisao-contratos-email
-// Expressão: "CRON_TZ=America/Sao_Paulo 0 8 * * *"
+// Expressão: "0 11 * * *"
 // -------------------------------------------------------------
-cronAdd('revisao-contratos-email', 'CRON_TZ=America/Sao_Paulo 0 8 * * *', () => {
+cronAdd('revisao-contratos-email', '0 11 * * *', () => {
   function pad2(num) {
     return num < 10 ? '0' + num : '' + num
   }
@@ -760,5 +760,5 @@ routerAdd(
       erros: errosCount,
     })
   },
-  $apis.requireAuth(),
+  $apis.requireSuperuserAuth(),
 )
