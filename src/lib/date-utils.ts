@@ -19,3 +19,53 @@ export function isOverdue(protocolDate: string | Date | undefined, prazo: number
   const due = addWorkingDays(start, prazo || 15)
   return isAfter(startOfDay(new Date()), startOfDay(due))
 }
+
+/**
+ * Retorna a data local atual no formato civil "YYYY-MM-DD" baseada no relógio do navegador.
+ */
+export function getLocalTodayYMD(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Normaliza qualquer string de data (PocketBase date "YYYY-MM-DD HH:mm:ss.sssZ" ou "YYYY-MM-DD")
+ * para a data civil no formato "YYYY-MM-DD".
+ */
+export function normalizeDateCivil(dateStr?: string | null): string {
+  if (!dateStr) return ''
+  const trimmed = dateStr.trim()
+  if (!trimmed) return ''
+  return trimmed.split(' ')[0].split('T')[0]
+}
+
+export type ReviewStatus = 'past' | 'today' | 'future'
+
+/**
+ * Compara uma data civil com a data local de hoje.
+ * - 'past': revisar_em < hoje (atrasada)
+ * - 'today': revisar_em === hoje (revisar hoje)
+ * - 'future': revisar_em > hoje (futura)
+ * Retorna null se não houver data válida.
+ */
+export function getReviewStatus(
+  dateStr?: string | null,
+  todayYMD = getLocalTodayYMD(),
+): ReviewStatus | null {
+  const civil = normalizeDateCivil(dateStr)
+  if (!civil || !/^\d{4}-\d{2}-\d{2}$/.test(civil)) return null
+  if (civil < todayYMD) return 'past'
+  if (civil === todayYMD) return 'today'
+  return 'future'
+}
+
+/**
+ * Verifica se a data civil deve ser revisada (revisar_em <= hoje).
+ */
+export function isDueForReview(dateStr?: string | null, todayYMD = getLocalTodayYMD()): boolean {
+  const status = getReviewStatus(dateStr, todayYMD)
+  return status === 'past' || status === 'today'
+}

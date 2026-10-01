@@ -77,6 +77,7 @@ export function ContractModal({
     dcontrato: string
     dcalculo: string
     dprotocolo: string
+    revisar_em: string
     parceria: boolean
     parceiro_nome: string
     parceiro_comissao: number
@@ -98,6 +99,7 @@ export function ContractModal({
     dcontrato: '',
     dcalculo: '',
     dprotocolo: '',
+    revisar_em: '',
     parceria: false,
     parceiro_nome: '',
     parceiro_comissao: 0,
@@ -126,6 +128,7 @@ export function ContractModal({
           dcontrato: toYMD(contract.dcontrato) || '',
           dcalculo: toYMD(contract.dcalculo) || '',
           dprotocolo: toYMD(contract.dprotocolo) || '',
+          revisar_em: toYMD(contract.revisar_em) || '',
           parceria: contract.parceria || false,
           parceiro_nome: contract.parceiro_nome || '',
           parceiro_comissao: contract.parceiro_comissao || 0,
@@ -149,6 +152,7 @@ export function ContractModal({
           dcontrato: today,
           dcalculo: '',
           dprotocolo: '',
+          revisar_em: '',
           parceria: false,
           parceiro_nome: '',
           parceiro_comissao: 0,
@@ -379,6 +383,7 @@ export function ContractModal({
         dcontrato: toPBDate(formData.dcontrato),
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
+        revisar_em: formData.revisar_em ? toPBDate(formData.revisar_em) : '',
         representante_nome: formData.representante ? formData.representante_nome : '',
         representante_cpf: formData.representante ? formData.representante_cpf : '',
         representante_vinculo: formData.representante ? formData.representante_vinculo : '',
@@ -606,6 +611,16 @@ export function ContractModal({
                 </div>
               </>
             )}
+
+            <div className="space-y-2">
+              <Label>Revisar em</Label>
+              <Input
+                type="date"
+                value={formData.revisar_em}
+                onChange={(e) => setFormData({ ...formData, revisar_em: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
+              />
+            </div>
 
             <div className="space-y-2 md:col-span-2">
               <Label>Pendência Protocolo / Observações</Label>

@@ -23,6 +23,8 @@ import {
   Printer,
   Copy,
   StickyNote,
+  CalendarClock,
+  Clock,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -40,12 +42,19 @@ import { DeleteModal } from './DeleteModal'
 import { RDocsDashboard } from './RDocsDashboard'
 import { toYMD, getTiposAcao } from '@/services/contratos'
 import { isArchived } from '@/lib/archivedStatuses'
+import {
+  getLocalTodayYMD,
+  getReviewStatus,
+  isDueForReview,
+  normalizeDateCivil,
+} from '@/lib/date-utils'
 
 const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 
 const filters = [
   'Todos',
   'Ativos',
+  'Revisar',
   'FUP',
   'R. Docs',
   'L. Cálculos',
@@ -260,6 +269,10 @@ export function ContractsTable({
         (c) =>
           ATIVOS_STATUSES.includes(c.status) ||
           (!isArchived(c.status) && Boolean(c.status && c.status.trim() !== '')),
+      )
+    } else if (activeFilter === 'Revisar') {
+      result = result.filter(
+        (c) => !isArchived(c.status) && Boolean(c.revisar_em) && isDueForReview(c.revisar_em),
       )
     } else if (activeFilter === 'FUP') {
       result = result.filter((c) => c.fup === true && !isArchived(c.status))
@@ -561,22 +574,38 @@ export function ContractsTable({
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6">
-            {filters.map((status) => (
-              <Button
-                key={status}
-                onClick={() => setActiveFilter(status)}
-                variant={activeFilter === status ? 'default' : 'outline'}
-                size="sm"
-                className={cn(
-                  'rounded-full font-medium transition-colors',
-                  activeFilter === status
-                    ? 'bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A] hover:bg-[#C9922A]/25 shadow-none font-bold'
-                    : 'text-muted-foreground',
-                )}
-              >
-                {status === 'R. Docs' ? 'Falt. Docs' : status}
-              </Button>
-            ))}
+            {(() => {
+              const reviewDueCount = contratos.filter(
+                (c) =>
+                  !isArchived(c.status) && Boolean(c.revisar_em) && isDueForReview(c.revisar_em),
+              ).length
+
+              return filters.map((status) => {
+                const label =
+                  status === 'Revisar'
+                    ? `Revisar (${reviewDueCount})`
+                    : status === 'R. Docs'
+                      ? 'Falt. Docs'
+                      : status
+
+                return (
+                  <Button
+                    key={status}
+                    onClick={() => setActiveFilter(status)}
+                    variant={activeFilter === status ? 'default' : 'outline'}
+                    size="sm"
+                    className={cn(
+                      'rounded-full font-medium transition-colors',
+                      activeFilter === status
+                        ? 'bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A] hover:bg-[#C9922A]/25 shadow-none font-bold'
+                        : 'text-muted-foreground',
+                    )}
+                  >
+                    {label}
+                  </Button>
+                )
+              })
+            })()}
           </div>
 
           <div className="rounded-md border overflow-x-auto">
@@ -620,6 +649,9 @@ export function ContractsTable({
                         {group.items.map((contract: any) => {
                           const contractArchived = isArchived(contract.status)
                           const isRDocs = contract.status === 'R. Docs'
+                          const isAguardando = contract.status === 'Aguardando'
+                          const reviewStatus = getReviewStatus(contract.revisar_em)
+                          const reviewCivil = normalizeDateCivil(contract.revisar_em)
                           return (
                             <TableRow
                               key={contract.id}
@@ -630,7 +662,14 @@ export function ContractsTable({
                                 !contractArchived &&
                                   isRDocs &&
                                   'bg-[#E84040]/10 hover:bg-[#E84040]/20',
-                                !contractArchived && !isRDocs && 'hover:bg-muted/30',
+                                !contractArchived &&
+                                  !isRDocs &&
+                                  isAguardando &&
+                                  'bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/30',
+                                !contractArchived &&
+                                  !isRDocs &&
+                                  !isAguardando &&
+                                  'hover:bg-muted/30',
                               )}
                             >
                               <TableCell className="font-semibold">
@@ -644,6 +683,32 @@ export function ContractsTable({
                                       <TooltipContent>
                                         <p className="whitespace-pre-line">
                                           {contract.observacoes}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                  {reviewStatus && reviewCivil && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center cursor-help shrink-0">
+                                          <CalendarClock
+                                            className={cn(
+                                              'h-3.5 w-3.5',
+                                              reviewStatus === 'past' &&
+                                                'text-red-500 hover:text-red-600',
+                                              reviewStatus === 'today' &&
+                                                'text-amber-500 hover:text-amber-600 animate-pulse',
+                                              reviewStatus === 'future' &&
+                                                'text-[#C9922A]/80 hover:text-[#C9922A]',
+                                            )}
+                                          />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>
+                                          Revisar em: {formatDate(reviewCivil)}
+                                          {reviewStatus === 'past' && ' (Atrasada)'}
+                                          {reviewStatus === 'today' && ' (Hoje)'}
                                         </p>
                                       </TooltipContent>
                                     </Tooltip>
@@ -715,6 +780,13 @@ export function ContractsTable({
                                     className="bg-[#C9922A]/10 text-[#C9922A] border-[#C9922A]/30 gap-1.5 whitespace-nowrap px-2 py-0.5"
                                   >
                                     <FileText className="h-3 w-3" /> Faltando Documentos
+                                  </Badge>
+                                ) : contract.status === 'Aguardando' ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-amber-100/80 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 gap-1.5 whitespace-nowrap px-2 py-0.5 font-bold"
+                                  >
+                                    <Clock className="h-3 w-3" /> Aguardando
                                   </Badge>
                                 ) : contractArchived ? (
                                   <Badge
