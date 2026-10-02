@@ -12,20 +12,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/formatters'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-
-const isOverdue = (dateStr: string) => {
-  if (!dateStr) return false
-  const dStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr.split(' ')[0]
-  const [y, m, d] = dStr.split('-').map(Number)
-  const itemDate = new Date(y, m - 1, d)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return itemDate.getTime() < today.getTime()
-}
+import { isProtocoloOverdue } from '@/lib/date-utils'
 
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
   // Highlight strictly if status is "Prov. Inicial" and it's overdue
-  const overdue = item.status === 'Prov. Inicial' && isOverdue(item.dprotocolo)
+  const overdue = isProtocoloOverdue(item)
   const faltaDocs = item.status === 'R. Docs'
 
   const STATUS_LABELS: Record<string, string> = {

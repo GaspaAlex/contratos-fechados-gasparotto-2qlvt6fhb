@@ -21,6 +21,35 @@ export function isOverdue(protocolDate: string | Date | undefined, prazo: number
 }
 
 /**
+ * Regra centralizada de atraso da aba Protocolo.
+ * - Somente registros com status exatamente "Prov. Inicial" podem ser considerados atrasados.
+ * - Utiliza exclusivamente a data civil local de `dprotocolo`.
+ * - Se `dprotocolo` estiver vazio, retorna false.
+ * - Atrasado somente quando `dprotocolo` for anterior à data civil de hoje.
+ * - Data igual a hoje NÃO é atrasada.
+ * - Não utiliza dcalculo, dcontrato, prazo, decisao, origem ou parceiro.
+ */
+export function isProtocoloOverdue(
+  item: { status?: string | null; dprotocolo?: string | null } | null | undefined,
+): boolean {
+  if (!item || item.status !== 'Prov. Inicial' || !item.dprotocolo) {
+    return false
+  }
+
+  const dStr = item.dprotocolo.includes('T')
+    ? item.dprotocolo.split('T')[0]
+    : item.dprotocolo.split(' ')[0]
+  const [y, m, d] = dStr.split('-').map(Number)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return false
+
+  const itemDate = new Date(y, m - 1, d)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return itemDate.getTime() < today.getTime()
+}
+
+/**
  * Retorna a data local atual no formato civil "YYYY-MM-DD" baseada no relógio do navegador.
  */
 export function getLocalTodayYMD(): string {
