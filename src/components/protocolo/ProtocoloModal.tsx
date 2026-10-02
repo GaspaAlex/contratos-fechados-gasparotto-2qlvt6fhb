@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -60,6 +61,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     nautos: '',
     valor: undefined as unknown as number,
     decisao: 'Aguardando',
+    observacoes: '',
   })
 
   useEffect(() => {
@@ -79,6 +81,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           nautos: protocolo.nautos || '',
           valor: protocolo.valor === 0 ? undefined : protocolo.valor,
           decisao: protocolo.decisao || 'Aguardando',
+          observacoes: protocolo.observacoes || '',
         })
       } else {
         setFormData({
@@ -93,6 +96,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           nautos: '',
           valor: undefined as unknown as number,
           decisao: 'Aguardando',
+          observacoes: '',
         })
       }
       setDuplicateWarning(null)
@@ -410,6 +414,17 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                   <SelectItem value="Improcedente">Improcedente</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>Observações</Label>
+              <Textarea
+                rows={3}
+                placeholder="Observações sobre o processo ou documentos pendentes..."
+                value={formData.observacoes || ''}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
+              />
             </div>
           </div>
 

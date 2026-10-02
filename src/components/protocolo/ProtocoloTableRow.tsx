@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ClipboardList,
   FileText,
+  StickyNote,
   UserCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -68,10 +69,20 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       <TableCell className="font-semibold whitespace-nowrap">
         <div className="flex items-center gap-2">
           <span>{item.nome}</span>
+          {item.observacoes && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs md:max-w-sm">
+                <p className="whitespace-pre-line break-words text-xs">{item.observacoes}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           {item.representante && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <UserCheck className="h-4 w-4 text-[#C9922A] cursor-help" />
+                <UserCheck className="h-4 w-4 text-[#C9922A] cursor-help shrink-0" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Representante: {item.representante_nome || 'Não informado'}</p>

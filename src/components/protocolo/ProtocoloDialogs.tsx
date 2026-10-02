@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Form,
   FormControl,
@@ -63,6 +64,7 @@ const baseSchema = z.object({
   representante_cpf: z.string().optional(),
   representante_vinculo: z.string().optional(),
   representante_telefone: z.string().optional(),
+  observacoes: z.string().optional(),
 })
 
 const schema = baseSchema.refine(
@@ -150,6 +152,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       representante_cpf: '',
       representante_vinculo: '',
       representante_telefone: '',
+      observacoes: '',
     },
   })
 
@@ -173,6 +176,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           representante_cpf: item.representante_cpf || '',
           representante_vinculo: item.representante_vinculo || '',
           representante_telefone: item.representante_telefone || '',
+          observacoes: item.observacoes || '',
         })
       } else {
         form.reset({
@@ -194,6 +198,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           representante_cpf: '',
           representante_vinculo: '',
           representante_telefone: '',
+          observacoes: '',
         })
       }
     }
@@ -609,6 +614,28 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                   </FormItem>
                 )}
               />
+
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 space-y-2">
+                <FormField
+                  control={form.control}
+                  name="observacoes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={3}
+                          placeholder="Observações sobre o processo ou documentos pendentes..."
+                          className="focus-visible:ring-[#C9922A]"
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="col-span-1 sm:col-span-2 lg:col-span-3 space-y-4 mt-2">
                 <FormField
