@@ -23,6 +23,7 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 import { monthsArray } from '@/lib/months'
+import { getProtocoloFollowUpStats, isProtocoloDueForFollowUp } from '@/lib/date-utils'
 
 const normalizeText = (text: string) => {
   if (!text) return ''
@@ -78,6 +79,10 @@ export function ProtocoloTable({
     return Array.from(list).sort()
   }, [data])
 
+  const followUpStats = useMemo(() => {
+    return getProtocoloFollowUpStats(data)
+  }, [data])
+
   // Filters
   const filtered = data.filter((d: any) => {
     if (origem !== 'Todos') {
@@ -103,7 +108,11 @@ export function ProtocoloTable({
         return false
       }
     }
-    if (status !== 'Todos' && d.status !== status) return false
+    if (status === 'Acompanhar') {
+      if (!isProtocoloDueForFollowUp(d)) return false
+    } else if (status !== 'Todos' && d.status !== status) {
+      return false
+    }
     if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
     const respName = d.expand?.responsavel?.nome || d.responsavel || ''
     if (responsavel !== 'Todos' && respName !== responsavel) return false
@@ -177,6 +186,7 @@ export function ProtocoloTable({
   const cReqAdm = filtered.filter((d: any) => d.status === 'Requerimento Adm.').length
   const cProv = filtered.filter((d: any) => d.status === 'Prov. Inicial').length
   const cDocs = filtered.filter((d: any) => d.status === 'R. Docs').length
+  const cAcompanhar = filtered.filter((d: any) => isProtocoloDueForFollowUp(d)).length
 
   const headerClass =
     'text-[10px] uppercase tracking-wider text-muted-foreground font-bold whitespace-nowrap'
@@ -186,7 +196,8 @@ export function ProtocoloTable({
       <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
         <p>
           Calculado: {cCalc} | Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial:{' '}
-          {cProv} | Falt. Docs: {cDocs} | Total: {filtered.length}
+          {cProv} | Falt. Docs: {cDocs}
+          {status === 'Acompanhar' && ` | Acompanhar: ${cAcompanhar}`} | Total: {filtered.length}
         </p>
       </div>
 
@@ -298,6 +309,11 @@ export function ProtocoloTable({
           <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap items-center">
             {[
               { value: 'Todos', label: 'Todos' },
+              {
+                value: 'Acompanhar',
+                label: `Acompanhar (${followUpStats.total})`,
+                isAcompanhar: true,
+              },
               { value: 'Calculado', label: 'Calculado' },
               { value: 'Protocolado Judicial', label: 'Judicial' },
               { value: 'Requerimento Adm.', label: 'Administrativo' },
@@ -306,8 +322,22 @@ export function ProtocoloTable({
             ].map((s) => (
               <button
                 key={s.value}
-                onClick={() => setStatus(s.value)}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors ${status === s.value ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
+                onClick={() => {
+                  if (s.value === 'Acompanhar') {
+                    setStatus(status === 'Acompanhar' ? 'Todos' : 'Acompanhar')
+                  } else {
+                    setStatus(s.value)
+                  }
+                }}
+                className={`px-3 py-1 text-xs rounded-sm transition-colors ${
+                  status === s.value
+                    ? s.isAcompanhar
+                      ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold border border-amber-500/40 shadow-sm'
+                      : 'bg-background shadow-sm font-semibold'
+                    : s.isAcompanhar
+                      ? 'text-amber-700 dark:text-amber-400 hover:text-amber-900 font-semibold'
+                      : 'text-muted-foreground hover:text-foreground font-medium'
+                }`}
               >
                 {s.label}
               </button>

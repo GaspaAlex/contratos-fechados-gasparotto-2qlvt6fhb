@@ -116,3 +116,77 @@ export function isContractDueForReview(
   if (!contract.revisar_em) return false
   return isDueForReview(contract.revisar_em, todayYMD)
 }
+
+export interface ProtocoloFollowUpStats {
+  total: number // Registros únicos que precisam de acompanhamento
+  atrasados: number // Protocolos atrasados (isProtocoloOverdue)
+  revisarHoje: number // Revisões devidas hoje (revisar_em === hoje)
+  revisarAtrasadas: number // Revisões atrasadas (revisar_em < hoje)
+  items: any[] // Lista deduplicada de itens que atendem a pelo menos uma condição
+}
+
+/**
+ * Predicado canônico para verificar se um item de Protocolo precisa de acompanhamento.
+ * Retorna true se:
+ * - isProtocoloOverdue(item) === true (status 'Prov. Inicial' + dprotocolo < hoje)
+ * - OU revisar_em <= hoje (getReviewStatus(item.revisar_em) === 'today' || 'past')
+ */
+export function isProtocoloDueForFollowUp(
+  item:
+    | { status?: string | null; dprotocolo?: string | null; revisar_em?: string | null }
+    | null
+    | undefined,
+  todayYMD = getLocalTodayYMD(),
+): boolean {
+  if (!item) return false
+  const overdue = isProtocoloOverdue(item)
+  const reviewStatus = getReviewStatus(item.revisar_em, todayYMD)
+  const hasReviewDue = reviewStatus === 'today' || reviewStatus === 'past'
+  return overdue || hasReviewDue
+}
+
+/**
+ * Fonte única de verdade para contagens e detalhamentos do alerta e filtros de acompanhamento do Protocolo.
+ * Deduplica registros únicos no total e agrupa as 3 categorias:
+ * - atrasados (isProtocoloOverdue)
+ * - revisarHoje (revisar_em === hoje)
+ * - revisarAtrasadas (revisar_em < hoje)
+ */
+export function getProtocoloFollowUpStats(
+  items: any[] = [],
+  todayYMD = getLocalTodayYMD(),
+): ProtocoloFollowUpStats {
+  let atrasadosCount = 0
+  let revisarHojeCount = 0
+  let revisarAtrasadasCount = 0
+  const matchedItems: any[] = []
+
+  for (const item of items) {
+    if (!item) continue
+    const overdue = isProtocoloOverdue(item)
+    const reviewStatus = getReviewStatus(item.revisar_em, todayYMD)
+    const isToday = reviewStatus === 'today'
+    const isPast = reviewStatus === 'past'
+
+    if (overdue) {
+      atrasadosCount++
+    }
+    if (isToday) {
+      revisarHojeCount++
+    } else if (isPast) {
+      revisarAtrasadasCount++
+    }
+
+    if (overdue || isToday || isPast) {
+      matchedItems.push(item)
+    }
+  }
+
+  return {
+    total: matchedItems.length,
+    atrasados: atrasadosCount,
+    revisarHoje: revisarHojeCount,
+    revisarAtrasadas: revisarAtrasadasCount,
+    items: matchedItems,
+  }
+}
