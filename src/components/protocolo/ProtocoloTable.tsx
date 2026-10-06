@@ -27,7 +27,11 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 import { monthsArray } from '@/lib/months'
-import { getProtocoloFollowUpStats, isProtocoloDueForFollowUp } from '@/lib/date-utils'
+import {
+  getProtocoloFollowUpStats,
+  isProtocoloDueForFollowUp,
+  isProtocoloOverdue,
+} from '@/lib/date-utils'
 
 const normalizeText = (text: string) => {
   if (!text) return ''
@@ -319,7 +323,14 @@ export function ProtocoloTable({
       },
       {
         header: 'D. Protocolo',
-        accessor: (item) => formatDateBR(item.dprotocolo),
+        accessor: (item) => {
+          const dateStr = formatDateBR(item.dprotocolo)
+          if (dateStr === '-') return '-'
+          if (isProtocoloOverdue(item)) {
+            return `<span style="display: inline-flex; align-items: center; justify-content: center; gap: 3px; color: #dc2626; font-weight: 700; white-space: nowrap;"><span style="font-size: 11px; line-height: 1;">⚠</span><span>${dateStr}</span></span>`
+          }
+          return dateStr
+        },
         align: 'center',
       },
       {
