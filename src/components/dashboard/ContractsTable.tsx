@@ -45,6 +45,7 @@ import { RDocsDashboard } from './RDocsDashboard'
 import { toYMD, getTiposAcao } from '@/services/contratos'
 import { isArchived } from '@/lib/archivedStatuses'
 import { getReviewStatus, isContractDueForReview, normalizeDateCivil } from '@/lib/date-utils'
+import { printReport, PrintReportColumn } from '@/lib/print-report'
 
 const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 
@@ -366,100 +367,177 @@ export function ContractsTable({
     return `${day}/${m}/${y}`
   }
 
+  const getStatusBadgeHtml = (st?: string) => {
+    if (!st) return '-'
+    const archived = isArchived(st)
+    if (st === 'OK') {
+      return '<span class="badge badge-recebido">OK</span>'
+    }
+    if (st === 'R. Docs') {
+      return '<span class="badge badge-gold">Falt. Docs</span>'
+    }
+    if (st === 'Aguardando') {
+      return '<span class="badge badge-amber">Aguardando</span>'
+    }
+    if (st === 'L. Cálculos') {
+      return '<span class="badge badge-aguardando">L. Cálculos</span>'
+    }
+    if (st === 'Ag. Perícia') {
+      return '<span class="badge badge-purple">Ag. Perícia</span>'
+    }
+    if (archived) {
+      return `<span class="badge badge-gray">${st}</span>`
+    }
+    return `<span class="badge badge-gold">${st}</span>`
+  }
+
+  const getOrigemBadgeHtml = (origem?: string) => {
+    if (!origem) return '-'
+    if (origem === 'Campanha') {
+      return '<span class="badge badge-recebido">Campanha</span>'
+    }
+    if (origem === 'Particular') {
+      return '<span class="badge badge-aguardando">Particular</span>'
+    }
+    if (origem === 'Macohin') {
+      return '<span class="badge badge-purple">Macohin</span>'
+    }
+    if (origem === 'Indicação Macohin') {
+      return '<span class="badge badge-orange">Indicação Macohin</span>'
+    }
+    return `<span class="badge badge-gray">${origem}</span>`
+  }
+
   const handlePrintReport = () => {
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
+    const activeFiltersList: string[] = []
 
-    const filtersText = [
-      activeFilter !== 'Todos' ? `Status: ${activeFilter}` : '',
-      search ? `Busca: "${search}"` : '',
-      tableBeneficio !== 'Todos os benefícios' ? `Benefício: ${tableBeneficio}` : '',
-      tableResponsavel !== 'Todos os responsáveis' ? `Responsável: ${tableResponsavel}` : '',
-      tableMonth !== 'Todos os meses' ? `Mês: ${tableMonth}` : '',
-      tableYear !== 'Todos os anos' ? `Ano: ${tableYear}` : '',
-      tableWeek !== 'Todas as semanas'
-        ? `Semana: ${currentWeeks.find((w) => w.id === tableWeek)?.label || tableWeek}`
-        : '',
+    if (search.trim()) {
+      activeFiltersList.push(`Busca: "${search.trim()}"`)
+    }
+    if (tableBeneficio !== 'Todos os benefícios') {
+      activeFiltersList.push(`Benefício: ${tableBeneficio}`)
+    }
+    if (tableResponsavel !== 'Todos os responsáveis') {
+      activeFiltersList.push(`Responsável: ${tableResponsavel}`)
+    }
+    if (tableMonth !== 'Todos os meses') {
+      activeFiltersList.push(`Mês: ${tableMonth}`)
+    }
+    if (tableYear !== 'Todos os anos') {
+      activeFiltersList.push(`Ano: ${tableYear}`)
+    }
+    if (tableWeek !== 'Todas as semanas') {
+      const weekLabel = currentWeeks.find((w) => w.id === tableWeek)?.label || tableWeek
+      activeFiltersList.push(`Semana: ${weekLabel}`)
+    }
+    if (activeFilter !== 'Todos') {
+      const filterLabel =
+        activeFilter === 'Revisar'
+          ? 'Revisar'
+          : activeFilter === 'R. Docs'
+            ? 'Falt. Docs'
+            : activeFilter
+      activeFiltersList.push(`Filtro: ${filterLabel}`)
+    }
+
+    const columns: PrintReportColumn[] = [
+      {
+        header: '#',
+        accessor: (_item, idx) => String(idx + 1),
+        align: 'center',
+        width: '28px',
+      },
+      {
+        header: 'Nome',
+        accessor: (item) => {
+          const nome = item.nome || '-'
+          const rep = item.representante
+            ? `<div style="font-size: 8.5px; color: #78716c; margin-top: 1px;">Rep: ${item.representante_nome || 'Informado'}</div>`
+            : ''
+          return `<strong>${nome}</strong>${rep}`
+        },
+        align: 'left',
+      },
+      {
+        header: 'Telefone',
+        accessor: (item) => item.fone || '-',
+        align: 'left',
+        width: '95px',
+      },
+      {
+        header: 'Benefício',
+        accessor: (item) => item.beneficio || '-',
+        align: 'left',
+      },
+      {
+        header: 'Responsável',
+        accessor: (item) => item.responsavel || '-',
+        align: 'left',
+      },
+      {
+        header: 'Status',
+        accessor: (item) => getStatusBadgeHtml(item.status),
+        align: 'center',
+      },
+      {
+        header: 'Origem',
+        accessor: (item) => getOrigemBadgeHtml(item.origem),
+        align: 'center',
+      },
+      {
+        header: 'D. Contrato',
+        accessor: (item) => formatDate(item.dcontrato),
+        align: 'center',
+        width: '80px',
+      },
+      {
+        header: 'D. Cálculo',
+        accessor: (item) => formatDate(item.dcalculo),
+        align: 'center',
+        width: '80px',
+      },
+      {
+        header: 'D. Protocolo',
+        accessor: (item) => formatDate(item.dprotocolo),
+        align: 'center',
+        width: '80px',
+      },
+      {
+        header: 'Acompanhamento',
+        accessor: (item) => {
+          const parts: string[] = []
+          const reviewCivil = normalizeDateCivil(item.revisar_em)
+          if (reviewCivil) {
+            const dateStr = formatDate(reviewCivil)
+            parts.push(`<div><strong style="color: #C9922A;">Revisar em:</strong> ${dateStr}</div>`)
+          }
+          if (item.observacoes && item.observacoes.trim()) {
+            const safeObs = item.observacoes
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/\n/g, '<br/>')
+            parts.push(
+              `<div><strong style="color: #4b5563;">Observações:</strong> ${safeObs}</div>`,
+            )
+          }
+          if (parts.length === 0) return '-'
+          return `<div style="font-size: 9.5px; line-height: 1.3;">${parts.join('<div style="margin-top: 3px;"></div>')}</div>`
+        },
+        align: 'left',
+      },
     ]
-      .filter(Boolean)
-      .join(' | ')
 
-    const html = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Relatório de Contratos Fechados</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-        h1 { text-align: center; color: #111; margin-bottom: 5px; font-size: 20px; text-transform: uppercase; }
-        .filters { text-align: center; font-size: 12px; color: #555; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-        th { background-color: #f4f4f4; font-weight: bold; text-transform: uppercase; }
-        tr:nth-child(even) { background-color: #fafafa; }
-        .footer { margin-top: 20px; font-size: 12px; font-weight: bold; border-top: 1px solid #eee; padding-top: 10px; text-align: right; }
-        @media print {
-            body { margin: 0; }
-            @page { margin: 1cm; }
-        }
-    </style>
-</head>
-<body>
-    <h1>Advocacia Gasparotto &mdash; Contratos Fechados</h1>
-    <div class="filters">${filtersText ? `<strong>Filtros aplicados:</strong> ${filtersText}` : 'Nenhum filtro aplicado (mostrando todos os registros)'}</div>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>Benefício</th>
-                <th>Responsável</th>
-                <th>Status</th>
-                <th>Origem</th>
-                <th>D. Contrato</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${filtered
-              .map((c) => {
-                const dateStr = c.dcontrato ? c.dcontrato.split(' ')[0] : ''
-                const formattedDate = dateStr
-                  ? `${dateStr.split('-')[2]}/${dateStr.split('-')[1]}/${dateStr.split('-')[0]}`
-                  : '-'
-
-                return `
-                <tr>
-                    <td>${c.nome || '-'}</td>
-                    <td>${c.fone || '-'}</td>
-                    <td>${c.beneficio || '-'}</td>
-                    <td>${c.responsavel || '-'}</td>
-                    <td>${c.status || '-'}</td>
-                    <td>${c.origem || '-'}</td>
-                    <td>${formattedDate}</td>
-                </tr>
-            `
-              })
-              .join('')}
-        </tbody>
-    </table>
-
-    <div class="footer">
-        Total de registros: ${filtered.length}
-    </div>
-
-    <script>
-        window.onload = () => {
-            window.print();
-        };
-    </script>
-</body>
-</html>
-    `
-
-    printWindow.document.write(html)
-    printWindow.document.close()
+    printReport({
+      title: 'RELATÓRIO DE CONTRATOS FECHADOS',
+      subtitle: 'ADVOCACIA GASPAROTTO',
+      filters: activeFiltersList,
+      columns,
+      data: filtered,
+      orientation: 'landscape',
+      totalLabel: 'Total de registros',
+    })
   }
 
   return (
