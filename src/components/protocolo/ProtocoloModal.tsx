@@ -62,6 +62,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     valor: undefined as unknown as number,
     decisao: 'Aguardando',
     observacoes: '',
+    revisar_em: '',
   })
 
   useEffect(() => {
@@ -82,6 +83,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           valor: protocolo.valor === 0 ? undefined : protocolo.valor,
           decisao: protocolo.decisao || 'Aguardando',
           observacoes: protocolo.observacoes || '',
+          revisar_em: toYMD(protocolo.revisar_em) || '',
         })
       } else {
         setFormData({
@@ -97,6 +99,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           valor: undefined as unknown as number,
           decisao: 'Aguardando',
           observacoes: '',
+          revisar_em: '',
         })
       }
       setDuplicateWarning(null)
@@ -229,6 +232,7 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
         responsavel: responsavel_id,
         dcalculo: formData.dcalculo ? toPBDate(formData.dcalculo) : '',
         dprotocolo: formData.dprotocolo ? toPBDate(formData.dprotocolo) : '',
+        revisar_em: formData.revisar_em ? toPBDate(formData.revisar_em) : '',
       }
       if (isEdit) await updateProtocolo(protocolo.id, payload)
       else await createProtocolo(payload)
@@ -414,6 +418,16 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                   <SelectItem value="Improcedente">Improcedente</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Revisar em</Label>
+              <Input
+                type="date"
+                value={formData.revisar_em}
+                onChange={(e) => setFormData({ ...formData, revisar_em: e.target.value })}
+                className="focus-visible:ring-[#C9922A]"
+              />
             </div>
 
             <div className="space-y-2 md:col-span-2">

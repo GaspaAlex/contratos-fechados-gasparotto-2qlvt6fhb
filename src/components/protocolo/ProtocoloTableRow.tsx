@@ -9,16 +9,26 @@ import {
   FileText,
   StickyNote,
   UserCheck,
+  CalendarClock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/formatters'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { isProtocoloOverdue } from '@/lib/date-utils'
+import { getReviewStatus, normalizeDateCivil, isProtocoloOverdue } from '@/lib/date-utils'
+import { cn } from '@/lib/utils'
 
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
   // Highlight strictly if status is "Prov. Inicial" and it's overdue
   const overdue = isProtocoloOverdue(item)
   const faltaDocs = item.status === 'R. Docs'
+
+  const reviewStatus = getReviewStatus(item.revisar_em)
+  const reviewCivil = normalizeDateCivil(item.revisar_em)
+  const formatReviewDate = (civilStr: string) => {
+    const [y, m, d] = civilStr.split('-')
+    if (!d) return civilStr
+    return `${d}/${m}/${y}`
+  }
 
   const STATUS_LABELS: Record<string, string> = {
     'R. Docs': 'Faltando Documentos',
@@ -76,6 +86,30 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
               </TooltipTrigger>
               <TooltipContent className="max-w-xs md:max-w-sm">
                 <p className="whitespace-pre-line break-words text-xs">{item.observacoes}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {reviewStatus && reviewCivil && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center cursor-help shrink-0">
+                  <CalendarClock
+                    className={cn(
+                      'h-3.5 w-3.5',
+                      reviewStatus === 'past' && 'text-red-500 hover:text-red-600',
+                      reviewStatus === 'today' &&
+                        'text-amber-500 hover:text-amber-600 animate-pulse',
+                      reviewStatus === 'future' && 'text-[#C9922A]/80 hover:text-[#C9922A]',
+                    )}
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Revisar em: {formatReviewDate(reviewCivil)}
+                  {reviewStatus === 'past' && ' (Atrasada)'}
+                  {reviewStatus === 'today' && ' (Hoje)'}
+                </p>
               </TooltipContent>
             </Tooltip>
           )}

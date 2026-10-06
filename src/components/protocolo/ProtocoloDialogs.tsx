@@ -65,6 +65,7 @@ const baseSchema = z.object({
   representante_vinculo: z.string().optional(),
   representante_telefone: z.string().optional(),
   observacoes: z.string().optional(),
+  revisar_em: z.string().optional(),
 })
 
 const schema = baseSchema.refine(
@@ -153,6 +154,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       representante_vinculo: '',
       representante_telefone: '',
       observacoes: '',
+      revisar_em: '',
     },
   })
 
@@ -169,6 +171,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           dcontrato: item.dcontrato ? item.dcontrato.substring(0, 10) : '',
           dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
           dprotocolo: item.dprotocolo ? item.dprotocolo.substring(0, 10) : '',
+          revisar_em: item.revisar_em ? item.revisar_em.substring(0, 10) : '',
           origem: item.origem || '',
           parceiro: item.parceiro || '',
           representante: item.representante || false,
@@ -188,6 +191,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           dcontrato: '',
           dcalculo: '',
           dprotocolo: '',
+          revisar_em: '',
           nautos: '',
           valor: undefined as unknown as number,
           decisao: 'Aguardando',
@@ -336,6 +340,9 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       if (payload.dprotocolo)
         payload.dprotocolo = new Date(payload.dprotocolo + 'T12:00:00Z').toISOString()
       else payload.dprotocolo = null
+      if (payload.revisar_em)
+        payload.revisar_em = new Date(payload.revisar_em + 'T12:00:00Z').toISOString()
+      else payload.revisar_em = null
 
       if (!payload.representante) {
         payload.representante_nome = ''
@@ -611,6 +618,20 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                         <SelectItem value="Improcedente">Improcedente</SelectItem>
                       </SelectContent>
                     </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="revisar_em"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Revisar em</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

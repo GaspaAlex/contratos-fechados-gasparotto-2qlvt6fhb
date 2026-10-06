@@ -23,6 +23,7 @@ export interface ProtocoloItem {
   dcontrato?: string
   parceiro?: string
   observacoes?: string
+  revisar_em?: string
   created?: string
   updated?: string
   expand?: {
