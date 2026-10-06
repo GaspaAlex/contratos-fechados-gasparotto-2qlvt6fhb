@@ -1,4 +1,4 @@
-import { useState, useMemo, Fragment } from 'react'
+import { useState, useMemo, useEffect, Fragment } from 'react'
 import { Pericia } from '@/services/pericias'
 import {
   Table,
@@ -9,19 +9,31 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
-import { Search, Edit2, Trash2 } from 'lucide-react'
+import { Search, Edit2, Trash2, Printer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+export interface PericiasTableProps {
+  data: Pericia[]
+  onEdit: (p: Pericia) => void
+  onDelete: (p: Pericia) => void
+  onPrint?: () => void
+  onFilteredDataChange?: (items: Pericia[]) => void
+  onSearchChange?: (search: string) => void
+  onStatusFilterChange?: (status: string) => void
+}
 
 export function PericiasTable({
   data,
   onEdit,
   onDelete,
-}: {
-  data: Pericia[]
-  onEdit: (p: Pericia) => void
-  onDelete: (p: Pericia) => void
-}) {
+  onPrint,
+  onFilteredDataChange,
+  onSearchChange,
+  onStatusFilterChange,
+}: PericiasTableProps) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('Todos')
 
@@ -34,11 +46,17 @@ export function PericiasTable({
   const filtered = useMemo(() => {
     return data.filter((d) => {
       const matchSearch =
-        d.nome.toLowerCase().includes(search.toLowerCase()) || d.nautos.includes(search)
+        d.nome.toLowerCase().includes(search.toLowerCase()) ||
+        (d.nautos && d.nautos.includes(search))
       const matchStatus = statusFilter === 'Todos' || d.status === statusFilter
       return matchSearch && matchStatus
     })
   }, [data, search, statusFilter])
+
+  // Inform parent about filtered items whenever they change
+  useEffect(() => {
+    onFilteredDataChange?.(filtered)
+  }, [filtered, onFilteredDataChange])
 
   const grouped = useMemo(() => {
     const groups: Record<string, Pericia[]> = {}
@@ -127,28 +145,54 @@ export function PericiasTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou nº processo..."
-            className="pl-9 h-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-xl">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou nº processo..."
+              className="pl-9 h-10"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                onSearchChange?.(e.target.value)
+              }}
+            />
+          </div>
+          <select
+            className="border rounded-md px-3 py-2 bg-background text-sm h-10 min-w-[150px]"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value)
+              onStatusFilterChange?.(e.target.value)
+            }}
+          >
+            <option value="Todos">Todos os Status</option>
+            {filterOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          className="border rounded-md px-3 py-2 bg-background text-sm h-10 min-w-[150px]"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="Todos">Todos os Status</option>
-          {filterOptions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+
+        {onPrint && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onPrint}
+                className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A] h-10 w-10"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Exportar relatório PDF</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       <div className="rounded-lg border bg-card overflow-hidden">

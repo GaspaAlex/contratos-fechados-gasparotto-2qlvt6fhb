@@ -8,7 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Plus, Bell, ArrowRight } from 'lucide-react'
+import { Search, Plus, Bell, ArrowRight, Printer } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { printReport, PrintReportColumn } from '@/lib/print-report'
+import { formatCurrency } from '@/lib/formatters'
+import { normalizeDateCivil } from '@/lib/date-utils'
 import { ProtocoloTableRow } from './ProtocoloTableRow'
 import {
   Table,
@@ -191,6 +195,208 @@ export function ProtocoloTable({
   const headerClass =
     'text-[10px] uppercase tracking-wider text-muted-foreground font-bold whitespace-nowrap'
 
+  const formatDateBR = (val?: string) => {
+    if (!val) return '-'
+    const onlyDate = val.split(' ')[0].split('T')[0]
+    const parts = onlyDate.split('-')
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`
+    }
+    return val
+  }
+
+  const getStatusBadgeHtml = (st: string) => {
+    if (!st) return '-'
+    let badgeClass = 'badge-gray'
+    if (st === 'Protocolado Judicial') badgeClass = 'badge-recebido'
+    else if (st === 'Requerimento Adm.') badgeClass = 'badge-purple'
+    else if (st === 'Prov. Inicial') badgeClass = 'badge-aguardando'
+    else if (st === 'R. Docs') badgeClass = 'badge-gold'
+    else if (st === 'Calculado') badgeClass = 'badge-amber'
+
+    const label = st === 'R. Docs' ? 'Faltando Documentos' : st
+    return `<span class="badge ${badgeClass}">${label}</span>`
+  }
+
+  const handlePrintReport = () => {
+    const activeFiltersList: string[] = []
+
+    if (search.trim()) {
+      activeFiltersList.push(`Busca: "${search.trim()}"`)
+    }
+    if (tipo !== 'Todos') {
+      activeFiltersList.push(`Benefício: ${tipo}`)
+    }
+    if (responsavel !== 'Todos') {
+      activeFiltersList.push(`Responsável: ${responsavel}`)
+    }
+    if (status !== 'Todos') {
+      if (status === 'Acompanhar') {
+        activeFiltersList.push('Acompanhar (Atrasados e Revisões)')
+      } else {
+        activeFiltersList.push(`Status: ${status === 'R. Docs' ? 'Faltando Documentos' : status}`)
+      }
+    }
+    if (origem !== 'Todos') {
+      activeFiltersList.push(`Origem/Parceiro: ${origem}`)
+    }
+    if (monthStart !== 'Todos' && monthEnd !== 'Todos') {
+      const startIdx = parseInt(monthStart, 10)
+      const endIdx = parseInt(monthEnd, 10)
+      const startLabel = monthsArray[startIdx] || monthStart
+      const endLabel = monthsArray[endIdx] || monthEnd
+      activeFiltersList.push(`Período: ${startLabel} até ${endLabel}`)
+    } else if (month !== 'Todos') {
+      const monthIdx = parseInt(month, 10)
+      const monthLabel = monthsArray[monthIdx] || month
+      activeFiltersList.push(`Mês: ${monthLabel}`)
+    }
+    if (year !== 'Todos') {
+      activeFiltersList.push(`Ano: ${year}`)
+    }
+
+    const columns: PrintReportColumn[] = [
+      {
+        header: '#',
+        accessor: (_item, idx) => String(idx + 1),
+        align: 'center',
+        width: '28px',
+      },
+      {
+        header: 'Nome',
+        accessor: (item) => {
+          const nome = item.nome || '-'
+          const rep = item.representante
+            ? `<div style="font-size: 8.5px; color: #78716c; margin-top: 1px;">Rep: ${item.representante_nome || 'Informado'}</div>`
+            : ''
+          return `<strong>${nome}</strong>${rep}`
+        },
+        align: 'left',
+      },
+      {
+        header: 'Benefício',
+        accessor: (item) => item.expand?.tipo_acao?.nome || '-',
+        align: 'left',
+      },
+      {
+        header: 'Responsável',
+        accessor: (item) => item.expand?.responsavel?.nome || item.responsavel || '-',
+        align: 'left',
+      },
+      {
+        header: 'Status',
+        accessor: (item) => getStatusBadgeHtml(item.status),
+        align: 'center',
+      },
+      {
+        header: 'Origem',
+        accessor: (item) => {
+          if (!item.origem) return '-'
+          if (item.origem === 'Campanha') {
+            return '<span class="badge badge-recebido">Campanha</span>'
+          }
+          if (item.origem === 'Particular') {
+            return '<span class="badge badge-aguardando">Particular</span>'
+          }
+          return item.origem
+        },
+        align: 'center',
+      },
+      {
+        header: 'Parceiro',
+        accessor: (item) => item.parceiro || '-',
+        align: 'left',
+      },
+      {
+        header: 'D. Contrato',
+        accessor: (item) => formatDateBR(item.dcontrato),
+        align: 'center',
+      },
+      {
+        header: 'D. Cálculo',
+        accessor: (item) => formatDateBR(item.dcalculo),
+        align: 'center',
+      },
+      {
+        header: 'D. Protocolo',
+        accessor: (item) => formatDateBR(item.dprotocolo),
+        align: 'center',
+      },
+      {
+        header: 'Nº Autos',
+        accessor: (item) =>
+          item.nautos
+            ? `<span style="font-family: monospace; font-size: 9.5px;">${item.nautos}</span>`
+            : '-',
+        align: 'left',
+      },
+      {
+        header: 'Valor',
+        accessor: (item) => (item.valor ? formatCurrency(item.valor) : '-'),
+        align: 'right',
+      },
+      {
+        header: 'Honorários',
+        accessor: (item) => {
+          if (item.decisao === 'Improcedente' || !item.valor) return '-'
+          const percentual = item.parceiro ? 0.15 : 0.3
+          return `<strong style="color: #C9922A;">${formatCurrency(item.valor * percentual)}</strong>`
+        },
+        align: 'right',
+      },
+      {
+        header: 'Decisão',
+        accessor: (item) => {
+          if (!item.decisao || item.decisao === 'Aguardando') return '-'
+          if (item.decisao === 'Procedente') {
+            return '<span class="badge badge-recebido">Procedente</span>'
+          }
+          if (item.decisao === 'Improcedente') {
+            return '<span class="badge badge-red">Improcedente</span>'
+          }
+          return item.decisao
+        },
+        align: 'center',
+      },
+      {
+        header: 'Acompanhamento',
+        accessor: (item) => {
+          const parts: string[] = []
+          const reviewCivil = normalizeDateCivil(item.revisar_em)
+          if (reviewCivil) {
+            const [y, m, d] = reviewCivil.split('-')
+            const dateStr = d ? `${d}/${m}/${y}` : reviewCivil
+            parts.push(`<div><strong style="color: #C9922A;">Revisar em:</strong> ${dateStr}</div>`)
+          }
+          if (item.observacoes && item.observacoes.trim()) {
+            const safeObs = item.observacoes
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/\n/g, '<br/>')
+            parts.push(
+              `<div><strong style="color: #4b5563;">Observações:</strong> ${safeObs}</div>`,
+            )
+          }
+          if (parts.length === 0) return '-'
+          return `<div style="font-size: 9.5px; line-height: 1.3;">${parts.join('<div style="margin-top: 3px;"></div>')}</div>`
+        },
+        align: 'left',
+      },
+    ]
+
+    printReport({
+      title: 'Relatório de Protocolos',
+      subtitle: 'Advocacia Gasparotto',
+      filters: activeFiltersList,
+      columns,
+      data: sortedFiltered,
+      orientation: 'landscape',
+      totalLabel: 'Total de registros',
+    })
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
@@ -353,6 +559,23 @@ export function ProtocoloTable({
               </button>
             ))}
           </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePrintReport}
+                className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A] h-9 w-9"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Exportar relatório PDF</p>
+            </TooltipContent>
+          </Tooltip>
+
           <Button
             onClick={onAdd}
             className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white h-9 px-4 gap-2 shadow-sm"
