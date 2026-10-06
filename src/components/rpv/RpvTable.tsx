@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -29,18 +29,25 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 
-export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => void }) {
+export function RpvTable({
+  data,
+  onEdit,
+  onFilteredDataChange,
+}: {
+  data: any[]
+  onEdit: (r: any) => void
+  onFilteredDataChange?: (filtered: any[]) => void
+}) {
   const { quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter } =
     useRpvFilters()
 
-  const groupedData = useMemo(() => {
-    const filteredData = data.filter((item) => {
-      if (search.trim()) {
+  const finalFilteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (search && search.trim()) {
         const s = removeAccents(search.trim().toLowerCase())
-        return (
-          removeAccents((item.nome || '').toLowerCase()).includes(s) ||
-          removeAccents((item.numero_processo || '').toLowerCase()).includes(s)
-        )
+        const matchName = removeAccents((item.nome || '').toLowerCase()).includes(s)
+        const matchProc = removeAccents((item.numero_processo || '').toLowerCase()).includes(s)
+        if (!matchName && !matchProc) return false
       }
 
       if (quickFilter === 'A Receber' && item.status === 'Recebido') return false
@@ -69,9 +76,11 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
 
       return true
     })
+  }, [data, quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter])
 
+  const groupedData = useMemo(() => {
     const groups: Record<string, any[]> = {}
-    filteredData.forEach((item) => {
+    finalFilteredData.forEach((item) => {
       const key = item.previsao_pagamento || 'Sem previsão'
       if (!groups[key]) groups[key] = []
       groups[key].push(item)
@@ -112,7 +121,18 @@ export function RpvTable({ data, onEdit }: { data: any[]; onEdit: (r: any) => vo
         items,
       }
     })
-  }, [data, quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter])
+  }, [finalFilteredData])
+
+  // Flat sorted items representing exactly what's rendered in order across groups
+  const displayedItems = useMemo(() => {
+    return groupedData.flatMap((g) => g.items)
+  }, [groupedData])
+
+  useEffect(() => {
+    if (onFilteredDataChange) {
+      onFilteredDataChange(displayedItems)
+    }
+  }, [displayedItems, onFilteredDataChange])
 
   const handleDelete = async (id: string) => {
     try {

@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Printer } from 'lucide-react'
 import { STATUS_OPTIONS, MONTHS, YEARS } from './constants'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useRpvFilters, rpvFilterStore } from './store'
 
@@ -25,6 +26,7 @@ export function RpvFilters({
   year,
   setYear,
   onAdd,
+  onPrint,
 }: any) {
   const { quickFilter, parceriaFilter } = useRpvFilters()
 
@@ -159,13 +161,33 @@ export function RpvFilters({
           </Select>
         </div>
 
-        <Button
-          onClick={onAdd}
-          className="bg-[#C9922A] hover:bg-[#b07d20] text-white whitespace-nowrap self-end xl:self-auto shadow-sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar
-        </Button>
+        <div className="flex items-center gap-2 self-end xl:self-auto">
+          {onPrint && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onPrint}
+                  className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Exportar relatório PDF</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          <Button
+            onClick={onAdd}
+            className="bg-[#C9922A] hover:bg-[#b07d20] text-white whitespace-nowrap shadow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 px-1">
