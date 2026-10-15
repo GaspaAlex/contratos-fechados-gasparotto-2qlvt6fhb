@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
@@ -24,6 +25,8 @@ import DashboardPonto from './pages/gestao/DashboardPonto'
 import CartaoPonto from './pages/gestao/CartaoPonto'
 import AcessosSistemas from '@/pages/gestao/AcessosSistemas'
 import { ProtectedRoute } from './components/ProtectedRoute'
+
+const FerramentasPdf = lazy(() => import('./pages/FerramentasPdf'))
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -52,6 +55,20 @@ const App = () => (
                     <Route path="/gestao/funcionarios" element={<Funcionarios />} />
                     <Route path="/gestao/responsaveis" element={<Responsaveis />} />
                     <Route path="/gestao/acessos" element={<AcessosSistemas />} />
+                    <Route
+                      path="/ferramentas-pdf"
+                      element={
+                        <Suspense
+                          fallback={
+                            <div className="p-8 text-sm text-muted-foreground">
+                              Carregando ferramentas...
+                            </div>
+                          }
+                        >
+                          <FerramentasPdf />
+                        </Suspense>
+                      }
+                    />
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />

@@ -15,6 +15,7 @@ import {
   ClipboardList,
   KeyRound,
   UserCog,
+  Files,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRef, useEffect } from 'react'
@@ -90,6 +91,10 @@ export default function Layout() {
         { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
         { name: 'Responsáveis', path: '/gestao/responsaveis', icon: UserCog },
       ].filter((item) => item.path !== '/gestao/funcionarios' || isGestor),
+    },
+    {
+      label: 'FERRAMENTAS PDF',
+      items: [{ name: 'Ferramentas PDF', path: '/ferramentas-pdf', icon: Files }],
     },
   ]
 
