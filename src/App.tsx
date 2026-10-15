@@ -27,6 +27,7 @@ import AcessosSistemas from '@/pages/gestao/AcessosSistemas'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 const FerramentasPdf = lazy(() => import('./pages/FerramentasPdf'))
+const JuntarPdf = lazy(() => import('./pages/ferramentas-pdf/JuntarPdf'))
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -66,6 +67,20 @@ const App = () => (
                           }
                         >
                           <FerramentasPdf />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/ferramentas-pdf/juntar"
+                      element={
+                        <Suspense
+                          fallback={
+                            <div className="p-8 text-sm text-muted-foreground">
+                              Carregando Juntar PDF...
+                            </div>
+                          }
+                        >
+                          <JuntarPdf />
                         </Suspense>
                       }
                     />
