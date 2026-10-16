@@ -62,8 +62,8 @@ const PDF_TOOLS: PdfToolCard[] = [
     title: 'Rotacionar PDF',
     description: 'Gire páginas específicas ou o documento inteiro.',
     icon: RotateCw,
-    status: 'development',
-    statusLabel: 'Em desenvolvimento',
+    status: 'active',
+    href: '/ferramentas-pdf/rotacionar',
   },
   {
     id: 'imagens-para-pdf',

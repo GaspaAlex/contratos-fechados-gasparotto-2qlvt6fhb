@@ -29,6 +29,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 const FerramentasPdf = lazy(() => import('./pages/FerramentasPdf'))
 const JuntarPdf = lazy(() => import('./pages/ferramentas-pdf/JuntarPdf'))
 const DividirPdf = lazy(() => import('./pages/ferramentas-pdf/DividirPdf'))
+const RotacionarPdf = lazy(() => import('./pages/ferramentas-pdf/RotacionarPdf'))
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -96,6 +97,20 @@ const App = () => (
                           }
                         >
                           <DividirPdf />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/ferramentas-pdf/rotacionar"
+                      element={
+                        <Suspense
+                          fallback={
+                            <div className="p-8 text-sm text-muted-foreground">
+                              Carregando Rotacionar PDF...
+                            </div>
+                          }
+                        >
+                          <RotacionarPdf />
                         </Suspense>
                       }
                     />
