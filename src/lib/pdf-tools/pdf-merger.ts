@@ -19,6 +19,7 @@ export interface MergePdfResult {
     | 'INVALID_HEADER'
     | 'ENCRYPTED_PDF'
     | 'SIGNATURE_DETECTED'
+    | 'SIGNATURE_CHECK_ERROR'
     | 'PARSE_ERROR'
     | 'OUT_OF_MEMORY'
     | 'CANCELLED'
@@ -28,6 +29,7 @@ export interface MergePdfResult {
 
 export interface MergeExecutionOptions {
   files: MergePdfFilePayload[]
+  allowSignedDocuments?: boolean
   onProgress?: (progress: MergeProgressUpdate) => void
   checkCancelled?: () => boolean
 }
@@ -41,6 +43,7 @@ export async function validateSinglePdf(
   buffer: ArrayBuffer,
 ): Promise<{
   valid: boolean
+  hasSignature?: boolean
   error?: string
   errorCode?: MergePdfResult['errorCode']
   pageCount?: number
@@ -98,17 +101,20 @@ export async function validateSinglePdf(
   }
 
   // 3. Verificação preventiva de campos de assinatura digital (/Sig)
-  const hasSignature = detectDigitalSignatures(pdfDoc)
-  if (hasSignature) {
+  const sigCheck = detectDigitalSignatures(pdfDoc)
+  if (sigCheck.state === 'error') {
     return {
       valid: false,
-      errorCode: 'SIGNATURE_DETECTED',
-      error: `Foram detectados indícios de campos de assinatura digital no arquivo "${fileName}". A união de documentos invalidaria ou corromperia essa assinatura. Por segurança jurídica, a operação foi bloqueada.`,
+      errorCode: 'SIGNATURE_CHECK_ERROR',
+      error: `Falha na verificação de assinaturas digitais do arquivo "${fileName}". Por segurança, o arquivo não pôde ser validado e não poderá ser processado. (${sigCheck.error || 'Erro interno na estrutura do PDF'})`,
     }
   }
 
+  const hasSignature = sigCheck.state === 'detected'
+
   return {
     valid: true,
+    hasSignature,
     pageCount: pdfDoc.getPageCount(),
   }
 }
@@ -129,7 +135,7 @@ export async function validateSinglePdf(
 export async function mergePdfsSequentially(
   options: MergeExecutionOptions,
 ): Promise<MergePdfResult> {
-  const { files, onProgress, checkCancelled } = options
+  const { files, allowSignedDocuments = false, onProgress, checkCancelled } = options
 
   if (!files || files.length < 2) {
     return {
@@ -229,13 +235,22 @@ export async function mergePdfsSequentially(
       }
 
       // Detectar assinaturas digitais
-      const hasSig = detectDigitalSignatures(sourceDoc)
-      if (hasSig) {
+      const sigCheck = detectDigitalSignatures(sourceDoc)
+      if (sigCheck.state === 'error') {
+        return {
+          success: false,
+          errorCode: 'SIGNATURE_CHECK_ERROR',
+          failingFile: fileItem.name,
+          error: `Falha na verificação de assinaturas digitais do arquivo "${fileItem.name}". O processamento foi interrompido por segurança. (${sigCheck.error || 'Erro interno na estrutura do PDF'})`,
+        }
+      }
+
+      if (sigCheck.state === 'detected' && !allowSignedDocuments) {
         return {
           success: false,
           errorCode: 'SIGNATURE_DETECTED',
           failingFile: fileItem.name,
-          error: `Foram detectados indícios de campos de assinatura digital no arquivo "${fileItem.name}". A união de documentos invalidaria essa assinatura. Por segurança jurídica, a operação foi bloqueada.`,
+          error: `Foram detectados indícios de campos de assinatura digital no arquivo "${fileItem.name}". A união de documentos invalidaria essa assinatura. Confirmação expressa é obrigatória para prosseguir.`,
         }
       }
 

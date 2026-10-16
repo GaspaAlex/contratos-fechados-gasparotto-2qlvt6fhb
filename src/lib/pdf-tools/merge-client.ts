@@ -5,6 +5,7 @@ import { mergePdfsSequentially } from './pdf-merger'
 
 export interface MergeExecutionClientOptions {
   files: { name: string; buffer: ArrayBuffer }[]
+  allowSignedDocuments?: boolean
   onProgress?: (progress: MergeProgressUpdate) => void
   onCancel?: () => void
 }
@@ -20,7 +21,7 @@ export interface MergeExecutionHandle {
  * executa via fallback assíncrono sequencial no thread principal sem travar.
  */
 export function executePdfMerge(options: MergeExecutionClientOptions): MergeExecutionHandle {
-  const { files, onProgress } = options
+  const { files, allowSignedDocuments = false, onProgress } = options
 
   let worker: Worker | null = null
   let isCancelled = false
@@ -92,7 +93,9 @@ export function executePdfMerge(options: MergeExecutionClientOptions): MergeExec
           worker = null
         }
         // Executar fallback se worker falhar na inicialização
-        fallbackSequentialMerge(files, onProgress, () => isCancelled).then(resolve)
+        fallbackSequentialMerge(files, allowSignedDocuments, onProgress, () => isCancelled).then(
+          resolve,
+        )
       }
 
       // Preparar payload transferível
@@ -114,12 +117,15 @@ export function executePdfMerge(options: MergeExecutionClientOptions): MergeExec
         {
           type: 'START_MERGE',
           files: filePayloads,
+          allowSignedDocuments,
         } satisfies WorkerInMessage,
         transferables,
       )
     } catch (workerErr) {
       console.warn('Web Worker não disponível, executando no thread principal:', workerErr)
-      fallbackSequentialMerge(files, onProgress, () => isCancelled).then(resolve)
+      fallbackSequentialMerge(files, allowSignedDocuments, onProgress, () => isCancelled).then(
+        resolve,
+      )
     }
   })
 
@@ -134,6 +140,7 @@ export function executePdfMerge(options: MergeExecutionClientOptions): MergeExec
  */
 async function fallbackSequentialMerge(
   files: { name: string; buffer: ArrayBuffer }[],
+  allowSignedDocuments: boolean,
   onProgress?: (progress: MergeProgressUpdate) => void,
   checkCancelled?: () => boolean,
 ): Promise<MergePdfResult> {
@@ -142,6 +149,7 @@ async function fallbackSequentialMerge(
 
   return mergePdfsSequentially({
     files: files.map((f) => ({ name: f.name, buffer: f.buffer.slice(0) })),
+    allowSignedDocuments,
     onProgress,
     checkCancelled,
   })

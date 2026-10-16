@@ -5,6 +5,7 @@ export type WorkerInMessage =
   | {
       type: 'START_MERGE'
       files: MergePdfFilePayload[]
+      allowSignedDocuments?: boolean
     }
   | {
       type: 'CANCEL'
@@ -41,10 +42,12 @@ self.addEventListener('message', async (event: MessageEvent<WorkerInMessage>) =>
   if (data.type === 'START_MERGE') {
     isCancelled = false
     const files = data.files
+    const allowSignedDocuments = Boolean(data.allowSignedDocuments)
 
     try {
       const result = await mergePdfsSequentially({
         files,
+        allowSignedDocuments,
         onProgress: (progress) => {
           self.postMessage({
             type: 'PROGRESS',

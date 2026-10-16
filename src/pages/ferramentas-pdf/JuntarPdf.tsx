@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
+import { Checkbox } from '@/components/ui/checkbox'
 import { executePdfMerge, type MergeExecutionHandle } from '@/lib/pdf-tools/merge-client'
 import { validateSinglePdf } from '@/lib/pdf-tools/pdf-merger'
 import type { MergeProgressUpdate } from '@/lib/pdf-tools/pdf-validator'
@@ -33,6 +34,7 @@ interface SelectedFileItem {
   buffer: ArrayBuffer
   pageCount?: number
   validationStatus: 'pending' | 'valid' | 'invalid'
+  hasSignature?: boolean
   errorMessage?: string
 }
 
@@ -56,6 +58,8 @@ export default function JuntarPdf() {
   const [mergedBlobUrl, setMergedBlobUrl] = useState<string | null>(null)
   const [mergedPageCount, setMergedPageCount] = useState<number>(0)
   const [mergedSizeBytes, setMergedSizeBytes] = useState<number>(0)
+  const [mergedHasSignedDocs, setMergedHasSignedDocs] = useState<boolean>(false)
+  const [signatureConfirmed, setSignatureConfirmed] = useState<boolean>(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mergeHandleRef = useRef<MergeExecutionHandle | null>(null)
@@ -75,6 +79,7 @@ export default function JuntarPdf() {
   // Totalizadores
   const totalSizeBytes = items.reduce((acc, curr) => acc + curr.size, 0)
   const hasInvalidItem = items.some((item) => item.validationStatus === 'invalid')
+  const hasSignedDocuments = items.some((item) => item.hasSignature)
 
   // Adicionar arquivos à lista existente preservando ordem
   const handleFilesAdded = async (newFileList: FileList | File[]) => {
@@ -104,6 +109,7 @@ export default function JuntarPdf() {
           size: file.size,
           buffer,
           pageCount: validation.pageCount,
+          hasSignature: Boolean(validation.hasSignature),
           validationStatus: validation.valid ? 'valid' : 'invalid',
           errorMessage: validation.error,
         })
@@ -120,6 +126,8 @@ export default function JuntarPdf() {
       }
     }
 
+    // Redefinir confirmação de assinatura quando a composição da lista mudar
+    setSignatureConfirmed(false)
     setItems((prev) => [...prev, ...newItems])
     setIsValidatingFiles(false)
   }
@@ -182,6 +190,7 @@ export default function JuntarPdf() {
 
   // Remover item individual
   const removeItem = (id: string) => {
+    setSignatureConfirmed(false)
     setItems((prev) => prev.filter((item) => item.id !== id))
     setErrorMessage(null)
   }
@@ -189,6 +198,7 @@ export default function JuntarPdf() {
   // Limpar toda a seleção
   const handleClearAll = () => {
     if (isMerging) return
+    setSignatureConfirmed(false)
     setItems([])
     setErrorMessage(null)
     setErrorDetails(null)
@@ -204,6 +214,8 @@ export default function JuntarPdf() {
       URL.revokeObjectURL(mergedBlobUrl)
       setMergedBlobUrl(null)
     }
+    setSignatureConfirmed(false)
+    setMergedHasSignedDocs(false)
     setItems([])
     setErrorMessage(null)
     setErrorDetails(null)
@@ -221,7 +233,14 @@ export default function JuntarPdf() {
 
     if (hasInvalidItem) {
       setErrorMessage(
-        'Existem arquivos inválidos, protegidos ou com assinaturas digitais na lista. Remova-os para prosseguir.',
+        'Existem arquivos inválidos, corrompidos ou protegidos por senha na lista. Corrija-os ou remova-os para prosseguir.',
+      )
+      return
+    }
+
+    if (hasSignedDocuments && !signatureConfirmed) {
+      setErrorMessage(
+        'Um ou mais arquivos possuem indícios de assinatura digital. É necessário confirmar a declaração de ciência antes de prosseguir.',
       )
       return
     }
@@ -246,8 +265,11 @@ export default function JuntarPdf() {
       buffer: it.buffer,
     }))
 
+    const containsSigned = hasSignedDocuments
+
     const handle = executePdfMerge({
       files: payload,
+      allowSignedDocuments: containsSigned && signatureConfirmed,
       onProgress: (p) => {
         setProgress(p)
       },
@@ -266,6 +288,7 @@ export default function JuntarPdf() {
         setMergedBlobUrl(url)
         setMergedPageCount(result.pageCount || 0)
         setMergedSizeBytes(blob.size)
+        setMergedHasSignedDocs(containsSigned)
         setProgress(null)
       } else {
         setErrorMessage(result.error || 'Ocorreu um erro ao processar a união dos documentos.')
@@ -400,7 +423,12 @@ export default function JuntarPdf() {
                 asChild
                 className="w-full sm:w-auto flex-1 bg-[#C9922A] hover:bg-[#b07d1f] text-white font-semibold"
               >
-                <a href={mergedBlobUrl} download="documentos-unidos.pdf">
+                <a
+                  href={mergedBlobUrl}
+                  download={
+                    mergedHasSignedDocs ? 'documentos-unidos-copia.pdf' : 'documentos-unidos.pdf'
+                  }
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Baixar PDF
                 </a>
@@ -522,12 +550,19 @@ export default function JuntarPdf() {
                 <ul className="divide-y divide-border">
                   {items.map((item, idx) => {
                     const isInvalid = item.validationStatus === 'invalid'
+                    const hasSig = Boolean(item.hasSignature && !isInvalid)
+
+                    let rowBgClass = 'hover:bg-muted/30'
+                    if (isInvalid) {
+                      rowBgClass = 'bg-destructive/5'
+                    } else if (hasSig) {
+                      rowBgClass = 'bg-amber-500/5 hover:bg-amber-500/10'
+                    }
+
                     return (
                       <li
                         key={item.id}
-                        className={`p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
-                          isInvalid ? 'bg-destructive/5' : 'hover:bg-muted/30'
-                        }`}
+                        className={`p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${rowBgClass}`}
                       >
                         <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                           {/* Número da Ordem */}
@@ -548,14 +583,31 @@ export default function JuntarPdf() {
                               <span className="text-[11px] text-muted-foreground">
                                 {formatBytes(item.size)}
                               </span>
+                              {hasSig && (
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 font-medium inline-flex items-center gap-1 border border-amber-500/30">
+                                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                                  Indício de assinatura digital
+                                </span>
+                              )}
                             </div>
 
-                            {/* Alerta de erro de validação do arquivo específico */}
+                            {/* Alerta de erro de validação do arquivo específico (vermelho/bloqueante) */}
                             {isInvalid && (
                               <div className="mt-1 text-xs text-destructive flex items-center gap-1 font-medium">
                                 <Ban className="w-3.5 h-3.5 shrink-0" />
                                 <span>
                                   {item.errorMessage || 'Arquivo inválido ou não suportado.'}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Aviso informativo em tom âmbar sobre indício de assinatura */}
+                            {hasSig && (
+                              <div className="mt-1 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-1 font-medium">
+                                <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                                <span>
+                                  Documento com indício de assinatura digital. Poderá ser unido como
+                                  cópia derivada após confirmação.
                                 </span>
                               </div>
                             )}
@@ -606,6 +658,46 @@ export default function JuntarPdf() {
             </Card>
           )}
 
+          {/* Bloco de Confirmação Obrigatória para Documentos Assinados */}
+          {items.length > 0 && hasSignedDocuments && !isMerging && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 dark:bg-amber-950/20 p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 flex-1">
+                  <h4 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-200 tracking-tight">
+                    ATENÇÃO — DOCUMENTOS ASSINADOS
+                  </h4>
+                  <p className="text-xs sm:text-sm text-amber-900/90 dark:text-amber-300/90 leading-relaxed">
+                    Um ou mais arquivos apresentam indícios de assinatura digital. A união poderá
+                    invalidar as assinaturas criptográficas incorporadas aos documentos, mesmo que
+                    as assinaturas visíveis e os relatórios de evidências continuem aparecendo. O
+                    arquivo gerado será uma cópia derivada. Os documentos originais permanecerão
+                    inalterados.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-amber-500/20">
+                <label
+                  htmlFor="signature-agreement-checkbox"
+                  className="flex items-start gap-3 cursor-pointer group"
+                >
+                  <Checkbox
+                    id="signature-agreement-checkbox"
+                    checked={signatureConfirmed}
+                    onCheckedChange={(checked) => setSignatureConfirmed(checked === true)}
+                    className="mt-0.5 border-amber-600 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                  />
+                  <span className="text-xs sm:text-sm font-medium text-amber-950 dark:text-amber-200 leading-normal select-none group-hover:text-amber-900">
+                    Estou ciente de que o PDF resultante poderá não preservar a validade
+                    criptográfica das assinaturas e desejo prosseguir com a geração da cópia
+                    derivada.
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
           {/* Painel de Progresso / Em Andamento */}
           {isMerging && (
             <Card className="border-[#C9922A]/40 bg-[#C9922A]/5 rounded-xl">
@@ -652,12 +744,25 @@ export default function JuntarPdf() {
           {/* Botão de Ação Principal */}
           {items.length > 0 && !isMerging && (
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+              {hasSignedDocuments &&
+                !signatureConfirmed &&
+                !hasInvalidItem &&
+                items.length >= 2 && (
+                  <p className="text-xs text-amber-700 dark:text-amber-400 font-medium text-right order-2 sm:order-1">
+                    Confirme a ciência acima para habilitar a união.
+                  </p>
+                )}
               <Button
                 type="button"
                 size="lg"
                 onClick={handleMerge}
-                disabled={items.length < 2 || hasInvalidItem || isValidatingFiles}
-                className="w-full sm:w-auto bg-[#C9922A] hover:bg-[#b07d1f] text-white font-semibold shadow-sm px-8"
+                disabled={
+                  items.length < 2 ||
+                  hasInvalidItem ||
+                  isValidatingFiles ||
+                  (hasSignedDocuments && !signatureConfirmed)
+                }
+                className="w-full sm:w-auto bg-[#C9922A] hover:bg-[#b07d1f] text-white font-semibold shadow-sm px-8 order-1 sm:order-2"
               >
                 <Files className="w-4 h-4 mr-2" />
                 Juntar {items.length} {items.length === 1 ? 'PDF' : 'PDFs'}

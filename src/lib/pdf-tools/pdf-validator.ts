@@ -1,7 +1,15 @@
+export type SignatureDetectionState = 'detected' | 'not_detected' | 'error'
+
+export interface SignatureDetectionResult {
+  state: SignatureDetectionState
+  error?: string
+}
+
 export interface FileValidationResult {
   valid: boolean
   error?: string
   hasSignature?: boolean
+  signatureCheckFailed?: boolean
   isEncrypted?: boolean
   pageCount?: number
 }
@@ -53,10 +61,12 @@ export function validatePdfHeader(buffer: ArrayBuffer): boolean {
  * que um documento esteja 100% isento de outros formatos de assinatura.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function detectDigitalSignatures(pdfDoc: any): boolean {
+export function detectDigitalSignatures(pdfDoc: any): SignatureDetectionResult {
   try {
-    const catalog = pdfDoc.catalog
-    if (!catalog) return false
+    const catalog = pdfDoc?.catalog
+    if (!catalog) {
+      return { state: 'not_detected' }
+    }
 
     // 1. Verificar AcroForm através do catálogo
     const acroFormRef = catalog.get(pdfDoc.context.obj('AcroForm'))
@@ -73,7 +83,7 @@ export function detectDigitalSignatures(pdfDoc: any): boolean {
               const ft = field.get(pdfDoc.context.obj('FT'))
               const ftValue = ft ? ft.toString() : ''
               if (ftValue === '/Sig' || ftValue === 'Sig') {
-                return true
+                return { state: 'detected' }
               }
             }
           }
@@ -84,7 +94,7 @@ export function detectDigitalSignatures(pdfDoc: any): boolean {
         if (sigFlags) {
           const flagsVal = Number(sigFlags.toString())
           if (!isNaN(flagsVal) && flagsVal > 0) {
-            return true
+            return { state: 'detected' }
           }
         }
       }
@@ -96,7 +106,7 @@ export function detectDigitalSignatures(pdfDoc: any): boolean {
       const perms = pdfDoc.context.lookup(permsRef)
       if (perms && typeof perms.get === 'function') {
         const docMdp = perms.get(pdfDoc.context.obj('DocMDP'))
-        if (docMdp) return true
+        if (docMdp) return { state: 'detected' }
       }
     }
 
@@ -107,14 +117,19 @@ export function detectDigitalSignatures(pdfDoc: any): boolean {
         if (obj && typeof obj.get === 'function') {
           const ft = obj.get(pdfDoc.context.obj('FT'))
           if (ft && (ft.toString() === '/Sig' || ft.toString() === 'Sig')) {
-            return true
+            return { state: 'detected' }
           }
         }
       }
     }
-  } catch (err) {
-    console.warn('Aviso na verificação preventiva de assinaturas digitais:', err)
-  }
 
-  return false
+    return { state: 'not_detected' }
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    console.warn('Falha na verificação preventiva de assinaturas digitais:', err)
+    return {
+      state: 'error',
+      error: errorMsg,
+    }
+  }
 }
