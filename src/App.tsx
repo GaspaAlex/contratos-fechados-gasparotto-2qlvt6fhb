@@ -28,6 +28,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 
 const FerramentasPdf = lazy(() => import('./pages/FerramentasPdf'))
 const JuntarPdf = lazy(() => import('./pages/ferramentas-pdf/JuntarPdf'))
+const DividirPdf = lazy(() => import('./pages/ferramentas-pdf/DividirPdf'))
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -81,6 +82,20 @@ const App = () => (
                           }
                         >
                           <JuntarPdf />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/ferramentas-pdf/dividir"
+                      element={
+                        <Suspense
+                          fallback={
+                            <div className="p-8 text-sm text-muted-foreground">
+                              Carregando Dividir PDF...
+                            </div>
+                          }
+                        >
+                          <DividirPdf />
                         </Suspense>
                       }
                     />

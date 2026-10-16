@@ -46,8 +46,8 @@ const PDF_TOOLS: PdfToolCard[] = [
     title: 'Dividir PDF',
     description: 'Separe páginas ou intervalos de um documento.',
     icon: Scissors,
-    status: 'development',
-    statusLabel: 'Em desenvolvimento',
+    status: 'active',
+    href: '/ferramentas-pdf/dividir',
   },
   {
     id: 'organizar-pdf',
