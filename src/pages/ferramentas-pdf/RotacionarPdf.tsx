@@ -168,7 +168,10 @@ export default function RotacionarPdf() {
         const origRots = await getDocumentOriginalRotations(loadedPdf)
         setOriginalRotations(origRots)
       } catch (pdfJsErr: unknown) {
-        console.warn('Falha ao inicializar renderizador de miniaturas PDF.js:', pdfJsErr)
+        console.error('[RotacionarPdf] Falha técnica ao inicializar miniaturas PDF.js:', pdfJsErr)
+        if (pdfJsErr instanceof Error && pdfJsErr.stack) {
+          console.debug('[RotacionarPdf] Stack trace do erro de inicialização:', pdfJsErr.stack)
+        }
         setThumbnailLoadError(
           'Não foi possível inicializar as miniaturas visuais deste documento. A rotação continuará disponível normalmente.',
         )

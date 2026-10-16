@@ -1,11 +1,43 @@
 import * as pdfjsLib from 'pdfjs-dist'
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import pdfWorkerRaw from 'pdfjs-dist/build/pdf.worker.min.mjs?raw'
 
-// Configura o worker localmente empacotado pelo Vite (sem chamadas a CDNs ou APIs externas)
-if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
-  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+// Cache em memória para o Blob URL do Worker, garantindo criação única por sessão
+let cachedWorkerBlobUrl: string | null = null
+
+/**
+ * Inicializa e configura o worker do PDF.js de forma 100% local a partir do bundle.
+ *
+ * Utiliza o código fonte do worker importado como string via `?raw` e empacotado
+ * em um Blob com MIME type explícito 'application/javascript'. Isso contorna a limitação
+ * em que servidores de hospedagem estática servem extensões `.mjs` com Content-Type
+ * `application/octet-stream`, o que faz navegadores modernos (como o Chrome) bloquearem a
+ * inicialização do Worker.
+ */
+function ensurePdfJsWorkerConfigured(): void {
+  if (typeof window === 'undefined' || !pdfjsLib.GlobalWorkerOptions) {
+    return
   }
+
+  if (!cachedWorkerBlobUrl) {
+    try {
+      const blob = new Blob([pdfWorkerRaw], { type: 'application/javascript' })
+      cachedWorkerBlobUrl = URL.createObjectURL(blob)
+    } catch (blobErr) {
+      console.error('[PDF.js Worker] Falha ao criar Blob URL para o worker:', blobErr)
+      throw blobErr
+    }
+  }
+
+  if (pdfjsLib.GlobalWorkerOptions.workerSrc !== cachedWorkerBlobUrl) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = cachedWorkerBlobUrl
+  }
+}
+
+// Configura o worker antecipadamente se em ambiente de navegador
+try {
+  ensurePdfJsWorkerConfigured()
+} catch (err) {
+  console.warn('[PDF.js Worker] Erro na configuração imediata do worker:', err)
 }
 
 export interface RenderThumbnailOptions {
@@ -24,6 +56,14 @@ export interface DocumentInfo {
  * Retorna uma instância do PDFDocumentProxy.
  */
 export async function loadPdfJsDocument(buffer: ArrayBuffer): Promise<pdfjsLib.PDFDocumentProxy> {
+  // Garante que o workerSrc esteja configurado com o Blob URL JS antes de qualquer carregamento
+  try {
+    ensurePdfJsWorkerConfigured()
+  } catch (workerInitErr) {
+    console.error('[PDF.js Worker] Erro ao garantir workerSrc antes de getDocument:', workerInitErr)
+    throw workerInitErr
+  }
+
   // Clona o buffer para evitar mutações
   const copy = buffer.slice(0)
   const loadingTask = pdfjsLib.getDocument({
