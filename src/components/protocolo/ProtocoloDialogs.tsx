@@ -366,12 +366,19 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="text-[#C9922A]">
+      <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] rounded-[10px] border border-[#E4E7EB] dark:border-border p-6">
+        <DialogHeader className="border-b border-[#E4E7EB] dark:border-border pb-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              {item ? 'EDIÇÃO' : 'NOVO REGISTRO'}
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
             {item ? `Editar: ${item.nome}` : 'Adicionar ao Protocolo'}
           </DialogTitle>
-          <DialogDescription className="sr-only">Preencha os dados do protocolo.</DialogDescription>
+          <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground">
+            Preencha e confirme os dados processuais do protocolo.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -763,23 +770,24 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
             </div>
 
             {duplicateWarning && (
-              <div className="bg-amber-100 border border-amber-300 rounded-md p-4 mt-4 text-sm text-amber-900">
+              <div className="rounded-[8px] bg-[#C77E1E]/10 border border-[#C77E1E]/30 p-4 mt-4 text-xs text-[#252B34] dark:text-foreground">
                 <p className="mb-3">
                   Atenção: já existe um protocolo cadastrado para{' '}
-                  <strong>{duplicateWarning}</strong>. Deseja continuar mesmo assim?
+                  <strong className="text-[#C77E1E]">{duplicateWarning}</strong>. Deseja continuar
+                  mesmo assim?
                 </p>
                 <div className="flex justify-end gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-amber-300 text-amber-800 hover:bg-amber-200"
+                    className="h-8 text-xs border-[#E4E7EB] dark:border-border text-[#78818E]"
                     onClick={() => setDuplicateWarning(null)}
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="button"
-                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    className="h-8 text-xs bg-[#C77E1E] hover:bg-[#C77E1E]/90 text-white font-semibold"
                     onClick={() => {
                       setDuplicateWarning(null)
                       handleSave(form.getValues(), true)
@@ -792,12 +800,20 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
             )}
 
             {!duplicateWarning && (
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              <DialogFooter className="pt-4 border-t border-[#E4E7EB] dark:border-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-9 text-xs border-[#E4E7EB] dark:border-border text-[#78818E]"
+                  onClick={() => onOpenChange(false)}
+                >
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white">
-                  {item ? 'Salvar alterações' : 'Salvar'}
+                <Button
+                  type="submit"
+                  className="h-9 text-xs bg-[#C9922A] hover:bg-[#b58324] text-white font-semibold shadow-xs"
+                >
+                  {item ? 'Salvar alterações' : 'Salvar Protocolo'}
                 </Button>
               </DialogFooter>
             )}
@@ -823,21 +839,34 @@ export function ProtocoloDeleteDialog({ open, onOpenChange, item, onDeleted }: a
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Excluir Protocolo</DialogTitle>
-          <DialogDescription>
-            Tem certeza que deseja excluir <strong>{item?.nome}</strong>? Esta ação não pode ser
-            desfeita.
+      <DialogContent className="rounded-[10px] border border-[#E4E7EB] dark:border-border p-6 max-w-md">
+        <DialogHeader className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#B4453C] bg-[#B4453C]/10 px-2 py-0.5 rounded">
+              CONFIRMAÇÃO
+            </span>
+          </div>
+          <DialogTitle className="text-lg font-bold text-[#252B34] dark:text-foreground">
+            Excluir Protocolo
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground">
+            Tem certeza que deseja excluir permanentemente o protocolo de{' '}
+            <strong className="text-[#252B34] dark:text-foreground font-semibold">
+              {item?.nome}
+            </strong>
+            ? Esta ação é irreversível.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="pt-4 border-t border-[#E4E7EB] dark:border-border gap-2">
+          <Button
+            variant="outline"
+            className="h-9 text-xs border-[#E4E7EB] dark:border-border text-[#78818E]"
+            onClick={() => onOpenChange(false)}
+          >
             Cancelar
           </Button>
           <Button
-            variant="destructive"
-            className="bg-[#E84040] hover:bg-[#d63838]"
+            className="h-9 text-xs bg-[#B4453C] hover:bg-[#9e3b33] text-white font-semibold shadow-xs"
             onClick={onConfirm}
           >
             Excluir permanentemente

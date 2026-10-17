@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,7 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Plus, Bell, ArrowRight, Printer } from 'lucide-react'
+import {
+  Search,
+  Plus,
+  Bell,
+  ArrowRight,
+  Printer,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
 import { formatCurrency } from '@/lib/formatters'
@@ -32,6 +41,7 @@ import {
   isProtocoloDueForFollowUp,
   isProtocoloOverdue,
 } from '@/lib/date-utils'
+import { cn } from '@/lib/utils'
 
 const normalizeText = (text: string) => {
   if (!text) return ''
@@ -189,15 +199,8 @@ export function ProtocoloTable({
     return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
   }, [sortedFiltered])
 
-  const cCalc = filtered.filter((d: any) => d.status === 'Calculado').length
-  const cProtJud = filtered.filter((d: any) => d.status === 'Protocolado Judicial').length
-  const cReqAdm = filtered.filter((d: any) => d.status === 'Requerimento Adm.').length
-  const cProv = filtered.filter((d: any) => d.status === 'Prov. Inicial').length
-  const cDocs = filtered.filter((d: any) => d.status === 'R. Docs').length
-  const cAcompanhar = filtered.filter((d: any) => isProtocoloDueForFollowUp(d)).length
-
   const headerClass =
-    'text-[10px] uppercase tracking-wider text-muted-foreground font-bold whitespace-nowrap'
+    'text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap'
 
   const formatDateBR = (val?: string) => {
     if (!val) return '-'
@@ -408,216 +411,54 @@ export function ProtocoloTable({
     })
   }
 
+  const statusPills = [
+    { value: 'Todos', label: 'Todos' },
+    {
+      value: 'Acompanhar',
+      label: `Acompanhar (${followUpStats.total})`,
+      isAcompanhar: true,
+    },
+    { value: 'Calculado', label: 'Calculado' },
+    { value: 'Protocolado Judicial', label: 'Judicial' },
+    { value: 'Requerimento Adm.', label: 'Administrativo' },
+    { value: 'Prov. Inicial', label: 'Inicial' },
+    { value: 'R. Docs', label: 'Falt. Docs' },
+  ]
+
+  const origemPills = ['Campanha', 'Particular', 'Previdenciarista', 'Carnevale', 'Macohin']
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
-        <p>
-          Calculado: {cCalc} | Prot. Judicial: {cProtJud} | Req. Adm.: {cReqAdm} | Prov. Inicial:{' '}
-          {cProv} | Falt. Docs: {cDocs}
-          {status === 'Acompanhar' && ` | Acompanhar: ${cAcompanhar}`} | Total: {filtered.length}
-        </p>
-      </div>
-
-      {/* Decisions Mini-Dashboard */}
-      <Card className="border shadow-sm">
-        <CardContent className="p-4">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            DECISÕES
-          </h3>
-          {totalDecisoes > 0 ? (
-            <>
-              <div className="h-2 w-full rounded-sm overflow-hidden flex bg-muted mb-3">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-500"
-                  style={{ width: `${percProc}%` }}
-                />
-                <div
-                  className="h-full bg-rose-500 transition-all duration-500"
-                  style={{ width: `${percImp}%` }}
-                />
-              </div>
-              <div className="flex gap-6 text-sm font-medium">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-500 text-lg leading-none">●</span>
-                  <span>
-                    {procedentes} Procedentes ({percProc}%)
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-rose-500 text-lg leading-none">●</span>
-                  <span>
-                    {improcedentes} Improcedentes ({percImp}%)
-                  </span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma decisão registrada ainda</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Toolbar */}
-      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-card p-3 rounded-lg border shadow-sm">
-        <div className="flex gap-3 w-full xl:w-auto flex-wrap">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar cliente, resp. ou autos..."
-              className="pl-9 h-9 text-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={tipo} onValueChange={setTipo}>
-            <SelectTrigger className="w-[170px] h-9 text-sm">
-              <SelectValue placeholder="Todos os Benefícios" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os Benefícios</SelectItem>
-              {tipos.map((t: any) => (
-                <SelectItem key={t.id} value={t.nome}>
-                  {t.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={responsavel} onValueChange={setResponsavel}>
-            <SelectTrigger className="w-[170px] h-9 text-sm">
-              <SelectValue placeholder="Todos os Responsáveis" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os Responsáveis</SelectItem>
-              {responsaveisList.map((r: any) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger className="w-[140px] h-9 text-sm">
-              <SelectValue placeholder="Todos os meses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os meses</SelectItem>
-              {monthsArray.map((m, i) => (
-                <SelectItem key={i} value={i.toString()}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[140px] h-9 text-sm">
-              <SelectValue placeholder="Todos os anos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos os anos</SelectItem>
-              {availableYears.map((y: any) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-3 w-full xl:w-auto justify-end items-center">
-          <div className="flex p-1 bg-muted rounded-md overflow-hidden flex-wrap items-center">
-            {[
-              { value: 'Todos', label: 'Todos' },
-              {
-                value: 'Acompanhar',
-                label: `Acompanhar (${followUpStats.total})`,
-                isAcompanhar: true,
-              },
-              { value: 'Calculado', label: 'Calculado' },
-              { value: 'Protocolado Judicial', label: 'Judicial' },
-              { value: 'Requerimento Adm.', label: 'Administrativo' },
-              { value: 'Prov. Inicial', label: 'Inicial' },
-              { value: 'R. Docs', label: 'Falt. Docs' },
-            ].map((s) => (
-              <button
-                key={s.value}
-                onClick={() => {
-                  if (s.value === 'Acompanhar') {
-                    setStatus(status === 'Acompanhar' ? 'Todos' : 'Acompanhar')
-                  } else {
-                    setStatus(s.value)
-                  }
-                }}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors ${
-                  status === s.value
-                    ? s.isAcompanhar
-                      ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold border border-amber-500/40 shadow-sm'
-                      : 'bg-background shadow-sm font-semibold'
-                    : s.isAcompanhar
-                      ? 'text-amber-700 dark:text-amber-400 hover:text-amber-900 font-semibold'
-                      : 'text-muted-foreground hover:text-foreground font-medium'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-            <div className="w-px h-4 bg-border mx-1" />
-            {['Campanha', 'Particular', 'Previdenciarista', 'Carnevale', 'Macohin'].map((o) => (
-              <button
-                key={o}
-                onClick={() => setOrigem(origem === o ? 'Todos' : o)}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors ${origem === o ? 'bg-background shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground font-medium'}`}
-              >
-                {o}
-              </button>
-            ))}
-          </div>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePrintReport}
-                className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A] h-9 w-9"
-              >
-                <Printer className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Exportar relatório PDF</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Button
-            onClick={onAdd}
-            className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white h-9 px-4 gap-2 shadow-sm"
-          >
-            <Plus className="h-4 w-4" /> Adicionar
-          </Button>
-        </div>
-      </div>
-
+      {/* ALERTA DE ACOMPANHAMENTO — Refinado e Sofisticado (Paleta #C77E1E e #B4453C) */}
       {followUpStats.total > 0 && (
         <div
           role="alert"
           aria-live="polite"
-          className="relative overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/[0.12] via-amber-500/[0.08] to-amber-500/[0.03] dark:from-amber-500/[0.18] dark:via-amber-500/[0.10] dark:to-transparent p-4 sm:p-5 shadow-sm animate-fade-in-up"
+          className="relative overflow-hidden rounded-[10px] border border-[#C77E1E]/30 bg-[#C77E1E]/[0.05] dark:bg-[#C77E1E]/10 p-4 sm:p-5 shadow-sm"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Barra lateral de acento */}
+          <span
+            className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#C77E1E]"
+            aria-hidden="true"
+          />
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pl-1">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                <Bell className="h-5 w-5 animate-pulse" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#C77E1E]/15 text-[#C77E1E] border border-[#C77E1E]/25">
+                <Bell className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 font-bold text-foreground text-sm sm:text-base tracking-tight">
-                  <span className="text-amber-600 dark:text-amber-400">ATENÇÃO</span>
-                  <span className="text-muted-foreground font-normal">&mdash;</span>
+                <div className="flex items-center gap-2 font-bold text-[#252B34] dark:text-foreground text-sm sm:text-base tracking-tight">
+                  <span className="text-[10px] font-bold tracking-[1.2px] uppercase text-[#C77E1E] bg-[#C77E1E]/15 px-2 py-0.5 rounded">
+                    ATENÇÃO
+                  </span>
                   <span>
                     {followUpStats.total === 1
-                      ? '1 caso precisa de acompanhamento'
-                      : `${followUpStats.total} casos precisam de acompanhamento`}
+                      ? '1 caso requer acompanhamento imediato'
+                      : `${followUpStats.total} casos requerem acompanhamento imediato`}
                   </span>
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <div className="text-xs text-[#78818E] dark:text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   {(() => {
                     const parts: React.ReactNode[] = []
 
@@ -625,18 +466,21 @@ export function ProtocoloTable({
                       parts.push(
                         <span
                           key="atrasados"
-                          className="font-medium text-rose-600 dark:text-rose-400"
+                          className="font-semibold text-[#B4453C] dark:text-red-400"
                         >
                           {followUpStats.atrasados === 1
-                            ? '1 protocolo atrasado'
-                            : `${followUpStats.atrasados} protocolos atrasados`}
+                            ? '1 protocolo em atraso'
+                            : `${followUpStats.atrasados} protocolos em atraso`}
                         </span>,
                       )
                     }
 
                     if (followUpStats.revisarHoje > 0) {
                       parts.push(
-                        <span key="hoje" className="font-medium text-amber-700 dark:text-amber-300">
+                        <span
+                          key="hoje"
+                          className="font-semibold text-[#C77E1E] dark:text-amber-400"
+                        >
                           {followUpStats.revisarHoje === 1
                             ? '1 para revisar hoje'
                             : `${followUpStats.revisarHoje} para revisar hoje`}
@@ -648,18 +492,18 @@ export function ProtocoloTable({
                       parts.push(
                         <span
                           key="revisar-atrasadas"
-                          className="font-medium text-red-600 dark:text-red-400"
+                          className="font-semibold text-[#B4453C] dark:text-red-400"
                         >
                           {followUpStats.revisarAtrasadas === 1
-                            ? '1 revisão atrasada'
-                            : `${followUpStats.revisarAtrasadas} revisões atrasadas`}
+                            ? '1 revisão pendente'
+                            : `${followUpStats.revisarAtrasadas} revisões pendentes`}
                         </span>,
                       )
                     }
 
                     return parts.map((part, index) => (
                       <React.Fragment key={index}>
-                        {index > 0 && <span className="text-muted-foreground/60">&bull;</span>}
+                        {index > 0 && <span className="text-[#A0A7B5]">&bull;</span>}
                         {part}
                       </React.Fragment>
                     ))
@@ -670,86 +514,354 @@ export function ProtocoloTable({
 
             <Button
               type="button"
-              onClick={() => setStatus('Acompanhar')}
+              onClick={() => setStatus(status === 'Acompanhar' ? 'Todos' : 'Acompanhar')}
               variant="outline"
               size="sm"
-              className="self-start sm:self-center shrink-0 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 hover:text-amber-800 dark:hover:text-amber-200 font-semibold gap-1.5 shadow-none transition-colors"
+              className={cn(
+                'self-start sm:self-center shrink-0 h-9 font-semibold text-xs gap-1.5 transition-colors border shadow-xs',
+                status === 'Acompanhar'
+                  ? 'bg-[#161920] border-[#161920] text-white hover:bg-[#202532] hover:text-white dark:bg-[#D9A94A] dark:text-[#161920]'
+                  : 'border-[#C77E1E]/40 bg-white dark:bg-card text-[#C77E1E] hover:bg-[#C77E1E]/10 hover:text-[#C77E1E]',
+              )}
             >
-              Ver casos para acompanhamento
+              {status === 'Acompanhar'
+                ? 'Ver todos os protocolos'
+                : 'Filtrar casos de acompanhamento'}
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
       )}
 
-      <div className="border rounded-md bg-card overflow-hidden shadow-sm">
-        <Table>
-          <TableHeader className="bg-muted/50 border-b">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className={`w-10 ${headerClass}`}>#</TableHead>
-              <TableHead className={headerClass}>NOME</TableHead>
-              <TableHead className={headerClass}>BENEFÍCIO</TableHead>
-              <TableHead className={headerClass}>RESP.</TableHead>
-              <TableHead className={headerClass}>STATUS</TableHead>
-              <TableHead className={headerClass}>ORIGEM</TableHead>
-              <TableHead className={headerClass}>PARCEIRO</TableHead>
-              <TableHead className={headerClass}>D. CONTRATO</TableHead>
-              <TableHead className={headerClass}>D. CÁLCULO</TableHead>
-              <TableHead className={headerClass}>D. PROTOCOLO</TableHead>
-              <TableHead className={headerClass}>Nº AUTOS</TableHead>
-              <TableHead className={`text-right ${headerClass}`}>VALOR</TableHead>
-              <TableHead className={`text-right ${headerClass}`}>HONORÁRIOS</TableHead>
-              <TableHead className={headerClass}>DECISÃO</TableHead>
-              <TableHead className={`w-20 text-center ${headerClass}`}>AÇÕES</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {grouped.map(([monthStr, items]) => {
-              const projCount = items.filter(
-                (i) =>
-                  [
-                    'Protocolado Judicial',
-                    'Requerimento Adm.',
-                    'Prov. Inicial',
-                    'Calculado',
-                  ].includes(i.status) && i.decisao !== 'Improcedente',
-              ).length
-              const label =
-                monthStr !== '0000-00'
-                  ? format(parseISO(`${monthStr}-01T12:00:00Z`), 'MMMM yyyy', { locale: ptBR })
-                  : 'SEM DATA'
+      {/* Decisions Mini-Dashboard — Padrão Corporativo Contemporâneo */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <h3 className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
+              Decisões Judiciais dos Processos Listados
+            </h3>
+            <span className="text-xs text-[#78818E] dark:text-muted-foreground tabular-nums">
+              {totalDecisoes} {totalDecisoes === 1 ? 'decisão registrada' : 'decisões registradas'}
+            </span>
+          </div>
+
+          {totalDecisoes > 0 ? (
+            <div className="space-y-3">
+              <div className="h-2.5 w-full rounded-full overflow-hidden flex bg-[#F5F6F8] dark:bg-muted/50 border border-[#E4E7EB]/50">
+                <div
+                  className="h-full bg-[#3E8E5A] transition-all duration-500"
+                  style={{ width: `${percProc}%` }}
+                  title={`Procedentes: ${percProc}%`}
+                />
+                <div
+                  className="h-full bg-[#B4453C] transition-all duration-500"
+                  style={{ width: `${percImp}%` }}
+                  title={`Improcedentes: ${percImp}%`}
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-6 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-md bg-[#3E8E5A]/10 text-[#3E8E5A] flex items-center justify-center">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[#252B34] dark:text-foreground font-semibold tabular-nums">
+                    {procedentes} Procedentes
+                  </span>
+                  <span className="text-[#3E8E5A] font-semibold tabular-nums">({percProc}%)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-md bg-[#B4453C]/10 text-[#B4453C] flex items-center justify-center">
+                    <XCircle className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[#252B34] dark:text-foreground font-semibold tabular-nums">
+                    {improcedentes} Improcedentes
+                  </span>
+                  <span className="text-[#B4453C] font-semibold tabular-nums">({percImp}%)</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-[#78818E] dark:text-muted-foreground py-1">
+              Nenhuma decisão registrada para os filtros selecionados.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Toolbar Principal com Filtros Sóbrios no Padrão shadcn */}
+      <div className="space-y-3 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 shadow-sm">
+        {/* Linha 1: Busca, Selects shadcn e Ações */}
+        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+          <div className="flex flex-wrap gap-2.5 items-center flex-1">
+            {/* Campo de Busca */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#78818E]" />
+              <Input
+                placeholder="Buscar cliente, resp. ou autos..."
+                className="pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus-visible:ring-[#C9922A]"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            {/* Select Benefício */}
+            <Select value={tipo} onValueChange={setTipo}>
+              <SelectTrigger className="w-full sm:w-[170px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md">
+                <SelectValue placeholder="Todos os Benefícios" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos" className="text-xs">
+                  Todos os Benefícios
+                </SelectItem>
+                {tipos.map((t: any) => (
+                  <SelectItem key={t.id} value={t.nome} className="text-xs">
+                    {t.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Responsável */}
+            <Select value={responsavel} onValueChange={setResponsavel}>
+              <SelectTrigger className="w-full sm:w-[170px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md">
+                <SelectValue placeholder="Todos os Responsáveis" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos" className="text-xs">
+                  Todos os Responsáveis
+                </SelectItem>
+                {responsaveisList.map((r: any) => (
+                  <SelectItem key={r} value={r} className="text-xs">
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Mês */}
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger className="w-full sm:w-[140px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md">
+                <SelectValue placeholder="Todos os meses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos" className="text-xs">
+                  Todos os meses
+                </SelectItem>
+                {monthsArray.map((m, i) => (
+                  <SelectItem key={i} value={i.toString()} className="text-xs">
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Ano */}
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="w-full sm:w-[130px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md">
+                <SelectValue placeholder="Todos os anos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos" className="text-xs">
+                  Todos os anos
+                </SelectItem>
+                {availableYears.map((y: any) => (
+                  <SelectItem key={y} value={y} className="text-xs">
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Botões de Ação */}
+          <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handlePrintReport}
+                  className="h-9 w-9 border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:border-[#C9922A]/40 rounded-md"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Exportar relatório PDF</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Button
+              onClick={onAdd}
+              className="bg-[#C9922A] hover:bg-[#b58324] text-white h-9 px-4 text-xs font-semibold rounded-md gap-1.5 shadow-sm"
+            >
+              <Plus className="h-4 w-4" /> Novo Protocolo
+            </Button>
+          </div>
+        </div>
+
+        {/* Linha 2: Abas / Filtros Rápidos (Pills Sóbrias e Elegantes) */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-[#E4E7EB]/80 dark:border-border/80">
+          {/* Status Pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
+              STATUS:
+            </span>
+            {statusPills.map((s) => {
+              const isActive = status === s.value
               return (
-                <React.Fragment key={monthStr}>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-b">
-                    <TableCell
-                      colSpan={15}
-                      className="text-[10px] uppercase tracking-wider text-muted-foreground py-3 px-4"
-                    >
-                      <strong className="font-bold text-foreground">{label}</strong> • {projCount}{' '}
-                      CASO(S) NA PROJEÇÃO
-                    </TableCell>
-                  </TableRow>
-                  {items.map((item, idx) => (
-                    <ProtocoloTableRow
-                      key={item.id}
-                      item={item}
-                      index={idx + 1}
-                      onEdit={() => onEdit(item)}
-                      onDelete={() => onDelete(item)}
-                    />
-                  ))}
-                </React.Fragment>
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => {
+                    if (s.value === 'Acompanhar') {
+                      setStatus(status === 'Acompanhar' ? 'Todos' : 'Acompanhar')
+                    } else {
+                      setStatus(s.value)
+                    }
+                  }}
+                  className={cn(
+                    'h-7 px-2.5 text-xs rounded-md transition-all font-medium cursor-pointer select-none inline-flex items-center gap-1.5 border',
+                    isActive
+                      ? s.isAcompanhar
+                        ? 'bg-[#C77E1E] text-white border-[#C77E1E] font-semibold shadow-xs'
+                        : 'bg-[#161920] dark:bg-[#D9A94A] text-white dark:text-[#161920] border-[#161920] dark:border-[#D9A94A] font-semibold shadow-xs'
+                      : s.isAcompanhar
+                        ? 'border-[#C77E1E]/40 text-[#C77E1E] bg-[#C77E1E]/5 hover:bg-[#C77E1E]/15'
+                        : 'border-[#E4E7EB] dark:border-border text-[#78818E] dark:text-muted-foreground bg-white dark:bg-card hover:bg-[#F5F6F8] dark:hover:bg-muted/40 hover:text-[#252B34] dark:hover:text-foreground',
+                  )}
+                >
+                  {s.label}
+                </button>
               )
             })}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={15} className="text-center py-12 text-muted-foreground">
-                  Nenhum protocolo encontrado com os filtros atuais.
-                </TableCell>
+          </div>
+
+          {/* Origem / Parceiro Pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
+              ORIGEM:
+            </span>
+            {origemPills.map((o) => {
+              const isActive = origem === o
+              return (
+                <button
+                  key={o}
+                  type="button"
+                  onClick={() => setOrigem(origem === o ? 'Todos' : o)}
+                  className={cn(
+                    'h-7 px-2.5 text-xs rounded-md transition-all font-medium cursor-pointer select-none border',
+                    isActive
+                      ? 'bg-[#2B2927] text-[#F1C078] border-[#2B2927] font-semibold shadow-xs'
+                      : 'border-[#E4E7EB] dark:border-border text-[#78818E] dark:text-muted-foreground bg-white dark:bg-card hover:bg-[#F5F6F8] dark:hover:bg-muted/40 hover:text-[#252B34] dark:hover:text-foreground',
+                  )}
+                >
+                  {o}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Resumo Quantitativo da Filtragem Atual */}
+      <div className="flex items-center justify-between text-xs text-[#78818E] dark:text-muted-foreground px-1">
+        <span>
+          Exibindo{' '}
+          <strong className="text-[#252B34] dark:text-foreground font-semibold tabular-nums">
+            {filtered.length}
+          </strong>{' '}
+          {filtered.length === 1 ? 'processo' : 'processos'}
+        </span>
+        {status === 'Acompanhar' && (
+          <span className="text-[#C77E1E] font-semibold flex items-center gap-1">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Filtrando apenas casos para acompanhamento
+          </span>
+        )}
+      </div>
+
+      {/* TABELA PRINCIPAL — Refinada, Elegante e com Rolagem Segura */}
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-[#F5F6F8] dark:bg-muted/40 border-b border-[#E4E7EB] dark:border-border">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={`w-10 pl-4 ${headerClass}`}>#</TableHead>
+                <TableHead className={headerClass}>NOME</TableHead>
+                <TableHead className={headerClass}>BENEFÍCIO</TableHead>
+                <TableHead className={headerClass}>RESP.</TableHead>
+                <TableHead className={headerClass}>STATUS</TableHead>
+                <TableHead className={headerClass}>ORIGEM</TableHead>
+                <TableHead className={headerClass}>PARCEIRO</TableHead>
+                <TableHead className={headerClass}>D. CONTRATO</TableHead>
+                <TableHead className={headerClass}>D. CÁLCULO</TableHead>
+                <TableHead className={headerClass}>D. PROTOCOLO</TableHead>
+                <TableHead className={headerClass}>Nº AUTOS</TableHead>
+                <TableHead className={`text-right ${headerClass}`}>VALOR</TableHead>
+                <TableHead className={`text-right ${headerClass}`}>HONORÁRIOS</TableHead>
+                <TableHead className={headerClass}>DECISÃO</TableHead>
+                <TableHead className={`w-20 text-center pr-4 ${headerClass}`}>AÇÕES</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
+              {grouped.map(([monthStr, items]) => {
+                const projCount = items.filter(
+                  (i) =>
+                    [
+                      'Protocolado Judicial',
+                      'Requerimento Adm.',
+                      'Prov. Inicial',
+                      'Calculado',
+                    ].includes(i.status) && i.decisao !== 'Improcedente',
+                ).length
+                const label =
+                  monthStr !== '0000-00'
+                    ? format(parseISO(`${monthStr}-01T12:00:00Z`), 'MMMM yyyy', { locale: ptBR })
+                    : 'SEM DATA'
+                return (
+                  <React.Fragment key={monthStr}>
+                    <TableRow className="bg-[#F5F6F8]/80 dark:bg-muted/30 hover:bg-[#F5F6F8]/80 border-y border-[#E4E7EB] dark:border-border">
+                      <TableCell
+                        colSpan={15}
+                        className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-4 font-semibold"
+                      >
+                        <span className="font-bold text-[#252B34] dark:text-foreground">
+                          {label}
+                        </span>{' '}
+                        •{' '}
+                        <span className="text-[#C9922A] font-semibold tabular-nums">
+                          {projCount} {projCount === 1 ? 'caso na projeção' : 'casos na projeção'}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                    {items.map((item, idx) => (
+                      <ProtocoloTableRow
+                        key={item.id}
+                        item={item}
+                        index={idx + 1}
+                        onEdit={() => onEdit(item)}
+                        onDelete={() => onDelete(item)}
+                      />
+                    ))}
+                  </React.Fragment>
+                )
+              })}
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={15}
+                    className="text-center py-12 text-xs text-[#78818E] dark:text-muted-foreground"
+                  >
+                    Nenhum protocolo encontrado com os filtros selecionados.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   )
