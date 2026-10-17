@@ -86,9 +86,9 @@ const TableCellInput = ({ control, name, readOnly }: any) => (
         }}
         readOnly={readOnly}
         className={cn(
-          'h-7 text-xs text-center px-0.5 border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 min-w-[36px] w-full',
+          'h-7 text-xs text-center px-1 border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A] min-w-[36px] w-full rounded',
           readOnly &&
-            'bg-gray-50 dark:bg-gray-800 cursor-not-allowed border-muted text-muted-foreground font-bold',
+            'bg-[#F5F6F8] dark:bg-muted/40 cursor-not-allowed border-[#E4E7EB] dark:border-border text-[#252B34] dark:text-foreground font-semibold',
         )}
       />
     )}
@@ -102,7 +102,7 @@ const NumInput = ({ control, name, label, cl }: any) => (
     render={({ field }) => {
       return (
         <FormItem>
-          <FormLabel className="text-[10px] font-bold uppercase text-muted-foreground">
+          <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
             {label}
           </FormLabel>
           <FormControl>
@@ -114,7 +114,7 @@ const NumInput = ({ control, name, label, cl }: any) => (
                 const val = e.target.value
                 field.onChange(val === '' ? '' : Number(val))
               }}
-              className={`h-8 text-sm border-amber-300 bg-amber-50/80 focus-visible:ring-amber-500 dark:bg-amber-950/20 dark:border-amber-800 ${cl}`}
+              className={`h-8 text-sm border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A] rounded-md ${cl}`}
             />
           </FormControl>
         </FormItem>
@@ -125,8 +125,10 @@ const NumInput = ({ control, name, label, cl }: any) => (
 
 const CalcBox = ({ label, val }: any) => (
   <div>
-    <div className="text-[10px] font-bold uppercase text-muted-foreground">{label}</div>
-    <div className="h-8 rounded-md bg-muted flex items-center px-3 text-sm font-bold text-muted-foreground cursor-not-allowed border shadow-inner">
+    <div className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1">
+      {label}
+    </div>
+    <div className="h-8 rounded-md bg-[#F5F6F8] dark:bg-muted/30 flex items-center px-3 text-sm font-bold text-[#252B34] dark:text-foreground cursor-not-allowed border border-[#E4E7EB] dark:border-border tabular-nums">
       {val}
     </div>
   </div>
@@ -385,24 +387,31 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-[10px] border border-[#E4E7EB] dark:border-border p-6 shadow-xl bg-white dark:bg-card">
+        <DialogHeader className="pb-3 border-b border-[#E4E7EB] dark:border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              REGISTRO DIÁRIO DE LEADS
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold text-[#252B34] dark:text-foreground">
             {isEdit ? `Editar: Dia ${vals.dia} — ${vals.mes}` : 'Registrar Dia'}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 pb-4 border-b">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2">
+            <div className="grid grid-cols-2 gap-4 pb-4 border-b border-[#E4E7EB] dark:border-border">
               <FormField
                 control={form.control}
                 name="mes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Mês/Ano</FormLabel>
+                    <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                      Mês/Ano
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                        <SelectTrigger className="h-9 border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus:ring-[#C9922A] rounded-md text-xs">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
@@ -411,6 +420,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           <SelectItem
                             key={`${m} ${year}`}
                             value={`${m} ${year}`}
+                            className="text-xs"
                           >{`${m} ${year}`}</SelectItem>
                         ))}
                       </SelectContent>
@@ -423,7 +433,9 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                 name="dia"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Dia do Mês</FormLabel>
+                    <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                      Dia do Mês
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -433,7 +445,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           const val = e.target.value
                           field.onChange(val === '' ? '' : Number(val))
                         }}
-                        className="h-9 border-amber-300 bg-amber-50 dark:bg-amber-950/20"
+                        className="h-9 border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A] rounded-md text-xs"
                       />
                     </FormControl>
                   </FormItem>
@@ -443,31 +455,33 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
 
             <div className="space-y-6">
               {/* TOP SECTION */}
-              <div className="p-3 rounded-md bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900 shadow-sm">
-                <h4 className="text-xs font-bold text-blue-700 mb-3">LEADS RECEBIDOS</h4>
+              <div className="p-4 rounded-[10px] bg-[#F5F6F8] dark:bg-card border border-[#E4E7EB] dark:border-border shadow-xs">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#4A7FA5]">
+                    ENTRADA DE LEADS
+                  </span>
+                </div>
                 <div className="flex items-center gap-6 mb-4">
-                  <div className="w-48">
+                  <div className="w-56">
                     <NumInput control={form.control} name="google" label="Google Ads (DER)" />
                   </div>
                 </div>
 
-                <div className="p-2 rounded-md bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-2">
-                  <h5 className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase mb-2">
+                <div className="p-3 rounded-lg bg-white dark:bg-muted/30 border border-[#E4E7EB] dark:border-border space-y-2">
+                  <h5 className="text-[10px] font-bold text-[#252B34] dark:text-foreground uppercase tracking-wider mb-2">
                     Leads por Campanha
                   </h5>
-                  <div className="w-full border rounded-md shadow-sm overflow-hidden">
-                    <table className="w-full text-xs text-left bg-[#FAF8F2] dark:bg-amber-950/10 table-fixed">
-                      <thead className="bg-muted text-xs text-muted-foreground uppercase whitespace-nowrap">
+                  <div className="w-full border border-[#E4E7EB] dark:border-border rounded-md shadow-xs overflow-hidden">
+                    <table className="w-full text-xs text-left bg-white dark:bg-card table-fixed">
+                      <thead className="bg-[#F5F6F8] dark:bg-muted/40 text-[10px] font-bold text-[#78818E] dark:text-muted-foreground uppercase whitespace-nowrap">
                         <tr>
-                          <th className="px-1 py-2 font-semibold w-[45%] text-left">CAMPANHA</th>
-                          <th className="px-0.5 py-2 font-semibold text-center w-[25%]">LEADS</th>
-                          <th className="px-0.5 py-2 font-semibold text-center w-[25%]">
-                            EM QUALIF.
-                          </th>
-                          <th className="px-1 py-2 w-[5%]"></th>
+                          <th className="px-2 py-2 font-bold w-[45%] text-left">CAMPANHA</th>
+                          <th className="px-1 py-2 font-bold text-center w-[25%]">LEADS</th>
+                          <th className="px-1 py-2 font-bold text-center w-[25%]">EM QUALIF.</th>
+                          <th className="px-2 py-2 w-[5%]"></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-amber-100 dark:divide-amber-900/50">
+                      <tbody className="divide-y divide-[#E4E7EB] dark:divide-border">
                         {activeConfigs.map((c: any) => {
                           const slot = (c?.slug || '').replace('meta_c', '')
                           const metaName = `meta_c${slot}`
@@ -475,24 +489,27 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           const rotuloUpper = (c?.rotulo || '').toUpperCase()
 
                           return (
-                            <tr key={c.id}>
+                            <tr
+                              key={c.id}
+                              className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/30 transition-colors"
+                            >
                               <td
-                                className="px-1 py-1 align-middle font-bold uppercase whitespace-nowrap text-[10px] text-amber-900 dark:text-amber-200 truncate text-left"
+                                className="px-2 py-1.5 align-middle font-bold uppercase whitespace-nowrap text-[10px] text-[#252B34] dark:text-foreground truncate text-left"
                                 title={c.rotulo}
                               >
                                 {rotuloUpper} {rotuloUpper === 'DER' ? '(GOOGLE)' : ''}
                               </td>
-                              <td className="px-0.5 py-1 align-middle">
+                              <td className="px-1 py-1.5 align-middle">
                                 <TableCellInput control={form.control} name={metaName} readOnly />
                               </td>
-                              <td className="px-0.5 py-1 align-middle">
+                              <td className="px-1 py-1.5 align-middle">
                                 <TableCellInput control={form.control} name={qualifName} readOnly />
                               </td>
-                              <td className="px-1 py-1 align-middle text-right">
+                              <td className="px-2 py-1.5 align-middle text-right">
                                 <button
                                   type="button"
                                   onClick={() => handleDeactivate(c)}
-                                  className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                  className="text-[#78818E] hover:text-[#B4453C] transition-colors p-1"
                                   title="Desativar campanha"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -502,30 +519,30 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                           )
                         })}
                       </tbody>
-                      <tfoot className="bg-blue-50/80 dark:bg-blue-900/30 border-t-2 border-blue-200 dark:border-blue-800">
+                      <tfoot className="bg-[#FAF8F2] dark:bg-[#C9922A]/10 border-t-2 border-[#C9922A]/30 dark:border-[#C9922A]/50">
                         <tr>
-                          <td colSpan={3} className="px-2 py-2 text-right align-middle">
-                            <span className="text-[10px] font-bold uppercase text-blue-800 dark:text-blue-300 mr-2">
+                          <td colSpan={3} className="px-3 py-2 text-right align-middle">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9922A] mr-2">
                               Total Leads (Google + Meta)
                             </span>
-                            <span className="text-sm font-bold text-blue-900 dark:text-blue-200">
+                            <span className="text-sm font-bold text-[#252B34] dark:text-foreground tabular-nums">
                               {calc.total_leads}
                             </span>
                           </td>
-                          <td className="px-1 py-2"></td>
+                          <td className="px-2 py-2"></td>
                         </tr>
                       </tfoot>
                     </table>
                   </div>
 
                   {inactiveConfigs.length > 0 && (
-                    <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-2 mt-3 pt-1">
                       {!isAddingSlot ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 text-[10px] px-2"
+                          className="h-7 text-[10px] px-2.5 border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded transition-colors"
                           onClick={() => setIsAddingSlot(true)}
                         >
                           <Plus className="w-3 h-3 mr-1" /> Adicionar Campanha
@@ -536,12 +553,12 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                             value={newSlotLabel}
                             onChange={(e) => setNewSlotLabel(e.target.value)}
                             placeholder="Nome da campanha"
-                            className="h-7 text-[10px] w-32"
+                            className="h-7 text-[11px] w-40 border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A]"
                           />
                           <Button
                             type="button"
                             size="sm"
-                            className="h-7 text-[10px] px-2"
+                            className="h-7 text-[10px] px-3 bg-[#C9922A] hover:bg-[#b58324] text-white rounded font-medium"
                             onClick={handleAddSlot}
                           >
                             Salvar
@@ -550,7 +567,7 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-[10px] px-2"
+                            className="h-7 text-[10px] px-2 text-[#78818E] hover:text-[#252B34] rounded"
                             onClick={() => {
                               setIsAddingSlot(false)
                               setNewSlotLabel('')
@@ -566,18 +583,24 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
               </div>
 
               {/* MIDDLE SECTION */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-3 rounded-md bg-green-50/50 dark:bg-green-900/10 border border-green-100 dark:border-green-900 shadow-sm flex flex-col justify-center">
-                  <h4 className="text-xs font-bold text-green-700 mb-2">QUALIFICADOS</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-[10px] bg-white dark:bg-card border border-[#E4E7EB] dark:border-border shadow-xs flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#3E8E5A]">
+                      QUALIFICAÇÃO
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <CalcBox label="Total Qualificados" val={calc.qualificados} />
                   </div>
                 </div>
 
-                <div className="p-3 rounded-md bg-teal-50/50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-900 shadow-sm">
-                  <h4 className="text-xs font-bold text-teal-700 mb-2 uppercase">
-                    Fechamentos por Campanha (Banco de Dados)
-                  </h4>
+                <div className="p-4 rounded-[10px] bg-white dark:bg-card border border-[#E4E7EB] dark:border-border shadow-xs">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#2B9A8C]">
+                      FECHAMENTOS (BANCO DE DADOS)
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <CalcBox label="Direto" val={diretoCampanhaCount} />
                     <CalcBox label="FUP" val={fupCampanhaCount} />
@@ -599,8 +622,12 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
               </div>
 
               {/* BOTTOM SECTION */}
-              <div className="p-3 rounded-md bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900 shadow-sm">
-                <h4 className="text-xs font-bold text-purple-700 mb-2">INVESTIMENTO & OBS</h4>
+              <div className="p-4 rounded-[10px] bg-white dark:bg-card border border-[#E4E7EB] dark:border-border shadow-xs">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#7C5CBF]">
+                    INVESTIMENTO & OBSERVAÇÕES
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <NumInput
                     control={form.control}
@@ -612,13 +639,13 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
                     name="observacoes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-bold uppercase text-muted-foreground">
+                        <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
                           Observações
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            className="h-8 text-sm border-purple-300 bg-purple-50/80 focus-visible:ring-purple-500 dark:bg-purple-950/20 dark:border-purple-800"
+                            className="h-8 text-sm border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A] rounded-md"
                           />
                         </FormControl>
                       </FormItem>
@@ -628,30 +655,57 @@ export function LeadModal({ open, onOpenChange, data, year, onSuccess, campaignC
               </div>
             </div>
 
-            <div className="bg-muted/30 p-3 rounded-md border grid grid-cols-4 gap-2 text-center shadow-sm">
+            {/* BARRA DE INDICADORES RESULTANTES */}
+            <div className="bg-[#FAF8F2] dark:bg-[#C9922A]/10 p-3.5 rounded-[10px] border border-[#E8DFCE] dark:border-[#C9922A]/20 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center shadow-xs">
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Conv. Geral %</div>
-                <div className="font-bold text-purple-700">{fmtPct(calc.conv_geral)}</div>
+                <div className="text-[10px] font-bold text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
+                  Conv. Geral %
+                </div>
+                <div className="text-base font-bold text-[#252B34] dark:text-foreground tabular-nums mt-0.5">
+                  {fmtPct(calc.conv_geral)}
+                </div>
               </div>
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Conv. Qualif. %</div>
-                <div className="font-bold text-purple-700">{fmtPct(calc.conv_qualif)}</div>
+                <div className="text-[10px] font-bold text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
+                  Conv. Qualif. %
+                </div>
+                <div className="text-base font-bold text-[#252B34] dark:text-foreground tabular-nums mt-0.5">
+                  {fmtPct(calc.conv_qualif)}
+                </div>
               </div>
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">Desqualificação</div>
-                <div className="font-bold text-red-600">{fmtPct(calc.desqual_pct)}</div>
+                <div className="text-[10px] font-bold text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
+                  Desqualificação
+                </div>
+                <div className="text-base font-bold text-[#B4453C] dark:text-red-400 tabular-nums mt-0.5">
+                  {fmtPct(calc.desqual_pct)}
+                </div>
               </div>
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase">CAC</div>
-                <div className="font-bold text-blue-700">{fmtMon(calc.cac)}</div>
+                <div className="text-[10px] font-bold text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
+                  CAC
+                </div>
+                <div className="text-base font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums mt-0.5">
+                  {fmtMon(calc.cac)}
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#E4E7EB] dark:border-border">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] rounded-md transition-colors"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-[#C9922A] hover:bg-[#a67721] text-white">
+              <Button
+                type="submit"
+                size="sm"
+                className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white rounded-md shadow-sm transition-colors"
+              >
                 Salvar Registro
               </Button>
             </div>

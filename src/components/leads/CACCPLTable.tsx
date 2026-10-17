@@ -205,13 +205,26 @@ export function CACCPLTable({
 
   if (tableData.length === 0) {
     return (
-      <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-0 border-x-0 border-[#C9922A]">
-        <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
-          <CardTitle className="text-lg font-semibold text-gray-900">CAC & CPL por Mês</CardTitle>
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+        <CardHeader className="py-4 px-5 border-b border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <div>
+              <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A]">
+                ANÁLISE DE EFICIÊNCIA
+              </span>
+              <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+                CAC & CPL por Mês
+              </CardTitle>
+            </div>
+            <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+              CPL = Investimento / Leads &nbsp;|&nbsp; CAC = Investimento / Fechamentos
+              &nbsp;|&nbsp; CAP = Investimento / Protocolos
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground py-4 text-center">
-            Nenhum dado encontrado para o período.
+        <CardContent className="p-6">
+          <div className="text-xs text-[#78818E] dark:text-muted-foreground py-4 text-center">
+            Nenhum dado encontrado para o período selecionado.
           </div>
         </CardContent>
       </Card>
@@ -219,72 +232,120 @@ export function CACCPLTable({
   }
 
   return (
-    <Card className="bg-card dark:bg-gray-800 shadow-md border-t-4 border-b-0 border-x-0 border-[#C9922A]">
-      <CardHeader className="rounded-t-lg p-4 flex flex-row items-center justify-center">
-        <CardTitle className="text-lg font-semibold text-gray-900">CAC & CPL por Mês</CardTitle>
+    <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+      <CardHeader className="py-4 px-5 border-b border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div>
+            <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A]">
+              ANÁLISE DE EFICIÊNCIA
+            </span>
+            <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+              CAC & CPL por Mês
+            </CardTitle>
+          </div>
+          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+            CPL = Investimento / Leads &nbsp;|&nbsp; CAC = Investimento / Fechamentos &nbsp;|&nbsp;
+            CAP = Investimento / Protocolos
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="pt-6">
-        <div className="overflow-x-auto rounded-b-lg">
-          <Table>
-            <TableHeader className="bg-gray-100">
-              <TableRow className="hover:bg-gray-100 border-none">
-                <TableHead className="text-sm font-semibold uppercase text-gray-700">MÊS</TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table className="text-xs min-w-[700px]">
+            <TableHeader className="bg-[#F5F6F8] dark:bg-muted/30">
+              <TableRow className="border-b border-[#E4E7EB] dark:border-border hover:bg-transparent">
+                <TableHead className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-4">
+                  MÊS
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   LEADS
                 </TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   FECHAMENTOS
                 </TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   DESCARTES
                 </TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   PROTOCOLOS
                 </TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   INVESTIMENTO
                 </TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   CPL
                 </TableHead>
-                <TableHead className="text-right text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
                   CAC
                 </TableHead>
-                <TableHead className="text-right whitespace-nowrap text-sm font-semibold uppercase text-gray-700">
+                <TableHead className="text-right whitespace-nowrap text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-4">
                   CAP
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
               {tableData.map((row) => (
-                <TableRow key={row.month} className="hover:bg-muted/50 text-sm font-bold">
-                  <TableCell className="font-bold">{row.month}</TableCell>
-                  <TableCell className="text-right text-[#5A9FD4]">{row.leads}</TableCell>
-                  <TableCell className="text-right text-[#52B86E]">{row.fechamentos}</TableCell>
-                  <TableCell className="text-right text-[#E84040]">{row.descartes}</TableCell>
-                  <TableCell className="text-right text-[#B07FD4]">{row.protocolos}</TableCell>
-                  <TableCell className="text-right text-gray-500">
+                <TableRow
+                  key={row.month}
+                  className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors"
+                >
+                  <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-4">
+                    {row.month}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-[#4A7FA5] tabular-nums py-2.5 px-3">
+                    {row.leads}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-2.5 px-3">
+                    {row.fechamentos}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-[#B4453C] dark:text-red-400 tabular-nums py-2.5 px-3">
+                    {row.descartes}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-[#7C5CBF] dark:text-purple-400 tabular-nums py-2.5 px-3">
+                    {row.protocolos}
+                  </TableCell>
+                  <TableCell className="text-right font-medium text-[#78818E] dark:text-muted-foreground tabular-nums py-2.5 px-3">
                     {fmtMon(row.investimento)}
                   </TableCell>
-                  <TableCell className="text-right text-gray-900">{fmtMon(row.cpl)}</TableCell>
-                  <TableCell className="text-right text-gray-900">{fmtMon(row.cac)}</TableCell>
-                  <TableCell className="text-right text-gray-900">{fmtMon(row.cap)}</TableCell>
+                  <TableCell className="text-right font-semibold text-[#252B34] dark:text-foreground tabular-nums py-2.5 px-3">
+                    {fmtMon(row.cpl)}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums py-2.5 px-3">
+                    {fmtMon(row.cac)}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-[#252B34] dark:text-foreground tabular-nums py-2.5 px-4">
+                    {fmtMon(row.cap)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter className="border-none bg-transparent">
-              <TableRow className="hover:bg-muted/50 bg-gray-100 border-t border-gray-200 text-gray-900 text-sm font-bold rounded-b-lg">
-                <TableCell className="rounded-bl-lg">TOTAL</TableCell>
-                <TableCell className="text-right">{totals.leads}</TableCell>
-                <TableCell className="text-right">{totals.fechamentos}</TableCell>
-                <TableCell className="text-right">{totals.descartes}</TableCell>
-                <TableCell className="text-right">{totals.protocolos}</TableCell>
-                <TableCell className="text-right text-gray-500">
+              <TableRow className="bg-[#FAF8F2] dark:bg-[#C9922A]/10 hover:bg-[#FAF8F2] dark:hover:bg-[#C9922A]/15 font-bold border-t-2 border-[#C9922A]/30 dark:border-[#C9922A]/50">
+                <TableCell className="text-xs uppercase text-[#C9922A] font-bold py-3 px-4">
+                  TOTAL
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#4A7FA5] tabular-nums py-3 px-3">
+                  {totals.leads}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-3 px-3">
+                  {totals.fechamentos}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#B4453C] dark:text-red-400 tabular-nums py-3 px-3">
+                  {totals.descartes}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#7C5CBF] dark:text-purple-400 tabular-nums py-3 px-3">
+                  {totals.protocolos}
+                </TableCell>
+                <TableCell className="text-right font-medium text-[#78818E] dark:text-muted-foreground tabular-nums py-3 px-3">
                   {fmtMon(totals.investimento)}
                 </TableCell>
-                <TableCell className="text-right text-gray-900">{fmtMon(totals.cpl)}</TableCell>
-                <TableCell className="text-right text-gray-900">{fmtMon(totals.cac)}</TableCell>
-                <TableCell className="text-right text-gray-900 rounded-br-lg">
+                <TableCell className="text-right font-bold text-[#252B34] dark:text-foreground tabular-nums py-3 px-3">
+                  {fmtMon(totals.cpl)}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums py-3 px-3">
+                  {fmtMon(totals.cac)}
+                </TableCell>
+                <TableCell className="text-right font-bold text-[#252B34] dark:text-foreground tabular-nums py-3 px-4">
                   {fmtMon(totals.cap)}
                 </TableCell>
               </TableRow>

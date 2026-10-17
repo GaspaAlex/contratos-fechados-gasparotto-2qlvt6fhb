@@ -74,8 +74,8 @@ export function DailyTable({
   const renderRow = (row: any, isTotal: boolean = false, groupLeads?: any[]) => {
     const calc = isTotal ? calculateLeadRow(aggregateLeads(groupLeads!)) : calculateLeadRow(row)
     const baseClass = isTotal
-      ? 'bg-muted/80 font-bold hover:bg-muted/80'
-      : 'hover:bg-muted/50 transition-colors bg-background'
+      ? 'bg-[#FAF8F2] dark:bg-[#C9922A]/10 font-bold hover:bg-[#FAF8F2] dark:hover:bg-[#C9922A]/15 border-t-2 border-[#C9922A]/30 dark:border-[#C9922A]/50'
+      : 'hover:bg-[#F5F6F8]/70 dark:hover:bg-muted/40 transition-colors bg-white dark:bg-card'
     const c = (v: any) => v
 
     const getContratosStats = (leadsList: any[], isTotalGroup: boolean) => {
@@ -127,75 +127,83 @@ export function DailyTable({
     const cStats = getContratosStats(isTotal ? groupLeads! : [row], isTotal)
 
     return (
-      <TableRow key={isTotal ? 'total' : row.id} className={baseClass}>
-        <TableCell className="text-center font-bold border-r">
+      <TableRow
+        key={isTotal ? 'total' : row.id}
+        className={cn(baseClass, 'border-b border-[#E4E7EB] dark:border-border')}
+      >
+        <TableCell
+          className={cn(
+            'text-center font-bold border-r border-[#E4E7EB] dark:border-border tabular-nums py-2.5',
+            isTotal ? 'text-[#C9922A] uppercase text-xs' : 'text-[#252B34] dark:text-foreground',
+          )}
+        >
           {isTotal ? 'TOTAL MÊS' : row.dia}
         </TableCell>
-        <TableCell className="text-center bg-blue-50/30 dark:bg-blue-900/10">
+        <TableCell className="text-center bg-[#4A7FA5]/5 dark:bg-[#4A7FA5]/10 tabular-nums py-2.5">
           {c(calc.google)}
         </TableCell>
-        <TableCell className="text-center bg-blue-50/30 dark:bg-blue-900/10">
+        <TableCell className="text-center bg-[#4A7FA5]/5 dark:bg-[#4A7FA5]/10 tabular-nums py-2.5">
           {c(calc.meta_ads)}
         </TableCell>
-        <TableCell className="text-center bg-blue-50/30 dark:bg-blue-900/10">
+        <TableCell className="text-center bg-[#4A7FA5]/5 dark:bg-[#4A7FA5]/10 tabular-nums py-2.5">
           {c(calc.particular)}
         </TableCell>
-        <TableCell className="text-center font-bold bg-blue-100/40 dark:bg-blue-900/20 border-r">
+        <TableCell className="text-center font-bold bg-[#4A7FA5]/10 dark:bg-[#4A7FA5]/20 text-[#4A7FA5] dark:text-sky-400 border-r border-[#E4E7EB] dark:border-border tabular-nums py-2.5">
           {c(calc.total_leads)}
         </TableCell>
 
-        <TableCell className="text-center bg-amber-50/30 dark:bg-amber-900/10 border-r font-medium">
+        <TableCell className="text-center bg-[#C77E1E]/5 dark:bg-[#C77E1E]/10 border-r border-[#E4E7EB] dark:border-border font-medium text-[#C77E1E] dark:text-amber-400 tabular-nums py-2.5">
           {c(calc.em_qualif)}
         </TableCell>
 
-        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+        <TableCell className="text-center bg-[#B4453C]/5 dark:bg-[#B4453C]/10 tabular-nums py-2.5">
           {c(calc.sem_qualidade)}
         </TableCell>
-        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+        <TableCell className="text-center bg-[#B4453C]/5 dark:bg-[#B4453C]/10 tabular-nums py-2.5">
           {c(calc.aposentado)}
         </TableCell>
-        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+        <TableCell className="text-center bg-[#B4453C]/5 dark:bg-[#B4453C]/10 tabular-nums py-2.5">
           {c(calc.contribuinte_carne)}
         </TableCell>
-        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+        <TableCell className="text-center bg-[#B4453C]/5 dark:bg-[#B4453C]/10 tabular-nums py-2.5">
           {c(calc.outros)}
         </TableCell>
-        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+        <TableCell className="text-center bg-[#B4453C]/5 dark:bg-[#B4453C]/10 tabular-nums py-2.5">
           {c(calc.sem_interesse)}
         </TableCell>
-        <TableCell className="text-center bg-red-50/30 dark:bg-red-900/10">
+        <TableCell className="text-center bg-[#B4453C]/5 dark:bg-[#B4453C]/10 tabular-nums py-2.5">
           {c(calc.engano)}
         </TableCell>
-        <TableCell className="text-center font-bold bg-red-100/40 dark:bg-red-900/20 border-r">
+        <TableCell className="text-center font-bold bg-[#B4453C]/10 dark:bg-[#B4453C]/20 border-r border-[#E4E7EB] dark:border-border text-[#B4453C] dark:text-red-400 tabular-nums py-2.5">
           {c(calc.total_desq)}
         </TableCell>
 
-        <TableCell className="text-center font-bold bg-green-100/40 dark:bg-green-900/20 border-r text-green-800 dark:text-green-400">
+        <TableCell className="text-center font-bold bg-[#3E8E5A]/10 dark:bg-[#3E8E5A]/20 border-r border-[#E4E7EB] dark:border-border text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-2.5">
           {c(calc.qualificados)}
         </TableCell>
 
-        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
+        <TableCell className="text-center bg-[#2B9A8C]/5 dark:bg-[#2B9A8C]/10 text-[#2B9A8C] dark:text-teal-400 font-medium tabular-nums py-2.5">
           {cStats.aux}
         </TableCell>
-        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
+        <TableCell className="text-center bg-[#2B9A8C]/5 dark:bg-[#2B9A8C]/10 text-[#2B9A8C] dark:text-teal-400 font-medium tabular-nums py-2.5">
           {cStats.der}
         </TableCell>
-        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
+        <TableCell className="text-center bg-[#2B9A8C]/5 dark:bg-[#2B9A8C]/10 text-[#2B9A8C] dark:text-teal-400 font-medium tabular-nums py-2.5">
           {cStats.ben}
         </TableCell>
-        <TableCell className="text-center font-bold bg-teal-100/40 dark:bg-teal-900/20 text-teal-900 dark:text-teal-300">
+        <TableCell className="text-center font-bold bg-[#2B9A8C]/15 dark:bg-[#2B9A8C]/25 text-[#1b7167] dark:text-teal-300 tabular-nums py-2.5">
           {cStats.total}
         </TableCell>
-        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium">
+        <TableCell className="text-center bg-[#2B9A8C]/5 dark:bg-[#2B9A8C]/10 text-[#2B9A8C] dark:text-teal-400 font-medium tabular-nums py-2.5">
           {cStats.direto}
         </TableCell>
-        <TableCell className="text-center bg-teal-50/30 dark:bg-teal-900/10 text-teal-800 dark:text-teal-400 font-medium border-r">
+        <TableCell className="text-center bg-[#2B9A8C]/5 dark:bg-[#2B9A8C]/10 text-[#2B9A8C] dark:text-teal-400 font-medium border-r border-[#E4E7EB] dark:border-border tabular-nums py-2.5">
           {cStats.fup}
         </TableCell>
 
         <TableCell
           className={cn(
-            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10',
+            'text-center font-bold tabular-nums py-2.5',
             colorConvGeral(calc.conv_geral),
           )}
         >
@@ -203,23 +211,20 @@ export function DailyTable({
         </TableCell>
         <TableCell
           className={cn(
-            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10',
+            'text-center font-bold tabular-nums py-2.5',
             colorConvQualif(calc.conv_qualif),
           )}
         >
           {fmtPct(calc.conv_qualif)}
         </TableCell>
         <TableCell
-          className={cn(
-            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10',
-            colorDesq(calc.desqual_pct),
-          )}
+          className={cn('text-center font-bold tabular-nums py-2.5', colorDesq(calc.desqual_pct))}
         >
           {fmtPct(calc.desqual_pct)}
         </TableCell>
         <TableCell
           className={cn(
-            'text-center font-bold bg-purple-50/30 dark:bg-purple-900/10 border-r',
+            'text-center font-bold border-r border-[#E4E7EB] dark:border-border tabular-nums py-2.5',
             colorFechFup(calc.pct_fech_via_fup),
           )}
         >
@@ -227,19 +232,19 @@ export function DailyTable({
         </TableCell>
 
         <TableCell
-          className="text-center bg-muted/10 truncate max-w-[150px]"
+          className="text-center text-[#78818E] dark:text-muted-foreground truncate max-w-[150px] py-2.5 px-3"
           title={calc.observacoes}
         >
-          {calc.observacoes}
+          {calc.observacoes || '—'}
         </TableCell>
 
-        <TableCell className="text-center whitespace-nowrap bg-muted/10">
+        <TableCell className="text-center whitespace-nowrap py-2.5 px-2">
           {!isTotal ? (
             <div className="flex items-center justify-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
+                className="h-7 w-7 text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
                   onEdit(row)
@@ -250,7 +255,7 @@ export function DailyTable({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                className="h-7 w-7 text-[#78818E] hover:text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation()
                   onDelete(row)
@@ -266,28 +271,27 @@ export function DailyTable({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar registros..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-background h-9"
-            />
-          </div>
+    <div className="space-y-3.5">
+      {/* Barra de Ações: Busca + Botão Registrar Dia no Padrão Grafite Premium 2.1 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-3 sm:p-3.5 shadow-sm">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#78818E] dark:text-muted-foreground" />
+          <Input
+            placeholder="Buscar registros por observação ou mês..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] h-9 text-xs"
+          />
         </div>
         <Button
           onClick={onAdd}
-          className="bg-[#C9922A] hover:bg-[#a67721] text-white shadow-sm h-9"
+          className="bg-[#C9922A] hover:bg-[#b58324] text-white shadow-sm h-9 px-4 text-xs font-semibold rounded-md transition-colors shrink-0"
         >
-          <Plus className="mr-2 h-4 w-4" /> Registrar Dia
+          <Plus className="mr-1.5 h-4 w-4" /> Registrar Dia
         </Button>
       </div>
 
-      <div className="border rounded-lg shadow-sm bg-card overflow-hidden">
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border shadow-sm bg-white dark:bg-card overflow-hidden">
         <div
           ref={ref}
           onMouseDown={onMouseDown}
@@ -298,102 +302,147 @@ export function DailyTable({
           className="overflow-x-auto select-none"
         >
           <Table className="w-[3000px] text-xs relative">
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-center border-r bg-muted/30 w-16">BASE</TableHead>
+            <TableHeader className="bg-[#F5F6F8] dark:bg-muted/30">
+              {/* Linha Superior com Grupos de Colunas */}
+              <TableRow className="border-b border-[#E4E7EB] dark:border-border hover:bg-transparent">
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border bg-[#F5F6F8] dark:bg-muted/30 w-16 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5">
+                  BASE
+                </TableHead>
                 <TableHead
                   colSpan={4}
-                  className="text-center border-r bg-blue-100/50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 font-bold"
+                  className="text-center border-r border-[#E4E7EB] dark:border-border bg-[#4A7FA5]/10 dark:bg-[#4A7FA5]/20 text-[#4A7FA5] dark:text-sky-300 font-bold text-[10px] uppercase tracking-wider py-2.5"
                 >
                   LEADS RECEBIDOS
                 </TableHead>
                 <TableHead
                   colSpan={1}
-                  className="text-center border-r bg-amber-100/50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 font-bold"
+                  className="text-center border-r border-[#E4E7EB] dark:border-border bg-[#C77E1E]/10 dark:bg-[#C77E1E]/20 text-[#C77E1E] dark:text-amber-300 font-bold text-[10px] uppercase tracking-wider py-2.5"
                 >
                   EM QUALIF.
                 </TableHead>
                 <TableHead
                   colSpan={7}
-                  className="text-center border-r bg-red-100/50 dark:bg-red-900/20 text-red-800 dark:text-red-400 font-bold"
+                  className="text-center border-r border-[#E4E7EB] dark:border-border bg-[#B4453C]/10 dark:bg-[#B4453C]/20 text-[#B4453C] dark:text-red-300 font-bold text-[10px] uppercase tracking-wider py-2.5"
                 >
                   DESQUALIFICADOS
                 </TableHead>
                 <TableHead
                   colSpan={1}
-                  className="text-center border-r bg-green-100/50 dark:bg-green-900/20 text-green-800 dark:text-green-400 font-bold"
+                  className="text-center border-r border-[#E4E7EB] dark:border-border bg-[#3E8E5A]/10 dark:bg-[#3E8E5A]/20 text-[#3E8E5A] dark:text-green-300 font-bold text-[10px] uppercase tracking-wider py-2.5"
                 >
                   QUALIFICADOS
                 </TableHead>
                 <TableHead
                   colSpan={6}
-                  className="text-center border-r bg-teal-100/50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-bold"
+                  className="text-center border-r border-[#E4E7EB] dark:border-border bg-[#2B9A8C]/10 dark:bg-[#2B9A8C]/20 text-[#1b7167] dark:text-teal-300 font-bold text-[10px] uppercase tracking-wider py-2.5"
                 >
                   CONTRATOS
                 </TableHead>
                 <TableHead
                   colSpan={6}
-                  className="text-center bg-purple-100/50 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 font-bold"
+                  className="text-center bg-[#7C5CBF]/10 dark:bg-[#7C5CBF]/20 text-[#7C5CBF] dark:text-purple-300 font-bold text-[10px] uppercase tracking-wider py-2.5"
                 >
                   INDICADORES
                 </TableHead>
               </TableRow>
-              <TableRow className="bg-muted/10 hover:bg-muted/10">
-                <TableHead className="text-center border-r w-16">Dia</TableHead>
 
-                <TableHead className="text-center w-20">Google Ads</TableHead>
-                <TableHead className="text-center w-20">Meta Ads</TableHead>
-                <TableHead className="text-center w-20">Partic.</TableHead>
-                <TableHead className="text-center border-r w-20 font-bold">Total</TableHead>
-
-                <TableHead className="text-center border-r w-24">Em Qualif</TableHead>
-
-                <TableHead className="text-center w-24">S/ Qual Seg.</TableHead>
-                <TableHead className="text-center w-24">Aposentado</TableHead>
-                <TableHead className="text-center w-24">Carnê</TableHead>
-                <TableHead className="text-center w-20">Outros</TableHead>
-                <TableHead className="text-center w-24">Sem Int.</TableHead>
-                <TableHead className="text-center w-24">Engano</TableHead>
-                <TableHead className="text-center border-r w-24 font-bold">Total Desq.</TableHead>
-
-                <TableHead className="text-center border-r w-24 font-bold">Qualificados</TableHead>
-
-                <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
-                  Aux. Acid.
+              {/* Linha Inferior com Nomes de Coluna */}
+              <TableRow className="border-b border-[#E4E7EB] dark:border-border hover:bg-transparent bg-[#FAF8F2]/60 dark:bg-muted/20">
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-16 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Dia
                 </TableHead>
-                <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
-                  DER
+
+                <TableHead className="text-center w-20 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Google Ads
                 </TableHead>
-                <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
-                  Ben. Análise
+                <TableHead className="text-center w-20 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Meta Ads
                 </TableHead>
-                <TableHead className="text-center w-24 font-bold bg-teal-50 dark:bg-teal-900/20 text-teal-900 dark:text-teal-300">
+                <TableHead className="text-center w-20 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Partic.
+                </TableHead>
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-20 font-bold text-[10px] uppercase tracking-wider text-[#4A7FA5] dark:text-sky-300 py-2">
                   Total
                 </TableHead>
-                <TableHead className="text-center w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
+
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-24 text-[10px] font-bold uppercase tracking-wider text-[#C77E1E] dark:text-amber-300 py-2">
+                  Em Qualif
+                </TableHead>
+
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  S/ Qual Seg.
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Aposentado
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Carnê
+                </TableHead>
+                <TableHead className="text-center w-20 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Outros
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Sem Int.
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Engano
+                </TableHead>
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-24 font-bold text-[10px] uppercase tracking-wider text-[#B4453C] dark:text-red-300 py-2">
+                  Total Desq.
+                </TableHead>
+
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-24 font-bold text-[10px] uppercase tracking-wider text-[#3E8E5A] dark:text-green-300 py-2">
+                  Qualificados
+                </TableHead>
+
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#2B9A8C] dark:text-teal-300 py-2">
+                  Aux. Acid.
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#2B9A8C] dark:text-teal-300 py-2">
+                  DER
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#2B9A8C] dark:text-teal-300 py-2">
+                  Ben. Análise
+                </TableHead>
+                <TableHead className="text-center w-24 font-bold text-[10px] uppercase tracking-wider text-[#1b7167] dark:text-teal-200 py-2">
+                  Total
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#2B9A8C] dark:text-teal-300 py-2">
                   DIRETO
                 </TableHead>
-                <TableHead className="text-center border-r w-24 bg-teal-50 dark:bg-teal-900/20 text-teal-800 dark:text-teal-400 font-medium">
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-24 text-[10px] font-bold uppercase tracking-wider text-[#2B9A8C] dark:text-teal-300 py-2">
                   FUP
                 </TableHead>
 
-                <TableHead className="text-center w-24">Conv. Geral %</TableHead>
-                <TableHead className="text-center w-24">Conv. Qualif. %</TableHead>
-                <TableHead className="text-center w-24">Desqual. %</TableHead>
-                <TableHead className="text-center border-r w-24">Fech. FUP %</TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Conv. Geral %
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Conv. Qualif. %
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Desqual. %
+                </TableHead>
+                <TableHead className="text-center border-r border-[#E4E7EB] dark:border-border w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Fech. FUP %
+                </TableHead>
 
-                <TableHead className="text-center w-32">Obs.</TableHead>
-                <TableHead className="text-center w-24">Ações</TableHead>
+                <TableHead className="text-center w-32 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Obs.
+                </TableHead>
+                <TableHead className="text-center w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2">
+                  Ações
+                </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
               {sortedMonths.map((m) => (
                 <React.Fragment key={m}>
                   {((startMonth && endMonth) || month === 'Todos') && (
-                    <TableRow className="bg-muted/60 hover:bg-muted/60">
+                    <TableRow className="bg-[#22262E] text-white hover:bg-[#22262E]">
                       <TableCell
                         colSpan={27}
-                        className="py-2 px-4 font-bold text-muted-foreground uppercase text-sm tracking-wider"
+                        className="py-2.5 px-4 font-bold text-[#D9A94A] uppercase text-xs tracking-wider"
                       >
                         {m}
                       </TableCell>
@@ -409,7 +458,7 @@ export function DailyTable({
                 <TableRow>
                   <TableCell
                     colSpan={27}
-                    className="text-center py-12 text-muted-foreground bg-muted/5"
+                    className="text-center py-12 text-xs text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8]/30 dark:bg-card/40"
                   >
                     Nenhum registro encontrado.
                   </TableCell>

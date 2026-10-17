@@ -154,28 +154,34 @@ export function SummaryCards({
 
   const getConvGeralStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v > 0.08) return { text: 'Excelente', color: 'text-green-600 dark:text-green-500' }
-    if (v >= 0.06) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
-    return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
+    if (v > 0.08)
+      return { text: 'Excelente', color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20' }
+    if (v >= 0.06)
+      return { text: 'Na meta', color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20' }
+    return { text: 'Abaixo da meta', color: 'text-[#B4453C] bg-[#B4453C]/10 border-[#B4453C]/20' }
   }
 
   const getConvQualifStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v > 0.12) return { text: 'Excelente', color: 'text-green-600 dark:text-green-500' }
-    if (v >= 0.1) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
-    return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
+    if (v > 0.12)
+      return { text: 'Excelente', color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20' }
+    if (v >= 0.1)
+      return { text: 'Na meta', color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20' }
+    return { text: 'Abaixo da meta', color: 'text-[#B4453C] bg-[#B4453C]/10 border-[#B4453C]/20' }
   }
 
   const getDesqStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v <= 0.3) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
-    return { text: 'Acima do limite', color: 'text-red-600 dark:text-red-500' }
+    if (v <= 0.3)
+      return { text: 'Na meta', color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20' }
+    return { text: 'Acima do limite', color: 'text-[#B4453C] bg-[#B4453C]/10 border-[#B4453C]/20' }
   }
 
   const getFupStatus = (v: number | null) => {
     if (v === null || isNaN(v)) return null
-    if (v >= 0.4) return { text: 'Na meta', color: 'text-green-600 dark:text-green-500' }
-    return { text: 'Abaixo da meta', color: 'text-red-600 dark:text-red-500' }
+    if (v >= 0.4)
+      return { text: 'Na meta', color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20' }
+    return { text: 'Abaixo da meta', color: 'text-[#B4453C] bg-[#B4453C]/10 border-[#B4453C]/20' }
   }
 
   const cGeral = getConvGeralStatus(conv_geral)
@@ -198,64 +204,119 @@ export function SummaryCards({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <Card className="border-t-4 border-t-blue-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Total Leads
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
+      {/* 1. TOTAL LEADS — Card Executivo Grafite Premium #22262E */}
+      <Card className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#9EA7B6]">
+              Total Leads
+            </span>
+            <div className="h-2 w-2 rounded-full bg-[#D9A94A]" />
           </div>
-          <div className="text-3xl font-black mt-1 mb-1">{agg.total_leads}</div>
-          <div className="text-[11px] text-muted-foreground font-medium">{monthLabel}</div>
-        </CardContent>
-      </Card>
-      <Card className="border-t-4 border-t-green-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Qualificados
+          <div className="my-1.5">
+            <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#D9A94A] tabular-nums">
+              {agg.total_leads}
+            </div>
           </div>
-          <div className="text-3xl font-black mt-1 mb-1">{totalQualificados}</div>
-          <div className="text-[11px] text-muted-foreground font-medium">leads válidos</div>
-        </CardContent>
-      </Card>
-      <Card className="border-t-4 border-t-red-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Desqualificados
+          <div className="text-[11px] text-[#A5ADB9] font-medium truncate" title={monthLabel}>
+            {monthLabel}
           </div>
-          <div className="text-3xl font-black mt-1 mb-1 text-red-600 dark:text-red-500">
-            {total_desq}
-          </div>
-          <div className="text-[11px] text-muted-foreground font-medium">fora do perfil</div>
-        </CardContent>
-      </Card>
-      <Card className="border-t-4 border-t-amber-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Total Fechamentos
-          </div>
-          <div className="text-3xl font-black mt-1 mb-1 text-amber-600 dark:text-amber-500">
-            {total_fechados}
-          </div>
-          <div className="text-[11px] text-muted-foreground font-medium">direto + FUP</div>
         </CardContent>
       </Card>
 
-      <Card className="border-t-2 border-t-purple-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Conv. Geral
+      {/* 2. QUALIFICADOS */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Qualificados
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase text-[#3E8E5A] bg-[#3E8E5A]/10 border border-[#3E8E5A]/20">
+              VÁLIDOS
+            </span>
           </div>
-          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvGeral(conv_geral))}>
-            {fmtPct(conv_geral)}
+          <div className="my-1.5">
+            <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#3E8E5A] dark:text-[#52B86E] tabular-nums">
+              {totalQualificados}
+            </div>
           </div>
-          <div className="flex justify-between items-center mt-auto">
-            <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 6%</span>
+          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+            leads com perfil atendido
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. DESQUALIFICADOS */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Desqualificados
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase text-[#B4453C] bg-[#B4453C]/10 border border-[#B4453C]/20">
+              FILTRADOS
+            </span>
+          </div>
+          <div className="my-1.5">
+            <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#B4453C] dark:text-red-400 tabular-nums">
+              {total_desq}
+            </div>
+          </div>
+          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+            fora do perfil de atendimento
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. TOTAL FECHAMENTOS */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Total Fechamentos
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase text-[#C9922A] bg-[#C9922A]/10 border border-[#C9922A]/20">
+              CONTRATOS
+            </span>
+          </div>
+          <div className="my-1.5">
+            <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#C9922A] dark:text-[#D9A94A] tabular-nums">
+              {total_fechados}
+            </div>
+          </div>
+          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+            fechamentos direto + FUP
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. CONVERSÃO GERAL */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Conv. Geral
+            </span>
+            <span className="text-[10px] font-medium text-[#78818E] dark:text-muted-foreground">
+              Meta ≥ 6%
+            </span>
+          </div>
+          <div className="my-1.5">
+            <div
+              className={cn(
+                'text-2xl sm:text-3xl font-bold tracking-tight tabular-nums',
+                colorConvGeral(conv_geral),
+              )}
+            >
+              {fmtPct(conv_geral)}
+            </div>
+          </div>
+          <div className="flex justify-between items-center pt-1 border-t border-[#E4E7EB]/60 dark:border-border/60">
+            <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">Status</span>
             {cGeral && (
               <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
-                  cGeral.color,
-                )}
+                className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', cGeral.color)}
               >
                 {cGeral.text}
               </span>
@@ -263,22 +324,33 @@ export function SummaryCards({
           </div>
         </CardContent>
       </Card>
-      <Card className="border-t-2 border-t-purple-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Conv. Qualif.
+
+      {/* 6. CONVERSÃO QUALIFICADOS */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Conv. Qualif.
+            </span>
+            <span className="text-[10px] font-medium text-[#78818E] dark:text-muted-foreground">
+              Meta ≥ 10%
+            </span>
           </div>
-          <div className={cn('text-2xl font-black mt-1 mb-1', colorConvQualif(conv_qualif))}>
-            {fmtPct(conv_qualif)}
+          <div className="my-1.5">
+            <div
+              className={cn(
+                'text-2xl sm:text-3xl font-bold tracking-tight tabular-nums',
+                colorConvQualif(conv_qualif),
+              )}
+            >
+              {fmtPct(conv_qualif)}
+            </div>
           </div>
-          <div className="flex justify-between items-center mt-auto">
-            <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 10%</span>
+          <div className="flex justify-between items-center pt-1 border-t border-[#E4E7EB]/60 dark:border-border/60">
+            <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">Status</span>
             {cQualif && (
               <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
-                  cQualif.color,
-                )}
+                className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', cQualif.color)}
               >
                 {cQualif.text}
               </span>
@@ -286,22 +358,33 @@ export function SummaryCards({
           </div>
         </CardContent>
       </Card>
-      <Card className="border-t-2 border-t-red-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Desqualificação %
+
+      {/* 7. DESQUALIFICAÇÃO % */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Desqualificação %
+            </span>
+            <span className="text-[10px] font-medium text-[#78818E] dark:text-muted-foreground">
+              Limite ≤ 30%
+            </span>
           </div>
-          <div className={cn('text-2xl font-black mt-1 mb-1', colorDesq(desqual_pct))}>
-            {fmtPct(desqual_pct)}
+          <div className="my-1.5">
+            <div
+              className={cn(
+                'text-2xl sm:text-3xl font-bold tracking-tight tabular-nums',
+                colorDesq(desqual_pct),
+              )}
+            >
+              {fmtPct(desqual_pct)}
+            </div>
           </div>
-          <div className="flex justify-between items-center mt-auto">
-            <span className="text-[11px] text-muted-foreground font-medium">Limite ≤ 30%</span>
+          <div className="flex justify-between items-center pt-1 border-t border-[#E4E7EB]/60 dark:border-border/60">
+            <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">Status</span>
             {cDesq && (
               <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
-                  cDesq.color,
-                )}
+                className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', cDesq.color)}
               >
                 {cDesq.text}
               </span>
@@ -309,27 +392,37 @@ export function SummaryCards({
           </div>
         </CardContent>
       </Card>
-      <Card className="border-t-2 border-t-amber-500 shadow-sm">
-        <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-          <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            FECH. FUP
+
+      {/* 8. FECH. FUP */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between min-h-[120px]">
+        <CardContent className="p-4 sm:p-4.5 flex flex-col justify-between h-full">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+              Fech. FUP
+            </span>
+            <span className="text-[10px] font-medium text-[#78818E] dark:text-muted-foreground">
+              Meta ≥ 40%
+            </span>
           </div>
-          <div
-            className={cn(
-              'text-2xl font-black mt-1 mb-1',
-              cFup ? cFup.color : 'text-amber-600 dark:text-amber-500',
-            )}
-          >
-            {fmtPct(pct_fech_via_fup)}
+          <div className="my-1.5">
+            <div
+              className={cn(
+                'text-2xl sm:text-3xl font-bold tracking-tight tabular-nums',
+                cFup
+                  ? cFup.text === 'Na meta'
+                    ? 'text-[#3E8E5A] dark:text-[#52B86E]'
+                    : 'text-[#B4453C] dark:text-red-400'
+                  : 'text-[#C9922A] dark:text-[#D9A94A]',
+              )}
+            >
+              {fmtPct(pct_fech_via_fup)}
+            </div>
           </div>
-          <div className="flex justify-between items-center mt-auto">
-            <span className="text-[11px] text-muted-foreground font-medium">Meta ≥ 40%</span>
+          <div className="flex justify-between items-center pt-1 border-t border-[#E4E7EB]/60 dark:border-border/60">
+            <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">Status</span>
             {cFup && (
               <span
-                className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted/50',
-                  cFup.color,
-                )}
+                className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', cFup.color)}
               >
                 {cFup.text}
               </span>
@@ -343,17 +436,17 @@ export function SummaryCards({
 
 const getLocalCacStatus = (v: number | null) => {
   if (v === null || isNaN(v))
-    return { text: '-', color: 'text-muted-foreground border-transparent' }
+    return { text: '-', color: 'text-[#78818E] border-transparent bg-transparent' }
   if (v <= 250)
     return {
       text: '✓ Meta atingida',
       color:
-        'text-green-700 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/30 dark:border-green-800/50',
+        'text-[#3E8E5A] bg-[#3E8E5A]/10 border-[#3E8E5A]/20 dark:text-[#52B86E] dark:bg-[#3E8E5A]/20 dark:border-[#3E8E5A]/40',
     }
   return {
     text: '✗ Acima do ideal',
     color:
-      'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/30 dark:border-red-800/50',
+      'text-[#B4453C] bg-[#B4453C]/10 border-[#B4453C]/20 dark:text-red-400 dark:bg-[#B4453C]/20 dark:border-[#B4453C]/40',
   }
 }
 
@@ -415,27 +508,50 @@ export function CACCPLTable({
   const isMultiMonth = (startMonth && endMonth) || month === 'Todos'
 
   return (
-    <Card className="shadow-sm h-full flex flex-col">
-      <CardHeader className="pb-3 border-b">
-        <CardTitle className="text-base font-bold text-foreground">CAC & CPL por Mês</CardTitle>
-        <div className="text-xs text-muted-foreground mt-1">
-          CPL = Investimento / Total Leads | CAC = Investimento / Fechamentos
+    <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm h-full flex flex-col overflow-hidden">
+      <CardHeader className="py-4 px-5 border-b border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div>
+            <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A]">
+              ANÁLISE DE EFICIÊNCIA
+            </span>
+            <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+              CAC & CPL por Mês
+            </CardTitle>
+          </div>
+          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+            CPL = Investimento / Leads &nbsp;|&nbsp; CAC = Investimento / Fechamentos
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-x-auto">
-        <Table className="text-sm min-w-[600px]">
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="w-24">MÊS</TableHead>
-              <TableHead className="text-right">INVESTIMENTO</TableHead>
-              <TableHead className="text-right">TOTAL LEADS</TableHead>
-              <TableHead className="text-right">FECHAMENTOS</TableHead>
-              <TableHead className="text-right">CPL (R$)</TableHead>
-              <TableHead className="text-right">CAC (R$)</TableHead>
-              <TableHead className="text-center w-36">STATUS CAC</TableHead>
+        <Table className="text-xs min-w-[650px]">
+          <TableHeader className="bg-[#F5F6F8] dark:bg-muted/30">
+            <TableRow className="border-b border-[#E4E7EB] dark:border-border hover:bg-transparent">
+              <TableHead className="w-24 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-4">
+                MÊS
+              </TableHead>
+              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                INVESTIMENTO
+              </TableHead>
+              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                TOTAL LEADS
+              </TableHead>
+              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                FECHAMENTOS
+              </TableHead>
+              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                CPL (R$)
+              </TableHead>
+              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                CAC (R$)
+              </TableHead>
+              <TableHead className="text-center w-36 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                STATUS CAC
+              </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
             {isMultiMonth
               ? displayMonths.map((m) => {
                   const mLeads = filteredLeads.filter(
@@ -447,22 +563,33 @@ export function CACCPLTable({
                   agg.cac = agg.total_fechados > 0 ? agg.investimento / agg.total_fechados : null
                   const cacSt = getLocalCacStatus(agg.cac)
                   return (
-                    <TableRow key={m}>
-                      <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                    <TableRow
+                      key={m}
+                      className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors"
+                    >
+                      <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-4">
                         {(m || '').substring(0, 3)}
                       </TableCell>
-                      <TableCell className="text-right">{fmtMon(agg.investimento)}</TableCell>
-                      <TableCell className="text-right">{agg.total_leads}</TableCell>
-                      <TableCell className="text-right">{agg.total_fechados}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">
+                      <TableCell className="text-right font-medium text-[#252B34] dark:text-foreground tabular-nums py-2.5 px-3">
+                        {fmtMon(agg.investimento)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-[#4A7FA5] tabular-nums py-2.5 px-3">
+                        {agg.total_leads}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-2.5 px-3">
+                        {agg.total_fechados}
+                      </TableCell>
+                      <TableCell className="text-right text-[#78818E] dark:text-muted-foreground tabular-nums py-2.5 px-3">
                         {fmtMon(agg.cpl)}
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{fmtMon(agg.cac)}</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-right font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums py-2.5 px-3">
+                        {fmtMon(agg.cac)}
+                      </TableCell>
+                      <TableCell className="text-center py-2.5 px-3">
                         {agg.cac !== null && (
                           <div
                             className={cn(
-                              'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                              'inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded border whitespace-nowrap',
                               cacSt.color,
                             )}
                           >
@@ -478,24 +605,30 @@ export function CACCPLTable({
                   (() => {
                     const cacSt = getLocalCacStatus(aggAno.cac)
                     return (
-                      <TableRow>
-                        <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                      <TableRow className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-4">
                           {(month || '').substring(0, 3)}
                         </TableCell>
-                        <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
-                        <TableCell className="text-right">{aggAno.total_leads}</TableCell>
-                        <TableCell className="text-right">{aggAno.total_fechados}</TableCell>
-                        <TableCell className="text-right text-muted-foreground">
+                        <TableCell className="text-right font-medium text-[#252B34] dark:text-foreground tabular-nums py-2.5 px-3">
+                          {fmtMon(aggAno.investimento)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-[#4A7FA5] tabular-nums py-2.5 px-3">
+                          {aggAno.total_leads}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-2.5 px-3">
+                          {aggAno.total_fechados}
+                        </TableCell>
+                        <TableCell className="text-right text-[#78818E] dark:text-muted-foreground tabular-nums py-2.5 px-3">
                           {fmtMon(aggAno.cpl)}
                         </TableCell>
-                        <TableCell className="text-right font-semibold">
+                        <TableCell className="text-right font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums py-2.5 px-3">
                           {fmtMon(aggAno.cac)}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-2.5 px-3">
                           {aggAno.cac !== null && (
                             <div
                               className={cn(
-                                'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                                'inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded border whitespace-nowrap',
                                 cacSt.color,
                               )}
                             >
@@ -510,24 +643,30 @@ export function CACCPLTable({
                   (() => {
                     const cacSt = getLocalCacStatus(aggAno.cac)
                     return (
-                      <TableRow>
-                        <TableCell className="font-medium text-xs uppercase text-muted-foreground">
+                      <TableRow className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-4">
                           Dia {day} de {(month || '').substring(0, 3)} {year}
                         </TableCell>
-                        <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
-                        <TableCell className="text-right">{aggAno.total_leads}</TableCell>
-                        <TableCell className="text-right">{aggAno.total_fechados}</TableCell>
-                        <TableCell className="text-right text-muted-foreground">
+                        <TableCell className="text-right font-medium text-[#252B34] dark:text-foreground tabular-nums py-2.5 px-3">
+                          {fmtMon(aggAno.investimento)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-[#4A7FA5] tabular-nums py-2.5 px-3">
+                          {aggAno.total_leads}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-2.5 px-3">
+                          {aggAno.total_fechados}
+                        </TableCell>
+                        <TableCell className="text-right text-[#78818E] dark:text-muted-foreground tabular-nums py-2.5 px-3">
                           {fmtMon(aggAno.cpl)}
                         </TableCell>
-                        <TableCell className="text-right font-semibold">
+                        <TableCell className="text-right font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums py-2.5 px-3">
                           {fmtMon(aggAno.cac)}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-2.5 px-3">
                           {aggAno.cac !== null && (
                             <div
                               className={cn(
-                                'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap',
+                                'inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded border whitespace-nowrap',
                                 cacSt.color,
                               )}
                             >
@@ -543,18 +682,30 @@ export function CACCPLTable({
               (() => {
                 const cacSt = getLocalCacStatus(aggAno.cac)
                 return (
-                  <TableRow className="bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-50/80 dark:hover:bg-amber-900/30 font-bold border-t-2 border-t-amber-200 dark:border-t-amber-800/50">
-                    <TableCell>TOTAL</TableCell>
-                    <TableCell className="text-right">{fmtMon(aggAno.investimento)}</TableCell>
-                    <TableCell className="text-right">{aggAno.total_leads}</TableCell>
-                    <TableCell className="text-right">{aggAno.total_fechados}</TableCell>
-                    <TableCell className="text-right">{fmtMon(aggAno.cpl)}</TableCell>
-                    <TableCell className="text-right">{fmtMon(aggAno.cac)}</TableCell>
-                    <TableCell className="text-center">
+                  <TableRow className="bg-[#FAF8F2] dark:bg-[#C9922A]/10 hover:bg-[#FAF8F2] dark:hover:bg-[#C9922A]/15 font-bold border-t-2 border-[#C9922A]/30 dark:border-[#C9922A]/50">
+                    <TableCell className="text-xs uppercase text-[#C9922A] font-bold py-3 px-4">
+                      TOTAL
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-[#252B34] dark:text-foreground tabular-nums py-3 px-3">
+                      {fmtMon(aggAno.investimento)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-[#4A7FA5] tabular-nums py-3 px-3">
+                      {aggAno.total_leads}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-[#3E8E5A] dark:text-[#52B86E] tabular-nums py-3 px-3">
+                      {aggAno.total_fechados}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-[#78818E] dark:text-muted-foreground tabular-nums py-3 px-3">
+                      {fmtMon(aggAno.cpl)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-[#C9922A] dark:text-[#D9A94A] tabular-nums py-3 px-3">
+                      {fmtMon(aggAno.cac)}
+                    </TableCell>
+                    <TableCell className="text-center py-3 px-3">
                       {aggAno.cac !== null && (
                         <div
                           className={cn(
-                            'px-2 py-0.5 text-[10px] rounded-sm border whitespace-nowrap font-bold',
+                            'inline-flex items-center px-2.5 py-0.5 text-[10px] rounded border whitespace-nowrap font-bold',
                             cacSt.color,
                           )}
                         >
@@ -567,8 +718,11 @@ export function CACCPLTable({
               })()}
             {filteredLeads.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                  Nenhum dado encontrado
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-xs text-[#78818E] dark:text-muted-foreground"
+                >
+                  Nenhum dado encontrado para o período selecionado.
                 </TableCell>
               </TableRow>
             )}
@@ -614,65 +768,99 @@ export function DisqualificationAnalysis({
   const maxReason = Math.max(...reasons.map((r) => r.value), 1)
 
   return (
-    <Card className="shadow-sm h-full flex flex-col">
-      <CardHeader className="pb-3 border-b">
-        <CardTitle className="text-base font-bold text-foreground">
-          Motivos de Desqualificação
-        </CardTitle>
-        <div className="text-xs text-muted-foreground mt-1">
-          Análise de proporção e quebra mensal
-        </div>
-      </CardHeader>
-      <CardContent className="p-0 flex-1 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x">
-        <div className="p-4 space-y-5 md:w-1/3 flex flex-col justify-center">
-          {reasons.map((r) => (
-            <div key={r.label}>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="font-semibold text-muted-foreground uppercase tracking-wider">
-                  {r.label}
-                </span>
-                <span className="font-bold">
-                  {r.value}{' '}
-                  <span className="text-muted-foreground font-normal ml-1">
-                    ({aggAno.total_desq > 0 ? ((r.value / aggAno.total_desq) * 100).toFixed(1) : 0}
-                    %)
-                  </span>
-                </span>
-              </div>
-              <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                  style={{ width: `${(r.value / maxReason) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-          <div className="pt-4 border-t mt-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-bold uppercase text-muted-foreground">
-                TOTAL DESQUALIFICADOS
-              </span>
-              <span className="text-xl font-black text-red-600 dark:text-red-500">
-                {aggAno.total_desq}
-              </span>
-            </div>
+    <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm h-full flex flex-col overflow-hidden">
+      <CardHeader className="py-4 px-5 border-b border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div>
+            <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#B4453C]">
+              CONTROLE DE QUALIDADE
+            </span>
+            <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+              Motivos de Desqualificação
+            </CardTitle>
+          </div>
+          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-medium">
+            Análise de proporção e distribuição mensal por motivo
           </div>
         </div>
-        <div className="p-0 flex-1 overflow-x-auto">
-          <Table className="text-xs min-w-[600px]">
-            <TableHeader className="bg-muted/30">
-              <TableRow>
-                <TableHead className="w-20">MÊS</TableHead>
-                <TableHead className="text-right">S/QUAL</TableHead>
-                <TableHead className="text-right">APOSEN.</TableHead>
-                <TableHead className="text-right">CARNÊ</TableHead>
-                <TableHead className="text-right">OUTROS</TableHead>
-                <TableHead className="text-right">SEM INT.</TableHead>
-                <TableHead className="text-right">ENGANO</TableHead>
-                <TableHead className="text-right font-bold">TOTAL</TableHead>
+      </CardHeader>
+      <CardContent className="p-0 flex-1 flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-[#E4E7EB] dark:divide-border">
+        {/* Painel Esquerdo: Barras de proporção */}
+        <div className="p-5 lg:w-[38%] flex flex-col justify-between space-y-4 bg-white dark:bg-card">
+          <div className="space-y-3.5">
+            {reasons.map((r) => {
+              const pct = aggAno.total_desq > 0 ? (r.value / aggAno.total_desq) * 100 : 0
+              return (
+                <div key={r.label} className="space-y-1.5">
+                  <div className="flex justify-between items-baseline text-xs">
+                    <span className="font-semibold text-[#252B34] dark:text-foreground text-[11px] uppercase tracking-wider">
+                      {r.label}
+                    </span>
+                    <span className="text-xs font-bold text-[#252B34] dark:text-foreground tabular-nums">
+                      {r.value}{' '}
+                      <span className="text-[#78818E] dark:text-muted-foreground font-medium text-[11px] ml-1">
+                        ({pct.toFixed(1)}%)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-[#F5F6F8] dark:bg-muted/40 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#C9922A] rounded-full transition-all duration-500"
+                      style={{ width: `${(r.value / maxReason) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="pt-4 border-t border-[#E4E7EB] dark:border-border mt-4 flex justify-between items-center bg-[#FAF8F2] dark:bg-[#C9922A]/10 p-3 rounded-lg border border-[#E8DFCE] dark:border-[#C9922A]/20">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground block">
+                TOTAL DESQUALIFICADOS
+              </span>
+              <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">
+                Soma de todos os motivos
+              </span>
+            </div>
+            <span className="text-2xl font-bold text-[#B4453C] dark:text-red-400 tabular-nums">
+              {aggAno.total_desq}
+            </span>
+          </div>
+        </div>
+
+        {/* Painel Direito: Tabela por Mês */}
+        <div className="p-0 flex-1 overflow-x-auto bg-white dark:bg-card">
+          <Table className="text-xs min-w-[560px]">
+            <TableHeader className="bg-[#F5F6F8] dark:bg-muted/30">
+              <TableRow className="border-b border-[#E4E7EB] dark:border-border hover:bg-transparent">
+                <TableHead className="w-20 text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-3">
+                  MÊS
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-2">
+                  S/QUAL
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-2">
+                  APOSEN.
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-2">
+                  CARNÊ
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-2">
+                  OUTROS
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-2">
+                  SEM INT.
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground py-2.5 px-2">
+                  ENGANO
+                </TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-[#B4453C] dark:text-red-400 py-2.5 px-3">
+                  TOTAL
+                </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
               {isMultiMonth
                 ? displayMonths.map((m) => {
                     const mLeads = filteredLeads.filter(
@@ -681,17 +869,32 @@ export function DisqualificationAnalysis({
                     if (mLeads.length === 0) return null
                     const agg = calculateLeadRow(aggregateLeads(mLeads, year, campaign))
                     return (
-                      <TableRow key={m}>
-                        <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                      <TableRow
+                        key={m}
+                        className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors"
+                      >
+                        <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-3">
                           {(m || '').substring(0, 3)}
                         </TableCell>
-                        <TableCell className="text-right">{agg.sem_qualidade}</TableCell>
-                        <TableCell className="text-right">{agg.aposentado}</TableCell>
-                        <TableCell className="text-right">{agg.contribuinte_carne}</TableCell>
-                        <TableCell className="text-right">{agg.outros}</TableCell>
-                        <TableCell className="text-right">{agg.sem_interesse}</TableCell>
-                        <TableCell className="text-right">{agg.engano}</TableCell>
-                        <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {agg.sem_qualidade}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {agg.aposentado}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {agg.contribuinte_carne}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {agg.outros}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {agg.sem_interesse}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {agg.engano}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-[#B4453C] dark:text-red-400 tabular-nums py-2.5 px-3">
                           {agg.total_desq}
                         </TableCell>
                       </TableRow>
@@ -699,47 +902,85 @@ export function DisqualificationAnalysis({
                   })
                 : day === 'Todos'
                   ? filteredLeads.length > 0 && (
-                      <TableRow>
-                        <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                      <TableRow className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-3">
                           {(month || '').substring(0, 3)}
                         </TableCell>
-                        <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
-                        <TableCell className="text-right">{aggAno.aposentado}</TableCell>
-                        <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
-                        <TableCell className="text-right">{aggAno.outros}</TableCell>
-                        <TableCell className="text-right">{aggAno.sem_interesse}</TableCell>
-                        <TableCell className="text-right">{aggAno.engano}</TableCell>
-                        <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.sem_qualidade}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.aposentado}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.contribuinte_carne}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.outros}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.sem_interesse}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.engano}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-[#B4453C] dark:text-red-400 tabular-nums py-2.5 px-3">
                           {aggAno.total_desq}
                         </TableCell>
                       </TableRow>
                     )
                   : filteredLeads.length > 0 && (
-                      <TableRow>
-                        <TableCell className="font-medium text-[10px] uppercase text-muted-foreground">
+                      <TableRow className="hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-semibold text-xs uppercase text-[#252B34] dark:text-foreground py-2.5 px-3">
                           Dia {day}
                         </TableCell>
-                        <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
-                        <TableCell className="text-right">{aggAno.aposentado}</TableCell>
-                        <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
-                        <TableCell className="text-right">{aggAno.outros}</TableCell>
-                        <TableCell className="text-right">{aggAno.sem_interesse}</TableCell>
-                        <TableCell className="text-right">{aggAno.engano}</TableCell>
-                        <TableCell className="text-right font-bold text-red-600 dark:text-red-500">
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.sem_qualidade}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.aposentado}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.contribuinte_carne}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.outros}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.sem_interesse}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground py-2.5 px-2">
+                          {aggAno.engano}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-[#B4453C] dark:text-red-400 tabular-nums py-2.5 px-3">
                           {aggAno.total_desq}
                         </TableCell>
                       </TableRow>
                     )}
               {isMultiMonth && filteredLeads.length > 0 && (
-                <TableRow className="bg-muted/50 font-bold border-t">
-                  <TableCell>TOTAL</TableCell>
-                  <TableCell className="text-right">{aggAno.sem_qualidade}</TableCell>
-                  <TableCell className="text-right">{aggAno.aposentado}</TableCell>
-                  <TableCell className="text-right">{aggAno.contribuinte_carne}</TableCell>
-                  <TableCell className="text-right">{aggAno.outros}</TableCell>
-                  <TableCell className="text-right">{aggAno.sem_interesse}</TableCell>
-                  <TableCell className="text-right">{aggAno.engano}</TableCell>
-                  <TableCell className="text-right text-red-600 dark:text-red-500">
+                <TableRow className="bg-[#FAF8F2] dark:bg-[#C9922A]/10 hover:bg-[#FAF8F2] dark:hover:bg-[#C9922A]/15 font-bold border-t-2 border-[#C9922A]/30 dark:border-[#C9922A]/50">
+                  <TableCell className="text-xs uppercase text-[#C9922A] font-bold py-3 px-3">
+                    TOTAL
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground font-bold py-3 px-2">
+                    {aggAno.sem_qualidade}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground font-bold py-3 px-2">
+                    {aggAno.aposentado}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground font-bold py-3 px-2">
+                    {aggAno.contribuinte_carne}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground font-bold py-3 px-2">
+                    {aggAno.outros}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground font-bold py-3 px-2">
+                    {aggAno.sem_interesse}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-[#252B34] dark:text-foreground font-bold py-3 px-2">
+                    {aggAno.engano}
+                  </TableCell>
+                  <TableCell className="text-right text-xs font-bold text-[#B4453C] dark:text-red-400 tabular-nums py-3 px-3">
                     {aggAno.total_desq}
                   </TableCell>
                 </TableRow>
