@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { BrandLogo } from '@/components/BrandLogo'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -66,9 +67,12 @@ export default function Login() {
           boxShadow: '0 0 80px rgba(201,146,42,0.06)',
         }}
       >
-        <div className="mb-[32px]">
+        <div className="mb-[28px] flex flex-col items-center text-center">
+          <div className="w-full flex justify-center mb-3">
+            <BrandLogo size="default" className="w-full max-w-[280px]" />
+          </div>
           <div
-            className="inline-block px-[8px] py-[4px] rounded-[4px] text-[10px] font-bold tracking-wider mb-[16px]"
+            className="inline-block px-[8px] py-[3px] rounded-[4px] text-[10px] font-bold tracking-wider mt-1"
             style={{
               backgroundColor: 'rgba(201,146,42,0.12)',
               color: '#C9922A',
@@ -77,12 +81,6 @@ export default function Login() {
           >
             SISTEMA INTERNO
           </div>
-          <h1 className="font-bold leading-tight" style={{ color: '#F5E9D0', fontSize: '22px' }}>
-            Advocacia Gasparotto
-          </h1>
-          <p className="mt-[4px]" style={{ color: 'rgba(245,233,208,0.45)', fontSize: '13px' }}>
-            Sistema de Gestão
-          </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-[20px]">

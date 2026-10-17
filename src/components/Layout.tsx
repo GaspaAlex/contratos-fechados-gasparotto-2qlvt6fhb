@@ -223,19 +223,16 @@ export default function Layout() {
         >
           {/* Header da Sidebar — Fundo Grafite #161920 com superfície sutil para a BrandLogo e texto institucional */}
           <SidebarHeader className="p-0 border-b border-[#232836] bg-[#161920]">
-            <div className="flex flex-col items-center justify-center px-3 pt-3.5 pb-3 w-full">
+            <div className="flex flex-col items-center justify-center px-3 pt-3 pb-3 w-full">
               <Link
                 to="/"
-                className="group w-full max-w-[230px] flex flex-col items-center justify-center rounded-lg px-2.5 py-2 bg-[#1C202A]/90 hover:bg-[#202532] border border-[#2B3040]/70 hover:border-[#3D445A]/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A]"
+                className="group w-full max-w-[230px] block transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A] rounded-lg"
                 title="Advocacia Gasparotto - Início"
               >
-                <BrandLogo className="w-full h-auto max-h-[60px] object-contain" />
-                <span
-                  className="mt-1.5 text-[10px] font-medium tracking-[0.22em] text-[#D4AF37]/90 uppercase text-center select-none transition-colors group-hover:text-[#F1C078]"
-                  style={{ fontFeatureSettings: '"cv02", "cv03", "cv04", "cv11"' }}
-                >
-                  SISTEMA DE GESTÃO
-                </span>
+                <BrandLogo
+                  className="w-full hover:border-[#3D445A] transition-colors"
+                  size="default"
+                />
               </Link>
             </div>
           </SidebarHeader>
