@@ -274,29 +274,36 @@ export function LeadsRegistroModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-[425px] bg-[#FAF8F2] font-sans">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+      <DialogContent className="sm:max-w-[450px] rounded-[10px] border border-[#E4E7EB] dark:border-border p-6 shadow-xl bg-white dark:bg-card">
+        <DialogHeader className="pb-3 border-b border-[#E4E7EB] dark:border-border space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              REGISTRO DE LEADS
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
             {lead ? 'Editar Lead' : 'Novo Lead'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
             <FormField
               control={form.control}
               name="data"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Data</FormLabel>
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    Data
+                  </FormLabel>
                   <Popover open={dateOpen} onOpenChange={setDateOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant={'outline'}
                           className={cn(
-                            'w-full pl-3 text-left font-normal bg-white',
-                            !field.value && 'text-muted-foreground',
+                            'w-full h-9 pl-3 text-left font-normal bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md text-xs focus:ring-[#C9922A]',
+                            !field.value && 'text-[#78818E] dark:text-muted-foreground',
                           )}
                         >
                           {field.value ? (
@@ -304,11 +311,14 @@ export function LeadsRegistroModal({
                           ) : (
                             <span>Selecione uma data</span>
                           )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50 text-[#78818E]" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      className="w-auto p-0 border border-[#E4E7EB] dark:border-border shadow-lg"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={field.value}
@@ -322,7 +332,7 @@ export function LeadsRegistroModal({
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -332,11 +342,13 @@ export function LeadsRegistroModal({
               name="telefone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefone</FormLabel>
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    Telefone
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Ex: (00) 00000-0000"
-                      className="bg-white"
+                      className="h-9 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                       {...field}
                       onChange={(e) => {
                         const formatted = formatPhone(e.target.value)
@@ -344,7 +356,7 @@ export function LeadsRegistroModal({
                       }}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -354,22 +366,24 @@ export function LeadsRegistroModal({
               name="responsavel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Responsável</FormLabel>
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    Responsável
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || undefined}>
                     <FormControl>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="h-9 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#C9922A]">
                         <SelectValue placeholder="Selecione o responsável" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {responsavelItems.map((r) => (
-                        <SelectItem key={r.id} value={r.nome}>
+                        <SelectItem key={r.id} value={r.nome} className="text-xs">
                           {r.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -379,7 +393,9 @@ export function LeadsRegistroModal({
               name="classificacao"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Classificação</FormLabel>
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    Classificação
+                  </FormLabel>
                   <FormControl>
                     <DynamicSelect
                       value={!field.value || field.value === 'none' ? '' : field.value}
@@ -396,14 +412,14 @@ export function LeadsRegistroModal({
                       disabled={!activeCampanha}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
 
             {duplicateWarning && (
-              <div className="bg-amber-50 border border-amber-500 p-4 rounded-md mt-4 flex flex-col gap-3">
-                <p className="text-sm text-amber-700 font-semibold">
+              <div className="bg-[#FAF8F2] dark:bg-[#C9922A]/10 border border-[#C9922A]/40 p-4 rounded-md mt-4 flex flex-col gap-3">
+                <p className="text-xs text-[#C77E1E] font-medium leading-relaxed">
                   Já existe um lead cadastrado com este telefone nesta campanha. Deseja continuar
                   mesmo assim?
                 </p>
@@ -412,7 +428,7 @@ export function LeadsRegistroModal({
                     type="button"
                     variant="outline"
                     onClick={() => setDuplicateWarning(false)}
-                    className="border-amber-500 text-amber-700 hover:bg-amber-100 h-9"
+                    className="border-[#E4E7EB] dark:border-border text-[#78818E] hover:bg-[#FAF8F2] text-xs h-8 px-3 rounded-md"
                     disabled={loading}
                   >
                     Cancelar
@@ -420,7 +436,7 @@ export function LeadsRegistroModal({
                   <Button
                     type="button"
                     onClick={() => handleSave(form.getValues(), true)}
-                    className="bg-amber-600 hover:bg-amber-700 text-white h-9"
+                    className="bg-[#C9922A] hover:bg-[#b07d22] text-white text-xs h-8 px-3 rounded-md font-medium"
                     disabled={loading}
                   >
                     {loading ? 'Salvando...' : 'Registrar mesmo assim'}
@@ -430,16 +446,24 @@ export function LeadsRegistroModal({
             )}
 
             {!duplicateWarning && (
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+              <DialogFooter className="pt-4 border-t border-[#E4E7EB] dark:border-border flex gap-2 sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  disabled={loading}
+                  className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] rounded-md transition-colors"
+                >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={loading}
-                  className="bg-[#C9922A] hover:bg-[#b07d22] text-white"
+                  className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b07d22] text-white rounded-md shadow-sm transition-colors"
                 >
-                  {loading ? 'Salvando...' : 'Salvar'}
+                  {loading ? 'Salvando...' : lead ? 'Salvar Alterações' : 'Salvar Lead'}
                 </Button>
               </DialogFooter>
             )}
