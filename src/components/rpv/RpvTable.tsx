@@ -165,32 +165,59 @@ export function RpvTable({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-x-auto">
       {groupedData.length === 0 ? (
-        <div className="p-8 text-center text-muted-foreground">Nenhum registro encontrado.</div>
+        <div className="p-12 text-center text-sm text-[#78818E] dark:text-muted-foreground">
+          Nenhum registro encontrado para os filtros selecionados.
+        </div>
       ) : (
         groupedData.map((group) => (
-          <div key={group.key} className="mb-0">
-            <div className="bg-muted/40 dark:bg-gray-800/50 px-4 py-3 font-semibold text-xs tracking-wider text-muted-foreground dark:text-gray-300 border-b dark:border-gray-700 uppercase">
-              {formatGroupHeader(group.key, group.items.length)}
+          <div
+            key={group.key}
+            className="border-b last:border-b-0 border-[#E4E7EB] dark:border-border"
+          >
+            {/* Header de Agrupamento estilo Grafite Premium */}
+            <div className="bg-[#F8F9FA] dark:bg-muted/40 px-4 py-2.5 font-bold text-[11px] tracking-wider text-[#5F6775] dark:text-muted-foreground border-b border-[#E4E7EB] dark:border-border flex items-center justify-between">
+              <span className="uppercase">{formatGroupHeader(group.key, group.items.length)}</span>
+              <span className="text-[10px] font-normal text-[#9299A9] dark:text-muted-foreground">
+                Total do grupo: {group.items.length}{' '}
+                {group.items.length === 1 ? 'registro' : 'registros'}
+              </span>
             </div>
+
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-12 text-xs dark:text-gray-300">#</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">NOME / CPF</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">Nº PROCESSO</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">TIPO</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">
+                <TableRow className="border-b border-[#E4E7EB] dark:border-border hover:bg-transparent bg-white dark:bg-card">
+                  <TableHead className="w-12 text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    #
+                  </TableHead>
+                  <TableHead className="min-w-[220px] text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    NOME / CPF
+                  </TableHead>
+                  <TableHead className="min-w-[170px] text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    Nº PROCESSO
+                  </TableHead>
+                  <TableHead className="w-24 text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    TIPO
+                  </TableHead>
+                  <TableHead className="w-28 text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
                     {quickFilter === 'Recebido' ? 'RECEBIDO EM' : 'PREVISÃO'}
                   </TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">VALOR RPV/PREC.</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">SUCUMBÊNCIA</TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">
-                    {quickFilter === 'Recebido' ? 'RECEBIDO' : 'HONORÁRIOS ESCRITÓRIO'}
+                  <TableHead className="w-32 text-right text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    VALOR RPV/PREC.
                   </TableHead>
-                  <TableHead className="text-xs dark:text-gray-300">STATUS</TableHead>
-                  <TableHead className="text-right text-xs dark:text-gray-300">AÇÕES</TableHead>
+                  <TableHead className="w-28 text-right text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    SUCUMBÊNCIA
+                  </TableHead>
+                  <TableHead className="w-36 text-right text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    {quickFilter === 'Recebido' ? 'RECEBIDO' : 'HON. ESCRITÓRIO'}
+                  </TableHead>
+                  <TableHead className="w-44 text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    STATUS
+                  </TableHead>
+                  <TableHead className="w-20 text-right text-[11px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                    AÇÕES
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,90 +241,177 @@ export function RpvTable({
                     }
                   }
 
+                  const isRecebido = item.status === 'Recebido'
+
                   return (
                     <TableRow
                       key={item.id}
                       className={cn(
-                        'hover:bg-muted/30 dark:hover:bg-gray-800/50 transition-colors border-b dark:border-gray-700',
-                        item.status === 'Recebido' &&
-                          'bg-green-50 dark:bg-green-900/20 hover:bg-green-50/80 dark:hover:bg-green-900/30',
+                        'border-b border-[#E4E7EB]/80 dark:border-border/80 transition-colors hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/30',
+                        isRecebido &&
+                          'bg-[#3E8E5A]/[0.04] dark:bg-[#3E8E5A]/[0.08] hover:bg-[#3E8E5A]/[0.08] dark:hover:bg-[#3E8E5A]/[0.12]',
                       )}
                     >
-                      <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
-                      <TableCell>
-                        <div className="font-bold flex items-center gap-1">
-                          {item.nome}
+                      {/* Numeração */}
+                      <TableCell className="text-xs text-[#78818E] dark:text-muted-foreground font-medium py-3">
+                        {idx + 1}
+                      </TableCell>
+
+                      {/* Nome / CPF */}
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-1.5 font-semibold text-xs text-[#252B34] dark:text-foreground">
+                          <span
+                            className="truncate max-w-[260px] sm:max-w-[340px]"
+                            title={item.nome}
+                          >
+                            {item.nome}
+                          </span>
                           {item.observacoes && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent className="max-w-xs text-xs">
                                 <p className="whitespace-pre-line">{item.observacoes}</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{item.cpf}</div>
-                      </TableCell>
-                      <TableCell
-                        className="text-sm"
-                        style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                      >
-                        {item.numero_processo || '-'}
-                      </TableCell>
-                      <TableCell>{item.tipo || '-'}</TableCell>
-                      <TableCell>
-                        {item.status === 'Recebido'
-                          ? formatDateRecebimento(item.data_recebimento)
-                          : item.previsao_pagamento || '-'}
-                      </TableCell>
-                      <TableCell className="font-bold">{formatCurrency(item.valor_rpv)}</TableCell>
-                      <TableCell>{formatCurrency(item.sucumbencia)}</TableCell>
-                      <TableCell>
-                        {formatCurrency(
-                          item.status === 'Recebido'
-                            ? Number(item.valor_recebido) || 0
-                            : honorariosEscritorio,
+                        {item.cpf && (
+                          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-mono mt-0.5">
+                            {item.cpf}
+                          </div>
+                        )}
+                        {item.tipo_parceria && item.tipo_parceria !== 'Sem parceria' && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center text-[10px] font-medium text-[#C9922A] bg-[#C9922A]/10 border border-[#C9922A]/20 px-1.5 py-0.2 rounded">
+                              {item.tipo_parceria}
+                            </span>
+                          </div>
                         )}
                       </TableCell>
-                      <TableCell>
+
+                      {/* Nº Processo */}
+                      <TableCell className="py-3 font-mono text-xs text-[#252B34] dark:text-foreground">
+                        {item.numero_processo || (
+                          <span className="text-[#78818E] dark:text-muted-foreground font-sans text-xs">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* Tipo: RPV ou Precatório */}
+                      <TableCell className="py-3">
+                        <span
+                          className={cn(
+                            'inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                            item.tipo === 'Precatório'
+                              ? 'bg-[#58335E]/10 text-[#58335E] border-[#58335E]/20 dark:bg-[#58335E]/20 dark:text-purple-300 dark:border-[#58335E]/40'
+                              : 'bg-[#2B6CB0]/10 text-[#2B6CB0] border-[#2B6CB0]/20 dark:bg-[#2B6CB0]/20 dark:text-sky-300 dark:border-[#2B6CB0]/40',
+                          )}
+                        >
+                          {item.tipo || 'RPV'}
+                        </span>
+                      </TableCell>
+
+                      {/* Previsão / Recebido Em */}
+                      <TableCell className="py-3 text-xs text-[#252B34] dark:text-foreground font-medium">
+                        {isRecebido
+                          ? formatDateRecebimento(item.data_recebimento)
+                          : item.previsao_pagamento || '—'}
+                      </TableCell>
+
+                      {/* Valor RPV/Prec. */}
+                      <TableCell className="py-3 text-right font-semibold text-xs text-[#252B34] dark:text-foreground tabular-nums">
+                        {formatCurrency(item.valor_rpv)}
+                      </TableCell>
+
+                      {/* Sucumbência */}
+                      <TableCell className="py-3 text-right text-xs text-[#78818E] dark:text-muted-foreground tabular-nums">
+                        {formatCurrency(item.sucumbencia)}
+                      </TableCell>
+
+                      {/* Honorários Escritório ou Valor Recebido */}
+                      <TableCell className="py-3 text-right text-xs font-bold tabular-nums">
+                        {isRecebido ? (
+                          <span className="text-[#3E8E5A]">
+                            {formatCurrency(Number(item.valor_recebido) || 0)}
+                          </span>
+                        ) : (
+                          <span className="text-[#C9922A]">
+                            {formatCurrency(honorariosEscritorio)}
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell className="py-3">
                         <Badge
                           variant="outline"
                           className={cn(
-                            'font-normal border-transparent',
-                            STATUS_COLORS[item.status] || 'bg-muted text-muted-foreground',
+                            'text-[10px] font-medium border px-2 py-0.5 whitespace-nowrap',
+                            STATUS_COLORS[item.status] ||
+                              'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
                           )}
                         >
                           {item.status || 'Sem status'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-                            <Edit2 className="h-4 w-4 text-[#C9922A]" />
+
+                      {/* Ações */}
+                      <TableCell className="py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(item)}
+                            className="h-7 w-7 text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
+                            title="Editar registro"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-[#78818E] hover:text-[#B4453C] hover:bg-[#B4453C]/10 rounded-md transition-colors"
+                                title="Excluir registro"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir registro</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir este registro? Esta ação não pode
-                                  ser desfeita.
+                            <AlertDialogContent className="max-w-md rounded-[10px] border border-[#E4E7EB] dark:border-border p-5 sm:p-6 shadow-lg bg-white dark:bg-card">
+                              <AlertDialogHeader className="pb-2">
+                                <div className="flex items-center gap-2.5 text-[#B4453C] mb-1">
+                                  <div className="h-8 w-8 rounded-lg bg-[#B4453C]/10 flex items-center justify-center shrink-0">
+                                    <Trash2 className="h-4 w-4 text-[#B4453C]" />
+                                  </div>
+                                  <AlertDialogTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+                                    Excluir Registro
+                                  </AlertDialogTitle>
+                                </div>
+                                <AlertDialogDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground pt-1">
+                                  Tem certeza que deseja excluir o registro de{' '}
+                                  <strong className="text-[#252B34] dark:text-foreground font-semibold">
+                                    {item.nome}
+                                  </strong>
+                                  ?
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <div className="text-xs text-[#78818E] dark:text-muted-foreground bg-[#B4453C]/[0.05] border border-[#B4453C]/20 p-3 rounded-md mt-2">
+                                Esta ação é irreversível. O registro e seus valores serão removidos
+                                do sistema.
+                              </div>
+                              <AlertDialogFooter className="mt-5 flex gap-2 justify-end pt-3 border-t border-[#E4E7EB]/80 dark:border-border/80">
+                                <AlertDialogCancel className="h-8 px-3 text-xs border-[#E4E7EB] dark:border-border rounded-md text-[#78818E] hover:text-[#252B34]">
+                                  Cancelar
+                                </AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDelete(item.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  className="h-8 px-4 text-xs font-semibold bg-[#B4453C] hover:bg-[#9c3a32] text-white rounded-md shadow-sm"
                                 >
-                                  Excluir
+                                  Excluir permanentemente
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

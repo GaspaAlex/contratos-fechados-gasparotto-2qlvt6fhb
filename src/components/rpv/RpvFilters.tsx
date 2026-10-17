@@ -67,11 +67,13 @@ export function RpvFilters({
   ]
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white dark:bg-[#0D0F0C] p-4 rounded-lg border dark:border-gray-800 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 flex-1">
+    <div className="space-y-3.5">
+      {/* Barra de Filtros e Ações — Grafite Premium 2.1 */}
+      <div className="flex flex-col xl:flex-row gap-3 items-stretch xl:items-center justify-between rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-3.5 sm:p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1">
+          {/* Busca */}
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#78818E] dark:text-muted-foreground" />
             <Input
               placeholder="Buscar nome ou processo..."
               value={search}
@@ -79,10 +81,11 @@ export function RpvFilters({
                 setSearch(e.target.value)
                 rpvFilterStore.setSearch(e.target.value)
               }}
-              className="pl-9"
+              className="h-9 pl-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
             />
           </div>
 
+          {/* Tipo */}
           <Select
             value={tipo}
             onValueChange={(val) => {
@@ -90,16 +93,23 @@ export function RpvFilters({
               rpvFilterStore.setTipoFilter(val)
             }}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[130px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Todos">Todos os Tipos</SelectItem>
-              <SelectItem value="RPV">RPV</SelectItem>
-              <SelectItem value="Precatório">Precatório</SelectItem>
+              <SelectItem value="Todos" className="text-xs">
+                Todos os Tipos
+              </SelectItem>
+              <SelectItem value="RPV" className="text-xs">
+                RPV
+              </SelectItem>
+              <SelectItem value="Precatório" className="text-xs">
+                Precatório
+              </SelectItem>
             </SelectContent>
           </Select>
 
+          {/* Status */}
           <Select
             value={status}
             onValueChange={(val) => {
@@ -107,19 +117,22 @@ export function RpvFilters({
               rpvFilterStore.setStatusFilter(val)
             }}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[190px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Todos">Todos os Status</SelectItem>
+              <SelectItem value="Todos" className="text-xs">
+                Todos os Status
+              </SelectItem>
               {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>
+                <SelectItem key={s} value={s} className="text-xs">
                   {s}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
+          {/* Mês */}
           <Select
             value={month}
             onValueChange={(val) => {
@@ -127,19 +140,22 @@ export function RpvFilters({
               rpvFilterStore.setMesFilter(val)
             }}
           >
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[145px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Todos">Todos os meses</SelectItem>
+              <SelectItem value="Todos" className="text-xs">
+                Todos os meses
+              </SelectItem>
               {MONTHS.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
+                <SelectItem key={m.value} value={m.value} className="text-xs">
                   {m.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
+          {/* Ano */}
           <Select
             value={year}
             onValueChange={(val) => {
@@ -147,13 +163,15 @@ export function RpvFilters({
               rpvFilterStore.setAnoFilter(val)
             }}
           >
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-full sm:w-[115px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Todos">Todos os Anos</SelectItem>
+              <SelectItem value="Todos" className="text-xs">
+                Todos os Anos
+              </SelectItem>
               {YEARS.map((y) => (
-                <SelectItem key={y} value={y}>
+                <SelectItem key={y} value={y} className="text-xs">
                   {y}
                 </SelectItem>
               ))}
@@ -161,7 +179,8 @@ export function RpvFilters({
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 self-end xl:self-auto">
+        {/* Ações: Imprimir e Novo Cadastro */}
+        <div className="flex items-center gap-2 self-end xl:self-auto shrink-0">
           {onPrint && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -169,7 +188,7 @@ export function RpvFilters({
                   variant="outline"
                   size="icon"
                   onClick={onPrint}
-                  className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+                  className="h-9 w-9 shrink-0 border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded-md transition-colors"
                 >
                   <Printer className="h-4 w-4" />
                 </Button>
@@ -182,26 +201,31 @@ export function RpvFilters({
 
           <Button
             onClick={onAdd}
-            className="bg-[#C9922A] hover:bg-[#b07d20] text-white whitespace-nowrap shadow-sm"
+            className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white whitespace-nowrap rounded-md shadow-sm transition-colors"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
+            <Plus className="w-4 h-4 mr-1.5" />
+            Adicionar Registro
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 px-1">
+      {/* Filtros Rápidos (Pills Sóbrias estilo Grafite/Dourado) */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
+          Filtro Rápido:
+        </span>
         {QUICK_FILTERS.map((pill) => {
           const isActive = quickFilter === pill
           return (
             <button
               key={pill}
+              type="button"
               onClick={() => setQuickFilter(pill)}
               className={cn(
-                'px-4 py-1.5 rounded-full text-sm font-medium transition-all border duration-200 ease-in-out',
+                'px-3.5 py-1 rounded-full text-xs font-medium transition-all duration-150 border cursor-pointer select-none',
                 isActive
-                  ? 'bg-[#C9922A] text-white border-[#C9922A] shadow-sm'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200',
+                  ? 'bg-[#22262E] text-[#D9A94A] border-[#22262E] shadow-xs dark:bg-[#D9A94A]/20 dark:text-[#D9A94A] dark:border-[#D9A94A]/40'
+                  : 'bg-white dark:bg-card text-[#78818E] dark:text-muted-foreground border-[#E4E7EB] dark:border-border hover:border-[#D0D5DD] dark:hover:border-gray-700 hover:text-[#252B34] dark:hover:text-foreground',
               )}
             >
               {pill}
@@ -210,14 +234,14 @@ export function RpvFilters({
         })}
 
         {quickFilter === 'Por Parceria' && (
-          <div className="ml-2 animate-fade-in">
+          <div className="ml-1 animate-fade-in inline-flex items-center">
             <Select value={parceriaFilter} onValueChange={setParceriaFilter}>
-              <SelectTrigger className="w-[200px] h-[34px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-[#C9922A] text-sm rounded-full">
+              <SelectTrigger className="w-[190px] h-8 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-full focus:ring-[#C9922A]">
                 <SelectValue placeholder="Selecione a parceria" />
               </SelectTrigger>
               <SelectContent>
                 {PARCERIA_OPTIONS.map((opt) => (
-                  <SelectItem key={opt} value={opt}>
+                  <SelectItem key={opt} value={opt} className="text-xs">
                     {opt}
                   </SelectItem>
                 ))}

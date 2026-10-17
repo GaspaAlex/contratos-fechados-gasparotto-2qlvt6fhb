@@ -267,11 +267,23 @@ export default function Rpv() {
 
   return (
     <RpvPinGuard>
-      <div className="-m-4 sm:-m-8 p-4 sm:p-8 flex flex-col gap-6 min-h-[calc(100vh-4rem)] animate-fade-in bg-[#FAF8F2] dark:bg-[#0D0F0C]">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-[#C9922A]">RPV/Precatório</h1>
-          <p className="text-muted-foreground">Gestão de RPVs e Precatórios</p>
+      <div className="space-y-6 animate-fade-in-up pb-10">
+        {/* Cabeçalho Corporativo Harmonizado (Grafite Premium 2.1) */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              GESTÃO FINANCEIRA
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            RPV/Precatório
+          </h1>
+          <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+            Gestão de créditos judiciais, acompanhamento de expedição e projeção de honorários.
+          </p>
         </div>
+
+        <RpvDashboard data={data} month={month} year={year} />
 
         <RpvFilters
           search={search}
@@ -291,19 +303,15 @@ export default function Rpv() {
           onPrint={handlePrintReport}
         />
 
-        <RpvDashboard data={data} month={month} year={year} />
-
-        <div className="flex-1 bg-white dark:bg-[#0D0F0C] border dark:border-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div className="flex-1 overflow-y-auto">
-            <RpvTable
-              data={filteredData}
-              onEdit={(r) => {
-                setEditRecord(r)
-                setFormOpen(true)
-              }}
-              onFilteredDataChange={setCurrentVisibleData}
-            />
-          </div>
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+          <RpvTable
+            data={filteredData}
+            onEdit={(r) => {
+              setEditRecord(r)
+              setFormOpen(true)
+            }}
+            onFilteredDataChange={setCurrentVisibleData}
+          />
         </div>
 
         <RpvFormModal open={formOpen} onOpenChange={setFormOpen} record={editRecord} />

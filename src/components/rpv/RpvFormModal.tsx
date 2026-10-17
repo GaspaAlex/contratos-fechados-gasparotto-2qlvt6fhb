@@ -183,51 +183,89 @@ export function RpvFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#FAF8F2] dark:bg-[#0D0F0C] dark:border-gray-800">
-        <DialogHeader>
-          <DialogTitle>{record ? 'Editar Registro' : 'Novo Registro'}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[10px] border border-[#E4E7EB] dark:border-border p-5 sm:p-6 shadow-lg bg-white dark:bg-card">
+        <DialogHeader className="pb-3 border-b border-[#E4E7EB]/80 dark:border-border/80">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              {record ? 'EDIÇÃO' : 'NOVO CADASTRO'}
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            {record ? 'Editar Registro RPV / Precatório' : 'Novo Registro RPV / Precatório'}
+          </DialogTitle>
+          <p className="text-xs text-[#78818E] dark:text-muted-foreground">
+            Preencha os dados cadastrais do processo, valores e parâmetros de liquidação.
+          </p>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-5 mt-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Nome *</Label>
+            {/* Nome */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Nome do Beneficiário <span className="text-[#B4453C]">*</span>
+              </Label>
               <Input
                 required
                 value={formData.nome || ''}
                 onChange={(e) => handleChange('nome', e.target.value)}
+                placeholder="Nome completo do titular"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
               />
             </div>
-            <div className="space-y-2">
-              <Label>CPF *</Label>
+
+            {/* CPF */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                CPF <span className="text-[#B4453C]">*</span>
+              </Label>
               <Input
                 required
                 value={formData.cpf || ''}
                 onChange={(e) => handleChange('cpf', formatCpf(e.target.value))}
                 placeholder="000.000.000-00"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Nº Processo</Label>
+
+            {/* Nº Processo */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Nº Processo Judicial
+              </Label>
               <Input
                 value={formData.numero_processo || ''}
                 onChange={(e) => handleChange('numero_processo', e.target.value)}
+                placeholder="0000000-00.0000.0.00.0000"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card font-mono"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Tipo</Label>
+
+            {/* Tipo */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Tipo de Crédito
+              </Label>
               <Select value={formData.tipo} onValueChange={(v) => handleChange('tipo', v)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="RPV">RPV</SelectItem>
-                  <SelectItem value="Precatório">Precatório</SelectItem>
+                  <SelectItem value="RPV" className="text-xs">
+                    RPV
+                  </SelectItem>
+                  <SelectItem value="Precatório" className="text-xs">
+                    Precatório
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Valor RPV/Precatório R$</Label>
+
+            {/* Valor RPV / Precatório */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Valor RPV/Precatório (R$)
+              </Label>
               <Input
                 type="text"
                 value={formData.valor_rpv_str || ''}
@@ -236,10 +274,16 @@ export function RpvFormModal({
                   const num = parseCurrencyInput(e.target.value)
                   setFormData((prev: any) => ({ ...prev, valor_rpv_str: str, valor_rpv: num }))
                 }}
+                placeholder="0,00"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card tabular-nums"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Sucumbência R$</Label>
+
+            {/* Sucumbência */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Sucumbência (R$)
+              </Label>
               <Input
                 type="text"
                 value={formData.sucumbencia_str || ''}
@@ -248,132 +292,187 @@ export function RpvFormModal({
                   const num = parseCurrencyInput(e.target.value)
                   setFormData((prev: any) => ({ ...prev, sucumbencia_str: str, sucumbencia: num }))
                 }}
+                placeholder="0,00"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card tabular-nums"
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-md border border-[#C9922A] bg-[#C9922A]/10 dark:bg-[#C9922A]/20">
-              <div className="space-y-1">
-                <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
-                  Honorários 30%
-                </Label>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">
-                  {formatCurrency(honorarios30)}
-                </div>
+            {/* Quadro de Projeção de Honorários — Padrão Corporativo Dourado */}
+            <div className="space-y-2 md:col-span-2 p-3.5 rounded-[10px] border border-[#C9922A]/30 bg-[#FAF8F2] dark:bg-[#C9922A]/10">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9922A]">
+                  Projeção Automática de Honorários
+                </span>
               </div>
-              <div className="space-y-1">
-                <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
-                  Total Honorários
-                </Label>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">
-                  {formatCurrency(totalHonorarios)}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground">
+                    Honorários 30%
+                  </span>
+                  <div className="text-sm font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                    {formatCurrency(honorarios30)}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[#C9922A] text-xs uppercase font-bold tracking-wider">
-                  Honorários Escritório
-                </Label>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">
-                  {formatCurrency(honorariosEscritorio)}
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground">
+                    Total Bruto Honorários
+                  </span>
+                  <div className="text-sm font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                    {formatCurrency(totalHonorarios)}
+                  </div>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground">
+                    Honorários Escritório
+                  </span>
+                  <div className="text-sm font-bold text-[#C9922A] tabular-nums">
+                    {formatCurrency(honorariosEscritorio)}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Status</Label>
+            {/* Status */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Status
+              </Label>
               <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s}>
+                    <SelectItem key={s} value={s} className="text-xs">
                       {s}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Parceria</Label>
+
+            {/* Parceria */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Regra de Parceria
+              </Label>
               <Select
                 value={formData.tipo_parceria}
                 onValueChange={(v) => handleChange('tipo_parceria', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Sem parceria">Sem parceria</SelectItem>
-                  <SelectItem value="Macohin">Macohin</SelectItem>
-                  <SelectItem value="Macohin + Rogério">Macohin + Rogério</SelectItem>
-                  <SelectItem value="Macohin + Luciana">Macohin + Luciana</SelectItem>
-                  <SelectItem value="Carnevale">Carnevale</SelectItem>
+                  <SelectItem value="Sem parceria" className="text-xs">
+                    Sem parceria
+                  </SelectItem>
+                  <SelectItem value="Macohin" className="text-xs">
+                    Macohin
+                  </SelectItem>
+                  <SelectItem value="Macohin + Rogério" className="text-xs">
+                    Macohin + Rogério
+                  </SelectItem>
+                  <SelectItem value="Macohin + Luciana" className="text-xs">
+                    Macohin + Luciana
+                  </SelectItem>
+                  <SelectItem value="Carnevale" className="text-xs">
+                    Carnevale
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div
-              className={`space-y-2 ${formData.status === 'Recebido' ? 'md:col-span-2' : 'md:col-span-2'}`}
-            >
-              <Label>Previsão Pagamento (MM/YYYY)</Label>
+            {/* Previsão de Pagamento */}
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Previsão de Pagamento (MM/AAAA)
+              </Label>
               <Input
                 placeholder="Ex: 06/2026"
                 value={formData.previsao_pagamento || ''}
                 onChange={(e) => handleChange('previsao_pagamento', formatPrevisao(e.target.value))}
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Observações</Label>
+            {/* Bloco de Recebimento Efetivo */}
+            {formData.status === 'Recebido' && (
+              <div className="md:col-span-2 p-3.5 border border-[#3E8E5A]/30 bg-[#3E8E5A]/[0.04] dark:bg-[#3E8E5A]/[0.08] rounded-[10px] space-y-3 animate-fade-in">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#3E8E5A]">
+                    Dados da Liquidação Efetiva
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                      Data de Recebimento <span className="text-[#B4453C]">*</span>
+                    </Label>
+                    <Input
+                      type="date"
+                      required
+                      value={parseDate(formData.data_recebimento)}
+                      onChange={(e) => handleChange('data_recebimento', e.target.value)}
+                      className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                      Valor Efetivamente Recebido (R$) <span className="text-[#B4453C]">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      required
+                      value={formData.valor_recebido_str || ''}
+                      onChange={(e) => {
+                        const str = formatCurrencyInput(e.target.value)
+                        const num = parseCurrencyInput(e.target.value)
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          valor_recebido_str: str,
+                          valor_recebido: num,
+                        }))
+                      }}
+                      placeholder="0,00"
+                      className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card tabular-nums"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Observações */}
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Observações
+              </Label>
               <Textarea
                 rows={3}
                 value={formData.observacoes || ''}
                 onChange={(e) => handleChange('observacoes', e.target.value)}
+                placeholder="Anotações internas sobre expedição, alvará ou instruções de pagamento..."
+                className="text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
               />
             </div>
-
-            {formData.status === 'Recebido' && (
-              <>
-                <div className="space-y-2">
-                  <Label>Data de Recebimento *</Label>
-                  <Input
-                    type="date"
-                    required
-                    value={parseDate(formData.data_recebimento)}
-                    onChange={(e) => handleChange('data_recebimento', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor Efetivamente Recebido R$ *</Label>
-                  <Input
-                    type="text"
-                    required
-                    value={formData.valor_recebido_str || ''}
-                    onChange={(e) => {
-                      const str = formatCurrencyInput(e.target.value)
-                      const num = parseCurrencyInput(e.target.value)
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        valor_recebido_str: str,
-                        valor_recebido: num,
-                      }))
-                    }}
-                  />
-                </div>
-              </>
-            )}
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="pt-3 border-t border-[#E4E7EB]/80 dark:border-border/80 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md text-[#78818E] hover:text-[#252B34]"
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#C9922A] hover:bg-[#b07d20] text-white"
+              className="h-9 px-5 text-xs bg-[#C9922A] hover:bg-[#b58324] text-white font-semibold rounded-md shadow-sm transition-colors"
             >
-              {loading ? 'Salvando...' : 'Salvar'}
+              {loading ? 'Salvando...' : record ? 'Salvar Alterações' : 'Cadastrar Registro'}
             </Button>
           </DialogFooter>
         </form>
