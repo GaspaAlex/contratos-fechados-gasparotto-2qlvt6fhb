@@ -17,7 +17,10 @@ import {
   CheckSquare,
   Square,
   Undo2,
-  FileX2,
+  RotateCcw,
+  MoveHorizontal,
+  ArrowUpDown,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -67,8 +70,16 @@ export default function OrganizarPdf() {
   const [originalRotations, setOriginalRotations] = useState<number[]>([])
   const [thumbnailLoadError, setThumbnailLoadError] = useState<string | null>(null)
 
-  // Páginas marcadas para EXCLUSÃO (1-based, ex: página 4)
+  // Páginas marcadas para EXCLUSÃO (1-based, ex: página original 4)
   const [excludedPages, setExcludedPages] = useState<Set<number>>(new Set())
+
+  // Ordem atual das páginas (array com números originais 1-based, ex: [6, 1, 2, 3, 4, 5])
+  const [pageOrder, setPageOrder] = useState<number[]>([])
+
+  // Estado de Drag and Drop
+  const [draggedPage, setDraggedPage] = useState<number | null>(null)
+  const [dragOverPage, setDragOverPage] = useState<number | null>(null)
+  const [dropIndicator, setDropIndicator] = useState<'before' | 'after' | null>(null)
 
   // Resultado
   const [organizedBlobUrl, setOrganizedBlobUrl] = useState<string | null>(null)
@@ -76,6 +87,8 @@ export default function OrganizarPdf() {
   const [resultTotalPages, setResultTotalPages] = useState<number>(0)
   const [resultExcludedPages, setResultExcludedPages] = useState<number>(0)
   const [resultRemainingPages, setResultRemainingPages] = useState<number>(0)
+  const [resultReorderedCount, setResultReorderedCount] = useState<number>(0)
+  const [resultIsOrderModified, setResultIsOrderModified] = useState(false)
   const [resultHasSignature, setResultHasSignature] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -114,6 +127,10 @@ export default function OrganizarPdf() {
     cleanupOutput()
     setSignatureConfirmed(false) // Redefinir confirmação de assinatura
     setExcludedPages(new Set()) // Redefinir páginas excluídas
+    setPageOrder([])
+    setDraggedPage(null)
+    setDragOverPage(null)
+    setDropIndicator(null)
     setIsValidatingFile(true)
 
     if (pdfJsDoc) {
@@ -155,6 +172,10 @@ export default function OrganizarPdf() {
         hasSignature: Boolean(validation.hasSignature),
       })
 
+      // Inicializa ordem natural 1..N
+      const initialOrder = Array.from({ length: pages }, (_, i) => i + 1)
+      setPageOrder(initialOrder)
+
       // Tenta carregar PDF.js para renderização das miniaturas
       try {
         const loadedPdf = await loadPdfJsDocument(buffer)
@@ -167,7 +188,7 @@ export default function OrganizarPdf() {
           console.debug('[OrganizarPdf] Stack trace do erro de inicialização:', pdfJsErr.stack)
         }
         setThumbnailLoadError(
-          'Não foi possível inicializar as miniaturas visuais deste documento. A exclusão de páginas continuará disponível normalmente.',
+          'Não foi possível inicializar as miniaturas visuais deste documento. A reordenação e a exclusão continuarão disponíveis normalmente.',
         )
       }
     } catch (err) {
@@ -229,15 +250,39 @@ export default function OrganizarPdf() {
     return doc.pageCount > 0 && totalExcludedCount >= doc.pageCount
   }, [doc, totalExcludedCount])
 
-  // Ações de seleção para exclusão
-  const handleToggleExcludePage = useCallback((pageNumber: number) => {
+  // Quantidade de páginas cuja posição visual atual difere da posição original (1-based)
+  const reorderedPagesCount = useMemo(() => {
+    if (!doc || pageOrder.length === 0) return 0
+    let count = 0
+    pageOrder.forEach((origNum, posIdx) => {
+      if (origNum !== posIdx + 1) {
+        count++
+      }
+    })
+    return count
+  }, [doc, pageOrder])
+
+  const isOrderModified = reorderedPagesCount > 0
+
+  // Verifica se há alguma alteração realizada (reordenação ou exclusão)
+  const hasAnyChanges = useMemo(() => {
+    return totalExcludedCount > 0 || isOrderModified
+  }, [totalExcludedCount, isOrderModified])
+
+  // Lista de páginas preservadas na sequência final ordenada
+  const finalRemainingSequence = useMemo(() => {
+    return pageOrder.filter((origPage) => !excludedPages.has(origPage))
+  }, [pageOrder, excludedPages])
+
+  // Ações de seleção para exclusão (preservando identidade original da página)
+  const handleToggleExcludePage = useCallback((originalPageNumber: number) => {
     setErrorMessage(null)
     setExcludedPages((prev) => {
       const next = new Set(prev)
-      if (next.has(pageNumber)) {
-        next.delete(pageNumber)
+      if (next.has(originalPageNumber)) {
+        next.delete(originalPageNumber)
       } else {
-        next.add(pageNumber)
+        next.add(originalPageNumber)
       }
       return next
     })
@@ -272,7 +317,132 @@ export default function OrganizarPdf() {
     setErrorMessage(null)
   }, [])
 
-  // Executar processamento de exclusão
+  // Restaurar ordem original (sem alterar marcações de exclusão)
+  const handleRestoreOriginalOrder = useCallback(() => {
+    if (!doc) return
+    const naturalOrder = Array.from({ length: doc.pageCount }, (_, i) => i + 1)
+    setPageOrder(naturalOrder)
+    setErrorMessage(null)
+  }, [doc])
+
+  // Mover página uma posição para a esquerda (anterior)
+  const handleMoveLeft = useCallback((originalPageNumber: number) => {
+    setPageOrder((prev) => {
+      const idx = prev.indexOf(originalPageNumber)
+      if (idx <= 0) return prev
+      const next = [...prev]
+      const temp = next[idx - 1]
+      next[idx - 1] = next[idx]
+      next[idx] = temp
+      return next
+    })
+    setErrorMessage(null)
+  }, [])
+
+  // Mover página uma posição para a direita (posterior)
+  const handleMoveRight = useCallback((originalPageNumber: number) => {
+    setPageOrder((prev) => {
+      const idx = prev.indexOf(originalPageNumber)
+      if (idx < 0 || idx >= prev.length - 1) return prev
+      const next = [...prev]
+      const temp = next[idx + 1]
+      next[idx + 1] = next[idx]
+      next[idx] = temp
+      return next
+    })
+    setErrorMessage(null)
+  }, [])
+
+  // Drag and Drop de páginas
+  const handleDragStartCard = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, originalPageNumber: number) => {
+      setDraggedPage(originalPageNumber)
+      e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('text/plain', String(originalPageNumber))
+    },
+    [],
+  )
+
+  const handleDragOverCard = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, targetOriginalPageNumber: number) => {
+      e.preventDefault()
+      e.stopPropagation()
+      e.dataTransfer.dropEffect = 'move'
+
+      if (draggedPage === null || draggedPage === targetOriginalPageNumber) {
+        setDragOverPage(null)
+        setDropIndicator(null)
+        return
+      }
+
+      setDragOverPage(targetOriginalPageNumber)
+
+      // Identifica se soltará antes ou depois com base na coordenada X do cursor no card
+      const rect = e.currentTarget.getBoundingClientRect()
+      const relX = e.clientX - rect.left
+      const isAfter = relX > rect.width / 2
+      setDropIndicator(isAfter ? 'after' : 'before')
+    },
+    [draggedPage],
+  )
+
+  const handleDragLeaveCard = useCallback(() => {
+    setDragOverPage(null)
+    setDropIndicator(null)
+  }, [])
+
+  const handleDropCard = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, targetOriginalPageNumber: number) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (draggedPage === null || draggedPage === targetOriginalPageNumber) {
+        setDraggedPage(null)
+        setDragOverPage(null)
+        setDropIndicator(null)
+        return
+      }
+
+      const rect = e.currentTarget.getBoundingClientRect()
+      const relX = e.clientX - rect.left
+      const isAfter = relX > rect.width / 2
+
+      setPageOrder((prev) => {
+        const fromIdx = prev.indexOf(draggedPage)
+        if (fromIdx < 0) return prev
+
+        const next = [...prev]
+        // Remove da posição de origem
+        next.splice(fromIdx, 1)
+
+        // Localiza nova posição do alvo
+        let toIdx = next.indexOf(targetOriginalPageNumber)
+        if (toIdx < 0) return prev
+
+        if (isAfter) {
+          toIdx += 1
+        }
+
+        // Insere na nova posição
+        next.splice(toIdx, 0, draggedPage)
+        return next
+      })
+
+      setDraggedPage(null)
+      setDragOverPage(null)
+      setDropIndicator(null)
+      setErrorMessage(null)
+    },
+    [draggedPage],
+  )
+
+  const handleDragEndCard = useCallback(() => {
+    setDraggedPage(null)
+    setDragOverPage(null)
+    setDropIndicator(null)
+  }, [])
+
+  // Executar processamento de exclusão e/ou reordenação
   const handleProcessOrganize = async () => {
     if (!doc) {
       setErrorMessage('Selecione um arquivo PDF para organizar.')
@@ -287,8 +457,10 @@ export default function OrganizarPdf() {
       return
     }
 
-    if (excludedPages.size === 0) {
-      setErrorMessage('Selecione ao menos uma página para excluir do documento.')
+    if (!hasAnyChanges) {
+      setErrorMessage(
+        'Nenhuma alteração foi realizada. Reordene as páginas arrastando/movendo ou selecione páginas para exclusão antes de gerar o novo PDF.',
+      )
       return
     }
 
@@ -319,6 +491,7 @@ export default function OrganizarPdf() {
     const handle = executePdfOrganize({
       fileName: doc.name,
       buffer: doc.buffer,
+      pageOrder,
       excludedPages: Array.from(excludedPages),
       allowSignedDocument: doc.hasSignature && signatureConfirmed,
       onProgress: (p) => {
@@ -341,6 +514,8 @@ export default function OrganizarPdf() {
         setResultTotalPages(result.totalOriginalPages)
         setResultExcludedPages(result.totalExcludedPages)
         setResultRemainingPages(result.totalRemainingPages)
+        setResultReorderedCount(result.reorderedCount ?? reorderedPagesCount)
+        setResultIsOrderModified(result.isOrderModified ?? isOrderModified)
         setResultHasSignature(result.hasSignedDocument)
         setProgress(null)
       } else {
@@ -383,6 +558,10 @@ export default function OrganizarPdf() {
     setProgress(null)
     setSignatureConfirmed(false)
     setExcludedPages(new Set())
+    setPageOrder([])
+    setDraggedPage(null)
+    setDragOverPage(null)
+    setDropIndicator(null)
     setOriginalRotations([])
     setThumbnailLoadError(null)
   }
@@ -408,7 +587,8 @@ export default function OrganizarPdf() {
               Organizar PDF
             </h1>
             <p className="text-sm font-medium text-muted-foreground">
-              Selecione e exclua páginas específicas dos seus documentos.
+              Reordene páginas arrastando e soltando ou exclua páginas específicas dos seus
+              documentos.
             </p>
           </div>
         </div>
@@ -431,8 +611,8 @@ export default function OrganizarPdf() {
               Selecionar documento PDF
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Envie o documento do qual deseja excluir páginas. Todo o processamento ocorre no seu
-              navegador com total privacidade.
+              Envie o documento cujas páginas deseja reorganizar ou excluir. Todo o processamento
+              ocorre no seu navegador com total privacidade.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-2">
@@ -578,7 +758,7 @@ export default function OrganizarPdf() {
                 <AlertDescription className="text-xs sm:text-sm mt-1 space-y-2">
                   <p>
                     Foram identificados campos de assinatura digital (/Sig) neste documento. A
-                    exclusão de páginas altera a estrutura binária do arquivo e{' '}
+                    reordenação ou exclusão de páginas altera a estrutura binária do arquivo e{' '}
                     <strong>pode invalidar a assinatura criptográfica</strong> existente.
                   </p>
                   <p>
@@ -617,14 +797,19 @@ export default function OrganizarPdf() {
         </Card>
       )}
 
-      {/* SEÇÃO 2: BARRA DE FERRAMENTAS E CONTROLES DE EXCLUSÃO */}
+      {/* SEÇÃO 2: BARRA DE FERRAMENTAS E CONTROLES DE ORGANIZAÇÃO */}
       {doc && doc.validationStatus === 'valid' && (
         <Card className="border-border bg-card/90 shadow-sm rounded-xl">
           <CardHeader className="p-5 pb-3">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                  Controles de Exclusão
+                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2 flex-wrap">
+                  <span>Organização das Páginas</span>
+                  {isOrderModified && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30">
+                      Ordem modificada ({reorderedPagesCount} em nova posição)
+                    </span>
+                  )}
                   {totalExcludedCount > 0 && (
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
                       {totalExcludedCount}{' '}
@@ -634,13 +819,29 @@ export default function OrganizarPdf() {
                   )}
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                  Clique nas páginas abaixo que deseja remover. A exclusão definitiva ocorrerá
-                  somente quando você confirmar a geração do novo PDF.
+                  Arraste e solte as miniaturas ou use os botões <strong>Anterior/Próxima</strong>{' '}
+                  para reordenar. Clique no card para marcar/desmarcar exclusão.
                 </CardDescription>
               </div>
 
-              {/* Ações de Seleção Rápida */}
+              {/* Ações de Organização e Seleção Rápida */}
               <div className="flex flex-wrap items-center gap-2">
+                {/* Restaurar Ordem Original */}
+                {isOrderModified && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRestoreOriginalOrder}
+                    disabled={isProcessing}
+                    className="h-8 text-xs border-[#C9922A]/40 text-[#C9922A] hover:bg-[#C9922A]/10"
+                    title="Devolve as páginas à sequência original do documento sem afetar as exclusões"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                    Restaurar ordem original
+                  </Button>
+                )}
+
                 <Button
                   type="button"
                   variant="outline"
@@ -662,7 +863,7 @@ export default function OrganizarPdf() {
                     onClick={handleClearExclusion}
                     disabled={isProcessing}
                     className="h-8 text-xs"
-                    title="Limpa todas as marcações de exclusão"
+                    title="Limpa todas as marcações de exclusão mantendo a ordem atual"
                   >
                     <Square className="w-3.5 h-3.5 mr-1" />
                     Limpar seleção
@@ -687,13 +888,23 @@ export default function OrganizarPdf() {
             </div>
           </CardHeader>
 
-          {/* Resumo Dinâmico da Seleção */}
+          {/* Resumo Dinâmico da Seleção e Ordem */}
           <CardContent className="p-5 pt-2">
             <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border/60 text-xs sm:text-sm">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <span className="text-muted-foreground">Original:</span>
                   <span className="font-semibold text-foreground">{doc.pageCount} págs.</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Ordem:</span>
+                  <span
+                    className={`font-semibold ${
+                      isOrderModified ? 'text-[#C9922A]' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {isOrderModified ? `Modificada (${reorderedPagesCount} movidas)` : 'Original'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-muted-foreground">A excluir:</span>
@@ -730,35 +941,55 @@ export default function OrganizarPdf() {
         </Card>
       )}
 
-      {/* SEÇÃO 3: GRADE DE MINIATURAS VISUAIS DAS PÁGINAS */}
+      {/* SEÇÃO 3: GRADE DE MINIATURAS VISUAIS DAS PÁGINAS COM REORDENAÇÃO */}
       {doc && doc.validationStatus === 'valid' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
-              Páginas do Documento ({doc.pageCount})
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              {totalExcludedCount} de {doc.pageCount} marcada(s) para exclusão
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                Páginas do Documento ({doc.pageCount})
+              </h2>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                • Arraste para reposicionar ou use os botões Anterior / Próxima
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>
+                {totalExcludedCount} excluída(s) • {totalRemainingCount} preservada(s)
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-            {Array.from({ length: doc.pageCount }, (_, idx) => {
-              const pageNumber = idx + 1
-              const origRot = originalRotations[idx] || 0
-              const isMarked = excludedPages.has(pageNumber)
+            {pageOrder.map((originalPageNumber, visualIndex) => {
+              const currentPosition = visualIndex + 1
+              const origRot = originalRotations[originalPageNumber - 1] || 0
+              const isMarked = excludedPages.has(originalPageNumber)
 
               return (
                 <PageThumbnailCard
-                  key={`page-${pageNumber}`}
-                  pageNumber={pageNumber}
+                  key={`orig-page-${originalPageNumber}`}
+                  pageNumber={originalPageNumber}
+                  currentPosition={currentPosition}
+                  totalCount={pageOrder.length}
                   pdfDoc={pdfJsDoc}
                   originalRotation={origRot}
                   deltaRotation={0}
                   isSelected={isMarked}
-                  mode="delete"
+                  mode="organize"
                   isMarkedForDeletion={isMarked}
                   onToggleSelect={handleToggleExcludePage}
+                  onMoveLeft={handleMoveLeft}
+                  onMoveRight={handleMoveRight}
+                  draggable={!isProcessing}
+                  onDragStart={handleDragStartCard}
+                  onDragOver={handleDragOverCard}
+                  onDragLeave={handleDragLeaveCard}
+                  onDrop={handleDropCard}
+                  onDragEnd={handleDragEndCard}
+                  isDraggingThis={draggedPage === originalPageNumber}
+                  isDragOverThis={dragOverPage === originalPageNumber}
+                  dropPositionIndicator={dragOverPage === originalPageNumber ? dropIndicator : null}
                   disabled={isProcessing}
                 />
               )
@@ -774,34 +1005,55 @@ export default function OrganizarPdf() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">
-                  Confirmação de exclusão e geração
+                  Confirmação de organização e geração
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {totalExcludedCount > 0 ? (
-                    wouldExcludeAll ? (
-                      <span className="text-destructive font-medium">
-                        Todas as páginas foram marcadas. Desmarque ao menos uma página para poder
-                        gerar o PDF.
-                      </span>
-                    ) : (
-                      <span>
-                        Documento original com <strong>{doc.pageCount} páginas</strong>. Serão
-                        excluídas <strong>{totalExcludedCount} página(s)</strong> (
-                        {Array.from(excludedPages)
-                          .sort((a, b) => a - b)
-                          .map((p) => `Pág. ${p}`)
-                          .join(', ')}
-                        ). O PDF resultante terá{' '}
-                        <strong className="text-emerald-600 dark:text-emerald-400">
-                          {totalRemainingCount} página(s)
-                        </strong>{' '}
-                        preservando a ordem original.
-                      </span>
-                    )
+                <div className="text-xs text-muted-foreground space-y-1">
+                  {!hasAnyChanges ? (
+                    <p>
+                      Nenhuma alteração realizada. Arraste as miniaturas ou utilize os botões
+                      Anterior/Próxima para alterar a ordem, ou clique em uma miniatura para marcar
+                      para exclusão.
+                    </p>
+                  ) : wouldExcludeAll ? (
+                    <p className="text-destructive font-medium">
+                      Todas as páginas foram marcadas para exclusão. Ao menos uma página deve ser
+                      preservada.
+                    </p>
                   ) : (
-                    'Nenhuma página marcada para exclusão. Clique nas miniaturas acima para marcar as páginas que deseja remover.'
+                    <p>
+                      Documento original: <strong>{doc.pageCount} páginas</strong>.
+                      {totalExcludedCount > 0 && (
+                        <>
+                          {' '}
+                          Excluindo <strong>{totalExcludedCount} página(s)</strong> (
+                          {Array.from(excludedPages)
+                            .sort((a, b) => a - b)
+                            .map((p) => `Orig. ${p}`)
+                            .join(', ')}
+                          ).
+                        </>
+                      )}
+                      {isOrderModified && (
+                        <>
+                          {' '}
+                          Ordem modificada: <strong>{reorderedPagesCount} página(s)</strong> em nova
+                          posição.
+                        </>
+                      )}{' '}
+                      Resultado:{' '}
+                      <strong className="text-emerald-600 dark:text-emerald-400">
+                        {totalRemainingCount} página(s)
+                      </strong>
+                      {finalRemainingSequence.length > 0 && (
+                        <span className="text-muted-foreground font-mono ml-1">
+                          (Sequência final: {finalRemainingSequence.map((p) => `p.${p}`).join(', ')}
+                          )
+                        </span>
+                      )}
+                      .
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
@@ -810,7 +1062,7 @@ export default function OrganizarPdf() {
                   onClick={handleProcessOrganize}
                   disabled={
                     isProcessing ||
-                    totalExcludedCount === 0 ||
+                    !hasAnyChanges ||
                     wouldExcludeAll ||
                     (doc.hasSignature && !signatureConfirmed)
                   }
@@ -823,8 +1075,8 @@ export default function OrganizarPdf() {
                     </>
                   ) : (
                     <>
-                      <FileX2 className="w-4 h-4 mr-2" />
-                      Excluir páginas e gerar PDF
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Gerar PDF organizado
                     </>
                   )}
                 </Button>
@@ -880,8 +1132,8 @@ export default function OrganizarPdf() {
                   Documento organizado com sucesso!
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-                  As páginas selecionadas foram excluídas e o novo arquivo foi gerado preservando a
-                  integridade e a ordem exata das páginas restantes.
+                  O documento foi reconstruído com base na nova sequência e exclusões definidas,
+                  preservando a integridade vetorial, dimensões, imagens e formatação das páginas.
                 </CardDescription>
               </div>
             </div>
@@ -900,11 +1152,19 @@ export default function OrganizarPdf() {
                 <span className="font-semibold text-foreground">{resultTotalPages}</span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-muted-foreground">Alteração de sequência:</span>
+                <span className="font-semibold text-[#C9922A]">
+                  {resultIsOrderModified
+                    ? `Ordem alterada (${resultReorderedCount} páginas em nova posição)`
+                    : 'Ordem original preservada'}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-muted-foreground">Páginas excluídas:</span>
                 <span className="font-semibold text-destructive">{resultExcludedPages}</span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Páginas preservadas:</span>
+                <span className="text-muted-foreground">Páginas no PDF gerado:</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                   {resultRemainingPages}
                 </span>

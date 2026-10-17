@@ -5,7 +5,8 @@ export type OrganizeWorkerInMessage =
       type: 'START_ORGANIZE'
       fileName: string
       buffer: ArrayBuffer
-      excludedPages: number[]
+      excludedPages?: number[]
+      pageOrder?: number[]
       allowSignedDocument?: boolean
     }
   | {
@@ -24,6 +25,8 @@ export type OrganizeWorkerOutMessage =
       totalOriginalPages: number
       totalExcludedPages: number
       totalRemainingPages: number
+      reorderedCount?: number
+      isOrderModified?: boolean
       hasSignedDocument: boolean
     }
   | {
@@ -45,13 +48,14 @@ self.addEventListener('message', async (event: MessageEvent<OrganizeWorkerInMess
 
   if (data.type === 'START_ORGANIZE') {
     isCancelled = false
-    const { fileName, buffer, excludedPages, allowSignedDocument } = data
+    const { fileName, buffer, excludedPages, pageOrder, allowSignedDocument } = data
 
     try {
       const result = await organizePdfLocally({
         fileName,
         buffer,
         excludedPages,
+        pageOrder,
         allowSignedDocument,
         onProgress: (progress) => {
           self.postMessage({
@@ -78,6 +82,8 @@ self.addEventListener('message', async (event: MessageEvent<OrganizeWorkerInMess
             totalOriginalPages: result.totalOriginalPages,
             totalExcludedPages: result.totalExcludedPages,
             totalRemainingPages: result.totalRemainingPages,
+            reorderedCount: result.reorderedCount,
+            isOrderModified: result.isOrderModified,
             hasSignedDocument: result.hasSignedDocument,
           } satisfies OrganizeWorkerOutMessage,
           transferables,

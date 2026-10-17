@@ -15,6 +15,8 @@ export interface OrganizePdfResult {
   totalOriginalPages: number
   totalExcludedPages: number
   totalRemainingPages: number
+  reorderedCount?: number
+  isOrderModified?: boolean
   hasSignedDocument: boolean
   error?: string
   errorCode?:
@@ -25,6 +27,7 @@ export interface OrganizePdfResult {
     | 'PARSE_ERROR'
     | 'ALL_PAGES_EXCLUDED'
     | 'NO_PAGES_EXCLUDED'
+    | 'NO_CHANGES_MADE'
     | 'INVALID_PAGE_SELECTION'
     | 'OUT_OF_MEMORY'
     | 'CANCELLED'
@@ -35,9 +38,16 @@ export interface OrganizeExecutionOptions {
   fileName: string
   buffer: ArrayBuffer
   /**
-   * Conjunto ou array de números de páginas a excluir (1-based, ex: [4] para excluir página 4)
+   * Conjunto ou array de números de páginas a excluir (1-based, ex: [4] para excluir página original 4).
+   * Opcional se customPageOrder for fornecido com reordenação.
    */
-  excludedPages: number[]
+  excludedPages?: number[]
+  /**
+   * Sequência personalizada das páginas originais desejadas (1-based).
+   * Exemplo: para documento de 6 páginas com a 6 na 1ª posição e 3 excluída: [6, 1, 2, 4, 5].
+   * Se omitido, utiliza a ordem natural das páginas 1..N exceto excludedPages.
+   */
+  pageOrder?: number[]
   allowSignedDocument?: boolean
   onProgress?: (progress: OrganizePdfProgressUpdate) => void
   checkCancelled?: () => boolean
@@ -69,7 +79,8 @@ export async function organizePdfLocally(
   const {
     fileName,
     buffer,
-    excludedPages,
+    excludedPages = [],
+    pageOrder,
     allowSignedDocument = false,
     onProgress,
     checkCancelled,
@@ -232,7 +243,7 @@ export async function organizePdfLocally(
     excludedPages.filter((p) => Number.isInteger(p) && p >= 1 && p <= totalOriginalPages),
   )
 
-  // Checagem se alguma página inválida foi passada
+  // Checagem se alguma página inválida foi passada na exclusão
   for (const p of excludedPages) {
     if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
       return {
@@ -247,20 +258,54 @@ export async function organizePdfLocally(
     }
   }
 
-  if (excludedSet.size === 0) {
-    return {
-      success: false,
-      totalOriginalPages,
-      totalExcludedPages: 0,
-      totalRemainingPages: totalOriginalPages,
-      hasSignedDocument: hasSignature,
-      errorCode: 'NO_PAGES_EXCLUDED',
-      error: 'Selecione ao menos uma página para excluir do documento.',
+  // 5. Determinar a sequência de páginas resultantes
+  // Se pageOrder for fornecido, usamos pageOrder excluindo as que estiverem no excludedSet.
+  // Caso pageOrder não seja fornecido, usamos a sequência original 1..totalOriginalPages excluindo as marcadas.
+  let finalSequence1Based: number[] = []
+
+  if (Array.isArray(pageOrder) && pageOrder.length > 0) {
+    // Validar itens do pageOrder
+    const seenInOrder = new Set<number>()
+    for (const p of pageOrder) {
+      if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
+        return {
+          success: false,
+          totalOriginalPages,
+          totalExcludedPages: excludedSet.size,
+          totalRemainingPages: 0,
+          hasSignedDocument: hasSignature,
+          errorCode: 'INVALID_PAGE_SELECTION',
+          error: `A sequência contém página inválida: ${p} (documento possui ${totalOriginalPages} páginas).`,
+        }
+      }
+      if (seenInOrder.has(p)) {
+        return {
+          success: false,
+          totalOriginalPages,
+          totalExcludedPages: excludedSet.size,
+          totalRemainingPages: 0,
+          hasSignedDocument: hasSignature,
+          errorCode: 'INVALID_PAGE_SELECTION',
+          error: `A página ${p} foi duplicada na sequência de organização.`,
+        }
+      }
+      seenInOrder.add(p)
+      if (!excludedSet.has(p)) {
+        finalSequence1Based.push(p)
+      }
+    }
+  } else {
+    // Sequência natural 1..totalOriginalPages
+    for (let i = 1; i <= totalOriginalPages; i++) {
+      if (!excludedSet.has(i)) {
+        finalSequence1Based.push(i)
+      }
     }
   }
 
-  const totalRemainingPages = totalOriginalPages - excludedSet.size
-  if (totalRemainingPages <= 0) {
+  // Verificar se há páginas restantes
+  const totalRemainingPages = finalSequence1Based.length
+  if (totalRemainingPages === 0) {
     return {
       success: false,
       totalOriginalPages,
@@ -269,18 +314,47 @@ export async function organizePdfLocally(
       hasSignedDocument: hasSignature,
       errorCode: 'ALL_PAGES_EXCLUDED',
       error:
-        'Não é permitido excluir todas as páginas do documento. O PDF resultante precisa conter ao menos uma página.',
+        'Não é permitido gerar um PDF com zero páginas. Ao menos uma página deve ser preservada.',
     }
   }
 
-  // 5. Determinar índices 0-based das páginas mantidas, preservando a sequência original estrita
-  const keptIndices: number[] = []
-  for (let i = 0; i < totalOriginalPages; i++) {
-    const pageNumber = i + 1
-    if (!excludedSet.has(pageNumber)) {
-      keptIndices.push(i)
+  // Verificar se houve alguma alteração (seja exclusão ou reordenação)
+  // Ordem natural esperada sem alterações: 1, 2, ..., totalOriginalPages
+  const isOrderModified =
+    finalSequence1Based.length !== totalOriginalPages ||
+    finalSequence1Based.some((origNum, posIdx) => origNum !== posIdx + 1)
+
+  const hasExclusion = excludedSet.size > 0
+  const hasReorder =
+    Array.isArray(pageOrder) &&
+    pageOrder.length === totalOriginalPages &&
+    pageOrder.some((origNum, posIdx) => origNum !== posIdx + 1)
+
+  if (!hasExclusion && !hasReorder) {
+    return {
+      success: false,
+      totalOriginalPages,
+      totalExcludedPages: 0,
+      totalRemainingPages: totalOriginalPages,
+      hasSignedDocument: hasSignature,
+      errorCode: 'NO_CHANGES_MADE',
+      error:
+        'Nenhuma alteração foi realizada (nenhuma página excluída e a ordem original permanece a mesma).',
     }
   }
+
+  // Contabilizar quantas páginas tiveram sua posição alterada em relação à ordem original
+  let reorderedCount = 0
+  if (Array.isArray(pageOrder)) {
+    pageOrder.forEach((origNum, posIdx) => {
+      if (origNum !== posIdx + 1) {
+        reorderedCount++
+      }
+    })
+  }
+
+  // Converter finalSequence1Based para índices 0-based do pdf-lib
+  const keptIndices: number[] = finalSequence1Based.map((p) => p - 1)
 
   if (isCancelled()) {
     return {
@@ -387,6 +461,8 @@ export async function organizePdfLocally(
       totalOriginalPages,
       totalExcludedPages: excludedSet.size,
       totalRemainingPages,
+      reorderedCount,
+      isOrderModified,
       hasSignedDocument: hasSignature,
     }
   } catch (saveErr: unknown) {

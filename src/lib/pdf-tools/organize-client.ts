@@ -9,7 +9,8 @@ import { organizePdfLocally } from './pdf-organizer'
 export interface OrganizeExecutionClientOptions {
   fileName: string
   buffer: ArrayBuffer
-  excludedPages: number[]
+  excludedPages?: number[]
+  pageOrder?: number[]
   allowSignedDocument?: boolean
   onProgress?: (progress: OrganizePdfProgressUpdate) => void
   onCancel?: () => void
@@ -28,7 +29,14 @@ export interface OrganizeExecutionHandle {
 export function executePdfOrganize(
   options: OrganizeExecutionClientOptions,
 ): OrganizeExecutionHandle {
-  const { fileName, buffer, excludedPages, allowSignedDocument = false, onProgress } = options
+  const {
+    fileName,
+    buffer,
+    excludedPages,
+    pageOrder,
+    allowSignedDocument = false,
+    onProgress,
+  } = options
 
   let worker: Worker | null = null
   let isCancelled = false
@@ -83,6 +91,8 @@ export function executePdfOrganize(
               totalOriginalPages: msg.totalOriginalPages,
               totalExcludedPages: msg.totalExcludedPages,
               totalRemainingPages: msg.totalRemainingPages,
+              reorderedCount: msg.reorderedCount,
+              isOrderModified: msg.isOrderModified,
               hasSignedDocument: msg.hasSignedDocument,
             })
           }
@@ -120,6 +130,7 @@ export function executePdfOrganize(
           fileName,
           buffer: slice,
           excludedPages,
+          pageOrder,
           allowSignedDocument,
         } satisfies OrganizeWorkerInMessage,
         [slice],
@@ -153,6 +164,7 @@ async function fallbackLocalOrganize(
     fileName: options.fileName,
     buffer: options.buffer.slice(0),
     excludedPages: options.excludedPages,
+    pageOrder: options.pageOrder,
     allowSignedDocument: options.allowSignedDocument,
     onProgress: options.onProgress,
     checkCancelled,
