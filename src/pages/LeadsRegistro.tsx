@@ -574,7 +574,7 @@ export default function LeadsRegistro() {
                           col.key === 'data'
                             ? 'text-left pl-4'
                             : col.key === 'total'
-                              ? 'text-center font-extrabold text-[#252B34] dark:text-foreground bg-[#F0F2F5]/60'
+                              ? 'text-center font-extrabold text-[#252B34] dark:text-foreground bg-[#F0F2F5]/60 dark:bg-muted/60'
                               : col.key === 'qualificando'
                                 ? 'text-center text-[#4A7FA5] dark:text-sky-400'
                                 : col.key === 'qualificado'
@@ -617,7 +617,7 @@ export default function LeadsRegistro() {
                                 ? 'text-left font-medium text-[#252B34] dark:text-foreground pl-4'
                                 : 'text-center',
                               isTotalCol &&
-                                'font-bold text-[#252B34] dark:text-foreground bg-[#F5F6F8]/40',
+                                'font-bold text-[#252B34] dark:text-foreground bg-[#F5F6F8]/40 dark:bg-muted/30',
                               col.key === 'qualificando' &&
                                 val > 0 &&
                                 'text-[#4A7FA5] font-semibold',
