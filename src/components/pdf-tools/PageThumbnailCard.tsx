@@ -209,28 +209,28 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
           onDragEnd(e)
         }
       }}
-      className={`group relative flex flex-col rounded-xl border bg-card p-2.5 transition-all duration-200 select-none ${
+      className={`group relative flex flex-col rounded-[10px] border bg-white dark:bg-card p-2.5 transition-all duration-200 select-none ${
         isDraggingThis
           ? 'opacity-40 scale-[0.98] border-dashed border-[#C9922A] shadow-md ring-2 ring-[#C9922A]/40'
           : isDragOverThis
-            ? 'border-[#C9922A] ring-2 ring-[#C9922A]/50 shadow-md bg-[#C9922A]/5'
+            ? 'border-[#C9922A] ring-2 ring-[#C9922A]/50 shadow-md bg-[#FAF8F2] dark:bg-muted/30'
             : isExtractMode
               ? isSelected
-                ? 'border-[#C9922A] bg-[#C9922A]/[0.05] ring-2 ring-[#C9922A]/50 shadow-sm'
+                ? 'border-[#C9922A] bg-[#FAF8F2]/60 dark:bg-muted/30 ring-2 ring-[#C9922A]/40 shadow-sm'
                 : isPositionChanged
                   ? 'border-[#C9922A]/60 ring-1 ring-[#C9922A]/20 shadow-xs'
-                  : 'border-border/80 hover:border-[#C9922A]/40 hover:shadow-subtle'
+                  : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/40 hover:shadow-xs'
               : isDeleteMode || isOrganizeMode
                 ? isMarkedForDeletion
-                  ? 'border-destructive/80 bg-destructive/[0.04] ring-2 ring-destructive/30 shadow-sm'
+                  ? 'border-red-300 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/20 ring-2 ring-red-400/30 shadow-sm'
                   : isPositionChanged
                     ? 'border-[#C9922A]/70 ring-1 ring-[#C9922A]/30 shadow-sm'
                     : isSelected
                       ? 'border-[#C9922A] ring-2 ring-[#C9922A]/30 shadow-sm'
-                      : 'border-border/80 hover:border-[#C9922A]/40 hover:shadow-subtle'
+                      : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/40 hover:shadow-xs'
                 : isSelected
                   ? 'border-[#C9922A] ring-2 ring-[#C9922A]/30 shadow-sm'
-                  : 'border-border/80 hover:border-border hover:shadow-subtle'
+                  : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/40 hover:shadow-xs'
       } ${disabled ? 'opacity-70 pointer-events-none' : ''}`}
     >
       {/* Indicador visual de inserção antes/depois no drop */}
@@ -271,16 +271,16 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
               isExtractMode
                 ? isSelected
                   ? 'bg-[#C9922A] border-[#C9922A] text-white'
-                  : 'border-muted-foreground/40 hover:border-[#C9922A] bg-background'
+                  : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A] bg-white dark:bg-card'
                 : isDeleteMode || isOrganizeMode
                   ? isMarkedForDeletion
-                    ? 'bg-destructive border-destructive text-white'
+                    ? 'bg-[#B4453C] border-[#B4453C] text-white'
                     : isSelected
                       ? 'bg-[#C9922A] border-[#C9922A] text-white'
-                      : 'border-muted-foreground/40 hover:border-destructive bg-background'
+                      : 'border-[#E4E7EB] dark:border-border hover:border-[#B4453C] bg-white dark:bg-card'
                   : isSelected
                     ? 'bg-[#C9922A] border-[#C9922A] text-white'
-                    : 'border-muted-foreground/40 hover:border-[#C9922A] bg-background'
+                    : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A] bg-white dark:bg-card'
             }`}
             title={
               isExtractMode
@@ -362,7 +362,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             ) : (
               <Badge
                 variant="outline"
-                className="text-[10px] font-normal px-1.5 py-0 border-border text-muted-foreground bg-muted/30"
+                className="text-[10px] font-normal px-1.5 py-0 border-[#E4E7EB] dark:border-border text-[#78818E] bg-[#F5F6F8]/60"
               >
                 #{currentPosition}
               </Badge>
@@ -371,7 +371,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             isMarkedForDeletion ? (
               <Badge
                 variant="outline"
-                className="text-[10px] font-semibold px-1.5 py-0 border-destructive/40 bg-destructive/10 text-destructive"
+                className="text-[10px] font-semibold px-1.5 py-0 border-red-200 bg-red-50 text-[#B4453C]"
               >
                 Excluir
               </Badge>
@@ -386,7 +386,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             ) : (
               <Badge
                 variant="outline"
-                className="text-[10px] font-normal px-1.5 py-0 border-border text-muted-foreground bg-muted/30"
+                className="text-[10px] font-normal px-1.5 py-0 border-[#E4E7EB] dark:border-border text-[#78818E] bg-[#F5F6F8]/60"
               >
                 #{currentPosition}
               </Badge>
@@ -395,14 +395,14 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             isMarkedForDeletion ? (
               <Badge
                 variant="outline"
-                className="text-[10px] font-semibold px-1.5 py-0 border-destructive/40 bg-destructive/10 text-destructive"
+                className="text-[10px] font-semibold px-1.5 py-0 border-red-200 bg-red-50 text-[#B4453C]"
               >
                 Excluir
               </Badge>
             ) : (
               <Badge
                 variant="outline"
-                className="text-[10px] font-normal px-1.5 py-0 border-border text-muted-foreground bg-muted/30"
+                className="text-[10px] font-normal px-1.5 py-0 border-[#E4E7EB] dark:border-border text-[#78818E] bg-[#F5F6F8]/60"
               >
                 Manter
               </Badge>
@@ -418,7 +418,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
           ) : (
             <Badge
               variant="outline"
-              className="text-[10px] font-normal px-1.5 py-0 border-border text-muted-foreground bg-muted/30"
+              className="text-[10px] font-normal px-1.5 py-0 border-[#E4E7EB] dark:border-border text-[#78818E] bg-[#F5F6F8]/60"
             >
               Original
             </Badge>
@@ -477,8 +477,8 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
 
         {/* Overlay de exclusão visual discreto quando marcada para exclusão (modo delete/organize) */}
         {!isExtractMode && (isDeleteMode || isOrganizeMode) && isMarkedForDeletion && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/15 backdrop-blur-[0.5px] pointer-events-none transition-opacity">
-            <span className="text-[11px] font-semibold text-destructive px-2 py-0.5 rounded bg-background/90 shadow-xs border border-destructive/30">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-500/15 backdrop-blur-[0.5px] pointer-events-none transition-opacity">
+            <span className="text-[11px] font-semibold text-[#B4453C] px-2 py-0.5 rounded bg-white/95 dark:bg-card/95 shadow-xs border border-red-300">
               Será excluída
             </span>
           </div>
@@ -487,7 +487,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
         {/* Overlay sutil positivo de extração quando selecionada (modo extract) */}
         {isExtractMode && isSelected && (
           <div className="absolute top-2 right-2 pointer-events-none">
-            <span className="text-[10px] font-bold text-[#C9922A] px-1.5 py-0.5 rounded bg-background/95 shadow-xs border border-[#C9922A]/40 flex items-center gap-1">
+            <span className="text-[10px] font-bold text-[#C9922A] px-1.5 py-0.5 rounded bg-white/95 dark:bg-card/95 shadow-xs border border-[#C9922A]/40 flex items-center gap-1">
               <Check className="w-3 h-3 stroke-[3]" />
               Extrair
             </span>
@@ -512,7 +512,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
 
       {/* Controles de Reordenação Alternativos (Modos organize e extract: mover esquerda / direita) */}
       {hasReorderControls && (
-        <div className="flex items-center justify-between gap-1 pt-2 mt-auto border-t border-dashed border-border/60">
+        <div className="flex items-center justify-between gap-1 pt-2 mt-auto border-t border-[#E4E7EB]/80 dark:border-border/60">
           <Button
             type="button"
             size="sm"
@@ -527,7 +527,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
                 ? `Mover página original ${pageNumber} para a esquerda (posição ${(currentPosition || 1) - 1})`
                 : 'Primeira página da sequência'
             }
-            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-[#C9922A]/10 hover:text-[#C9922A] disabled:opacity-30 disabled:hover:bg-transparent"
+            className="h-7 px-2 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <ChevronLeft className="w-3.5 h-3.5 mr-0.5" />
             <span className="text-[11px]">Anterior</span>
@@ -547,7 +547,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
                 ? `Mover página original ${pageNumber} para a direita (posição ${(currentPosition || 1) + 1})`
                 : 'Última página da sequência'
             }
-            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-[#C9922A]/10 hover:text-[#C9922A] disabled:opacity-30 disabled:hover:bg-transparent"
+            className="h-7 px-2 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded disabled:opacity-30 disabled:hover:bg-transparent"
           >
             <span className="text-[11px]">Próxima</span>
             <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
@@ -557,7 +557,7 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
 
       {/* Ações de Rotação por Página (somente no modo rotate) */}
       {!isDeleteMode && !isOrganizeMode && (
-        <div className="flex items-center justify-between gap-1 pt-2 mt-auto border-t border-dashed border-border/60">
+        <div className="flex items-center justify-between gap-1 pt-2 mt-auto border-t border-[#E4E7EB]/80 dark:border-border/60">
           <Button
             type="button"
             size="sm"
@@ -568,9 +568,9 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             }}
             disabled={disabled}
             title="Girar 90° para a esquerda (anti-horário)"
-            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+            className="h-7 px-2 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded"
           >
-            <RotateCcw className="w-3.5 h-3.5 mr-1" />
+            <RotateCcw className="w-3.5 h-3.5 mr-1 text-[#C9922A]" />
             -90°
           </Button>
 
@@ -584,10 +584,10 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             }}
             disabled={disabled}
             title="Girar 90° para a direita (horário)"
-            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+            className="h-7 px-2 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded"
           >
             +90°
-            <RotateCw className="w-3.5 h-3.5 ml-1" />
+            <RotateCw className="w-3.5 h-3.5 ml-1 text-[#C9922A]" />
           </Button>
         </div>
       )}

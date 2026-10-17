@@ -394,38 +394,40 @@ export default function DividirPdf() {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-12 max-w-5xl mx-auto">
-      {/* Botão Voltar e Cabeçalho */}
+      {/* 1. CABEÇALHO CORPORATIVO PADRONIZADO (GRAFITE PREMIUM 2.1) */}
       <div className="flex flex-col gap-3">
         <Link
           to="/ferramentas-pdf"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-fit group"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#78818E] hover:text-[#C9922A] transition-colors w-fit group"
         >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
           Voltar para Ferramentas PDF
         </Link>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#C9922A]/10 border border-[#C9922A]/20 rounded-lg">
-              <Scissors className="w-6 h-6 text-[#C9922A]" />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+                FERRAMENTAS
+              </span>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                Dividir PDF
-              </h1>
-              <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                Separe páginas, extraia trechos específicos ou divida o documento em intervalos.
-              </p>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+              Dividir PDF
+            </h1>
+            <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+              Separe páginas, extraia trechos específicos ou divida o documento em intervalos.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Alerta Institucional / Integridade */}
-      <div className="rounded-xl border border-border/80 bg-muted/20 p-4 flex items-start gap-3 text-muted-foreground text-xs leading-relaxed">
-        <Info className="w-4 h-4 text-[#C9922A] shrink-0 mt-0.5" />
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 flex items-start gap-3.5 text-[#78818E] dark:text-muted-foreground text-xs leading-relaxed shadow-xs">
+        <div className="h-8 w-8 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0 mt-0.5">
+          <Info className="w-4 h-4 text-[#C9922A]" />
+        </div>
         <div>
-          <span className="font-semibold text-foreground">
+          <span className="font-semibold text-[#252B34] dark:text-foreground">
             Aviso sobre integridade de documentos:
           </span>{' '}
           A divisão de arquivos PDF gera cópias derivadas com as páginas selecionadas. Arquivos
@@ -439,11 +441,13 @@ export default function DividirPdf() {
       {errorMessage && (
         <Alert
           variant="destructive"
-          className="border-destructive/40 bg-destructive/10 text-destructive"
+          className="rounded-[10px] border border-red-200 dark:border-red-900/60 bg-red-50/80 dark:bg-red-950/30 text-[#B4453C]"
         >
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold">Não foi possível concluir a operação</AlertTitle>
-          <AlertDescription className="mt-1 text-xs sm:text-sm">
+          <AlertTriangle className="h-4 w-4 text-[#B4453C]" />
+          <AlertTitle className="font-semibold text-xs sm:text-sm text-[#B4453C]">
+            Não foi possível concluir a operação
+          </AlertTitle>
+          <AlertDescription className="mt-1 text-xs sm:text-sm text-[#B4453C]/90">
             <p>{errorMessage}</p>
           </AlertDescription>
         </Alert>
@@ -451,15 +455,15 @@ export default function DividirPdf() {
 
       {/* TELA DE SUCESSO: Download dos Arquivos */}
       {resultFiles.length > 0 && (singlePdfUrl || zipBlobUrl) ? (
-        <Card className="border-border bg-card shadow-sm rounded-xl">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
           <CardHeader className="text-center pb-4 pt-8">
             <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3">
-              <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="w-7 h-7 text-[#3E8E5A]" />
             </div>
-            <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
               Documento dividido com sucesso!
             </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground max-w-md mx-auto">
+            <CardDescription className="text-sm text-[#78818E] dark:text-muted-foreground max-w-md mx-auto">
               {resultFiles.length === 1
                 ? 'Seu novo arquivo PDF está pronto para download.'
                 : `Foram gerados ${resultFiles.length} arquivos PDF agrupados em um pacote ZIP.`}
@@ -468,27 +472,35 @@ export default function DividirPdf() {
 
           <CardContent className="space-y-6 pb-8">
             {/* Detalhes do resultado */}
-            <div className="max-w-md mx-auto rounded-lg border border-border bg-muted/30 p-4 space-y-2 text-sm">
-              <div className="flex justify-between items-center text-muted-foreground">
-                <span>Arquivos gerados:</span>
-                <span className="font-semibold text-foreground">
+            <div className="max-w-md mx-auto rounded-[10px] border border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/60 dark:bg-muted/20 p-4 space-y-2 text-sm">
+              <div className="flex justify-between items-center text-[#78818E] dark:text-muted-foreground">
+                <span className="text-xs uppercase tracking-wider font-semibold">
+                  Arquivos gerados:
+                </span>
+                <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
                   {resultFiles.length} arquivo(s)
                 </span>
               </div>
-              <div className="flex justify-between items-center text-muted-foreground">
-                <span>Total de páginas processadas:</span>
-                <span className="font-semibold text-foreground">{totalProcessedPages} páginas</span>
+              <div className="flex justify-between items-center text-[#78818E] dark:text-muted-foreground">
+                <span className="text-xs uppercase tracking-wider font-semibold">
+                  Total de páginas processadas:
+                </span>
+                <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                  {totalProcessedPages} páginas
+                </span>
               </div>
               {doc && (
-                <div className="flex justify-between items-center text-muted-foreground">
-                  <span>Documento original:</span>
-                  <span className="font-semibold text-foreground truncate max-w-[220px]">
+                <div className="flex justify-between items-center text-[#78818E] dark:text-muted-foreground">
+                  <span className="text-xs uppercase tracking-wider font-semibold">
+                    Documento original:
+                  </span>
+                  <span className="font-semibold text-[#252B34] dark:text-foreground truncate max-w-[220px]">
                     {doc.name}
                   </span>
                 </div>
               )}
               {resultHasSignedDocs && (
-                <div className="pt-2 border-t border-border/60 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5 font-medium">
+                <div className="pt-2 border-t border-[#E4E7EB]/80 dark:border-border/60 text-xs text-[#C77E1E] flex items-center gap-1.5 font-medium">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   Arquivos gerados como cópias derivadas sem validade criptográfica da assinatura
                   original.
@@ -497,19 +509,21 @@ export default function DividirPdf() {
             </div>
 
             {/* Lista dos arquivos gerados */}
-            <div className="max-w-md mx-auto rounded-lg border border-border p-3 divide-y divide-border text-xs">
-              <div className="font-semibold text-muted-foreground pb-2 flex items-center justify-between">
+            <div className="max-w-md mx-auto rounded-[10px] border border-[#E4E7EB] dark:border-border p-3 divide-y divide-[#E4E7EB]/80 dark:divide-border/80 text-xs bg-white dark:bg-card">
+              <div className="font-semibold text-[#78818E] dark:text-muted-foreground pb-2 flex items-center justify-between text-xs uppercase tracking-wider">
                 <span>Arquivos resultantes</span>
-                <span>{resultFiles.length} total</span>
+                <span className="tabular-nums font-bold text-[#252B34] dark:text-foreground">
+                  {resultFiles.length} total
+                </span>
               </div>
-              <div className="max-h-48 overflow-y-auto divide-y divide-border/60">
+              <div className="max-h-48 overflow-y-auto divide-y divide-[#E4E7EB]/80 dark:divide-border/60">
                 {resultFiles.map((f, idx) => (
-                  <div key={idx} className="py-1.5 flex items-center justify-between gap-2">
-                    <span className="truncate text-foreground font-medium flex items-center gap-1.5">
+                  <div key={idx} className="py-2 flex items-center justify-between gap-2">
+                    <span className="truncate text-[#252B34] dark:text-foreground font-medium flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5 text-[#C9922A] shrink-0" />
                       {f.name}
                     </span>
-                    <span className="text-muted-foreground shrink-0">
+                    <span className="text-[#78818E] dark:text-muted-foreground shrink-0 tabular-nums">
                       {f.pageCount} pág{f.pageCount > 1 ? 's' : ''} • {formatBytes(f.sizeBytes)}
                     </span>
                   </div>
@@ -522,7 +536,7 @@ export default function DividirPdf() {
               {singlePdfUrl && resultFiles.length === 1 && (
                 <Button
                   asChild
-                  className="w-full sm:w-auto flex-1 bg-[#C9922A] hover:bg-[#b07d1f] text-white font-semibold"
+                  className="w-full sm:w-auto flex-1 h-9 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
                 >
                   <a href={singlePdfUrl} download={resultFiles[0].name}>
                     <Download className="w-4 h-4 mr-2" />
@@ -534,7 +548,7 @@ export default function DividirPdf() {
               {zipBlobUrl && resultFiles.length > 1 && (
                 <Button
                   asChild
-                  className="w-full sm:w-auto flex-1 bg-[#C9922A] hover:bg-[#b07d1f] text-white font-semibold"
+                  className="w-full sm:w-auto flex-1 h-9 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
                 >
                   <a href={zipBlobUrl} download={zipFileName}>
                     <Archive className="w-4 h-4 mr-2" />
@@ -546,7 +560,7 @@ export default function DividirPdf() {
               <Button
                 variant="outline"
                 onClick={handleResetForNewOperation}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto h-9 text-xs font-medium border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded-md transition-colors"
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Nova divisão
@@ -563,10 +577,10 @@ export default function DividirPdf() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`relative rounded-xl border-2 border-dashed transition-all p-8 text-center flex flex-col items-center justify-center cursor-pointer ${
+              className={`relative rounded-[10px] border-2 border-dashed transition-all p-8 text-center flex flex-col items-center justify-center cursor-pointer ${
                 isDragging
-                  ? 'border-[#C9922A] bg-[#C9922A]/10 scale-[1.005]'
-                  : 'border-border/80 bg-card/60 hover:border-[#C9922A]/50 hover:bg-card'
+                  ? 'border-[#C9922A] bg-[#FAF8F2] dark:bg-muted/30 scale-[1.005]'
+                  : 'border-[#E4E7EB] dark:border-border bg-white dark:bg-card hover:border-[#C9922A]/60 hover:bg-[#FAF8F2]/30 dark:hover:bg-muted/10'
               }`}
               onClick={() => !isSplitting && fileInputRef.current?.click()}
             >
@@ -579,14 +593,14 @@ export default function DividirPdf() {
                 disabled={isSplitting || isValidatingFile}
               />
 
-              <div className="p-4 rounded-full bg-[#C9922A]/10 text-[#C9922A] ring-1 ring-[#C9922A]/20 mb-3">
-                <Upload className="w-6 h-6" />
+              <div className="h-12 w-12 rounded-full bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border text-[#C9922A] flex items-center justify-center mb-3">
+                <Upload className="w-5 h-5 text-[#C9922A]" />
               </div>
 
-              <h3 className="text-base font-semibold text-foreground">
+              <h3 className="text-base font-bold text-[#252B34] dark:text-foreground tracking-tight">
                 Clique para selecionar ou arraste o arquivo PDF
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-md">
+              <p className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground mt-1 max-w-md">
                 Selecione um arquivo PDF para realizar a divisão por intervalos, extrair páginas
                 específicas ou separar página a página.
               </p>
@@ -594,14 +608,14 @@ export default function DividirPdf() {
               <div className="mt-4 flex items-center gap-2">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="font-medium"
+                  className="h-8 px-4 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                   disabled={isSplitting || isValidatingFile}
                 >
                   {isValidatingFile ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-[#C9922A]" />
                       Lendo documento...
                     </>
                   ) : (
@@ -612,16 +626,20 @@ export default function DividirPdf() {
             </div>
           ) : (
             /* Card do Documento Selecionado com Opção de Substituir */
-            <Card className="border-border bg-card shadow-sm rounded-xl">
-              <CardHeader className="p-4 sm:p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+              <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F5F6F8]/60 dark:bg-muted/20">
                 <div>
-                  <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                    <FileCheck2 className="w-4 h-4 text-[#C9922A]" />
-                    Documento selecionado
-                  </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-md bg-[#FAF8F2] dark:bg-muted/40 flex items-center justify-center text-[#C9922A]">
+                      <FileCheck2 className="w-4 h-4 text-[#C9922A]" />
+                    </div>
+                    <h2 className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
+                      Documento selecionado
+                    </h2>
+                  </div>
+                  <p className="text-xs text-[#78818E] dark:text-muted-foreground mt-0.5">
                     Você pode alterar as opções de divisão abaixo ou substituir o documento.
-                  </CardDescription>
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -631,7 +649,7 @@ export default function DividirPdf() {
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isSplitting}
-                    className="text-xs h-8"
+                    className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                   >
                     <Upload className="w-3.5 h-3.5 mr-1.5" />
                     Substituir PDF
@@ -646,7 +664,7 @@ export default function DividirPdf() {
                       setSignatureConfirmed(false)
                     }}
                     disabled={isSplitting}
-                    className="text-xs h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    className="h-8 px-3 text-xs font-medium text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                     Remover
@@ -661,21 +679,23 @@ export default function DividirPdf() {
                   onChange={handleInputChange}
                   disabled={isSplitting || isValidatingFile}
                 />
-              </CardHeader>
+              </div>
 
-              <CardContent className="p-4 sm:p-5">
+              <div className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-foreground truncate max-w-md">
+                      <span className="text-sm font-semibold text-[#252B34] dark:text-foreground truncate max-w-md">
                         {doc.name}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#F5F6F8] dark:bg-muted/50 border border-[#E4E7EB]/80 dark:border-border/60 text-[#78818E] dark:text-muted-foreground font-medium tabular-nums">
                         {doc.pageCount} {doc.pageCount === 1 ? 'página' : 'páginas'}
                       </span>
-                      <span className="text-xs text-muted-foreground">{formatBytes(doc.size)}</span>
+                      <span className="text-xs text-[#78818E] dark:text-muted-foreground tabular-nums">
+                        {formatBytes(doc.size)}
+                      </span>
                       {doc.hasSignature && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 font-medium inline-flex items-center gap-1 border border-amber-500/30">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#C77E1E]/10 text-[#C77E1E] font-medium inline-flex items-center gap-1 border border-[#C77E1E]/30">
                           <AlertTriangle className="w-3 h-3 shrink-0" />
                           Indício de assinatura digital
                         </span>
@@ -683,31 +703,35 @@ export default function DividirPdf() {
                     </div>
 
                     {doc.validationStatus === 'invalid' && (
-                      <div className="text-xs text-destructive flex items-center gap-1 font-medium mt-1">
+                      <div className="text-xs text-[#B4453C] flex items-center gap-1 font-medium mt-1">
                         <Ban className="w-3.5 h-3.5 shrink-0" />
                         <span>{doc.errorMessage || 'Arquivo inválido.'}</span>
                       </div>
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Configuração das Modalidades de Divisão */}
           {doc && doc.validationStatus === 'valid' && (
-            <Card className="border-border bg-card shadow-sm rounded-xl">
-              <CardHeader className="p-4 sm:p-5 border-b">
-                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#C9922A]" />
-                  Modalidade de divisão
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
+            <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+              <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 bg-[#F5F6F8]/60 dark:bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-md bg-[#FAF8F2] dark:bg-muted/40 flex items-center justify-center text-[#C9922A]">
+                    <Layers className="w-4 h-4 text-[#C9922A]" />
+                  </div>
+                  <h2 className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
+                    Modalidade de divisão
+                  </h2>
+                </div>
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground mt-0.5">
                   Escolha como deseja separar as páginas do documento.
-                </CardDescription>
-              </CardHeader>
+                </p>
+              </div>
 
-              <CardContent className="p-4 sm:p-5 space-y-6">
+              <div className="p-4 sm:p-6 space-y-6">
                 <RadioGroup
                   value={splitMode}
                   onValueChange={(val) => setSplitMode(val as SplitMode)}
@@ -717,67 +741,79 @@ export default function DividirPdf() {
                   {/* Opção 1: Intervalos */}
                   <label
                     htmlFor={modeRadioRangesId}
-                    className={`flex flex-col justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex flex-col justify-between p-4 rounded-[10px] border-2 cursor-pointer transition-all ${
                       splitMode === 'ranges'
-                        ? 'border-[#C9922A] bg-[#C9922A]/5'
-                        : 'border-border/70 hover:border-border hover:bg-muted/20'
+                        ? 'border-[#C9922A] bg-[#FAF8F2]/60 dark:bg-muted/30 shadow-xs ring-1 ring-[#C9922A]/30'
+                        : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/40 hover:bg-[#FAF8F2]/20'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
-                        <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-[#252B34] dark:text-foreground flex items-center gap-1.5 tracking-tight">
                           Dividir por intervalos
                         </span>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-[#78818E] dark:text-muted-foreground leading-relaxed">
                           Gere múltiplos PDFs a partir de intervalos configurados (ex: 1-10, 11-20).
                         </p>
                       </div>
-                      <RadioGroupItem value="ranges" id={modeRadioRangesId} className="mt-0.5" />
+                      <RadioGroupItem
+                        value="ranges"
+                        id={modeRadioRangesId}
+                        className="mt-0.5 text-[#C9922A] border-[#C9922A]"
+                      />
                     </div>
                   </label>
 
                   {/* Opção 2: Extrair páginas específicas */}
                   <label
                     htmlFor={modeRadioExtractId}
-                    className={`flex flex-col justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex flex-col justify-between p-4 rounded-[10px] border-2 cursor-pointer transition-all ${
                       splitMode === 'extract'
-                        ? 'border-[#C9922A] bg-[#C9922A]/5'
-                        : 'border-border/70 hover:border-border hover:bg-muted/20'
+                        ? 'border-[#C9922A] bg-[#FAF8F2]/60 dark:bg-muted/30 shadow-xs ring-1 ring-[#C9922A]/30'
+                        : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/40 hover:bg-[#FAF8F2]/20'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
-                        <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-[#252B34] dark:text-foreground flex items-center gap-1.5 tracking-tight">
                           Extrair páginas
                         </span>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-[#78818E] dark:text-muted-foreground leading-relaxed">
                           Gera UM ÚNICO PDF contendo páginas avulsas e intervalos na ordem original.
                         </p>
                       </div>
-                      <RadioGroupItem value="extract" id={modeRadioExtractId} className="mt-0.5" />
+                      <RadioGroupItem
+                        value="extract"
+                        id={modeRadioExtractId}
+                        className="mt-0.5 text-[#C9922A] border-[#C9922A]"
+                      />
                     </div>
                   </label>
 
                   {/* Opção 3: Separar todas as páginas */}
                   <label
                     htmlFor={modeRadioAllId}
-                    className={`flex flex-col justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex flex-col justify-between p-4 rounded-[10px] border-2 cursor-pointer transition-all ${
                       splitMode === 'all'
-                        ? 'border-[#C9922A] bg-[#C9922A]/5'
-                        : 'border-border/70 hover:border-border hover:bg-muted/20'
+                        ? 'border-[#C9922A] bg-[#FAF8F2]/60 dark:bg-muted/30 shadow-xs ring-1 ring-[#C9922A]/30'
+                        : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/40 hover:bg-[#FAF8F2]/20'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
-                        <span className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-[#252B34] dark:text-foreground flex items-center gap-1.5 tracking-tight">
                           Separar todas as páginas
                         </span>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-[#78818E] dark:text-muted-foreground leading-relaxed">
                           Gera um PDF individual para cada página, empacotados em um único arquivo
                           ZIP.
                         </p>
                       </div>
-                      <RadioGroupItem value="all" id={modeRadioAllId} className="mt-0.5" />
+                      <RadioGroupItem
+                        value="all"
+                        id={modeRadioAllId}
+                        className="mt-0.5 text-[#C9922A] border-[#C9922A]"
+                      />
                     </div>
                   </label>
                 </RadioGroup>
@@ -786,13 +822,13 @@ export default function DividirPdf() {
 
                 {/* MODALIDADE A: MÚLTIPLOS INTERVALOS */}
                 {splitMode === 'ranges' && (
-                  <div className="space-y-4 pt-2 border-t border-border/60">
+                  <div className="space-y-4 pt-4 border-t border-[#E4E7EB]/80 dark:border-border/60">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-sm font-semibold text-foreground">
+                        <h4 className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
                           Configurar intervalos de páginas
                         </h4>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-[#78818E] dark:text-muted-foreground">
                           Cada linha abaixo irá gerar um arquivo PDF independente.
                         </p>
                       </div>
@@ -802,9 +838,9 @@ export default function DividirPdf() {
                         size="sm"
                         onClick={addRange}
                         disabled={isSplitting}
-                        className="text-xs h-8 border-[#C9922A]/40 text-[#C9922A] hover:bg-[#C9922A]/10"
+                        className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                       >
-                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        <Plus className="w-3.5 h-3.5 mr-1 text-[#C9922A]" />
                         Adicionar intervalo
                       </Button>
                     </div>
@@ -820,20 +856,22 @@ export default function DividirPdf() {
                         return (
                           <div
                             key={range.id}
-                            className={`p-3 rounded-lg border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                            className={`p-3 sm:px-4 rounded-[10px] border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                               isInvalid
-                                ? 'border-destructive/40 bg-destructive/5'
-                                : 'border-border bg-muted/20'
+                                ? 'border-red-200 dark:border-red-900/60 bg-red-50/50 dark:bg-red-950/20'
+                                : 'border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/40 dark:bg-muted/10'
                             }`}
                           >
                             <div className="flex items-center gap-3 flex-1">
-                              <span className="text-xs font-bold text-muted-foreground w-6">
-                                #{index + 1}
+                              <span className="w-6 h-6 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border text-[#C9922A] flex items-center justify-center text-xs font-bold shrink-0">
+                                {index + 1}
                               </span>
 
                               <div className="flex items-center gap-2 flex-wrap flex-1">
                                 <div className="flex items-center gap-1.5">
-                                  <Label className="text-xs text-muted-foreground">De:</Label>
+                                  <Label className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                                    De:
+                                  </Label>
                                   <Input
                                     type="number"
                                     min={1}
@@ -847,12 +885,14 @@ export default function DividirPdf() {
                                       )
                                     }
                                     disabled={isSplitting}
-                                    className="w-20 h-8 text-xs font-semibold"
+                                    className="w-20 h-8 text-xs font-semibold tabular-nums border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] bg-white dark:bg-card"
                                   />
                                 </div>
 
                                 <div className="flex items-center gap-1.5">
-                                  <Label className="text-xs text-muted-foreground">Até:</Label>
+                                  <Label className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                                    Até:
+                                  </Label>
                                   <Input
                                     type="number"
                                     min={1}
@@ -866,18 +906,18 @@ export default function DividirPdf() {
                                       )
                                     }
                                     disabled={isSplitting}
-                                    className="w-20 h-8 text-xs font-semibold"
+                                    className="w-20 h-8 text-xs font-semibold tabular-nums border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] bg-white dark:bg-card"
                                   />
                                 </div>
 
-                                <span className="text-xs text-muted-foreground ml-2">
+                                <span className="text-xs text-[#78818E] dark:text-muted-foreground ml-2">
                                   {!isInvalid && (
                                     <>
                                       ({pagesInRange} {pagesInRange === 1 ? 'página' : 'páginas'})
                                     </>
                                   )}
                                   {isInvalid && (
-                                    <span className="text-destructive font-medium">
+                                    <span className="text-[#B4453C] font-medium">
                                       Intervalo inválido
                                     </span>
                                   )}
@@ -891,7 +931,7 @@ export default function DividirPdf() {
                               size="sm"
                               onClick={() => removeRange(range.id)}
                               disabled={ranges.length <= 1 || isSplitting}
-                              className="text-xs h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 self-end sm:self-auto"
+                              className="h-8 px-2.5 text-xs text-[#78818E] hover:text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md self-end sm:self-auto"
                               title="Remover este intervalo"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -905,17 +945,17 @@ export default function DividirPdf() {
 
                 {/* MODALIDADE B: EXTRAIR PÁGINAS ESPECÍFICAS */}
                 {splitMode === 'extract' && (
-                  <div className="space-y-4 pt-2 border-t border-border/60">
+                  <div className="space-y-4 pt-4 border-t border-[#E4E7EB]/80 dark:border-border/60">
                     <div className="space-y-1.5">
                       <Label
                         htmlFor="extract-pages-input"
-                        className="text-sm font-semibold text-foreground"
+                        className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground"
                       >
                         Páginas e intervalos para extração
                       </Label>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-[#78818E] dark:text-muted-foreground">
                         Digite números de páginas e intervalos separados por vírgula. Exemplo:{' '}
-                        <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">
+                        <span className="font-mono bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border px-1.5 py-0.5 rounded text-[#252B34] dark:text-foreground">
                           2, 5, 8-10
                         </span>
                       </p>
@@ -925,27 +965,27 @@ export default function DividirPdf() {
                         value={extractInput}
                         onChange={(e) => setExtractInput(e.target.value)}
                         disabled={isSplitting}
-                        className="text-sm font-mono mt-1"
+                        className="text-sm font-mono mt-1 h-9 border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] bg-white dark:bg-card"
                       />
                     </div>
 
                     {/* Resumo da extração em tempo real */}
                     {extractAnalysis.valid ? (
-                      <div className="rounded-lg border border-border bg-muted/20 p-3.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/60 dark:bg-muted/20 p-3.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="text-foreground font-medium">
+                          <CheckCircle2 className="w-4 h-4 text-[#3E8E5A] shrink-0" />
+                          <span className="text-[#252B34] dark:text-foreground font-medium">
                             {extractAnalysis.selectedCount} página(s) selecionada(s) para o novo
                             PDF.
                           </span>
                         </div>
-                        <span className="text-muted-foreground">
+                        <span className="text-[#78818E] dark:text-muted-foreground">
                           {extractAnalysis.excludedCount} página(s) permanecerão fora do resultado.
                         </span>
                       </div>
                     ) : (
                       extractAnalysis.error && (
-                        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex items-center gap-2">
+                        <div className="rounded-[10px] border border-red-200 dark:border-red-900/60 bg-red-50/50 p-3 text-xs text-[#B4453C] flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4 shrink-0" />
                           <span>{extractAnalysis.error}</span>
                         </div>
@@ -956,37 +996,40 @@ export default function DividirPdf() {
 
                 {/* MODALIDADE C: SEPARAR TODAS AS PÁGINAS */}
                 {splitMode === 'all' && (
-                  <div className="pt-2 border-t border-border/60">
-                    <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-2 text-xs">
-                      <div className="flex items-center gap-2 text-foreground font-medium">
+                  <div className="pt-4 border-t border-[#E4E7EB]/80 dark:border-border/60">
+                    <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/60 dark:bg-muted/20 p-4 space-y-2 text-xs">
+                      <div className="flex items-center gap-2 text-[#252B34] dark:text-foreground font-semibold">
                         <FileSpreadsheet className="w-4 h-4 text-[#C9922A]" />
                         <span>
                           Cada uma das {doc.pageCount} páginas será convertida em um documento PDF
                           separado.
                         </span>
                       </div>
-                      <p className="text-muted-foreground leading-relaxed">
+                      <p className="text-[#78818E] dark:text-muted-foreground leading-relaxed">
                         Para conveniência e evitar múltiplos downloads individuais, os{' '}
                         {doc.pageCount} arquivos serão reunidos automaticamente em um único pacote{' '}
-                        <strong className="text-foreground">ZIP</strong> pronto para descompactação.
+                        <strong className="text-[#252B34] dark:text-foreground font-semibold">
+                          ZIP
+                        </strong>{' '}
+                        pronto para descompactação.
                       </p>
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Bloco de Confirmação Obrigatória para Documento Assinado */}
           {doc && doc.hasSignature && !isSplitting && (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 dark:bg-amber-950/20 p-5 space-y-4">
+            <div className="rounded-[10px] border border-amber-300 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/20 p-5 space-y-4 shadow-xs">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-[#C77E1E] shrink-0 mt-0.5" />
                 <div className="space-y-1.5 flex-1">
-                  <h4 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-200 tracking-tight">
+                  <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#C77E1E]">
                     ATENÇÃO — DOCUMENTO COM ASSINATURA DIGITAL
                   </h4>
-                  <p className="text-xs sm:text-sm text-amber-900/90 dark:text-amber-300/90 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-amber-950/90 dark:text-amber-200/90 leading-relaxed">
                     Foram detectados indícios de campos de assinatura digital no arquivo
                     selecionado. A divisão do documento poderá comprometer a validade criptográfica
                     das assinaturas digitais. Os arquivos gerados serão cópias derivadas. O
@@ -995,7 +1038,7 @@ export default function DividirPdf() {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-amber-500/20">
+              <div className="pt-2 border-t border-amber-200 dark:border-amber-800/40">
                 <label
                   htmlFor="split-signature-agreement"
                   className="flex items-start gap-3 cursor-pointer group"
@@ -1004,7 +1047,7 @@ export default function DividirPdf() {
                     id="split-signature-agreement"
                     checked={signatureConfirmed}
                     onCheckedChange={(checked) => setSignatureConfirmed(checked === true)}
-                    className="mt-0.5 border-amber-600 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    className="mt-0.5 border-[#C77E1E] data-[state=checked]:bg-[#C9922A] data-[state=checked]:border-[#C9922A]"
                   />
                   <span className="text-xs sm:text-sm font-medium text-amber-950 dark:text-amber-200 leading-normal select-none group-hover:text-amber-900">
                     Estou ciente de que os PDFs gerados poderão não preservar a validade
@@ -1018,16 +1061,16 @@ export default function DividirPdf() {
 
           {/* Painel de Progresso / Em Andamento */}
           {isSplitting && (
-            <Card className="border-[#C9922A]/40 bg-[#C9922A]/5 rounded-xl">
+            <Card className="rounded-[10px] border border-[#C9922A]/40 bg-[#FAF8F2]/60 dark:bg-muted/20">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <Loader2 className="w-5 h-5 text-[#C9922A] animate-spin" />
                     <div>
-                      <h4 className="text-sm font-semibold text-foreground">
+                      <h4 className="text-sm font-bold text-[#252B34] dark:text-foreground">
                         Dividindo documento...
                       </h4>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-[#78818E] dark:text-muted-foreground">
                         {progress?.currentLabel || 'Processando páginas...'}
                       </p>
                     </div>
@@ -1036,7 +1079,7 @@ export default function DividirPdf() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                    className="h-8 px-3 text-xs text-[#B4453C] border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md"
                     onClick={handleCancelSplit}
                   >
                     Cancelar
@@ -1054,11 +1097,11 @@ export default function DividirPdf() {
                     }
                     className="h-2"
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <div className="flex justify-between text-[11px] text-[#78818E] dark:text-muted-foreground">
                     <span>
                       Etapa {progress?.currentStep ?? 0} de {progress?.totalSteps ?? 1}
                     </span>
-                    <span>
+                    <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
                       {progress && progress.totalSteps > 0
                         ? Math.round((progress.currentStep / progress.totalSteps) * 100)
                         : 0}
@@ -1074,7 +1117,7 @@ export default function DividirPdf() {
           {doc && doc.validationStatus === 'valid' && !isSplitting && (
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
               {doc.hasSignature && !signatureConfirmed && (
-                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium text-right order-2 sm:order-1">
+                <p className="text-xs text-[#C77E1E] font-medium text-right order-2 sm:order-1">
                   Confirme a ciência acima para habilitar a divisão.
                 </p>
               )}
@@ -1087,7 +1130,7 @@ export default function DividirPdf() {
                   (doc.hasSignature && !signatureConfirmed) ||
                   (splitMode === 'extract' && !extractAnalysis.valid)
                 }
-                className="w-full sm:w-auto bg-[#C9922A] hover:bg-[#b07d1f] text-white font-semibold shadow-sm px-8 order-1 sm:order-2"
+                className="w-full sm:w-auto h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A] order-1 sm:order-2"
               >
                 <Scissors className="w-4 h-4 mr-2" />
                 Dividir PDF
@@ -1098,12 +1141,16 @@ export default function DividirPdf() {
       )}
 
       {/* Informação sobre Processamento Local no Navegador */}
-      <div className="rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5 flex items-center gap-3.5 text-muted-foreground">
-        <ShieldCheck className="w-5 h-5 text-[#C9922A] shrink-0" />
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 flex items-center gap-3.5 text-[#78818E] dark:text-muted-foreground shadow-xs">
+        <div className="h-9 w-9 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
+          <ShieldCheck className="w-5 h-5 text-[#C9922A]" />
+        </div>
         <p className="text-xs sm:text-sm leading-relaxed">
-          Processamento executado 100% de forma local no seu navegador. Os documentos não são
-          enviados para nenhum servidor ou armazenados externamente, garantindo sigilo e
-          conformidade.
+          <strong className="text-[#252B34] dark:text-foreground font-semibold">
+            Processamento 100% Local:
+          </strong>{' '}
+          Executado no seu navegador. Os documentos não são enviados para nenhum servidor ou
+          armazenados externamente, garantindo sigilo e conformidade.
         </p>
       </div>
     </div>

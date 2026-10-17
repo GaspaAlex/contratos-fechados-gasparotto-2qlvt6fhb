@@ -403,48 +403,73 @@ export default function RotacionarPdf() {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-12 max-w-6xl mx-auto">
-      {/* Botão Voltar e Cabeçalho */}
+      {/* 1. CABEÇALHO CORPORATIVO PADRONIZADO (GRAFITE PREMIUM 2.1) */}
       <div className="flex flex-col gap-3">
         <Link
           to="/ferramentas-pdf"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-[#C9922A] transition-colors w-fit"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#78818E] hover:text-[#C9922A] transition-colors w-fit group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
           Voltar para Ferramentas PDF
         </Link>
 
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#C9922A]/10 border border-[#C9922A]/20 rounded-lg">
-            <RotateCw className="w-6 h-6 text-[#C9922A]" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+                FERRAMENTAS
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
               Rotacionar PDF
             </h1>
-            <p className="text-sm font-medium text-muted-foreground">
-              Gire páginas específicas ou o documento inteiro.
+            <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+              Gire páginas específicas ou o documento inteiro com pré-visualização real.
             </p>
           </div>
         </div>
       </div>
 
+      {/* Alerta Institucional de Assinatura */}
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 flex items-start gap-3.5 text-[#78818E] dark:text-muted-foreground text-xs leading-relaxed shadow-xs">
+        <div className="h-8 w-8 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0 mt-0.5">
+          <Info className="w-4 h-4 text-[#C9922A]" />
+        </div>
+        <div>
+          <span className="font-semibold text-[#252B34] dark:text-foreground">
+            Aviso sobre integridade de documentos:
+          </span>{' '}
+          A alteração da orientação das páginas altera os metadados do documento. Caso o arquivo
+          possua assinaturas digitais com certificados ICP-Brasil ou similares, o procedimento
+          gerará uma cópia derivada e as assinaturas digitais existentes poderão perder sua validade
+          jurídica. O documento original permanecerá inalterado.
+        </div>
+      </div>
+
       {/* Alerta de Erro Geral */}
       {errorMessage && (
-        <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
-          <Ban className="w-4 h-4" />
-          <AlertTitle className="font-semibold">Atenção</AlertTitle>
-          <AlertDescription className="text-xs sm:text-sm mt-1">{errorMessage}</AlertDescription>
+        <Alert
+          variant="destructive"
+          className="rounded-[10px] border border-red-200 dark:border-red-900/60 bg-red-50/80 dark:bg-red-950/30 text-[#B4453C]"
+        >
+          <Ban className="w-4 h-4 text-[#B4453C]" />
+          <AlertTitle className="font-semibold text-xs sm:text-sm text-[#B4453C]">
+            Atenção
+          </AlertTitle>
+          <AlertDescription className="text-xs sm:text-sm mt-1 text-[#B4453C]/90">
+            {errorMessage}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* SEÇÃO 1: SELEÇÃO DO DOCUMENTO */}
       {!doc ? (
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
           <CardHeader className="p-6 pb-4">
-            <CardTitle className="text-lg font-bold text-foreground">
+            <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground tracking-tight">
               Selecionar documento PDF
             </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
+            <CardDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground">
               Envie o documento que deseja rotacionar. Todo o processamento ocorre no seu navegador
               com total privacidade.
             </CardDescription>
@@ -455,10 +480,10 @@ export default function RotacionarPdf() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 ${
+              className={`border-2 border-dashed rounded-[10px] p-8 sm:p-12 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 ${
                 isDragging
-                  ? 'border-[#C9922A] bg-[#C9922A]/10'
-                  : 'border-border/80 hover:border-[#C9922A]/60 bg-muted/20 hover:bg-muted/40'
+                  ? 'border-[#C9922A] bg-[#FAF8F2] dark:bg-muted/30 scale-[1.005]'
+                  : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/60 bg-white dark:bg-card hover:bg-[#FAF8F2]/20'
               }`}
             >
               <input
@@ -468,14 +493,14 @@ export default function RotacionarPdf() {
                 className="hidden"
                 onChange={handleInputChange}
               />
-              <div className="p-4 rounded-full bg-[#C9922A]/10 text-[#C9922A] ring-1 ring-[#C9922A]/20">
-                <Upload className="w-7 h-7" />
+              <div className="h-12 w-12 rounded-full bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border text-[#C9922A] flex items-center justify-center">
+                <Upload className="w-5 h-5 text-[#C9922A]" />
               </div>
               <div>
-                <p className="text-base font-semibold text-foreground">
+                <p className="text-base font-bold text-[#252B34] dark:text-foreground tracking-tight">
                   Arraste o arquivo PDF aqui ou clique para selecionar
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground mt-1">
                   Formatos aceitos: PDF nativo (.pdf). Sem limites de páginas ou tamanho.
                 </p>
               </div>
@@ -483,14 +508,14 @@ export default function RotacionarPdf() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="mt-2 border-[#C9922A]/40 text-[#C9922A] hover:bg-[#C9922A]/10"
+                className="mt-2 h-8 px-4 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
               >
                 Procurar no computador
               </Button>
             </div>
 
             {isValidatingFile && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin text-[#C9922A]" />
                 <span>Validando integridade do documento...</span>
               </div>
@@ -499,159 +524,165 @@ export default function RotacionarPdf() {
         </Card>
       ) : (
         /* Card do Arquivo Carregado */
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
-          <CardHeader className="p-5 pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div
-                  className={`p-2 rounded-lg mt-0.5 shrink-0 ${
-                    doc.validationStatus === 'valid'
-                      ? 'bg-[#C9922A]/10 text-[#C9922A]'
-                      : 'bg-destructive/10 text-destructive'
-                  }`}
-                >
-                  <FileCheck2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground leading-snug break-all">
-                    {doc.name}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-                    <span>{formatBytes(doc.size)}</span>
-                    <span>•</span>
-                    <span>{doc.pageCount} página(s)</span>
-                    <span>•</span>
-                    <span
-                      className={`font-medium ${
-                        doc.validationStatus === 'valid'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-destructive'
-                      }`}
-                    >
-                      {doc.validationStatus === 'valid' ? 'Arquivo válido' : 'Arquivo com erro'}
-                    </span>
-                  </div>
-                </div>
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+          <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F5F6F8]/60 dark:bg-muted/20">
+            <div className="flex items-start gap-3">
+              <div
+                className={`p-2 rounded-md mt-0.5 shrink-0 ${
+                  doc.validationStatus === 'valid'
+                    ? 'bg-[#FAF8F2] dark:bg-muted/40 text-[#C9922A] border border-[#E4E7EB] dark:border-border'
+                    : 'bg-red-50 text-[#B4453C] border border-red-200'
+                }`}
+              >
+                <FileCheck2 className="w-4 h-4" />
               </div>
-
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessing}
-                  className="text-xs"
-                >
-                  Substituir
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className="hidden"
-                  onChange={handleInputChange}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleResetForNewOperation}
-                  disabled={isProcessing}
-                  className="text-xs text-muted-foreground hover:text-destructive"
-                  title="Remover documento"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Remover
-                </Button>
+              <div>
+                <h3 className="text-sm font-bold text-[#252B34] dark:text-foreground leading-snug break-all tracking-tight">
+                  {doc.name}
+                </h3>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#78818E] dark:text-muted-foreground mt-1">
+                  <span className="tabular-nums">{formatBytes(doc.size)}</span>
+                  <span>•</span>
+                  <span className="tabular-nums">{doc.pageCount} página(s)</span>
+                  <span>•</span>
+                  <span
+                    className={`font-semibold ${
+                      doc.validationStatus === 'valid' ? 'text-[#3E8E5A]' : 'text-[#B4453C]'
+                    }`}
+                  >
+                    {doc.validationStatus === 'valid' ? 'Arquivo válido' : 'Arquivo com erro'}
+                  </span>
+                </div>
               </div>
             </div>
-          </CardHeader>
+
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessing}
+                className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
+              >
+                Substituir
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={handleInputChange}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleResetForNewOperation}
+                disabled={isProcessing}
+                className="h-8 px-3 text-xs font-medium text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                title="Remover documento"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                Remover
+              </Button>
+            </div>
+          </div>
 
           {/* Erro de Validação do Arquivo */}
           {doc.validationStatus === 'invalid' && (
-            <CardContent className="p-5 pt-0">
-              <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
-                <Ban className="w-4 h-4" />
-                <AlertTitle className="font-semibold">Documento bloqueado</AlertTitle>
+            <div className="p-4 sm:p-5">
+              <Alert
+                variant="destructive"
+                className="rounded-[10px] border border-red-200 bg-red-50 text-[#B4453C]"
+              >
+                <Ban className="w-4 h-4 text-[#B4453C]" />
+                <AlertTitle className="font-semibold text-xs sm:text-sm">
+                  Documento bloqueado
+                </AlertTitle>
                 <AlertDescription className="text-xs sm:text-sm mt-1">
                   {doc.errorMessage || 'O arquivo selecionado não pôde ser validado.'}
                 </AlertDescription>
               </Alert>
-            </CardContent>
+            </div>
           )}
 
           {/* Aviso e Confirmação de Assinatura Digital */}
           {doc.validationStatus === 'valid' && doc.hasSignature && (
-            <CardContent className="p-5 pt-0">
-              <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="font-semibold text-amber-900 dark:text-amber-200">
-                  Indícios de Assinatura Digital Detectados
-                </AlertTitle>
-                <AlertDescription className="text-xs sm:text-sm mt-1 space-y-2">
-                  <p>
-                    Foram identificados campos de assinatura digital (/Sig) neste documento. A
-                    rotação de páginas altera a estrutura binária do arquivo e{' '}
-                    <strong>pode comprometer a validade criptográfica</strong> das assinaturas
-                    existentes.
-                  </p>
-                  <p>
-                    O documento original permanecerá intacto no seu computador. O PDF gerado será
-                    uma cópia derivada devidamente identificada.
-                  </p>
-                  <div className="pt-2 flex items-start gap-2.5">
-                    <Checkbox
-                      id="signature-confirm"
-                      checked={signatureConfirmed}
-                      onCheckedChange={(checked) => setSignatureConfirmed(Boolean(checked))}
-                      className="mt-0.5 border-amber-600 data-[state=checked]:bg-[#C9922A] data-[state=checked]:border-[#C9922A]"
-                    />
-                    <label
-                      htmlFor="signature-confirm"
-                      className="text-xs sm:text-sm leading-snug cursor-pointer font-medium select-none text-foreground"
-                    >
-                      Estou ciente de que o PDF resultante poderá não preservar a validade
-                      criptográfica das assinaturas digitais e desejo gerar uma cópia derivada.
-                    </label>
+            <div className="p-4 sm:p-5 border-t border-[#E4E7EB]/80 dark:border-border/60">
+              <div className="rounded-[10px] border border-amber-300 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/20 p-4 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-[#C77E1E] shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#C77E1E]">
+                      Indícios de Assinatura Digital Detectados
+                    </h4>
+                    <p className="text-xs text-amber-950/90 dark:text-amber-200/90 leading-relaxed">
+                      Foram identificados campos de assinatura digital (/Sig) neste documento. A
+                      rotação de páginas altera a estrutura binária do arquivo e{' '}
+                      <strong>pode comprometer a validade criptográfica</strong> das assinaturas
+                      existentes.
+                    </p>
+                    <p className="text-xs text-amber-950/90 dark:text-amber-200/90 leading-relaxed">
+                      O documento original permanecerá intacto no seu computador. O PDF gerado será
+                      uma cópia derivada devidamente identificada.
+                    </p>
                   </div>
-                </AlertDescription>
-              </Alert>
-            </CardContent>
+                </div>
+
+                <div className="pt-2 border-t border-amber-200 dark:border-amber-800/40 flex items-start gap-2.5">
+                  <Checkbox
+                    id="signature-confirm"
+                    checked={signatureConfirmed}
+                    onCheckedChange={(checked) => setSignatureConfirmed(Boolean(checked))}
+                    className="mt-0.5 border-[#C77E1E] data-[state=checked]:bg-[#C9922A] data-[state=checked]:border-[#C9922A]"
+                  />
+                  <label
+                    htmlFor="signature-confirm"
+                    className="text-xs leading-snug cursor-pointer font-medium select-none text-amber-950 dark:text-amber-200"
+                  >
+                    Estou ciente de que o PDF resultante poderá não preservar a validade
+                    criptográfica das assinaturas digitais e desejo gerar uma cópia derivada.
+                  </label>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Aviso pontual caso haja erro ao carregar miniaturas */}
           {thumbnailLoadError && (
-            <CardContent className="p-5 pt-0">
-              <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 flex items-center gap-2">
+            <div className="p-4 sm:p-5 pt-0">
+              <div className="text-xs text-[#C77E1E] bg-amber-50 dark:bg-amber-950/30 p-3 rounded-[10px] border border-amber-200 dark:border-amber-800/40 flex items-center gap-2">
                 <Info className="w-4 h-4 shrink-0" />
                 <span>{thumbnailLoadError}</span>
               </div>
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
       )}
 
       {/* SEÇÃO 2: BARRA DE FERRAMENTAS E CONTROLES DE ROTAÇÃO */}
       {doc && doc.validationStatus === 'valid' && (
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
-          <CardHeader className="p-5 pb-3">
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+          <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 bg-[#F5F6F8]/60 dark:bg-muted/20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                  Controles de Rotação
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
+                    Controles de Rotação
+                  </span>
                   {modifiedPagesCount > 0 && (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30 tabular-nums">
                       {modifiedPagesCount}{' '}
                       {modifiedPagesCount === 1 ? 'página modificada' : 'páginas modificadas'}
                     </span>
                   )}
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                </div>
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground mt-1">
                   {selectedPages.size > 0
                     ? `Aplicando ações nas ${selectedPages.size} página(s) selecionada(s).`
                     : 'Nenhuma página selecionada individualmente: os botões abaixo aplicarão a todas as páginas.'}
-                </CardDescription>
+                </p>
               </div>
 
               {/* Ações de Seleção Rápida */}
@@ -662,7 +693,7 @@ export default function RotacionarPdf() {
                   size="sm"
                   onClick={handleSelectAll}
                   disabled={isProcessing}
-                  className="h-8 text-xs"
+                  className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                 >
                   <CheckSquare className="w-3.5 h-3.5 mr-1 text-[#C9922A]" />
                   Selecionar todas ({doc.pageCount})
@@ -674,7 +705,7 @@ export default function RotacionarPdf() {
                     size="sm"
                     onClick={handleDeselectAll}
                     disabled={isProcessing}
-                    className="h-8 text-xs"
+                    className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#252B34] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                   >
                     <Square className="w-3.5 h-3.5 mr-1" />
                     Desmarcar seleção
@@ -687,7 +718,7 @@ export default function RotacionarPdf() {
                     size="sm"
                     onClick={handleResetRotations}
                     disabled={isProcessing}
-                    className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="h-8 px-2.5 text-xs text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] rounded-md"
                     title="Retorna todas as páginas às orientações originais do arquivo"
                   >
                     <Undo2 className="w-3.5 h-3.5 mr-1" />
@@ -696,11 +727,11 @@ export default function RotacionarPdf() {
                 )}
               </div>
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="p-5 pt-2">
-            <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-lg bg-muted/30 border border-border/60">
-              <span className="text-xs font-medium text-muted-foreground mr-1">
+          <div className="p-4 sm:p-5">
+            <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-[10px] bg-[#F5F6F8]/60 dark:bg-muted/20 border border-[#E4E7EB]/80 dark:border-border/60">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
                 Girar {selectedPages.size > 0 ? 'selecionadas:' : 'todas as páginas:'}
               </span>
 
@@ -710,10 +741,10 @@ export default function RotacionarPdf() {
                 size="sm"
                 onClick={() => rotateSelectedPages(-90)}
                 disabled={isProcessing}
-                className="h-8 text-xs hover:border-[#C9922A] hover:text-[#C9922A]"
+                className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/60 hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                 title="Girar 90° para a esquerda (anti-horário)"
               >
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
                 90° para a esquerda
               </Button>
 
@@ -723,10 +754,10 @@ export default function RotacionarPdf() {
                 size="sm"
                 onClick={() => rotateSelectedPages(90)}
                 disabled={isProcessing}
-                className="h-8 text-xs hover:border-[#C9922A] hover:text-[#C9922A]"
+                className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/60 hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                 title="Girar 90° para a direita (horário)"
               >
-                <RotateCw className="w-3.5 h-3.5 mr-1.5" />
+                <RotateCw className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
                 90° para a direita
               </Button>
 
@@ -736,15 +767,15 @@ export default function RotacionarPdf() {
                 size="sm"
                 onClick={() => rotateSelectedPages(180)}
                 disabled={isProcessing}
-                className="h-8 text-xs hover:border-[#C9922A] hover:text-[#C9922A]"
+                className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/60 hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                 title="Girar 180°"
               >
-                <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                <RefreshCw className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
                 180°
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* SEÇÃO 3: GRADE DE MINIATURAS VISUAIS DAS PÁGINAS */}
@@ -787,14 +818,14 @@ export default function RotacionarPdf() {
 
       {/* SEÇÃO 4: AÇÃO DE CONFIRMAÇÃO / PROCESSAMENTO */}
       {doc && doc.validationStatus === 'valid' && !rotatedBlobUrl && (
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
-          <CardContent className="p-6">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
+          <CardContent className="p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
                   Pronto para gerar o documento rotacionado
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground leading-relaxed">
                   {modifiedPagesCount > 0
                     ? `${modifiedPagesCount} página(s) serão rotacionadas. As demais manterão suas orientações originais.`
                     : 'Nenhuma página foi rotacionada ainda. Ajuste as páginas desejadas ou aplique a rotação em todo o documento.'}
@@ -806,7 +837,7 @@ export default function RotacionarPdf() {
                   type="button"
                   onClick={handleProcessRotation}
                   disabled={isProcessing || (doc.hasSignature && !signatureConfirmed)}
-                  className="bg-[#C9922A] hover:bg-[#B38022] text-white font-medium px-6 shadow-sm"
+                  className="h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
                 >
                   {isProcessing ? (
                     <>
@@ -825,11 +856,13 @@ export default function RotacionarPdf() {
 
             {/* Progresso do Processamento */}
             {isProcessing && progress && (
-              <div className="mt-5 pt-4 border-t border-border/60 space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">{progress.currentLabel}</span>
+              <div className="mt-5 pt-4 border-t border-[#E4E7EB]/80 dark:border-border/60 space-y-2">
+                <div className="flex items-center justify-between text-xs text-[#78818E] dark:text-muted-foreground">
+                  <span className="font-semibold text-[#252B34] dark:text-foreground">
+                    {progress.currentLabel}
+                  </span>
                   {progress.totalPages > 0 && progress.currentPage > 0 && (
-                    <span>
+                    <span className="tabular-nums">
                       {progress.currentPage} / {progress.totalPages}
                     </span>
                   )}
@@ -848,7 +881,7 @@ export default function RotacionarPdf() {
                     variant="ghost"
                     size="sm"
                     onClick={handleCancelProcess}
-                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                    className="h-7 px-2.5 text-xs text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md"
                   >
                     Cancelar operação
                   </Button>
@@ -861,17 +894,17 @@ export default function RotacionarPdf() {
 
       {/* SEÇÃO 5: SUCESSO E DOWNLOAD */}
       {rotatedBlobUrl && (
-        <Card className="border-[#C9922A]/40 bg-[#C9922A]/5 shadow-sm rounded-xl animate-fade-in-up">
-          <CardHeader className="p-6 pb-3">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden animate-fade-in-up">
+          <CardHeader className="p-6 pb-4">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#C9922A]/10 text-[#C9922A] ring-1 ring-[#C9922A]/20">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#3E8E5A] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-[#3E8E5A]" />
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-lg font-bold text-foreground">
+                <CardTitle className="text-lg font-bold tracking-tight text-[#252B34] dark:text-foreground">
                   Documento rotacionado com sucesso!
                 </CardTitle>
-                <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+                <CardDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground">
                   O arquivo resultante foi gerado preservando a integridade original das páginas sem
                   qualquer rasterização.
                 </CardDescription>
@@ -879,26 +912,38 @@ export default function RotacionarPdf() {
             </div>
           </CardHeader>
 
-          <CardContent className="p-6 pt-2 space-y-4">
-            <div className="rounded-lg border border-border/80 bg-background/80 p-4 space-y-2 text-xs sm:text-sm">
+          <CardContent className="p-6 pt-0 space-y-4">
+            <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/60 dark:bg-muted/20 p-4 space-y-2 text-xs sm:text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Nome do arquivo gerado:</span>
-                <span className="font-mono font-medium text-foreground break-all">
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Nome do arquivo gerado:
+                </span>
+                <span className="font-mono font-semibold text-[#252B34] dark:text-foreground break-all">
                   {outputFileName}
                 </span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Total de páginas:</span>
-                <span className="font-semibold text-foreground">{resultTotalPages}</span>
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Total de páginas:
+                </span>
+                <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                  {resultTotalPages}
+                </span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Páginas com rotação modificada:</span>
-                <span className="font-semibold text-[#C9922A]">{resultModifiedPages}</span>
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Páginas com rotação modificada:
+                </span>
+                <span className="font-semibold text-[#C9922A] tabular-nums">
+                  {resultModifiedPages}
+                </span>
               </div>
               {resultHasSignature && (
-                <div className="flex flex-wrap items-center justify-between gap-2 text-amber-700 dark:text-amber-400">
-                  <span>Natureza do arquivo:</span>
-                  <span className="font-medium">Cópia derivada de documento assinado</span>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[#C77E1E]">
+                  <span className="uppercase tracking-wider text-[11px] font-semibold">
+                    Natureza do arquivo:
+                  </span>
+                  <span className="font-semibold">Cópia derivada de documento assinado</span>
                 </div>
               )}
             </div>
@@ -907,7 +952,7 @@ export default function RotacionarPdf() {
               <a
                 href={rotatedBlobUrl}
                 download={outputFileName}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-[#C9922A] text-white hover:bg-[#B38022] h-10 px-6 shadow-sm no-underline"
+                className="inline-flex items-center justify-center rounded-md text-xs font-semibold transition-colors bg-[#C9922A] text-white hover:bg-[#b58324] h-9 px-6 shadow-sm no-underline focus-visible:ring-2 focus-visible:ring-[#C9922A]"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Baixar PDF Rotacionado
@@ -917,7 +962,7 @@ export default function RotacionarPdf() {
                 type="button"
                 variant="outline"
                 onClick={handleResetForNewOperation}
-                className="text-xs sm:text-sm"
+                className="h-9 px-4 text-xs font-medium border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
               >
                 Rotacionar outro documento
               </Button>
@@ -927,12 +972,16 @@ export default function RotacionarPdf() {
       )}
 
       {/* Informativo de Privacidade e Segurança */}
-      <div className="rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5 flex items-center gap-3.5 text-muted-foreground">
-        <ShieldCheck className="w-5 h-5 text-[#C9922A] shrink-0" />
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 flex items-center gap-3.5 text-[#78818E] dark:text-muted-foreground shadow-xs">
+        <div className="h-9 w-9 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
+          <ShieldCheck className="w-5 h-5 text-[#C9922A]" />
+        </div>
         <p className="text-xs sm:text-sm leading-relaxed">
-          Processamento estritamente local: os dados dos seus documentos não são transmitidos para
-          servidores externos ou bancos de dados, mantendo o sigilo e a privacidade dos processos
-          jurídicos.
+          <strong className="text-[#252B34] dark:text-foreground font-semibold">
+            Processamento 100% Local:
+          </strong>{' '}
+          Os dados dos seus documentos não são transmitidos para servidores externos ou bancos de
+          dados, mantendo o sigilo e a privacidade dos processos jurídicos.
         </p>
       </div>
     </div>

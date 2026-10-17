@@ -77,25 +77,23 @@ const PDF_TOOLS: PdfToolCard[] = [
 
 export default function FerramentasPdf() {
   return (
-    <div className="space-y-8 animate-fade-in-up pb-10">
-      {/* Cabeçalho da Página */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#C9922A]/10 border border-[#C9922A]/20 rounded-lg">
-            <Files className="w-6 h-6 text-[#C9922A]" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Ferramentas PDF
-            </h1>
-            <p className="text-sm font-medium text-muted-foreground">
-              Organize e prepare seus documentos PDF com praticidade e segurança.
-            </p>
-          </div>
+    <div className="space-y-6 animate-fade-in-up pb-10">
+      {/* 1. CABEÇALHO CORPORATIVO PADRONIZADO (GRAFITE PREMIUM 2.1) */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+            FERRAMENTAS
+          </span>
         </div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+          Editor de PDFs
+        </h1>
+        <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+          Organize e prepare documentos PDF com praticidade e segurança.
+        </p>
       </div>
 
-      {/* Grade de Cards das Ferramentas */}
+      {/* 2. GRADE DE CARDS DAS FERRAMENTAS — Grafite Premium 2.1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {PDF_TOOLS.map((tool) => {
           const Icon = tool.icon
@@ -103,38 +101,38 @@ export default function FerramentasPdf() {
 
           const cardContent = (
             <Card
-              className={`relative flex flex-col justify-between border-border bg-card/80 backdrop-blur-sm rounded-xl transition-all duration-200 h-full ${
+              className={`relative flex flex-col justify-between border border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-[10px] transition-all duration-200 h-full shadow-sm ${
                 isActive
-                  ? 'hover:border-[#C9922A] hover:shadow-subtle cursor-pointer group hover:bg-card'
-                  : 'hover:border-[#C9922A]/40 hover:shadow-subtle'
+                  ? 'hover:border-[#C9922A]/50 hover:shadow-md cursor-pointer group'
+                  : 'opacity-90 hover:border-[#E4E7EB] dark:hover:border-border'
               }`}
             >
-              <CardHeader className="p-6 pb-4">
+              <CardHeader className="p-5 sm:p-6 pb-4">
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="p-2.5 rounded-lg bg-[#C9922A]/10 text-[#C9922A] ring-1 ring-[#C9922A]/20 transition-colors group-hover:bg-[#C9922A] group-hover:text-white">
+                  <div className="h-10 w-10 rounded-lg bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border/80 flex items-center justify-center text-[#C9922A] transition-colors group-hover:bg-[#C9922A] group-hover:text-white group-hover:border-[#C9922A]">
                     <Icon className="w-5 h-5" />
                   </div>
                   {tool.statusLabel && (
                     <Badge
                       variant="outline"
-                      className="border-muted bg-muted/40 text-muted-foreground text-[11px] font-medium tracking-tight px-2 py-0.5 rounded-full"
+                      className="border-[#E4E7EB] dark:border-border bg-[#F5F7FA] dark:bg-muted/50 text-[#78818E] dark:text-muted-foreground text-[11px] font-medium tracking-tight px-2.5 py-0.5 rounded-full"
                     >
                       {tool.statusLabel}
                     </Badge>
                   )}
                 </div>
-                <CardTitle className="text-lg font-bold text-foreground group-hover:text-[#C9922A] transition-colors">
+                <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground group-hover:text-[#C9922A] transition-colors tracking-tight">
                   {tool.title}
                 </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                <CardDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground mt-1.5 leading-relaxed">
                   {tool.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="px-6 pb-6 pt-0">
-                <div className="pt-3 border-t border-dashed border-border/60">
-                  <span className="text-xs text-muted-foreground/80 font-normal">
+              <CardContent className="px-5 sm:px-6 pb-5 pt-0">
+                <div className="pt-3 border-t border-[#E4E7EB]/80 dark:border-border/60">
+                  <span className="text-xs text-[#78818E] dark:text-muted-foreground font-normal">
                     {isActive ? (
-                      <span className="text-[#C9922A] font-medium inline-flex items-center gap-1">
+                      <span className="text-[#C9922A] font-semibold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                         Acessar ferramenta →
                       </span>
                     ) : (
@@ -158,12 +156,17 @@ export default function FerramentasPdf() {
         })}
       </div>
 
-      {/* Informação sobre Privacidade e Segurança */}
-      <div className="rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5 flex items-center gap-3.5 text-muted-foreground">
-        <ShieldCheck className="w-5 h-5 text-[#C9922A] shrink-0" />
+      {/* 3. CARD CORPORATIVO DE PRIVACIDADE E SEGURANÇA LOCAL */}
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 flex items-center gap-3.5 text-[#78818E] dark:text-muted-foreground shadow-xs">
+        <div className="h-9 w-9 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
+          <ShieldCheck className="w-5 h-5 text-[#C9922A]" />
+        </div>
         <p className="text-xs sm:text-sm leading-relaxed">
+          <strong className="text-[#252B34] dark:text-foreground font-semibold">
+            Processamento 100% Local:
+          </strong>{' '}
           Ferramentas planejadas para processar documentos diretamente no navegador, sem
-          armazenamento no sistema.
+          armazenamento no servidor ou transmissão de dados sensíveis.
         </p>
       </div>
     </div>

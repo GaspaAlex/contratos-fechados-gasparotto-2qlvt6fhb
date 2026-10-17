@@ -719,25 +719,27 @@ export default function OrganizarPdf() {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-12 max-w-6xl mx-auto">
-      {/* Botão Voltar e Cabeçalho */}
+      {/* 1. CABEÇALHO CORPORATIVO PADRONIZADO (GRAFITE PREMIUM 2.1) */}
       <div className="flex flex-col gap-3">
         <Link
           to="/ferramentas-pdf"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-[#C9922A] transition-colors w-fit"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#78818E] hover:text-[#C9922A] transition-colors w-fit group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
           Voltar para Ferramentas PDF
         </Link>
 
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#C9922A]/10 border border-[#C9922A]/20 rounded-lg">
-            <LayoutGrid className="w-6 h-6 text-[#C9922A]" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+                FERRAMENTAS
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
               Organizar PDF
             </h1>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-sm text-[#78818E] dark:text-muted-foreground">
               Reordene, exclua ou extraia páginas específicas dos seus documentos com
               pré-visualização real.
             </p>
@@ -746,16 +748,16 @@ export default function OrganizarPdf() {
       </div>
 
       {/* SELETOR DE MODALIDADE (DUAS AÇÕES CLARAMENTE DISTINTAS) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 rounded-xl border border-border bg-card/90 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-xs">
         <div className="grid grid-cols-2 gap-1.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => handleSwitchMode('organize')}
             disabled={isProcessing}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeMode === 'organize'
                 ? 'bg-[#C9922A] text-white shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                : 'text-[#78818E] dark:text-muted-foreground hover:text-[#252B34] dark:hover:text-foreground hover:bg-[#FAF8F2] dark:hover:bg-muted/40'
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
@@ -766,10 +768,10 @@ export default function OrganizarPdf() {
             type="button"
             onClick={() => handleSwitchMode('extract')}
             disabled={isProcessing}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeMode === 'extract'
                 ? 'bg-[#C9922A] text-white shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                : 'text-[#78818E] dark:text-muted-foreground hover:text-[#252B34] dark:hover:text-foreground hover:bg-[#FAF8F2] dark:hover:bg-muted/40'
             }`}
           >
             <FileOutput className="w-4 h-4" />
@@ -777,7 +779,7 @@ export default function OrganizarPdf() {
           </button>
         </div>
 
-        <div className="text-xs text-muted-foreground px-3 py-1 flex items-center gap-1.5 hidden md:flex">
+        <div className="text-xs text-[#78818E] dark:text-muted-foreground px-3 py-1 flex items-center gap-1.5 hidden md:flex">
           <Info className="w-3.5 h-3.5 text-[#C9922A] shrink-0" />
           <span>
             {activeMode === 'organize'
@@ -789,21 +791,28 @@ export default function OrganizarPdf() {
 
       {/* Alerta de Erro Geral */}
       {errorMessage && (
-        <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
-          <Ban className="w-4 h-4" />
-          <AlertTitle className="font-semibold">Atenção</AlertTitle>
-          <AlertDescription className="text-xs sm:text-sm mt-1">{errorMessage}</AlertDescription>
+        <Alert
+          variant="destructive"
+          className="rounded-[10px] border border-red-200 dark:border-red-900/60 bg-red-50/80 dark:bg-red-950/30 text-[#B4453C]"
+        >
+          <Ban className="w-4 h-4 text-[#B4453C]" />
+          <AlertTitle className="font-semibold text-xs sm:text-sm text-[#B4453C]">
+            Atenção
+          </AlertTitle>
+          <AlertDescription className="text-xs sm:text-sm mt-1 text-[#B4453C]/90">
+            {errorMessage}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* SEÇÃO 1: SELEÇÃO DO DOCUMENTO */}
       {!doc ? (
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
           <CardHeader className="p-6 pb-4">
-            <CardTitle className="text-lg font-bold text-foreground">
+            <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground tracking-tight">
               Selecionar documento PDF
             </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
+            <CardDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground">
               Envie o documento cujas páginas deseja reorganizar ou excluir. Todo o processamento
               ocorre no seu navegador com total privacidade.
             </CardDescription>
@@ -814,10 +823,10 @@ export default function OrganizarPdf() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 ${
+              className={`border-2 border-dashed rounded-[10px] p-8 sm:p-12 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3 ${
                 isDragging
-                  ? 'border-[#C9922A] bg-[#C9922A]/10'
-                  : 'border-border/80 hover:border-[#C9922A]/60 bg-muted/20 hover:bg-muted/40'
+                  ? 'border-[#C9922A] bg-[#FAF8F2] dark:bg-muted/30 scale-[1.005]'
+                  : 'border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/60 bg-white dark:bg-card hover:bg-[#FAF8F2]/20'
               }`}
             >
               <input
@@ -827,14 +836,14 @@ export default function OrganizarPdf() {
                 className="hidden"
                 onChange={handleInputChange}
               />
-              <div className="p-4 rounded-full bg-[#C9922A]/10 text-[#C9922A] ring-1 ring-[#C9922A]/20">
-                <Upload className="w-7 h-7" />
+              <div className="h-12 w-12 rounded-full bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border text-[#C9922A] flex items-center justify-center">
+                <Upload className="w-5 h-5 text-[#C9922A]" />
               </div>
               <div>
-                <p className="text-base font-semibold text-foreground">
+                <p className="text-base font-bold text-[#252B34] dark:text-foreground tracking-tight">
                   Arraste o arquivo PDF aqui ou clique para selecionar
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground mt-1">
                   Formatos aceitos: PDF nativo (.pdf). Sem limites de páginas ou tamanho.
                 </p>
               </div>
@@ -842,14 +851,14 @@ export default function OrganizarPdf() {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="mt-2 border-[#C9922A]/40 text-[#C9922A] hover:bg-[#C9922A]/10"
+                className="mt-2 h-8 px-4 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
               >
                 Procurar no computador
               </Button>
             </div>
 
             {isValidatingFile && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin text-[#C9922A]" />
                 <span>Validando integridade do documento...</span>
               </div>
@@ -858,159 +867,167 @@ export default function OrganizarPdf() {
         </Card>
       ) : (
         /* Card do Arquivo Carregado */
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
-          <CardHeader className="p-5 pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div
-                  className={`p-2 rounded-lg mt-0.5 shrink-0 ${
-                    doc.validationStatus === 'valid'
-                      ? 'bg-[#C9922A]/10 text-[#C9922A]'
-                      : 'bg-destructive/10 text-destructive'
-                  }`}
-                >
-                  <FileCheck2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground leading-snug break-all">
-                    {doc.name}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-                    <span>{formatBytes(doc.size)}</span>
-                    <span>•</span>
-                    <span>{doc.pageCount} página(s)</span>
-                    <span>•</span>
-                    <span
-                      className={`font-medium ${
-                        doc.validationStatus === 'valid'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-destructive'
-                      }`}
-                    >
-                      {doc.validationStatus === 'valid' ? 'Arquivo válido' : 'Arquivo com erro'}
-                    </span>
-                  </div>
-                </div>
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+          <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F5F6F8]/60 dark:bg-muted/20">
+            <div className="flex items-start gap-3">
+              <div
+                className={`p-2 rounded-md mt-0.5 shrink-0 ${
+                  doc.validationStatus === 'valid'
+                    ? 'bg-[#FAF8F2] dark:bg-muted/40 text-[#C9922A] border border-[#E4E7EB] dark:border-border'
+                    : 'bg-red-50 text-[#B4453C] border border-red-200'
+                }`}
+              >
+                <FileCheck2 className="w-4 h-4" />
               </div>
-
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessing}
-                  className="text-xs"
-                >
-                  Substituir
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className="hidden"
-                  onChange={handleInputChange}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleResetForNewOperation}
-                  disabled={isProcessing}
-                  className="text-xs text-muted-foreground hover:text-destructive"
-                  title="Remover documento"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Remover
-                </Button>
+              <div>
+                <h3 className="text-sm font-bold text-[#252B34] dark:text-foreground leading-snug break-all tracking-tight">
+                  {doc.name}
+                </h3>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#78818E] dark:text-muted-foreground mt-1">
+                  <span className="tabular-nums">{formatBytes(doc.size)}</span>
+                  <span>•</span>
+                  <span className="tabular-nums">{doc.pageCount} página(s)</span>
+                  <span>•</span>
+                  <span
+                    className={`font-semibold ${
+                      doc.validationStatus === 'valid' ? 'text-[#3E8E5A]' : 'text-[#B4453C]'
+                    }`}
+                  >
+                    {doc.validationStatus === 'valid' ? 'Arquivo válido' : 'Arquivo com erro'}
+                  </span>
+                </div>
               </div>
             </div>
-          </CardHeader>
+
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessing}
+                className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
+              >
+                Substituir
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={handleInputChange}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleResetForNewOperation}
+                disabled={isProcessing}
+                className="h-8 px-3 text-xs font-medium text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                title="Remover documento"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                Remover
+              </Button>
+            </div>
+          </div>
 
           {/* Erro de Validação do Arquivo */}
           {doc.validationStatus === 'invalid' && (
-            <CardContent className="p-5 pt-0">
-              <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
-                <Ban className="w-4 h-4" />
-                <AlertTitle className="font-semibold">Documento bloqueado</AlertTitle>
+            <div className="p-4 sm:p-5">
+              <Alert
+                variant="destructive"
+                className="rounded-[10px] border border-red-200 bg-red-50 text-[#B4453C]"
+              >
+                <Ban className="w-4 h-4 text-[#B4453C]" />
+                <AlertTitle className="font-semibold text-xs sm:text-sm">
+                  Documento bloqueado
+                </AlertTitle>
                 <AlertDescription className="text-xs sm:text-sm mt-1">
                   {doc.errorMessage || 'O arquivo selecionado não pôde ser validado.'}
                 </AlertDescription>
               </Alert>
-            </CardContent>
+            </div>
           )}
 
           {/* Aviso e Confirmação de Assinatura Digital */}
           {doc.validationStatus === 'valid' && doc.hasSignature && (
-            <CardContent className="p-5 pt-0">
-              <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="font-semibold text-amber-900 dark:text-amber-200">
-                  Indícios de Assinatura Digital Detectados
-                </AlertTitle>
-                <AlertDescription className="text-xs sm:text-sm mt-1 space-y-2">
-                  <p>
-                    Foram identificados campos de assinatura digital (/Sig) neste documento. A{' '}
-                    {activeMode === 'extract'
-                      ? 'extração de páginas gera um documento derivado e '
-                      : 'reordenação ou exclusão de páginas altera a estrutura binária do arquivo e '}
-                    <strong>poderá comprometer a validade criptográfica</strong> das assinaturas
-                    existentes.
-                  </p>
-                  <p>
-                    O documento original permanecerá intacto no seu computador. O PDF resultante
-                    será uma cópia derivada devidamente identificada.
-                  </p>
-                  <div className="pt-2 flex items-start gap-2.5">
-                    <Checkbox
-                      id="signature-confirm-organize"
-                      checked={signatureConfirmed}
-                      onCheckedChange={(checked) => setSignatureConfirmed(Boolean(checked))}
-                      className="mt-0.5 border-amber-600 data-[state=checked]:bg-[#C9922A] data-[state=checked]:border-[#C9922A]"
-                    />
-                    <label
-                      htmlFor="signature-confirm-organize"
-                      className="text-xs sm:text-sm leading-snug cursor-pointer font-medium select-none text-foreground"
-                    >
-                      Estou ciente de que a extração/organização gera uma cópia derivada e poderá
-                      comprometer a validade criptográfica das assinaturas digitais, e desejo
-                      prosseguir.
-                    </label>
+            <div className="p-4 sm:p-5 border-t border-[#E4E7EB]/80 dark:border-border/60">
+              <div className="rounded-[10px] border border-amber-300 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/20 p-4 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-[#C77E1E] shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#C77E1E]">
+                      Indícios de Assinatura Digital Detectados
+                    </h4>
+                    <p className="text-xs text-amber-950/90 dark:text-amber-200/90 leading-relaxed">
+                      Foram identificados campos de assinatura digital (/Sig) neste documento. A{' '}
+                      {activeMode === 'extract'
+                        ? 'extração de páginas gera um documento derivado e '
+                        : 'reordenação ou exclusão de páginas altera a estrutura binária do arquivo e '}
+                      <strong>poderá comprometer a validade criptográfica</strong> das assinaturas
+                      existentes.
+                    </p>
+                    <p className="text-xs text-amber-950/90 dark:text-amber-200/90 leading-relaxed">
+                      O documento original permanecerá intacto no seu computador. O PDF resultante
+                      será uma cópia derivada devidamente identificada.
+                    </p>
                   </div>
-                </AlertDescription>
-              </Alert>
-            </CardContent>
+                </div>
+
+                <div className="pt-2 border-t border-amber-200 dark:border-amber-800/40 flex items-start gap-2.5">
+                  <Checkbox
+                    id="signature-confirm-organize"
+                    checked={signatureConfirmed}
+                    onCheckedChange={(checked) => setSignatureConfirmed(Boolean(checked))}
+                    className="mt-0.5 border-[#C77E1E] data-[state=checked]:bg-[#C9922A] data-[state=checked]:border-[#C9922A]"
+                  />
+                  <label
+                    htmlFor="signature-confirm-organize"
+                    className="text-xs leading-snug cursor-pointer font-medium select-none text-amber-950 dark:text-amber-200"
+                  >
+                    Estou ciente de que a extração/organização gera uma cópia derivada e poderá
+                    comprometer a validade criptográfica das assinaturas digitais, e desejo
+                    prosseguir.
+                  </label>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Aviso pontual caso haja erro ao carregar miniaturas */}
           {thumbnailLoadError && (
-            <CardContent className="p-5 pt-0">
-              <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 flex items-center gap-2">
+            <div className="p-4 sm:p-5 pt-0">
+              <div className="text-xs text-[#C77E1E] bg-amber-50 dark:bg-amber-950/30 p-3 rounded-[10px] border border-amber-200 dark:border-amber-800/40 flex items-center gap-2">
                 <Info className="w-4 h-4 shrink-0" />
                 <span>{thumbnailLoadError}</span>
               </div>
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
       )}
 
       {/* SEÇÃO 2: BARRA DE FERRAMENTAS E CONTROLES DE ORGANIZAÇÃO / EXTRAÇÃO */}
       {doc && doc.validationStatus === 'valid' && (
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
-          <CardHeader className="p-5 pb-3">
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+          <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 bg-[#F5F6F8]/60 dark:bg-muted/20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
+                    {activeMode === 'organize'
+                      ? 'Organizar e Excluir Páginas'
+                      : 'Extração Visual de Páginas'}
+                  </span>
                   {activeMode === 'organize' ? (
                     <>
-                      <span>Organizar e Excluir Páginas</span>
                       {isOrderModified && (
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30 tabular-nums">
                           Ordem modificada ({reorderedPagesCount} em nova posição)
                         </span>
                       )}
                       {totalExcludedCount > 0 && (
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/30">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-[#B4453C] border border-red-200 tabular-nums">
                           {totalExcludedCount}{' '}
                           {totalExcludedCount === 1 ? 'página marcada' : 'páginas marcadas'} para
                           exclusão
@@ -1019,13 +1036,12 @@ export default function OrganizarPdf() {
                     </>
                   ) : (
                     <>
-                      <span>Extração Visual de Páginas</span>
                       {isOrderModified && (
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30 tabular-nums">
                           Sequência personalizada ({reorderedPagesCount} em nova posição)
                         </span>
                       )}
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#C9922A]/10 text-[#C9922A] border border-[#C9922A]/30 tabular-nums">
                         {totalExtractSelectedCount}{' '}
                         {totalExtractSelectedCount === 1
                           ? 'página selecionada'
@@ -1033,22 +1049,28 @@ export default function OrganizarPdf() {
                       </span>
                     </>
                   )}
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                </div>
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground mt-1">
                   {activeMode === 'organize' ? (
                     <>
                       Arraste e solte as miniaturas ou use os botões{' '}
-                      <strong>Anterior/Próxima</strong> para reordenar. Clique no card para
-                      marcar/desmarcar exclusão (semântica: vermelho = remover).
+                      <strong className="text-[#252B34] dark:text-foreground">
+                        Anterior/Próxima
+                      </strong>{' '}
+                      para reordenar. Clique no card para marcar/desmarcar exclusão (semântica:
+                      vermelho = remover).
                     </>
                   ) : (
                     <>
                       Selecione as páginas que deseja manter no novo PDF. Arraste ou use{' '}
-                      <strong>Anterior/Próxima</strong> para definir a ordem de extração. O novo PDF
-                      respeitará exatamente a sequência visual atual.
+                      <strong className="text-[#252B34] dark:text-foreground">
+                        Anterior/Próxima
+                      </strong>{' '}
+                      para definir a ordem de extração. O novo PDF respeitará exatamente a sequência
+                      visual atual.
                     </>
                   )}
-                </CardDescription>
+                </p>
               </div>
 
               {/* Ações de Organização e Seleção Rápida Conforme a Modalidade */}
@@ -1061,11 +1083,11 @@ export default function OrganizarPdf() {
                     size="sm"
                     onClick={handleRestoreOriginalOrder}
                     disabled={isProcessing}
-                    className="h-8 text-xs border-[#C9922A]/40 text-[#C9922A] hover:bg-[#C9922A]/10"
+                    className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                     title="Devolve as páginas à sequência original do documento"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                    Restaurar ordem original
+                    <RotateCcw className="w-3.5 h-3.5 mr-1 text-[#C9922A]" />
+                    Restaurar ordem
                   </Button>
                 )}
 
@@ -1077,10 +1099,10 @@ export default function OrganizarPdf() {
                       size="sm"
                       onClick={handleSelectAllForExclusion}
                       disabled={isProcessing || doc.pageCount <= 1}
-                      className="h-8 text-xs hover:border-destructive hover:text-destructive"
+                      className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
                       title="Marca páginas para exclusão (preservando ao menos uma)"
                     >
-                      <CheckSquare className="w-3.5 h-3.5 mr-1 text-destructive" />
+                      <CheckSquare className="w-3.5 h-3.5 mr-1 text-[#B4453C]" />
                       Marcar todas ({doc.pageCount - 1})
                     </Button>
 
@@ -1091,7 +1113,7 @@ export default function OrganizarPdf() {
                         size="sm"
                         onClick={handleClearExclusion}
                         disabled={isProcessing}
-                        className="h-8 text-xs"
+                        className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#252B34] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                         title="Limpa todas as marcações de exclusão mantendo a ordem atual"
                       >
                         <Square className="w-3.5 h-3.5 mr-1" />
@@ -1106,7 +1128,7 @@ export default function OrganizarPdf() {
                         size="sm"
                         onClick={handleClearExclusion}
                         disabled={isProcessing}
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                        className="h-8 px-2.5 text-xs text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] rounded-md"
                         title="Desmarca todas as exclusões"
                       >
                         <Undo2 className="w-3.5 h-3.5 mr-1" />
@@ -1122,7 +1144,7 @@ export default function OrganizarPdf() {
                       size="sm"
                       onClick={handleSelectAllForExtract}
                       disabled={isProcessing}
-                      className="h-8 text-xs border-[#C9922A]/40 text-[#C9922A] hover:bg-[#C9922A]/10"
+                      className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                       title="Seleciona todas as páginas do documento para extração"
                     >
                       <CheckSquare className="w-3.5 h-3.5 mr-1 text-[#C9922A]" />
@@ -1136,7 +1158,7 @@ export default function OrganizarPdf() {
                         size="sm"
                         onClick={handleClearExtractSelection}
                         disabled={isProcessing}
-                        className="h-8 text-xs"
+                        className="h-8 px-3 text-xs font-medium border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#252B34] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                         title="Limpa a seleção de extração"
                       >
                         <Square className="w-3.5 h-3.5 mr-1" />
@@ -1147,44 +1169,56 @@ export default function OrganizarPdf() {
                 )}
               </div>
             </div>
-          </CardHeader>
+          </div>
 
           {/* Resumo Dinâmico da Seleção e Ordem */}
-          <CardContent className="p-5 pt-2">
+          <div className="p-4 sm:p-5">
             {activeMode === 'organize' ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border/60 text-xs sm:text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-[10px] bg-[#F5F6F8]/60 dark:bg-muted/20 border border-[#E4E7EB]/80 dark:border-border/60 text-xs">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Original:</span>
-                    <span className="font-semibold text-foreground">{doc.pageCount} págs.</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Original:
+                    </span>
+                    <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                      {doc.pageCount} págs.
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Ordem:</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Ordem:
+                    </span>
                     <span
-                      className={`font-semibold ${
-                        isOrderModified ? 'text-[#C9922A]' : 'text-muted-foreground'
+                      className={`font-semibold tabular-nums ${
+                        isOrderModified
+                          ? 'text-[#C9922A]'
+                          : 'text-[#78818E] dark:text-muted-foreground'
                       }`}
                     >
                       {isOrderModified ? `Modificada (${reorderedPagesCount} movidas)` : 'Original'}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">A excluir (vermelho):</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      A excluir (vermelho):
+                    </span>
                     <span
-                      className={`font-semibold ${
-                        totalExcludedCount > 0 ? 'text-destructive' : 'text-muted-foreground'
+                      className={`font-semibold tabular-nums ${
+                        totalExcludedCount > 0
+                          ? 'text-[#B4453C]'
+                          : 'text-[#78818E] dark:text-muted-foreground'
                       }`}
                     >
                       {totalExcludedCount} págs.
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Restantes no PDF:</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Restantes no PDF:
+                    </span>
                     <span
-                      className={`font-semibold ${
-                        totalRemainingCount > 0
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-destructive'
+                      className={`font-semibold tabular-nums ${
+                        totalRemainingCount > 0 ? 'text-[#3E8E5A]' : 'text-[#B4453C]'
                       }`}
                     >
                       {totalRemainingCount} págs.
@@ -1193,7 +1227,7 @@ export default function OrganizarPdf() {
                 </div>
 
                 {wouldExcludeAll && (
-                  <div className="text-xs text-destructive font-semibold flex items-center gap-1.5">
+                  <div className="text-xs text-[#B4453C] font-semibold flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                     <span>Não é permitido excluir todas as páginas do documento.</span>
                   </div>
@@ -1201,50 +1235,64 @@ export default function OrganizarPdf() {
               </div>
             ) : (
               /* Modalidade Extrair: Exibe total de páginas, selecionadas para extração e fora do resultado */
-              <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border/60 text-xs sm:text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-[10px] bg-[#F5F6F8]/60 dark:bg-muted/20 border border-[#E4E7EB]/80 dark:border-border/60 text-xs">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Total do documento:</span>
-                    <span className="font-semibold text-foreground">{doc.pageCount} págs.</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Total do documento:
+                    </span>
+                    <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                      {doc.pageCount} págs.
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Ordem visual:</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Ordem visual:
+                    </span>
                     <span
-                      className={`font-semibold ${
-                        isOrderModified ? 'text-[#C9922A]' : 'text-muted-foreground'
+                      className={`font-semibold tabular-nums ${
+                        isOrderModified
+                          ? 'text-[#C9922A]'
+                          : 'text-[#78818E] dark:text-muted-foreground'
                       }`}
                     >
                       {isOrderModified ? `Modificada (${reorderedPagesCount} movidas)` : 'Original'}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Para extrair (dourado):</span>
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Para extrair (dourado):
+                    </span>
                     <span
-                      className={`font-semibold ${
-                        totalExtractSelectedCount > 0 ? 'text-[#C9922A]' : 'text-muted-foreground'
+                      className={`font-semibold tabular-nums ${
+                        totalExtractSelectedCount > 0
+                          ? 'text-[#C9922A]'
+                          : 'text-[#78818E] dark:text-muted-foreground'
                       }`}
                     >
                       {totalExtractSelectedCount} págs.
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Fora do resultado:</span>
-                    <span className="font-semibold text-muted-foreground">
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider font-semibold text-[10px]">
+                      Fora do resultado:
+                    </span>
+                    <span className="font-semibold text-[#78818E] dark:text-muted-foreground tabular-nums">
                       {totalExtractUnselectedCount} págs.
                     </span>
                   </div>
                 </div>
 
                 {totalExtractSelectedCount === 0 && (
-                  <div className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                  <div className="text-xs text-[#C77E1E] font-medium flex items-center gap-1.5">
                     <Info className="w-3.5 h-3.5 shrink-0" />
                     <span>Selecione ao menos uma página pelas miniaturas para extrair.</span>
                   </div>
                 )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* SEÇÃO 3: GRADE DE MINIATURAS VISUAIS DAS PÁGINAS COM REORDENAÇÃO */}
@@ -1351,16 +1399,16 @@ export default function OrganizarPdf() {
 
       {/* SEÇÃO 4: AÇÃO DE CONFIRMAÇÃO / PROCESSAMENTO */}
       {doc && doc.validationStatus === 'valid' && !organizedBlobUrl && (
-        <Card className="border-border bg-card/90 shadow-sm rounded-xl">
-          <CardContent className="p-6">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
+          <CardContent className="p-5 sm:p-6">
             {activeMode === 'organize' ? (
               /* Confirmação do Modo Organizar / Excluir */
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
                     Confirmação de organização e exclusão
                   </p>
-                  <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="text-xs text-[#78818E] dark:text-muted-foreground space-y-1 leading-relaxed">
                     {!hasAnyChanges ? (
                       <p>
                         Nenhuma alteração realizada. Arraste as miniaturas ou utilize os botões
@@ -1368,17 +1416,25 @@ export default function OrganizarPdf() {
                         marcar para exclusão.
                       </p>
                     ) : wouldExcludeAll ? (
-                      <p className="text-destructive font-medium">
+                      <p className="text-[#B4453C] font-semibold">
                         Todas as páginas foram marcadas para exclusão. Ao menos uma página deve ser
                         preservada.
                       </p>
                     ) : (
                       <p>
-                        Documento original: <strong>{doc.pageCount} páginas</strong>.
+                        Documento original:{' '}
+                        <strong className="text-[#252B34] dark:text-foreground">
+                          {doc.pageCount} páginas
+                        </strong>
+                        .
                         {totalExcludedCount > 0 && (
                           <>
                             {' '}
-                            Excluindo <strong>{totalExcludedCount} página(s)</strong> (
+                            Excluindo{' '}
+                            <strong className="text-[#B4453C]">
+                              {totalExcludedCount} página(s)
+                            </strong>{' '}
+                            (
                             {Array.from(excludedPages)
                               .sort((a, b) => a - b)
                               .map((p) => `Orig. ${p}`)
@@ -1389,16 +1445,17 @@ export default function OrganizarPdf() {
                         {isOrderModified && (
                           <>
                             {' '}
-                            Ordem modificada: <strong>{reorderedPagesCount} página(s)</strong> em
-                            nova posição.
+                            Ordem modificada:{' '}
+                            <strong className="text-[#C9922A]">
+                              {reorderedPagesCount} página(s)
+                            </strong>{' '}
+                            em nova posição.
                           </>
                         )}{' '}
                         Resultado:{' '}
-                        <strong className="text-emerald-600 dark:text-emerald-400">
-                          {totalRemainingCount} página(s)
-                        </strong>
+                        <strong className="text-[#3E8E5A]">{totalRemainingCount} página(s)</strong>
                         {finalRemainingSequence.length > 0 && (
-                          <span className="text-muted-foreground font-mono ml-1">
+                          <span className="text-[#78818E] dark:text-muted-foreground font-mono ml-1">
                             (Sequência final:{' '}
                             {finalRemainingSequence.map((p) => `p.${p}`).join(', ')})
                           </span>
@@ -1419,7 +1476,7 @@ export default function OrganizarPdf() {
                       wouldExcludeAll ||
                       (doc.hasSignature && !signatureConfirmed)
                     }
-                    className="bg-[#C9922A] hover:bg-[#B38022] text-white font-medium px-6 shadow-sm"
+                    className="h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
                   >
                     {isProcessing ? (
                       <>
@@ -1439,19 +1496,22 @@ export default function OrganizarPdf() {
               /* Confirmação do Modo Extrair Páginas */
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
                     Resumo da extração de páginas
                   </p>
-                  <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="text-xs text-[#78818E] dark:text-muted-foreground space-y-1 leading-relaxed">
                     {totalExtractSelectedCount === 0 ? (
-                      <p className="text-amber-600 dark:text-amber-400 font-medium">
+                      <p className="text-[#C77E1E] font-medium">
                         Nenhuma página selecionada. Clique nas miniaturas para selecionar as páginas
                         que farão parte do novo PDF.
                       </p>
                     ) : (
                       <p>
-                        Documento original: <strong>{doc.pageCount} páginas</strong>. Quantidade
-                        selecionada:{' '}
+                        Documento original:{' '}
+                        <strong className="text-[#252B34] dark:text-foreground">
+                          {doc.pageCount} páginas
+                        </strong>
+                        . Quantidade selecionada:{' '}
                         <strong className="text-[#C9922A]">
                           {totalExtractSelectedCount} página(s)
                         </strong>
@@ -1467,7 +1527,7 @@ export default function OrganizarPdf() {
                           </>
                         )}
                         {finalExtractSequence.length > 0 && (
-                          <span className="block mt-1 text-foreground font-mono">
+                          <span className="block mt-1 text-[#252B34] dark:text-foreground font-mono">
                             Sequência de páginas selecionadas:{' '}
                             <span className="text-[#C9922A] font-bold">
                               {finalExtractSequence.map((p) => `p.${p}`).join(', ')}
@@ -1488,7 +1548,7 @@ export default function OrganizarPdf() {
                       totalExtractSelectedCount === 0 ||
                       (doc.hasSignature && !signatureConfirmed)
                     }
-                    className="bg-[#C9922A] hover:bg-[#B38022] text-white font-medium px-6 shadow-sm"
+                    className="h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
                   >
                     {isProcessing ? (
                       <>
@@ -1508,11 +1568,13 @@ export default function OrganizarPdf() {
 
             {/* Progresso do Processamento */}
             {isProcessing && progress && (
-              <div className="mt-5 pt-4 border-t border-border/60 space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">{progress.currentLabel}</span>
+              <div className="mt-5 pt-4 border-t border-[#E4E7EB]/80 dark:border-border/60 space-y-2">
+                <div className="flex items-center justify-between text-xs text-[#78818E] dark:text-muted-foreground">
+                  <span className="font-semibold text-[#252B34] dark:text-foreground">
+                    {progress.currentLabel}
+                  </span>
                   {progress.totalPages > 0 && progress.currentPage > 0 && (
-                    <span>
+                    <span className="tabular-nums">
                       {progress.currentPage} / {progress.totalPages}
                     </span>
                   )}
@@ -1531,7 +1593,7 @@ export default function OrganizarPdf() {
                     variant="ghost"
                     size="sm"
                     onClick={handleCancelProcess}
-                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                    className="h-7 px-2.5 text-xs text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md"
                   >
                     Cancelar operação
                   </Button>
@@ -1544,19 +1606,19 @@ export default function OrganizarPdf() {
 
       {/* SEÇÃO 5: SUCESSO E DOWNLOAD */}
       {organizedBlobUrl && (
-        <Card className="border-[#C9922A]/40 bg-[#C9922A]/5 shadow-sm rounded-xl animate-fade-in-up">
-          <CardHeader className="p-6 pb-3">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden animate-fade-in-up">
+          <CardHeader className="p-6 pb-4">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#C9922A]/10 text-[#C9922A] ring-1 ring-[#C9922A]/20">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#3E8E5A] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-[#3E8E5A]" />
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-lg font-bold text-foreground">
+                <CardTitle className="text-lg font-bold tracking-tight text-[#252B34] dark:text-foreground">
                   {resultMode === 'extract'
                     ? 'Páginas extraídas com sucesso!'
                     : 'Documento organizado com sucesso!'}
                 </CardTitle>
-                <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+                <CardDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground">
                   {resultMode === 'extract'
                     ? 'O novo PDF foi gerado contendo somente as páginas selecionadas, preservando a sequência visual definida e a fidelidade vetorial original.'
                     : 'O documento foi reconstruído com base na nova sequência e exclusões definidas, preservando a integridade vetorial, dimensões, imagens e formatação das páginas.'}
@@ -1565,43 +1627,57 @@ export default function OrganizarPdf() {
             </div>
           </CardHeader>
 
-          <CardContent className="p-6 pt-2 space-y-4">
-            <div className="rounded-lg border border-border/80 bg-background/80 p-4 space-y-2 text-xs sm:text-sm">
+          <CardContent className="p-6 pt-0 space-y-4">
+            <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/60 dark:bg-muted/20 p-4 space-y-2 text-xs sm:text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Nome do arquivo gerado:</span>
-                <span className="font-mono font-medium text-foreground break-all">
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Nome do arquivo gerado:
+                </span>
+                <span className="font-mono font-semibold text-[#252B34] dark:text-foreground break-all">
                   {outputFileName}
                 </span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Páginas do documento original:</span>
-                <span className="font-semibold text-foreground">{resultTotalPages}</span>
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Páginas do documento original:
+                </span>
+                <span className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                  {resultTotalPages}
+                </span>
               </div>
               {resultMode === 'extract' ? (
                 <>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-muted-foreground">Páginas selecionadas e extraídas:</span>
-                    <span className="font-semibold text-[#C9922A]">
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                      Páginas selecionadas e extraídas:
+                    </span>
+                    <span className="font-semibold text-[#C9922A] tabular-nums">
                       {resultSelectedPages || resultRemainingPages}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-muted-foreground">
+                    <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
                       Páginas deixadas fora do novo PDF:
                     </span>
-                    <span className="font-semibold text-muted-foreground">
+                    <span className="font-semibold text-[#78818E] dark:text-muted-foreground tabular-nums">
                       {resultUnselectedPages}
                     </span>
                   </div>
                 </>
               ) : (
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground">Páginas excluídas:</span>
-                  <span className="font-semibold text-destructive">{resultExcludedPages}</span>
+                  <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                    Páginas excluídas:
+                  </span>
+                  <span className="font-semibold text-[#B4453C] tabular-nums">
+                    {resultExcludedPages}
+                  </span>
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Sequência de páginas:</span>
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Sequência de páginas:
+                </span>
                 <span className="font-semibold text-[#C9922A]">
                   {resultIsOrderModified
                     ? `Ordem personalizada (${resultReorderedCount} páginas em nova posição)`
@@ -1609,15 +1685,19 @@ export default function OrganizarPdf() {
                 </span>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">Total de páginas no PDF gerado:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="text-[#78818E] dark:text-muted-foreground uppercase tracking-wider text-[11px] font-semibold">
+                  Total de páginas no PDF gerado:
+                </span>
+                <span className="font-semibold text-[#3E8E5A] tabular-nums">
                   {resultRemainingPages}
                 </span>
               </div>
               {resultHasSignature && (
-                <div className="flex flex-wrap items-center justify-between gap-2 text-amber-700 dark:text-amber-400">
-                  <span>Natureza do arquivo:</span>
-                  <span className="font-medium">Cópia derivada de documento assinado</span>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[#C77E1E]">
+                  <span className="uppercase tracking-wider text-[11px] font-semibold">
+                    Natureza do arquivo:
+                  </span>
+                  <span className="font-semibold">Cópia derivada de documento assinado</span>
                 </div>
               )}
             </div>
@@ -1626,7 +1706,7 @@ export default function OrganizarPdf() {
               <a
                 href={organizedBlobUrl}
                 download={outputFileName}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-[#C9922A] text-white hover:bg-[#B38022] h-10 px-6 shadow-sm no-underline"
+                className="inline-flex items-center justify-center rounded-md text-xs font-semibold transition-colors bg-[#C9922A] text-white hover:bg-[#b58324] h-9 px-6 shadow-sm no-underline focus-visible:ring-2 focus-visible:ring-[#C9922A]"
               >
                 <Download className="w-4 h-4 mr-2" />
                 {resultMode === 'extract' ? 'Baixar PDF Extraído' : 'Baixar PDF Organizado'}
@@ -1636,7 +1716,7 @@ export default function OrganizarPdf() {
                 type="button"
                 variant="outline"
                 onClick={handleResetForNewOperation}
-                className="text-xs sm:text-sm"
+                className="h-9 px-4 text-xs font-medium border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
               >
                 Iniciar nova operação
               </Button>
@@ -1646,12 +1726,16 @@ export default function OrganizarPdf() {
       )}
 
       {/* Informativo de Privacidade e Segurança */}
-      <div className="rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5 flex items-center gap-3.5 text-muted-foreground">
-        <ShieldCheck className="w-5 h-5 text-[#C9922A] shrink-0" />
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 flex items-center gap-3.5 text-[#78818E] dark:text-muted-foreground shadow-xs">
+        <div className="h-9 w-9 rounded-md bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
+          <ShieldCheck className="w-5 h-5 text-[#C9922A]" />
+        </div>
         <p className="text-xs sm:text-sm leading-relaxed">
-          Processamento estritamente local: os dados dos seus documentos não são transmitidos para
-          servidores externos ou bancos de dados, mantendo o sigilo e a privacidade dos processos
-          jurídicos.
+          <strong className="text-[#252B34] dark:text-foreground font-semibold">
+            Processamento 100% Local:
+          </strong>{' '}
+          Os dados dos seus documentos não são transmitidos para servidores externos ou bancos de
+          dados, mantendo o sigilo e a privacidade dos processos jurídicos.
         </p>
       </div>
     </div>
