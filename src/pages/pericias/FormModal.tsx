@@ -142,40 +142,83 @@ export function FormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
-        <DialogHeader>
-          <DialogTitle className="text-amber-600 dark:text-amber-500 text-xl">
-            {item ? `Editar: ${item.nome}` : 'Adicionar Perícia'}
-          </DialogTitle>
+      <DialogContent className="sm:max-w-[550px] rounded-[10px] border border-[#E4E7EB] dark:border-border p-5 sm:p-6 bg-white dark:bg-card shadow-lg">
+        <DialogHeader className="pb-3 border-b border-[#E4E7EB]/80 dark:border-border/80">
+          <div className="flex flex-col gap-1">
+            <span className="inline-flex items-center self-start text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              GESTÃO DE CASOS
+            </span>
+            <DialogTitle className="text-lg sm:text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+              {item ? `Editar: ${item.nome}` : 'Adicionar Perícia'}
+            </DialogTitle>
+          </div>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-2">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-            <div className="space-y-2 col-span-2">
-              <Label>Nome do Cliente *</Label>
-              <Input {...form.register('nome')} placeholder="Ex: João da Silva" />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+            <div className="space-y-2 col-span-1 sm:col-span-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Nome do Cliente *
+              </Label>
+              <Input
+                {...form.register('nome')}
+                placeholder="Ex: João da Silva"
+                className="h-9 border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              />
             </div>
-            <div className="space-y-2 col-span-2">
-              <Label>Nº do Processo *</Label>
-              <Input {...form.register('nautos')} placeholder="Ex: 0001234-56.2026.8.16.0001" />
-            </div>
-            <div className="space-y-2">
-              <Label>Data *</Label>
-              <Input type="date" {...form.register('data')} />
-            </div>
-            <div className="space-y-2">
-              <Label>Horário</Label>
-              <Input type="time" {...form.register('horario')} />
-            </div>
-            <div className="space-y-2">
-              <Label>Perito</Label>
-              <Input {...form.register('perito')} placeholder="Nome do perito" />
-            </div>
-            <div className="space-y-2">
-              <Label>Endereço</Label>
-              <Input {...form.register('endereco')} placeholder="Local da perícia" />
+            <div className="space-y-2 col-span-1 sm:col-span-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Nº do Processo *
+              </Label>
+              <Input
+                {...form.register('nautos')}
+                placeholder="Ex: 0001234-56.2026.8.16.0001"
+                className="h-9 font-mono text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Data *
+              </Label>
+              <Input
+                type="date"
+                {...form.register('data')}
+                className="h-9 border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Horário
+              </Label>
+              <Input
+                type="time"
+                {...form.register('horario')}
+                className="h-9 border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Perito
+              </Label>
+              <Input
+                {...form.register('perito')}
+                placeholder="Nome do perito"
+                className="h-9 border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Endereço
+              </Label>
+              <Input
+                {...form.register('endereco')}
+                placeholder="Local da perícia"
+                className="h-9 border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Status
+              </Label>{' '}
               {!isAddingStatus ? (
                 <div className="flex items-center gap-2">
                   <select
@@ -231,7 +274,9 @@ export function FormModal({
               )}
             </div>
             <div className="space-y-2">
-              <Label>Compareceu</Label>
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Compareceu
+              </Label>
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 {...form.register('compareceu')}
@@ -241,8 +286,10 @@ export function FormModal({
                 <option value="Não">Não</option>
               </select>
             </div>
-            <div className="space-y-2 col-span-2">
-              <Label>Laudo</Label>
+            <div className="space-y-2 col-span-1 sm:col-span-2">
+              <Label className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground uppercase tracking-wide">
+                Laudo
+              </Label>
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 {...form.register('laudo')}
@@ -255,11 +302,19 @@ export function FormModal({
               </select>
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-3 mt-1 border-t border-[#E4E7EB]/80 dark:border-border/80">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="h-9 px-4 text-xs font-semibold border-[#E4E7EB] dark:border-border rounded-md text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground"
+            >
               Cancelar
             </Button>
-            <Button type="submit" className="bg-amber-600 hover:bg-amber-700 text-white">
+            <Button
+              type="submit"
+              className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white rounded-md shadow-sm"
+            >
               Salvar
             </Button>
           </div>

@@ -9,6 +9,13 @@ import { DeleteModal } from './pericias/DeleteModal'
 import { Button } from '@/components/ui/button'
 import { Plus, Printer } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
 
 export default function Pericias() {
@@ -185,24 +192,36 @@ export default function Pericias() {
   }, [filteredPericias, yearData, year, tableSearch, tableStatus])
 
   return (
-    <div className="animate-fade-in-up space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Perícias</h1>
-          <p className="text-muted-foreground mt-1">Acompanhamento de perícias ativas</p>
+    <div className="animate-fade-in-up space-y-6 pb-10">
+      {/* Cabeçalho Corporativo Harmonizado (Grafite Premium 2.1) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              GESTÃO DE CASOS
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            Perícias
+          </h1>
+          <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+            Acompanhamento de perícias ativas, agendamentos e taxas de laudo.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="h-10 px-3 rounded-md border border-input bg-background text-sm font-medium"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
+
+        <div className="flex items-center gap-2.5 self-start lg:self-center">
+          <Select value={year.toString()} onValueChange={(val) => setYear(Number(val))}>
+            <SelectTrigger className="w-[125px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+              <SelectValue placeholder="Ano" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((y) => (
+                <SelectItem key={y} value={y.toString()} className="text-xs">
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -210,7 +229,7 @@ export default function Pericias() {
                 variant="outline"
                 size="icon"
                 onClick={handlePrintReport}
-                className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A] h-10 w-10"
+                className="h-9 w-9 shrink-0 border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded-md transition-colors"
               >
                 <Printer className="h-4 w-4" />
               </Button>
@@ -225,9 +244,9 @@ export default function Pericias() {
               setEditingItem(null)
               setFormModalOpen(true)
             }}
-            className="bg-[#C9922A] hover:bg-[#b07f24] text-white"
+            className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white whitespace-nowrap rounded-md shadow-sm transition-colors"
           >
-            <Plus className="mr-2 h-4 w-4" /> Nova Perícia
+            <Plus className="mr-1.5 h-4 w-4" /> Nova Perícia
           </Button>
         </div>
       </div>

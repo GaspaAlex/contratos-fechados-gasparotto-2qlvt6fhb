@@ -19,27 +19,42 @@ export function DeleteModal({ item, onClose }: { item: Pericia | null; onClose: 
 
   return (
     <Dialog open={!!item} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="sm:max-w-[400px] rounded-[10px]">
-        <DialogHeader className="flex flex-col items-center text-center pt-2">
-          <div className="h-14 w-14 rounded-full bg-rose-100 flex items-center justify-center mb-4 dark:bg-rose-500/20">
-            <AlertTriangle className="h-7 w-7 text-rose-600 dark:text-rose-500" />
+      <DialogContent className="max-w-md rounded-[10px] border border-[#E4E7EB] dark:border-border p-5 sm:p-6 shadow-lg bg-white dark:bg-card">
+        <DialogHeader className="pb-2">
+          <div className="flex items-center gap-2.5 text-[#B4453C] mb-1">
+            <div className="h-8 w-8 rounded-lg bg-[#B4453C]/10 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-4 w-4 text-[#B4453C]" />
+            </div>
+            <DialogTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+              Confirmar Exclusão
+            </DialogTitle>
           </div>
-          <DialogTitle className="text-xl text-rose-600 dark:text-rose-500">
-            Excluir Perícia
-          </DialogTitle>
+          <div className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground pt-1">
+            Deseja excluir a perícia de{' '}
+            <strong className="text-[#252B34] dark:text-foreground font-semibold">
+              {item?.nome}
+            </strong>
+            ?
+          </div>
         </DialogHeader>
-        <div className="text-center py-2 text-muted-foreground">
-          Deseja excluir a perícia de <strong className="text-foreground">{item?.nome}</strong>?
-          <br /> Esta ação não pode ser desfeita.
+
+        <div className="text-xs text-[#78818E] dark:text-muted-foreground bg-[#B4453C]/[0.05] border border-[#B4453C]/20 p-3 rounded-md mt-2">
+          Esta ação é irreversível. O registro será removido do sistema.
         </div>
-        <DialogFooter className="flex gap-2 sm:justify-center w-full mt-4 pb-2">
-          <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={onClose}>
+
+        <DialogFooter className="mt-5 flex gap-2 justify-end pt-3 border-t border-[#E4E7EB]/80 dark:border-border/80 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="h-8 px-3 text-xs border-[#E4E7EB] dark:border-border rounded-md text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground"
+          >
             Cancelar
           </Button>
           <Button
             type="button"
             variant="destructive"
-            className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700"
+            className="h-8 px-4 text-xs font-semibold bg-[#B4453C] hover:bg-[#9c3a32] text-white rounded-md shadow-sm"
             onClick={handleDelete}
           >
             Excluir permanentemente
