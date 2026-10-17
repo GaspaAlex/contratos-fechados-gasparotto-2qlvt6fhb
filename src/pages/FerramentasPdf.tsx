@@ -54,8 +54,8 @@ const PDF_TOOLS: PdfToolCard[] = [
     title: 'Organizar PDF',
     description: 'Reordene, exclua ou extraia páginas.',
     icon: LayoutGrid,
-    status: 'development',
-    statusLabel: 'Em desenvolvimento',
+    status: 'active',
+    href: '/ferramentas-pdf/organizar',
   },
   {
     id: 'rotacionar-pdf',
