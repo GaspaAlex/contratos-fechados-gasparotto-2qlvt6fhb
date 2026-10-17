@@ -132,22 +132,22 @@ export function OverviewCharts({ protocolos }: Props) {
   }, [allTableData, filteredYear])
 
   return (
-    <div className="flex flex-col gap-8 w-full">
-      {/* Chart Section */}
-      <section className="bg-white dark:bg-[#0D0F0C] border border-border dark:border-gray-700 rounded-[6px] p-[20px_24px] shadow-sm">
-        <div className="flex items-start justify-between mb-6">
+    <div className="flex flex-col gap-6 w-full">
+      {/* Chart Section — Card Corporativo com Recharts aumentado de 160px para ~240px */}
+      <section className="bg-white dark:bg-card border border-[#E4E7EB] dark:border-border rounded-[10px] p-5 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="space-y-1">
-            <h2 className="text-[15px] font-bold text-foreground dark:text-gray-100">
+            <h2 className="text-base font-bold text-[#252B34] dark:text-foreground">
               Ações Distribuídas por Mês
             </h2>
-            <p className="text-[12px] text-muted-foreground dark:text-gray-400">
+            <p className="text-xs text-[#78818E] dark:text-muted-foreground">
               {filteredYear === 'all' ? 'Todos os anos' : filteredYear} · baseado em lançamentos da
               aba Protocolo
             </p>
           </div>
-          <div className="w-[160px]">
+          <div className="w-[180px]">
             <Select value={anoSelecionado} onValueChange={setAnoSelecionado}>
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
                 <SelectValue placeholder="Selecione o ano" />
               </SelectTrigger>
               <SelectContent>
@@ -162,13 +162,19 @@ export function OverviewCharts({ protocolos }: Props) {
           </div>
         </div>
 
-        <div className="h-[160px] w-full relative">
-          <ChartContainer config={{ acoes: { color: '#C9922A' } }} className="h-[160px] w-full">
-            <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 24 }}>
-              <CartesianGrid vertical={false} horizontal={false} />
+        <div className="h-[240px] w-full relative">
+          <ChartContainer config={{ acoes: { color: '#C9922A' } }} className="h-[240px] w-full">
+            <BarChart data={chartData} margin={{ top: 12, right: 8, left: -20, bottom: 28 }}>
+              <CartesianGrid
+                vertical={false}
+                horizontal={true}
+                stroke="#E4E7EB"
+                strokeDasharray="3 3"
+                opacity={0.6}
+              />
               <XAxis
                 dataKey="name"
-                axisLine={{ stroke: '#E8E4D4', strokeWidth: 1 }}
+                axisLine={{ stroke: '#E4E7EB', strokeWidth: 1 }}
                 tickLine={false}
                 interval={0}
                 tick={(props: any) => {
@@ -177,16 +183,23 @@ export function OverviewCharts({ protocolos }: Props) {
                   const value = chartData[monthIndex]?.acoes || 0
                   return (
                     <g transform={`translate(${x},${y})`}>
-                      <text x={0} y={12} textAnchor="middle" fill="#6B7280" fontSize={11}>
+                      <text
+                        x={0}
+                        y={14}
+                        textAnchor="middle"
+                        fill="#78818E"
+                        fontSize={11}
+                        fontWeight={500}
+                      >
                         {payload.value}
                       </text>
                       <text
                         x={0}
                         y={28}
                         textAnchor="middle"
-                        fill={value > 0 ? '#C9922A' : '#9CA3AF'}
+                        fill={value > 0 ? '#C9922A' : '#A0A7B5'}
                         fontSize={11}
-                        fontWeight={value > 0 ? 'bold' : 'normal'}
+                        fontWeight={value > 0 ? 700 : 400}
                       >
                         {value > 0 ? value : '—'}
                       </text>
@@ -195,11 +208,17 @@ export function OverviewCharts({ protocolos }: Props) {
                 }}
               />
               <Tooltip
-                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                cursor={{ fill: 'rgba(201, 146, 42, 0.06)' }}
                 content={<ChartTooltipContent hideLabel />}
               />
-              <YAxis hide domain={[0, 'dataMax * 1.33']} />
-              <Bar dataKey="acoes" fill="#C9922A" radius={[4, 4, 0, 0]} maxBarSize={48}>
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#78818E', fontSize: 10 }}
+                domain={[0, 'dataMax + 2']}
+                allowDecimals={false}
+              />
+              <Bar dataKey="acoes" fill="#C9922A" radius={[4, 4, 0, 0]} maxBarSize={44}>
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.acoes > 0 ? '#C9922A' : 'transparent'} />
                 ))}
@@ -209,46 +228,46 @@ export function OverviewCharts({ protocolos }: Props) {
         </div>
       </section>
 
-      {/* Table Section */}
-      <section className="bg-white dark:bg-[#0D0F0C] border border-border dark:border-gray-700 rounded-[6px] p-[20px_24px] shadow-sm overflow-hidden">
-        <div className="mb-6 space-y-1">
-          <h2 className="text-[15px] font-bold text-foreground dark:text-gray-100">
+      {/* Table Section — Histórico Anual */}
+      <section className="bg-white dark:bg-card border border-[#E4E7EB] dark:border-border rounded-[10px] p-5 sm:p-6 shadow-sm overflow-hidden">
+        <div className="mb-5 space-y-1">
+          <h2 className="text-base font-bold text-[#252B34] dark:text-foreground">
             Histórico Anual
           </h2>
-          <p className="text-[12px] text-muted-foreground dark:text-gray-400">
+          <p className="text-xs text-[#78818E] dark:text-muted-foreground">
             Ações distribuídas e honorários por ano · dados da aba Protocolo
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
+        <div className="overflow-x-auto rounded-[8px] border border-[#E4E7EB] dark:border-border">
+          <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
             <thead>
-              <tr className="bg-[#F5F1E4] dark:bg-gray-800 h-[36px] border-b border-border dark:border-gray-700">
-                <th className="pl-4 pr-2 text-left font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase">
+              <tr className="bg-[#F5F6F8] dark:bg-muted/40 h-10 border-b border-[#E4E7EB] dark:border-border">
+                <th className="pl-4 pr-3 text-left font-semibold text-[10px] tracking-wider text-[#78818E] dark:text-muted-foreground uppercase">
                   ANO
                 </th>
                 {tableMonthNames.map((m) => (
                   <th
                     key={m}
-                    className="px-2 text-center font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase"
+                    className="px-2.5 text-center font-semibold text-[10px] tracking-wider text-[#78818E] dark:text-muted-foreground uppercase"
                   >
                     {m}
                   </th>
                 ))}
-                <th className="px-4 text-center font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase">
+                <th className="px-4 text-center font-semibold text-[10px] tracking-wider text-[#78818E] dark:text-muted-foreground uppercase">
                   TOTAL AÇÕES
                 </th>
-                <th className="pr-4 pl-2 text-right font-semibold text-[10px] tracking-[0.6px] text-muted-foreground dark:text-gray-400 uppercase">
+                <th className="pr-4 pl-3 text-right font-semibold text-[10px] tracking-wider text-[#78818E] dark:text-muted-foreground uppercase">
                   TOTAL HONORÁRIOS
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#E4E7EB] dark:divide-border">
               {tableData.length === 0 ? (
                 <tr>
                   <td
                     colSpan={15}
-                    className="h-[44px] text-center text-[13px] text-muted-foreground border-b border-border"
+                    className="h-12 text-center text-xs text-[#78818E] dark:text-muted-foreground"
                   >
                     Nenhum dado encontrado.
                   </td>
@@ -260,17 +279,26 @@ export function OverviewCharts({ protocolos }: Props) {
                     <tr
                       key={row.year}
                       className={cn(
-                        'h-[44px] transition-colors border-b border-border dark:border-gray-700 hover:bg-accent/50 dark:hover:bg-gray-800',
-                        isCurrentYear ? 'bg-[#FDFAF4] dark:bg-gray-900' : 'bg-transparent',
+                        'h-11 transition-colors hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/20 relative',
+                        isCurrentYear
+                          ? 'bg-[#C9922A]/[0.04] dark:bg-[#C9922A]/10 font-medium'
+                          : 'bg-transparent',
                       )}
                     >
-                      <td className="pl-4 pr-2">
+                      <td className="pl-4 pr-3 relative">
+                        {/* Linha vertical dourada discreta para o ano corrente */}
+                        {isCurrentYear && (
+                          <span
+                            className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#C9922A]"
+                            aria-hidden="true"
+                          />
+                        )}
                         <span
                           className={cn(
-                            'px-2.5 py-0.5 rounded-full text-[11px]',
+                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums',
                             isCurrentYear
-                              ? 'bg-[#F5EED8] dark:bg-gray-800 text-[#C9922A] font-bold'
-                              : 'bg-[#E8E4D4] dark:bg-gray-800/50 text-[#9A9070] dark:text-gray-400 font-medium',
+                              ? 'bg-[#C9922A]/15 text-[#C9922A]'
+                              : 'bg-[#E4E7EB] dark:bg-muted text-[#78818E] dark:text-muted-foreground',
                           )}
                         >
                           {row.year}
@@ -280,10 +308,10 @@ export function OverviewCharts({ protocolos }: Props) {
                         <td
                           key={i}
                           className={cn(
-                            'px-2 text-center text-[13px]',
+                            'px-2.5 text-center text-xs tabular-nums',
                             m > 0
-                              ? 'text-foreground dark:text-gray-100'
-                              : 'text-muted-foreground dark:text-gray-500',
+                              ? 'text-[#252B34] dark:text-foreground font-semibold'
+                              : 'text-[#A0A7B5] dark:text-muted-foreground/60',
                           )}
                         >
                           {m > 0 ? m : '—'}
@@ -291,20 +319,20 @@ export function OverviewCharts({ protocolos }: Props) {
                       ))}
                       <td
                         className={cn(
-                          'px-4 text-center text-[13px]',
+                          'px-4 text-center text-xs tabular-nums',
                           isCurrentYear
-                            ? 'font-bold text-foreground dark:text-gray-100'
-                            : 'text-foreground dark:text-gray-100',
+                            ? 'font-bold text-[#252B34] dark:text-foreground'
+                            : 'text-[#252B34] dark:text-foreground font-medium',
                         )}
                       >
                         {row.acoes > 0 ? row.acoes : '—'}
                       </td>
                       <td
                         className={cn(
-                          'pr-4 pl-2 text-right text-[13px]',
+                          'pr-4 pl-3 text-right text-xs tabular-nums',
                           isCurrentYear
-                            ? 'font-bold text-foreground dark:text-gray-100'
-                            : 'text-foreground dark:text-gray-100',
+                            ? 'font-bold text-[#C9922A]'
+                            : 'text-[#252B34] dark:text-foreground font-medium',
                         )}
                       >
                         {row.honorarios > 0 ? formatCurrency(row.honorarios) : '—'}

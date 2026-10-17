@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DollarSign, TrendingUp, FileCheck2, FolderCheck, AlertCircle } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { DashboardProtocolo, DashboardContrato } from '@/hooks/use-dashboard-data'
 
@@ -36,14 +44,14 @@ export function OverviewStats({ protocolos, contratos }: Props) {
   const [yearCard3, setYearCard3] = useState(currentYear)
   const [yearCard4, setYearCard4] = useState(currentYear)
 
-  // Card 1 & 2 Logic
+  // Card 1 & 2 Logic (Preservada integralmente)
   const validProtocolos = protocolos.filter(
     (p) => p.status !== 'R. Docs' && p.decisao !== 'Improcedente',
   )
   const totalHonorarios = validProtocolos.reduce((acc, p) => acc + (p.valor || 0) * 0.3, 0)
   const totalAcoes = validProtocolos.length
 
-  // Card 3 Logic
+  // Card 3 Logic (Preservada integralmente)
   const contratosAno3 = contratos.filter(
     (c) => c.dcontrato && new Date(c.dcontrato).getFullYear() === yearCard3,
   )
@@ -51,7 +59,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
     (c) => !['Sem Qualidade de Segurado', 'Tem Advogado', 'Litispendência'].includes(c.status),
   ).length
 
-  // Card 4 Logic
+  // Card 4 Logic (Preservada integralmente)
   const contratosAno4 = contratos.filter(
     (c) => c.dcontrato && new Date(c.dcontrato).getFullYear() === yearCard4,
   )
@@ -63,7 +71,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
   const rdocsPercentage = ativosAno4 > 0 ? Math.round((rDocsAno4 / ativosAno4) * 100) : 0
   const isMetaMet = rdocsPercentage >= 50
 
-  // Ticket Médio Logic
+  // Ticket Médio Logic (Preservada integralmente)
   const validTicketProtocolos = protocolos.filter((p) => {
     if (!p.dprotocolo) return false
     const date = new Date(p.dprotocolo)
@@ -84,120 +92,223 @@ export function OverviewStats({ protocolos, contratos }: Props) {
   const ticketMedio = countTicket > 0 ? sumHonorariosTicket / countTicket : null
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      <Card className="border-t-2 border-t-[#C9922A] shadow-sm dark:bg-gray-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-            Total Honorários (todos os anos)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-foreground dark:text-gray-100">
-            {formatCurrency(totalHonorarios)}
+    <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {/* CARD 1 — TOTAL HONORÁRIOS (Grafite Premium Executivo #22262E) */}
+      <Card className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm flex flex-col justify-between">
+        <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#9EA7B6]">
+                Total Honorários
+              </span>
+              <div className="h-7 w-7 rounded-md bg-[#2B303C] flex items-center justify-center text-[#D9A94A]">
+                <DollarSign className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-[11px] text-[#7C8596] mb-3">Todos os anos acumulados</p>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="border-t-2 border-t-[#C9922A] shadow-sm dark:bg-gray-800">
-        <CardHeader className="flex flex-col items-start justify-center space-y-2 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-            Ticket Médio por Ação
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <select
-              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              value={monthTicket}
-              onChange={(e) => setMonthTicket(Number(e.target.value))}
+          <div>
+            <div
+              className="text-xl sm:text-2xl font-bold tracking-tight text-[#D9A94A] tabular-nums"
+              title={formatCurrency(totalHonorarios)}
             >
-              {months.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              value={yearTicket}
-              onChange={(e) => setYearTicket(Number(e.target.value))}
+              {formatCurrency(totalHonorarios)}
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#A5ADB9]">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#3E8E5A]" />
+              <span>Estimativa 30% contratual</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CARD 2 — TICKET MÉDIO POR AÇÃO */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
+        <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+                Ticket Médio
+              </span>
+              <div className="h-7 w-7 rounded-md bg-[#F5F6F8] dark:bg-muted/50 flex items-center justify-center text-[#C9922A]">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+            </div>
+
+            {/* Filtros em shadcn Select */}
+            <div className="grid grid-cols-2 gap-1.5 mb-3">
+              <Select
+                value={String(monthTicket)}
+                onValueChange={(val) => setMonthTicket(Number(val))}
+              >
+                <SelectTrigger className="h-7 text-[11px] px-2 py-0 border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((m) => (
+                    <SelectItem key={m.value} value={String(m.value)} className="text-xs">
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={String(yearTicket)}
+                onValueChange={(val) => setYearTicket(Number(val))}
+              >
+                <SelectTrigger className="h-7 text-[11px] px-2 py-0 border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="text-xs">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <div
+              className="text-xl sm:text-2xl font-bold tracking-tight text-[#252B34] dark:text-foreground tabular-nums"
+              title={ticketMedio !== null ? formatCurrency(ticketMedio) : 'Sem registros'}
             >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-[#C9922A]">
-            {ticketMedio !== null ? formatCurrency(ticketMedio) : '—'}
+              {ticketMedio !== null ? formatCurrency(ticketMedio) : '—'}
+            </div>
+            <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
+              {countTicket > 0 ? `${countTicket} ações consideradas` : 'Nenhuma ação no período'}
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-t-2 border-t-blue-500 shadow-sm dark:bg-gray-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-            Ações Distribuídas (todos os anos)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-foreground dark:text-gray-100">{totalAcoes}</div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-t-2 border-t-green-500 shadow-sm dark:bg-gray-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-            Contratos Fechados (Ativos)
-          </CardTitle>
-          <select
-            className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-            value={yearCard3}
-            onChange={(e) => setYearCard3(Number(e.target.value))}
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-foreground dark:text-gray-100">{ativosAno3}</div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-t-2 border-t-red-500 shadow-sm dark:bg-gray-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-            Casos em Faltando Documentos
-          </CardTitle>
-          <select
-            className="h-7 rounded-md border border-input bg-transparent px-2 py-0.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-            value={yearCard4}
-            onChange={(e) => setYearCard4(Number(e.target.value))}
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-red-500">{rDocsAno4}</span>
-            <span className="text-lg font-semibold text-[#C9922A]">{rdocsPercentage}%</span>
+      {/* CARD 3 — AÇÕES DISTRIBUÍDAS */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
+        <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+                Ações Distribuídas
+              </span>
+              <div className="h-7 w-7 rounded-md bg-[#F5F6F8] dark:bg-muted/50 flex items-center justify-center text-[#4A7FA5]">
+                <FileCheck2 className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3">
+              Todos os anos acumulados
+            </p>
           </div>
-          <p
-            className={cn(
-              'mt-1 text-xs font-medium',
-              isMetaMet ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
-            )}
-          >
-            Meta: liberar ≥ 50% para protocolo
-          </p>
+
+          <div>
+            <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#252B34] dark:text-foreground tabular-nums">
+              {totalAcoes}
+            </div>
+            <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
+              Processos com protocolo ativo
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CARD 4 — CONTRATOS FECHADOS (ATIVOS) */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
+        <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+                Contratos Fechados
+              </span>
+              <div className="h-7 w-7 rounded-md bg-[#F5F6F8] dark:bg-muted/50 flex items-center justify-center text-[#3E8E5A]">
+                <FolderCheck className="h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <Select value={String(yearCard3)} onValueChange={(val) => setYearCard3(Number(val))}>
+                <SelectTrigger className="h-7 text-[11px] px-2 py-0 border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="text-xs">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#252B34] dark:text-foreground tabular-nums">
+              {ativosAno3}
+            </div>
+            <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
+              Contratos ativos em {yearCard3}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CARD 5 — CASOS FALTANDO DOCUMENTOS */}
+      <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
+        <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
+                Faltando Documentos
+              </span>
+              <div className="h-7 w-7 rounded-md bg-[#F5F6F8] dark:bg-muted/50 flex items-center justify-center text-[#C77E1E]">
+                <AlertCircle className="h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <Select value={String(yearCard4)} onValueChange={(val) => setYearCard4(Number(val))}>
+                <SelectTrigger className="h-7 text-[11px] px-2 py-0 border-[#E4E7EB] dark:border-border bg-white dark:bg-card">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="text-xs">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-[#B4453C] tabular-nums">{rDocsAno4}</span>
+              <span className="text-sm font-semibold text-[#C9922A] tabular-nums">
+                ({rdocsPercentage}%)
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-1.5">
+              <span
+                className={cn(
+                  'inline-block h-2 w-2 rounded-full',
+                  isMetaMet ? 'bg-[#3E8E5A]' : 'bg-[#B4453C]',
+                )}
+              />
+              <p
+                className={cn(
+                  'text-[11px] font-medium leading-tight',
+                  isMetaMet
+                    ? 'text-[#3E8E5A] dark:text-green-400'
+                    : 'text-[#B4453C] dark:text-red-400',
+                )}
+              >
+                Meta: liberar ≥ 50%
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

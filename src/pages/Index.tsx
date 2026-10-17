@@ -50,10 +50,18 @@ export default function Index() {
   }
 
   return (
-    <div className="animate-fade-in-up space-y-6 pb-10">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Visão Geral</h1>
-        <p className="text-muted-foreground">
+    <div className="animate-fade-in-up space-y-7 pb-10">
+      {/* Cabeçalho da Página com Eyebrow Corporativo */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+            PAINEL EXECUTIVO
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+          Visão Geral
+        </h1>
+        <p className="text-sm text-[#78818E] dark:text-muted-foreground">
           Monitore métricas em tempo real, honorários e desempenho da equipe.
         </p>
       </div>

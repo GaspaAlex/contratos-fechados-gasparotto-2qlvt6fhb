@@ -15,6 +15,7 @@ import {
   UserCog,
   Files,
   ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
@@ -125,6 +126,19 @@ export default function Layout() {
     return matched ? matched.id : null
   }, [navSections, isItemActive])
 
+  const activeBreadcrumb = useMemo(() => {
+    for (const section of navSections) {
+      const item = section.items.find((it) => isItemActive(it.path))
+      if (item) {
+        return {
+          section: section.label,
+          page: item.name,
+        }
+      }
+    }
+    return null
+  }, [navSections, isItemActive])
+
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
     const current = location.pathname
     const matched = navSections.find((section) =>
@@ -201,38 +215,45 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <Sidebar variant="inset" className="border-r">
-          <SidebarHeader className="p-0 border-b border-border">
-            <div className="flex items-center justify-center px-4 py-3.5 w-full">
+      <div className="flex min-h-screen w-full bg-background font-sans">
+        <Sidebar
+          variant="sidebar"
+          collapsible="offcanvas"
+          className="border-r border-[#222733] bg-[#161920] text-[#B5BAC4] shrink-0"
+        >
+          {/* Header da Sidebar — Fundo Grafite #161920 com superfície sutil para a BrandLogo */}
+          <SidebarHeader className="p-0 border-b border-[#232836] bg-[#161920]">
+            <div className="flex items-center justify-center px-4 py-4 w-full">
               <Link
                 to="/"
-                className="w-full max-w-[216px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-opacity hover:opacity-95"
+                className="w-full max-w-[216px] flex items-center justify-center rounded-md p-2 bg-[#1C202A]/90 hover:bg-[#202532] border border-[#2B3040]/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A]"
                 title="Advocacia Gasparotto - Início"
               >
-                <BrandLogo className="w-full h-auto max-h-[64px]" />
+                <BrandLogo className="w-full h-auto max-h-[58px]" />
               </Link>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-4 py-2">
-            <div className="flex flex-col">
-              {navSections.map((section, index) => {
+
+          {/* Navegação da Sidebar */}
+          <SidebarContent className="px-3 py-3 bg-[#161920]">
+            <div className="flex flex-col space-y-4">
+              {navSections.map((section) => {
                 const isExpanded = !!expandedSections[section.id]
                 const contentId = `nav-section-${section.id}`
 
                 return (
-                  <div key={section.id} className={cn(index > 0 && 'mt-4')}>
+                  <div key={section.id} className="flex flex-col">
                     <button
                       type="button"
                       onClick={() => toggleSection(section.id)}
                       aria-expanded={isExpanded}
                       aria-controls={contentId}
-                      className="group/sec-header flex w-full items-center justify-between px-2 py-1.5 mb-1 rounded text-[10px] uppercase font-semibold tracking-[1px] text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring cursor-pointer select-none"
+                      className="group/sec-header flex w-full items-center justify-between px-3 py-1.5 mb-1 rounded text-[10px] uppercase font-semibold tracking-[1.2px] text-[#9299A9] hover:text-[#E4E7EB] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#D9A94A] cursor-pointer select-none"
                     >
                       <span className="truncate">{section.label}</span>
                       <ChevronDown
                         className={cn(
-                          'h-3.5 w-3.5 shrink-0 text-muted-foreground/70 transition-transform duration-200 group-hover/sec-header:text-foreground',
+                          'h-3.5 w-3.5 shrink-0 text-[#9299A9] transition-transform duration-200 group-hover/sec-header:text-[#E4E7EB]',
                           isExpanded && 'rotate-180',
                         )}
                         aria-hidden="true"
@@ -241,7 +262,7 @@ export default function Layout() {
 
                     {isExpanded && (
                       <div id={contentId}>
-                        <SidebarMenu>
+                        <SidebarMenu className="gap-1">
                           {section.items.map((item) => {
                             const isActive = isItemActive(item.path)
                             return (
@@ -250,15 +271,27 @@ export default function Layout() {
                                   asChild
                                   isActive={isActive}
                                   className={cn(
-                                    'w-full py-5 text-base transition-colors border-l-4 rounded-none h-12',
+                                    'relative w-full h-11 px-3 py-2 text-sm transition-all duration-150 rounded-[9px] overflow-hidden',
                                     isActive
-                                      ? 'bg-[#C9922A]/15 border-[#C9922A] text-[#C9922A] font-bold hover:bg-[#C9922A]/20 hover:text-[#C9922A]'
-                                      : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium',
+                                      ? 'bg-[#2B2927] text-[#F1C078] font-semibold shadow-sm hover:bg-[#322F2D] hover:text-[#F1C078]'
+                                      : 'text-[#B5BAC4] hover:bg-[#1E222B] hover:text-[#F0F2F5] font-medium',
                                   )}
                                 >
-                                  <Link to={item.path}>
-                                    <item.icon className="h-5 w-5" />
-                                    <span>{item.name}</span>
+                                  <Link to={item.path} className="flex items-center gap-3">
+                                    {/* Linha vertical dourada de 3px à ESQUERDA no padrão aprovado */}
+                                    {isActive && (
+                                      <span
+                                        className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#D9A94A] rounded-r-sm"
+                                        aria-hidden="true"
+                                      />
+                                    )}
+                                    <item.icon
+                                      className={cn(
+                                        'h-4 w-4 shrink-0 transition-colors',
+                                        isActive ? 'text-[#D9A94A]' : 'text-[#8E95A5]',
+                                      )}
+                                    />
+                                    <span className="truncate tracking-wide">{item.name}</span>
                                   </Link>
                                 </SidebarMenuButton>
                               </SidebarMenuItem>
@@ -272,14 +305,16 @@ export default function Layout() {
               })}
             </div>
           </SidebarContent>
-          <SidebarFooter className="p-4 border-t">
+
+          {/* Footer da Sidebar */}
+          <SidebarFooter className="p-3 border-t border-[#232836] bg-[#161920]">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  className="w-full justify-start text-[#B5BAC4] hover:text-[#FFFFFF] hover:bg-[#202532] rounded-[8px] text-sm font-medium transition-colors"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="mr-2.5 h-4 w-4 text-[#8E95A5]" />
                   Sair do sistema
                 </Button>
               </AlertDialogTrigger>
@@ -292,7 +327,7 @@ export default function Layout() {
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleLogout}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    className="bg-[#B4453C] text-white hover:bg-[#9E3B33]"
                   >
                     Sair
                   </AlertDialogAction>
@@ -303,44 +338,72 @@ export default function Layout() {
         </Sidebar>
 
         <SidebarInset className="flex w-full flex-col overflow-hidden bg-background">
-          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-card px-6">
-            <div className="flex items-center gap-2 lg:hidden">
-              <SidebarTrigger className="-ml-2" />
-              <div className="flex flex-col text-left leading-none">
-                <span className="text-[12px] font-bold text-foreground">Advocacia</span>
-                <span className="text-[14px] font-bold text-[#C9922A]">Gasparotto</span>
+          {/* Header Executivo Limpo com Breadcrumb */}
+          <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#E4E7EB] dark:border-border bg-white dark:bg-card px-4 sm:px-8">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="text-[#78818E] hover:text-[#252B34] dark:text-muted-foreground dark:hover:text-foreground" />
+
+              <div className="flex items-center gap-2 lg:hidden">
+                <div className="flex flex-col text-left leading-none">
+                  <span className="text-[12px] font-bold text-[#252B34] dark:text-foreground">
+                    Advocacia
+                  </span>
+                  <span className="text-[13px] font-bold text-[#C9922A]">Gasparotto</span>
+                </div>
               </div>
+
+              {/* Breadcrumb corporativo discreto */}
+              {activeBreadcrumb && (
+                <nav
+                  aria-label="Breadcrumb"
+                  className="hidden sm:flex items-center gap-2 text-xs text-[#78818E] dark:text-muted-foreground pl-2 border-l border-[#E4E7EB] dark:border-border"
+                >
+                  <span className="font-medium tracking-wide uppercase text-[11px] text-[#78818E] dark:text-muted-foreground">
+                    {activeBreadcrumb.section}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 opacity-50 text-[#78818E]" />
+                  <span className="font-semibold text-[#252B34] dark:text-foreground">
+                    {activeBreadcrumb.page}
+                  </span>
+                </nav>
+              )}
             </div>
+
             <div className="flex-1" />
-            <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-full border">
+
+            {/* Alternador de tema preservado */}
+            <div className="flex items-center gap-1 bg-[#F5F6F8] dark:bg-muted/40 p-1 rounded-full border border-[#E4E7EB] dark:border-border">
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-8 w-8 rounded-full transition-all',
+                  'h-7 w-7 rounded-full transition-all',
                   theme === 'light'
-                    ? 'bg-[#C9922A] text-white shadow-sm hover:bg-[#C9922A] hover:text-white'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? 'bg-[#C9922A] text-white shadow-xs hover:bg-[#C9922A] hover:text-white'
+                    : 'text-[#78818E] hover:text-[#252B34] dark:text-muted-foreground dark:hover:text-foreground',
                 )}
                 onClick={() => setTheme('light')}
+                title="Modo Claro"
               >
-                <Sun className="h-4 w-4" />
+                <Sun className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-8 w-8 rounded-full transition-all',
+                  'h-7 w-7 rounded-full transition-all',
                   theme === 'dark'
-                    ? 'bg-[#C9922A] text-white shadow-sm hover:bg-[#C9922A] hover:text-white'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? 'bg-[#C9922A] text-white shadow-xs hover:bg-[#C9922A] hover:text-white'
+                    : 'text-[#78818E] hover:text-[#252B34] dark:text-muted-foreground dark:hover:text-foreground',
                 )}
                 onClick={() => setTheme('dark')}
+                title="Modo Escuro"
               >
-                <Moon className="h-4 w-4" />
+                <Moon className="h-3.5 w-3.5" />
               </Button>
             </div>
           </header>
+
           <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-8 bg-background">
             <Outlet />
           </main>
