@@ -208,29 +208,47 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{grupoExistente ? 'Editar Acesso' : 'Novo Acesso'}</DialogTitle>
+      <DialogContent className="rounded-[10px] sm:max-w-2xl max-h-[90vh] overflow-y-auto border border-[#E4E7EB] dark:border-border p-6 shadow-lg bg-white dark:bg-card">
+        <DialogHeader className="space-y-1 border-b border-[#E4E7EB] dark:border-border pb-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              GESTÃO DE PESSOAS
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            {grupoExistente ? 'Editar Acesso' : 'Novo Acesso'}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="titulo">Título *</Label>
+        <div className="space-y-4 pt-3">
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="titulo"
+              className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground"
+            >
+              Título / Nome do Sistema *
+            </Label>
             <Input
               id="titulo"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ex: Sistema Jurídico"
+              placeholder="Ex: ADVBOX, Prazoprev, E-Proc..."
+              className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nivel_acesso">Nível de acesso</Label>
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="nivel_acesso"
+              className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground"
+            >
+              Nível de acesso
+            </Label>
             <select
               id="nivel_acesso"
               value={nivelAcesso}
               onChange={(e) => setNivelAcesso(e.target.value as 'todos' | 'gestores' | 'restrito')}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex h-9 w-full items-center justify-between rounded-md border border-[#E4E7EB] dark:border-border bg-white dark:bg-card px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#C9922A]"
             >
               <option value="todos">Todos os colaboradores</option>
               <option value="gestores">Somente gestores</option>
@@ -239,15 +257,18 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
           </div>
 
           {nivelAcesso === 'restrito' && (
-            <div className="space-y-2">
-              <Label htmlFor="usuario_restrito">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="usuario_restrito"
+                className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground"
+              >
                 Visível somente para <span className="text-red-500">*</span>
               </Label>
               <select
                 id="usuario_restrito"
                 value={usuarioRestrito}
                 onChange={(e) => setUsuarioRestrito(e.target.value)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex h-9 w-full items-center justify-between rounded-md border border-[#E4E7EB] dark:border-border bg-white dark:bg-card px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#C9922A]"
               >
                 <option value="">Selecione um usuário...</option>
                 {colaboradores.map((c) => (
@@ -264,19 +285,30 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="observacoes"
+              className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground"
+            >
+              Observações Gerais / Orientações
+            </Label>
             <Textarea
               id="observacoes"
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
-              placeholder="Observações opcionais..."
+              placeholder="Informações adicionais, observações institucionais ou instruções de uso..."
               rows={3}
+              className="text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card leading-relaxed"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="anexo">Anexo</Label>
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="anexo"
+              className="text-xs font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground"
+            >
+              Documento Anexo (Opcional)
+            </Label>
             <div className="flex items-center gap-3">
               <input
                 type="file"
@@ -288,52 +320,75 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                 type="button"
                 variant="outline"
                 size="sm"
+                className="h-8 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A]"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="mr-2 h-4 w-4" />{' '}
+                <Upload className="mr-1.5 h-3.5 w-3.5" />{' '}
                 {anexoAtual ? 'Trocar anexo' : 'Selecionar anexo'}
               </Button>
               {anexoAtual && (
-                <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                <span className="text-xs text-[#78818E] dark:text-muted-foreground truncate max-w-[220px]">
                   {anexoAtual}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Blocos</Label>
-              <Button type="button" variant="outline" size="sm" onClick={adicionarBloco}>
-                <Plus className="mr-2 h-4 w-4" /> Adicionar bloco
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between border-t border-[#E4E7EB] dark:border-border pt-3">
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider text-[#252B34] dark:text-foreground">
+                  Blocos de Credenciais
+                </Label>
+                <p className="text-[11px] text-[#78818E] dark:text-muted-foreground">
+                  Adicione logins, senhas e links por usuário ou setor.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={adicionarBloco}
+                className="h-8 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A]"
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" /> Adicionar bloco
               </Button>
             </div>
 
             {blocos.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum bloco adicionado. Clique em "Adicionar bloco" para começar.
+              <p className="text-xs text-[#78818E] dark:text-muted-foreground italic py-2">
+                Nenhum bloco adicionado. Clique em &quot;Adicionar bloco&quot; para cadastrar
+                credenciais.
               </p>
             )}
 
             {blocos.map((bloco, bIndex) => (
-              <Card key={bIndex} className="border-dashed">
-                <CardContent className="pt-5 space-y-3">
+              <Card
+                key={bIndex}
+                className="rounded-lg border border-[#E4E7EB] dark:border-border bg-[#FAF8F2]/60 dark:bg-muted/20 shadow-none"
+              >
+                <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Nome</Label>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                          Nome / Rótulo
+                        </Label>
                         <Input
                           value={bloco.rotulo}
                           onChange={(e) => atualizarBloco(bIndex, { rotulo: e.target.value })}
-                          placeholder="Ex: Dr. Caio"
+                          placeholder="Ex: Dr. Caio, Comercial..."
+                          className="h-8 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A]"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Visível apenas para</Label>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                          Visível apenas para
+                        </Label>
                         <select
                           value={bloco.colaborador}
                           onChange={(e) => atualizarBloco(bIndex, { colaborador: e.target.value })}
-                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="flex h-8 w-full items-center justify-between rounded-md border border-[#E4E7EB] dark:border-border bg-white dark:bg-card px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#C9922A]"
                         >
                           <option value="">Todos com acesso a este grupo</option>
                           {colaboradores.map((c) => (
@@ -348,47 +403,60 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                      className="h-7 w-7 text-[#78818E] hover:text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded shrink-0"
                       onClick={() => removerBloco(bIndex)}
+                      title="Remover este bloco"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Login</Label>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                          Login
+                        </Label>
                         <Input
                           value={bloco.login}
                           onChange={(e) => atualizarBloco(bIndex, { login: e.target.value })}
-                          placeholder="Login (opcional)"
+                          placeholder="Login ou e-mail"
+                          className="h-8 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A]"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Senha</Label>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                          Senha
+                        </Label>
                         <Input
                           value={bloco.senha}
                           onChange={(e) => atualizarBloco(bIndex, { senha: e.target.value })}
-                          placeholder="Senha (opcional)"
+                          placeholder="Senha de acesso"
+                          className="h-8 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A]"
                         />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Link de acesso</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                        Link de Acesso (URL)
+                      </Label>
                       <Input
                         value={bloco.link}
                         onChange={(e) => atualizarBloco(bIndex, { link: e.target.value })}
-                        placeholder="Link de acesso (opcional)"
+                        placeholder="https://exemplo.com.br"
+                        className="h-8 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A]"
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Observações</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+                        Observações do Bloco
+                      </Label>
                       <Textarea
                         value={bloco.observacoes}
                         onChange={(e) => atualizarBloco(bIndex, { observacoes: e.target.value })}
-                        placeholder="Observações (opcional)"
+                        placeholder="Observações específicas para esta credencial..."
                         rows={2}
+                        className="text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card focus-visible:ring-[#C9922A]"
                       />
                     </div>
                   </div>
@@ -397,20 +465,30 @@ export function AcessoModal({ isOpen, onClose, grupoExistente, onSaved }: Acesso
             ))}
           </div>
 
-          {erroValidacao && <p className="text-sm text-red-500">{erroValidacao}</p>}
+          {erroValidacao && (
+            <p className="text-xs font-medium text-[#B4453C] bg-red-50 dark:bg-red-950/30 p-2.5 rounded-md border border-red-200 dark:border-red-900/50">
+              {erroValidacao}
+            </p>
+          )}
         </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose} disabled={salvando}>
+        <DialogFooter className="mt-4 border-t border-[#E4E7EB] dark:border-border pt-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={salvando}
+            className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] rounded-md transition-colors"
+          >
             Cancelar
           </Button>
           <Button
             type="button"
             onClick={handleSalvar}
             disabled={salvando}
-            className="bg-[#C8922A] text-white hover:bg-[#b07d20]"
+            className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white rounded-md shadow-sm transition-colors"
           >
-            {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {salvando && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
             Salvar
           </Button>
         </DialogFooter>
