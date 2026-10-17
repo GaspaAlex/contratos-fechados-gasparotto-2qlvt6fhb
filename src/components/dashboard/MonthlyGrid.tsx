@@ -95,366 +95,337 @@ export function MonthlyGrid({
   const totalTotalMacohin = totalMacohinCount + totalIndicacaoMacohinCount
 
   return (
-    <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-4">
-        {monthlyCounts.map((month, index) => (
-          <Card
-            key={month.name}
-            className={cn(
-              'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60',
-              'animate-fade-in-up',
-              month.count > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
-            )}
-            style={{ animationFillMode: 'both', animationDelay: `${index * 50}ms` }}
-          >
-            <CardContent className="p-3">
-              <h3 className="text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase mb-1">
-                {month.name}
-              </h3>
-
-              <div className="flex items-baseline gap-1.5">
-                <span
-                  className={cn(
-                    'text-3xl sm:text-4xl font-black leading-none tracking-tight',
-                    month.count > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
-                  )}
-                >
-                  {month.count}
-                </span>
-                <span
-                  className={cn(
-                    'text-xs font-medium',
-                    month.count > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
-                  )}
-                >
-                  {month.count === 1
-                    ? 'fechamento'
-                    : month.count > 0
-                      ? 'fechamentos'
-                      : 'sem registro'}
-                </span>
-              </div>
-
-              {month.archivedCount > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                    {month.archivedCount} {month.archivedCount === 1 ? 'arquivado' : 'arquivados'}
-                  </span>
-                </div>
+    <div className="space-y-4">
+      {/* 12 Cards Mensais + Indicadores Hoje e Total */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {monthlyCounts.map((monthItem, index) => {
+          const hasContracts = monthItem.count > 0
+          return (
+            <Card
+              key={monthItem.name}
+              className={cn(
+                'group relative h-full overflow-hidden transition-all duration-200 rounded-[10px] border shadow-xs',
+                'animate-fade-in-up',
+                hasContracts
+                  ? 'border-[#E4E7EB] dark:border-border bg-white dark:bg-card hover:border-[#C9922A]/40 hover:shadow-sm'
+                  : 'border-[#E4E7EB]/80 dark:border-border/60 bg-white/70 dark:bg-card/40 opacity-75',
               )}
-
-              {month.count > 0 && (
-                <div className="mt-2.5 space-y-2">
-                  {/* Grade 2x2 das 4 origens */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {/* Linha 1: Campanha | Particular */}
-                    <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                      style={{
-                        backgroundColor: 'rgba(82, 184, 110, 0.12)',
-                      }}
-                    >
-                      <span className="font-extrabold text-[12px] shrink-0">
-                        {month.campanhaCount}
+              style={{ animationFillMode: 'both', animationDelay: `${index * 35}ms` }}
+            >
+              <CardContent className="p-3.5 flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <h3 className="text-[11px] font-bold tracking-wider text-[#78818E] dark:text-muted-foreground uppercase">
+                      {monthItem.name}
+                    </h3>
+                    {monthItem.archivedCount > 0 && (
+                      <span className="inline-flex items-center bg-[#F5F6F8] text-[#78818E] dark:bg-muted dark:text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#E4E7EB] dark:border-border">
+                        {monthItem.archivedCount} {monthItem.archivedCount === 1 ? 'arq.' : 'arq.'}
                       </span>
-                      <span className="truncate">Campanha</span>
-                    </div>
-
-                    <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                      style={{
-                        backgroundColor: 'rgba(90, 159, 212, 0.12)',
-                      }}
-                    >
-                      <span className="font-extrabold text-[12px] shrink-0">
-                        {month.particularCount}
-                      </span>
-                      <span className="truncate">Particular</span>
-                    </div>
-
-                    {/* Linha 2: Macohin | Indicação Macohin */}
-                    <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                      style={{
-                        backgroundColor: 'rgba(139, 92, 246, 0.12)',
-                      }}
-                    >
-                      <span className="font-extrabold text-[12px] shrink-0">
-                        {month.macohinCount}
-                      </span>
-                      <span className="truncate">Macohin</span>
-                    </div>
-
-                    <div
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                      title={`${month.indicacaoMacohinCount} Indicação Macohin`}
-                      style={{
-                        backgroundColor: 'rgba(217, 119, 6, 0.12)',
-                      }}
-                    >
-                      <span className="font-extrabold text-[12px] shrink-0">
-                        {month.indicacaoMacohinCount}
-                      </span>
-                      <span className="truncate">Indicação Macohin</span>
-                    </div>
+                    )}
                   </div>
 
-                  {/* Linha divisória horizontal discreta */}
-                  <div className="border-t border-border/40" />
-
-                  {/* Área de destaque próprio para Total Macohin */}
-                  <div
-                    className="flex items-center justify-between rounded-md px-2.5 py-1.5 border"
-                    style={{
-                      backgroundColor: 'rgba(201, 146, 42, 0.08)',
-                      borderColor: 'rgba(201, 146, 42, 0.22)',
-                    }}
-                  >
-                    <span className="text-[11px] font-semibold text-foreground/80 tracking-tight">
-                      Total Macohin
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span
+                      className={cn(
+                        'text-2xl sm:text-3xl font-bold leading-none tracking-tight tabular-nums',
+                        hasContracts
+                          ? 'text-[#252B34] dark:text-foreground'
+                          : 'text-[#A0A7B5] dark:text-muted-foreground/40',
+                      )}
+                    >
+                      {monthItem.count}
                     </span>
-                    <span className="text-base font-black text-[#C9922A] leading-none">
-                      {month.totalMacohin}
+                    <span
+                      className={cn(
+                        'text-xs font-medium',
+                        hasContracts
+                          ? 'text-[#78818E] dark:text-muted-foreground'
+                          : 'text-[#A0A7B5] dark:text-muted-foreground/40',
+                      )}
+                    >
+                      {monthItem.count === 1
+                        ? 'fechamento'
+                        : monthItem.count > 0
+                          ? 'fechamentos'
+                          : 'sem registro'}
                     </span>
                   </div>
                 </div>
-              )}
-            </CardContent>
-            {month.count > 0 && (
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
-            )}
-          </Card>
-        ))}
 
+                {hasContracts ? (
+                  <div className="mt-2 space-y-2 pt-2 border-t border-[#E4E7EB]/70 dark:border-border/70">
+                    {/* Grade 2x2 das 4 origens */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {/* Linha 1: Campanha (Verde #3E8E5A) | Particular (Azul #4A7FA5) */}
+                      <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#3E8E5A]/10 text-[#252B34] dark:text-foreground border border-[#3E8E5A]/20">
+                        <span className="truncate text-[10px] text-[#3E8E5A] font-semibold">
+                          Campanha
+                        </span>
+                        <span className="font-bold text-xs shrink-0 tabular-nums text-[#3E8E5A]">
+                          {monthItem.campanhaCount}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#4A7FA5]/10 text-[#252B34] dark:text-foreground border border-[#4A7FA5]/20">
+                        <span className="truncate text-[10px] text-[#4A7FA5] font-semibold">
+                          Particular
+                        </span>
+                        <span className="font-bold text-xs shrink-0 tabular-nums text-[#4A7FA5]">
+                          {monthItem.particularCount}
+                        </span>
+                      </div>
+
+                      {/* Linha 2: Macohin (Roxo #8A56AC) | Indicação Macohin (Âmbar #C77E1E) */}
+                      <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#8A56AC]/10 text-[#252B34] dark:text-foreground border border-[#8A56AC]/20">
+                        <span className="truncate text-[10px] text-[#8A56AC] font-semibold">
+                          Macohin
+                        </span>
+                        <span className="font-bold text-xs shrink-0 tabular-nums text-[#8A56AC]">
+                          {monthItem.macohinCount}
+                        </span>
+                      </div>
+
+                      <div
+                        className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#C77E1E]/10 text-[#252B34] dark:text-foreground border border-[#C77E1E]/20"
+                        title={`${monthItem.indicacaoMacohinCount} Indicação Macohin`}
+                      >
+                        <span className="truncate text-[10px] text-[#C77E1E] font-semibold">
+                          Ind. Macohin
+                        </span>
+                        <span className="font-bold text-xs shrink-0 tabular-nums text-[#C77E1E]">
+                          {monthItem.indicacaoMacohinCount}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Destaque Próprio para Total Macohin */}
+                    <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#C9922A]/10 border border-[#C9922A]/25">
+                      <span className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground tracking-tight">
+                        Total Macohin
+                      </span>
+                      <span className="text-sm font-bold text-[#C9922A] leading-none tabular-nums">
+                        {monthItem.totalMacohin}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 pt-2 border-t border-[#E4E7EB]/50 dark:border-border/50">
+                    <p className="text-[11px] text-[#A0A7B5] dark:text-muted-foreground/60 italic">
+                      Nenhum fechamento registrado
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+
+        {/* CARD HOJE — Estilo Corporativo com Borda Sutil e Hierarquia Refinada */}
         <Card
           className={cn(
-            'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60 animate-fade-in-up',
-            todayActive > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
+            'group relative h-full overflow-hidden transition-all duration-200 rounded-[10px] border shadow-xs',
+            'animate-fade-in-up',
+            todayActive > 0
+              ? 'border-[#C9922A]/40 bg-white dark:bg-card shadow-sm'
+              : 'border-[#E4E7EB] dark:border-border bg-white dark:bg-card',
           )}
-          style={{ animationFillMode: 'both', animationDelay: '550ms' }}
+          style={{ animationFillMode: 'both', animationDelay: '500ms' }}
         >
-          <CardContent className="p-3">
-            <h3 className="text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase mb-1">
-              HOJE
-            </h3>
-            <div className="flex items-baseline gap-1.5">
-              <span
-                className={cn(
-                  'text-3xl sm:text-4xl font-black leading-none tracking-tight',
-                  todayActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
-                )}
-              >
-                {todayActive}
-              </span>
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  todayActive > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
-                )}
-              >
-                {todayActive === 1 ? 'fechamento hoje' : 'fechamentos hoje'}
-              </span>
+          <CardContent className="p-3.5 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1.5">
+                <span className="text-[11px] font-bold tracking-wider text-[#C9922A] uppercase">
+                  HOJE
+                </span>
+                <span className="text-[10px] font-medium text-[#78818E] dark:text-muted-foreground">
+                  Tempo real
+                </span>
+              </div>
+
+              <div className="flex items-baseline gap-2 mb-2">
+                <span
+                  className={cn(
+                    'text-2xl sm:text-3xl font-bold leading-none tracking-tight tabular-nums',
+                    todayActive > 0
+                      ? 'text-[#252B34] dark:text-foreground'
+                      : 'text-[#A0A7B5] dark:text-muted-foreground/40',
+                  )}
+                >
+                  {todayActive}
+                </span>
+                <span className="text-xs font-medium text-[#78818E] dark:text-muted-foreground">
+                  {todayActive === 1 ? 'fechamento hoje' : 'fechamentos hoje'}
+                </span>
+              </div>
             </div>
 
-            <div className="mt-2.5 space-y-2">
-              {/* Grade 2x2 das 4 origens */}
+            <div className="mt-2 space-y-2 pt-2 border-t border-[#E4E7EB]/70 dark:border-border/70">
               <div className="grid grid-cols-2 gap-1.5">
-                {/* Linha 1: Campanha | Particular */}
-                <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                  style={{
-                    backgroundColor: 'rgba(82, 184, 110, 0.12)',
-                  }}
-                >
-                  <span className="font-extrabold text-[12px] shrink-0">{todayCampanhaCount}</span>
-                  <span className="truncate">Campanha</span>
+                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#3E8E5A]/10 text-[#252B34] dark:text-foreground border border-[#3E8E5A]/20">
+                  <span className="truncate text-[10px] text-[#3E8E5A] font-semibold">
+                    Campanha
+                  </span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#3E8E5A]">
+                    {todayCampanhaCount}
+                  </span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                  style={{
-                    backgroundColor: 'rgba(90, 159, 212, 0.12)',
-                  }}
-                >
-                  <span className="font-extrabold text-[12px] shrink-0">
+                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#4A7FA5]/10 text-[#252B34] dark:text-foreground border border-[#4A7FA5]/20">
+                  <span className="truncate text-[10px] text-[#4A7FA5] font-semibold">
+                    Particular
+                  </span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#4A7FA5]">
                     {todayParticularCount}
                   </span>
-                  <span className="truncate">Particular</span>
                 </div>
 
-                {/* Linha 2: Macohin | Indicação Macohin */}
-                <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                  style={{
-                    backgroundColor: 'rgba(139, 92, 246, 0.12)',
-                  }}
-                >
-                  <span className="font-extrabold text-[12px] shrink-0">{todayMacohinCount}</span>
-                  <span className="truncate">Macohin</span>
+                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#8A56AC]/10 text-[#252B34] dark:text-foreground border border-[#8A56AC]/20">
+                  <span className="truncate text-[10px] text-[#8A56AC] font-semibold">Macohin</span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#8A56AC]">
+                    {todayMacohinCount}
+                  </span>
                 </div>
 
                 <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#C77E1E]/10 text-[#252B34] dark:text-foreground border border-[#C77E1E]/20"
                   title={`${todayIndicacaoMacohinCount} Indicação Macohin`}
-                  style={{
-                    backgroundColor: 'rgba(217, 119, 6, 0.12)',
-                  }}
                 >
-                  <span className="font-extrabold text-[12px] shrink-0">
+                  <span className="truncate text-[10px] text-[#C77E1E] font-semibold">
+                    Ind. Macohin
+                  </span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#C77E1E]">
                     {todayIndicacaoMacohinCount}
                   </span>
-                  <span className="truncate">Indicação Macohin</span>
                 </div>
               </div>
 
-              {/* Linha divisória horizontal discreta */}
-              <div className="border-t border-border/40" />
-
-              {/* Área de destaque próprio para Total Macohin */}
-              <div
-                className="flex items-center justify-between rounded-md px-2.5 py-1.5 border"
-                style={{
-                  backgroundColor: 'rgba(201, 146, 42, 0.08)',
-                  borderColor: 'rgba(201, 146, 42, 0.22)',
-                }}
-              >
-                <span className="text-[11px] font-semibold text-foreground/80 tracking-tight">
+              <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#C9922A]/10 border border-[#C9922A]/25">
+                <span className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground tracking-tight">
                   Total Macohin
                 </span>
-                <span className="text-base font-black text-[#C9922A] leading-none">
+                <span className="text-sm font-bold text-[#C9922A] leading-none tabular-nums">
                   {todayTotalMacohin}
                 </span>
               </div>
             </div>
-            {todayActive > 0 && (
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
-            )}
           </CardContent>
         </Card>
 
+        {/* CARD TOTAL DO ANO / GERAL — Destaque Executivo Grafite #22262E com Valores Dourados #D9A94A */}
         <Card
-          className={cn(
-            'group relative h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60 animate-fade-in-up',
-            totalActive > 0 ? 'bg-[#C9922A]/5 border-[#C9922A]/20' : 'bg-card/50 opacity-80',
-          )}
-          style={{ animationFillMode: 'both', animationDelay: '600ms' }}
+          className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm animate-fade-in-up"
+          style={{ animationFillMode: 'both', animationDelay: '550ms' }}
         >
-          <CardContent className="p-3">
-            <h3 className="text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase mb-1">
-              {year === 'Todos os anos' ? 'TOTAL GERAL' : `TOTAL ${year}`}
-            </h3>
-            <div className="flex items-baseline gap-1.5">
-              <span
-                className={cn(
-                  'text-3xl sm:text-4xl font-black leading-none tracking-tight',
-                  totalActive > 0 ? 'text-[#C9922A]' : 'text-muted-foreground/40',
+          <CardContent className="p-3.5 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1.5">
+                <h3 className="text-[11px] font-bold tracking-wider text-[#9EA7B6] uppercase">
+                  {year === 'Todos os anos' ? 'TOTAL GERAL' : `TOTAL ${year}`}
+                </h3>
+                {totalArchived > 0 && (
+                  <span className="inline-flex items-center bg-[#2B303C] text-[#D9A94A] text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#D9A94A]/20">
+                    {totalArchived} arq.
+                  </span>
                 )}
-              >
-                {totalActive}
-              </span>
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  totalActive > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40',
-                )}
-              >
-                {totalActive === 1 ? 'ativo' : 'ativos'}
-              </span>
+              </div>
+
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-2xl sm:text-3xl font-bold leading-none tracking-tight text-[#D9A94A] tabular-nums">
+                  {totalActive}
+                </span>
+                <span className="text-xs font-medium text-[#A5ADB9]">
+                  {totalActive === 1 ? 'contrato ativo' : 'contratos ativos'}
+                </span>
+              </div>
             </div>
 
-            {totalArchived > 0 && (
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-[10px] font-bold px-[6px] py-[1px] rounded-[10px]">
-                  {totalArchived} arquivados
-                </span>
-              </div>
-            )}
-
-            <div className="mt-2.5 space-y-2">
-              {/* Grade 2x2 das 4 origens */}
+            <div className="mt-2 space-y-2 pt-2 border-t border-[#2E3440]">
               <div className="grid grid-cols-2 gap-1.5">
-                {/* Linha 1: Campanha | Particular */}
-                <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                  style={{
-                    backgroundColor: 'rgba(82, 184, 110, 0.12)',
-                  }}
-                >
-                  <span className="font-extrabold text-[12px] shrink-0">{totalCampanhaCount}</span>
-                  <span className="truncate">Campanha</span>
+                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#3E8E5A]/30">
+                  <span className="truncate text-[10px] text-[#52B86E] font-semibold">
+                    Campanha
+                  </span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#52B86E]">
+                    {totalCampanhaCount}
+                  </span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                  style={{
-                    backgroundColor: 'rgba(90, 159, 212, 0.12)',
-                  }}
-                >
-                  <span className="font-extrabold text-[12px] shrink-0">
+                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#5A9FD4]/30">
+                  <span className="truncate text-[10px] text-[#5A9FD4] font-semibold">
+                    Particular
+                  </span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#5A9FD4]">
                     {totalParticularCount}
                   </span>
-                  <span className="truncate">Particular</span>
                 </div>
 
-                {/* Linha 2: Macohin | Indicação Macohin */}
-                <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
-                  style={{
-                    backgroundColor: 'rgba(139, 92, 246, 0.12)',
-                  }}
-                >
-                  <span className="font-extrabold text-[12px] shrink-0">{totalMacohinCount}</span>
-                  <span className="truncate">Macohin</span>
+                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#8B5CF6]/30">
+                  <span className="truncate text-[10px] text-[#A78BFA] font-semibold">Macohin</span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#A78BFA]">
+                    {totalMacohinCount}
+                  </span>
                 </div>
 
                 <div
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 text-foreground"
+                  className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#D97706]/30"
                   title={`${totalIndicacaoMacohinCount} Indicação Macohin`}
-                  style={{
-                    backgroundColor: 'rgba(217, 119, 6, 0.12)',
-                  }}
                 >
-                  <span className="font-extrabold text-[12px] shrink-0">
+                  <span className="truncate text-[10px] text-[#FBBF24] font-semibold">
+                    Ind. Macohin
+                  </span>
+                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#FBBF24]">
                     {totalIndicacaoMacohinCount}
                   </span>
-                  <span className="truncate">Indicação Macohin</span>
                 </div>
               </div>
 
-              {/* Linha divisória horizontal discreta */}
-              <div className="border-t border-border/40" />
-
-              {/* Área de destaque próprio para Total Macohin */}
-              <div
-                className="flex items-center justify-between rounded-md px-2.5 py-1.5 border"
-                style={{
-                  backgroundColor: 'rgba(201, 146, 42, 0.08)',
-                  borderColor: 'rgba(201, 146, 42, 0.22)',
-                }}
-              >
-                <span className="text-[11px] font-semibold text-foreground/80 tracking-tight">
+              <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#2B303C] border border-[#D9A94A]/30">
+                <span className="text-[11px] font-semibold text-[#A5ADB9] tracking-tight">
                   Total Macohin
                 </span>
-                <span className="text-base font-black text-[#C9922A] leading-none">
+                <span className="text-sm font-bold text-[#D9A94A] leading-none tabular-nums">
                   {totalTotalMacohin}
                 </span>
               </div>
             </div>
-            {totalActive > 0 && (
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-[#C9922A] transform origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
-            )}
           </CardContent>
         </Card>
       </div>
 
+      {/* Faixa Sóbria de Auditoria e Resumo Geral */}
       <div
-        className="text-center sm:text-right text-sm text-muted-foreground font-medium mb-8 animate-fade-in-up"
-        style={{ animationDelay: '650ms' }}
+        className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-[#78818E] dark:text-muted-foreground animate-fade-in-up"
+        style={{ animationDelay: '600ms' }}
       >
-        {year === 'Todos os anos' ? 'Total (ativos):' : 'Total do ano (ativos):'}{' '}
-        <span className="font-bold text-foreground">{totalActive}</span> &mdash; Arquivados
-        excluídos: <span className="font-bold text-foreground">{totalArchived}</span> &mdash; Total
-        registrado: <span className="font-bold text-foreground">{totalRegistrado}</span>
+        <div>
+          <span>Escopo exibido: </span>
+          <strong className="text-[#252B34] dark:text-foreground font-semibold">
+            {month === 'Todos os meses' ? 'Todos os meses' : month} / {year}
+          </strong>
+        </div>
+        <div className="flex items-center gap-3 tabular-nums">
+          <span>
+            Ativos:{' '}
+            <strong className="text-[#252B34] dark:text-foreground font-semibold">
+              {totalActive}
+            </strong>
+          </span>
+          <span className="text-[#A0A7B5]">&bull;</span>
+          <span>
+            Arquivados:{' '}
+            <strong className="text-[#78818E] dark:text-muted-foreground font-medium">
+              {totalArchived}
+            </strong>
+          </span>
+          <span className="text-[#A0A7B5]">&bull;</span>
+          <span>
+            Total cadastrado:{' '}
+            <strong className="text-[#252B34] dark:text-foreground font-semibold">
+              {totalRegistrado}
+            </strong>
+          </span>
+        </div>
       </div>
 
       <RDocsDashboard

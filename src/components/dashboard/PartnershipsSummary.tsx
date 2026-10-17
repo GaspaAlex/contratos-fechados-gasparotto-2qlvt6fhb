@@ -152,44 +152,67 @@ export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {
 
   return (
     <Card
-      className="mt-8 mb-12 border-amber-200/60 shadow-sm animate-fade-in-down"
+      className="mt-6 mb-8 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm animate-fade-in-down"
       style={{ animationDelay: '100ms' }}
     >
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4 bg-[#C9922A]/5 rounded-t-xl border-b border-[#C9922A]/10">
-        <CardTitle className="text-xl font-bold text-[#C9922A]">Resumo de Parcerias</CardTitle>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3 border-b border-[#E4E7EB] dark:border-border">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-[#C9922A]" />
+          <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+            Resumo de Parcerias
+          </CardTitle>
+        </div>
         <Button
           variant="outline"
           size="sm"
           onClick={handleRelatorioGeral}
-          className="font-bold border-[#C9922A] text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+          className="h-8 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#252B34] dark:text-foreground hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded-md gap-1.5 shadow-xs"
         >
-          <FileText className="mr-2 h-4 w-4" /> Relatório geral
+          <FileText className="h-3.5 w-3.5 text-[#C9922A]" /> Imprimir Relatório Geral
         </Button>
       </CardHeader>
-      <CardContent className="pt-6">
-        <div className="rounded-md border overflow-hidden">
+      <CardContent className="pt-4">
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border overflow-hidden">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader className="bg-[#F5F6F8] dark:bg-muted/40">
               <TableRow>
-                <TableHead className="font-semibold">PARCEIRO</TableHead>
-                <TableHead className="text-right font-semibold">CASOS</TableHead>
-                <TableHead className="text-right font-semibold">TOTAL POR PARCEIRO (R$)</TableHead>
-                <TableHead className="text-center font-semibold w-32">RELATÓRIO</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold">
+                  PARCEIRO
+                </TableHead>
+                <TableHead className="text-right text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold">
+                  CASOS
+                </TableHead>
+                <TableHead className="text-right text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold">
+                  TOTAL POR PARCEIRO
+                </TableHead>
+                <TableHead className="text-center text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold w-28">
+                  RELATÓRIO
+                </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
               {partnerships.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-8 text-xs text-[#78818E] dark:text-muted-foreground"
+                  >
                     Nenhuma parceria encontrada para os filtros atuais.
                   </TableCell>
                 </TableRow>
               ) : (
                 partnerships.map((p) => (
-                  <TableRow key={p.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-semibold">{p.parceiro}</TableCell>
-                    <TableCell className="text-right font-medium">{p.casos}</TableCell>
-                    <TableCell className="text-right font-bold text-[#C9922A]">
+                  <TableRow
+                    key={p.id}
+                    className="hover:bg-[#F5F6F8]/70 dark:hover:bg-muted/30 transition-colors"
+                  >
+                    <TableCell className="font-semibold text-xs text-[#252B34] dark:text-foreground">
+                      {p.parceiro}
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-medium tabular-nums text-[#78818E] dark:text-muted-foreground">
+                      {p.casos}
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-bold text-[#C9922A] tabular-nums">
                       {formatMoney(p.total)}
                     </TableCell>
                     <TableCell className="text-center">
@@ -197,20 +220,20 @@ export function PartnershipsSummary({ contratos = [] }: { contratos: any[] }) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleImprimir(p)}
-                        className="h-8 hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+                        className="h-7 px-2.5 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#C9922A]/10 rounded-md"
                       >
-                        <Printer className="mr-2 h-4 w-4" /> Imprimir
+                        <Printer className="mr-1.5 h-3.5 w-3.5" /> Imprimir
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
-            <TableFooter className="bg-[#C9922A]/10 text-[#C9922A] font-bold border-t-2 border-[#C9922A]/30">
+            <TableFooter className="bg-[#F5F6F8] dark:bg-muted/50 border-t border-[#E4E7EB] dark:border-border font-semibold text-xs text-[#252B34] dark:text-foreground">
               <TableRow>
-                <TableCell className="text-lg uppercase tracking-wide">TOTAL GERAL</TableCell>
-                <TableCell className="text-right text-lg">{totalGeralCasos}</TableCell>
-                <TableCell className="text-right text-lg font-black">
+                <TableCell className="text-xs uppercase tracking-wider">TOTAL GERAL</TableCell>
+                <TableCell className="text-right text-xs tabular-nums">{totalGeralCasos}</TableCell>
+                <TableCell className="text-right text-sm font-bold text-[#C9922A] tabular-nums">
                   {formatMoney(totalGeralRs)}
                 </TableCell>
                 <TableCell></TableCell>

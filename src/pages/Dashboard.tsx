@@ -66,51 +66,65 @@ export default function Dashboard() {
   })
 
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#C9922A]/10 rounded-lg">
-              <LayoutGrid className="w-6 h-6 text-[#C9922A]" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Contratos Fechados</h1>
-              <p className="text-sm font-medium text-muted-foreground">
-                Gestão de fechamentos e acompanhamento R. Docs
-              </p>
-            </div>
+    <div className="space-y-6 animate-fade-in-up pb-10">
+      {/* Cabeçalho Corporativo Harmonizado com Protocolo / Visão Geral (Grafite Premium 2.1) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              GESTÃO DE CONTRATOS
+            </span>
           </div>
-          <div className="flex items-center gap-3">
-            <Select value={gridMonth} onValueChange={setGridMonth}>
-              <SelectTrigger className="w-[180px] bg-background border-[#C9922A]/30 focus:ring-[#C9922A]">
-                <SelectValue placeholder="Todos os meses" />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={gridYear.toString()}
-              onValueChange={(v) => setGridYear(v === 'Todos os anos' ? v : parseInt(v))}
-            >
-              <SelectTrigger className="w-[120px] bg-background border-[#C9922A]/30 focus:ring-[#C9922A]">
-                <SelectValue placeholder="Todos os anos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Todos os anos">Todos os anos</SelectItem>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2027">2027</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            Contratos Fechados
+          </h1>
+          <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+            Gestão de fechamentos, acompanhamento R. Docs e metas de liberação para protocolo.
+          </p>
         </div>
 
+        <div className="flex items-center gap-2.5 self-start lg:self-center">
+          <Select value={gridMonth} onValueChange={setGridMonth}>
+            <SelectTrigger className="w-[170px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+              <SelectValue placeholder="Todos os meses" />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m) => (
+                <SelectItem key={m} value={m} className="text-xs">
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={gridYear.toString()}
+            onValueChange={(v) => setGridYear(v === 'Todos os anos' ? v : parseInt(v, 10))}
+          >
+            <SelectTrigger className="w-[130px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+              <SelectValue placeholder="Todos os anos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos os anos" className="text-xs">
+                Todos os anos
+              </SelectItem>
+              <SelectItem value="2024" className="text-xs">
+                2024
+              </SelectItem>
+              <SelectItem value="2025" className="text-xs">
+                2025
+              </SelectItem>
+              <SelectItem value="2026" className="text-xs">
+                2026
+              </SelectItem>
+              <SelectItem value="2027" className="text-xs">
+                2027
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
         <MonthlyGrid
           contratos={gridContratos}
           year={gridYear as any}

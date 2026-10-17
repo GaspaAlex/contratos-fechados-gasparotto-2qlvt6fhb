@@ -544,40 +544,48 @@ export function ContractsTable({
     <>
       {activeFilter === 'Parceria' && <PartnershipsSummary contratos={filtered} />}
 
+      {/* ALERTA DE REVISÃO — Harmonizado com Protocolo (Paleta #C77E1E e #B4453C) */}
       {reviewStats.total > 0 && (
         <div
           role="alert"
           aria-live="polite"
-          className="mt-8 relative overflow-hidden rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/[0.12] via-amber-500/[0.08] to-amber-500/[0.03] dark:from-amber-500/[0.18] dark:via-amber-500/[0.10] dark:to-transparent p-4 sm:p-5 shadow-sm animate-fade-in-up"
+          className="mt-6 relative overflow-hidden rounded-[10px] border border-[#C77E1E]/30 bg-[#C77E1E]/[0.05] dark:bg-[#C77E1E]/10 p-4 sm:p-5 shadow-sm animate-fade-in-up"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Barra lateral de acento */}
+          <span
+            className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#C77E1E]"
+            aria-hidden="true"
+          />
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pl-1">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                <Bell className="h-5 w-5 animate-pulse" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#C77E1E]/15 text-[#C77E1E] border border-[#C77E1E]/25">
+                <Bell className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 font-bold text-foreground text-sm sm:text-base tracking-tight">
-                  <span className="text-amber-600 dark:text-amber-400">ATENÇÃO</span>
-                  <span className="text-muted-foreground font-normal">&mdash;</span>
+                <div className="flex items-center gap-2 font-bold text-[#252B34] dark:text-foreground text-sm sm:text-base tracking-tight">
+                  <span className="text-[10px] font-bold tracking-[1.2px] uppercase text-[#C77E1E] bg-[#C77E1E]/15 px-2 py-0.5 rounded">
+                    ATENÇÃO
+                  </span>
                   <span>
                     {reviewStats.total === 1
                       ? '1 contrato precisa de acompanhamento'
                       : `${reviewStats.total} contratos precisam de acompanhamento`}
                   </span>
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <div className="text-xs text-[#78818E] dark:text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   {reviewStats.today > 0 && (
-                    <span className="font-medium text-amber-700 dark:text-amber-300">
+                    <span className="font-semibold text-[#C77E1E] dark:text-amber-400">
                       {reviewStats.today === 1
                         ? '1 para revisar hoje'
                         : `${reviewStats.today} para revisar hoje`}
                     </span>
                   )}
                   {reviewStats.today > 0 && reviewStats.past > 0 && (
-                    <span className="text-muted-foreground/60">&bull;</span>
+                    <span className="text-[#A0A7B5]">&bull;</span>
                   )}
                   {reviewStats.past > 0 && (
-                    <span className="font-medium text-red-600 dark:text-red-400">
+                    <span className="font-semibold text-[#B4453C] dark:text-red-400">
                       {reviewStats.past === 1
                         ? '1 revisão atrasada'
                         : `${reviewStats.past} revisões atrasadas`}
@@ -589,212 +597,301 @@ export function ContractsTable({
 
             <Button
               type="button"
-              onClick={() => setActiveFilter('Revisar')}
+              onClick={() => setActiveFilter(activeFilter === 'Revisar' ? 'Todos' : 'Revisar')}
               variant="outline"
               size="sm"
-              className="self-start sm:self-center shrink-0 border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 hover:text-amber-800 dark:hover:text-amber-200 font-semibold gap-1.5 shadow-none transition-colors"
+              className={cn(
+                'self-start sm:self-center shrink-0 h-9 font-semibold text-xs gap-1.5 transition-colors border shadow-xs',
+                activeFilter === 'Revisar'
+                  ? 'bg-[#161920] border-[#161920] text-white hover:bg-[#202532] hover:text-white dark:bg-[#D9A94A] dark:text-[#161920]'
+                  : 'border-[#C77E1E]/40 bg-white dark:bg-card text-[#C77E1E] hover:bg-[#C77E1E]/10 hover:text-[#C77E1E]',
+              )}
             >
-              Ver casos para revisão
+              {activeFilter === 'Revisar' ? 'Ver todos os contratos' : 'Ver casos para revisão'}
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
       )}
 
-      <Card
-        className="mt-8 border-border/60 shadow-sm animate-fade-in-up"
+      {/* CARD REGISTRO DE CONTRATOS — Toolbar e Filtros Harmonizados */}
+      <div
+        className="mt-6 space-y-4 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-4 sm:p-5 shadow-sm animate-fade-in-up"
         style={{ animationDelay: '200ms' }}
       >
-        <CardHeader>
-          <CardTitle className="text-xl font-bold">Registro de Contratos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col xl:flex-row justify-between gap-4 mb-6">
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full xl:flex-1">
-              <div className="relative w-full sm:w-80 shrink-0">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar cliente, benefício, resp..."
-                  className="pl-9 bg-background focus-visible:ring-amber-500"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <Select value={tableBeneficio} onValueChange={setTableBeneficio}>
-                <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Todos os benefícios" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todos os benefícios">Todos os benefícios</SelectItem>
-                  {beneficiosList.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={tableResponsavel} onValueChange={setTableResponsavel}>
-                <SelectTrigger className="w-full sm:w-48 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Todos os responsáveis" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todos os responsáveis">Todos os responsáveis</SelectItem>
-                  {responsaveisList.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={tableMonth}
-                onValueChange={(v) => {
-                  setTableMonth(v)
-                  setTableWeek('Todas as semanas')
-                  onMonthChange?.(v)
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-40 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Todos os meses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todos os meses">Todos os meses</SelectItem>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={tableWeek}
-                onValueChange={setTableWeek}
-                disabled={tableMonth === 'Todos os meses'}
-              >
-                <SelectTrigger className="w-full sm:w-56 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A] disabled:opacity-50">
-                  <SelectValue placeholder="Todas as semanas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todas as semanas">Todas as semanas</SelectItem>
-                  {currentWeeks.map((w) => (
-                    <SelectItem key={w.id} value={w.id}>
-                      {w.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={tableYear.toString()}
-                onValueChange={(v) => {
-                  setTableYear(v === 'Todos os anos' ? v : parseInt(v, 10))
-                  setTableWeek('Todas as semanas')
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-32 shrink-0 border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Todos os anos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todos os anos">Todos os anos</SelectItem>
-                  {availableYears.map((y) => (
-                    <SelectItem key={y} value={y.toString()}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-[#E4E7EB]/70 dark:border-border/70">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-[#C9922A]" />
+            <h2 className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+              Registro de Contratos
+            </h2>
+          </div>
+          <span className="text-xs text-[#78818E] dark:text-muted-foreground tabular-nums">
+            Exibindo{' '}
+            <strong className="text-[#252B34] dark:text-foreground">{filtered.length}</strong> de{' '}
+            {contratos.length} contratos
+          </span>
+        </div>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handlePrintReport}
-                    className="shrink-0 border-[#C9922A]/30 text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
-                  >
-                    <Printer className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Exportar relatório PDF</p>
-                </TooltipContent>
-              </Tooltip>
+        {/* Linha 1: Controles e Ações */}
+        <div className="flex flex-col lg:flex-row gap-2.5 items-stretch lg:items-center justify-between">
+          <div className="flex flex-wrap gap-2 items-center flex-1">
+            {/* Busca */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#78818E]" />
+              <Input
+                placeholder="Buscar cliente, benefício, resp..."
+                className="pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus-visible:ring-[#C9922A]"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
+
+            {/* Select Benefício */}
+            <Select value={tableBeneficio} onValueChange={setTableBeneficio}>
+              <SelectTrigger className="w-full sm:w-44 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+                <SelectValue placeholder="Todos os benefícios" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos os benefícios" className="text-xs">
+                  Todos os benefícios
+                </SelectItem>
+                {beneficiosList.map((b) => (
+                  <SelectItem key={b} value={b} className="text-xs">
+                    {b}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Responsável */}
+            <Select value={tableResponsavel} onValueChange={setTableResponsavel}>
+              <SelectTrigger className="w-full sm:w-44 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+                <SelectValue placeholder="Todos os responsáveis" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos os responsáveis" className="text-xs">
+                  Todos os responsáveis
+                </SelectItem>
+                {responsaveisList.map((r) => (
+                  <SelectItem key={r} value={r} className="text-xs">
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Mês */}
+            <Select
+              value={tableMonth}
+              onValueChange={(v) => {
+                setTableMonth(v)
+                setTableWeek('Todas as semanas')
+                onMonthChange?.(v)
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-36 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+                <SelectValue placeholder="Todos os meses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos os meses" className="text-xs">
+                  Todos os meses
+                </SelectItem>
+                {MONTHS.map((m) => (
+                  <SelectItem key={m} value={m} className="text-xs">
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Semana */}
+            <Select
+              value={tableWeek}
+              onValueChange={setTableWeek}
+              disabled={tableMonth === 'Todos os meses'}
+            >
+              <SelectTrigger className="w-full sm:w-52 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A] disabled:opacity-50">
+                <SelectValue placeholder="Todas as semanas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todas as semanas" className="text-xs">
+                  Todas as semanas
+                </SelectItem>
+                {currentWeeks.map((w) => (
+                  <SelectItem key={w.id} value={w.id} className="text-xs">
+                    {w.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Ano */}
+            <Select
+              value={tableYear.toString()}
+              onValueChange={(v) => {
+                setTableYear(v === 'Todos os anos' ? v : parseInt(v, 10))
+                setTableWeek('Todas as semanas')
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-32 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+                <SelectValue placeholder="Todos os anos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos os anos" className="text-xs">
+                  Todos os anos
+                </SelectItem>
+                {availableYears.map((y) => (
+                  <SelectItem key={y} value={y.toString()} className="text-xs">
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Botões de Ação */}
+          <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handlePrintReport}
+                  className="h-9 w-9 border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:border-[#C9922A]/40 rounded-md"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Exportar relatório PDF</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Button
               onClick={handleAdd}
-              className="w-full xl:w-auto bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-semibold shadow-sm shrink-0"
+              className="bg-[#C9922A] hover:bg-[#b58324] text-white h-9 px-4 text-xs font-semibold rounded-md gap-1.5 shadow-sm"
             >
-              <Plus className="mr-2 h-4 w-4" /> Adicionar
+              <Plus className="h-4 w-4" /> Adicionar Contrato
             </Button>
           </div>
+        </div>
 
-          <div className="flex flex-wrap gap-2 mb-6">
-            {(() => {
-              const reviewDueCount = reviewStats.total
+        {/* Linha 2: Pills Sóbrias Corporativas (Harmonizadas com Protocolo) */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#E4E7EB]/80 dark:border-border/80">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
+            FILTROS:
+          </span>
+          {(() => {
+            const reviewDueCount = reviewStats.total
 
-              return filters.map((status) => {
-                const label =
-                  status === 'Revisar'
-                    ? `Revisar (${reviewDueCount})`
-                    : status === 'R. Docs'
-                      ? 'Falt. Docs'
-                      : status
+            return filters.map((status) => {
+              const label =
+                status === 'Revisar'
+                  ? `Revisar (${reviewDueCount})`
+                  : status === 'R. Docs'
+                    ? 'Falt. Docs'
+                    : status
 
-                return (
-                  <Button
-                    key={status}
-                    onClick={() => setActiveFilter(status)}
-                    variant={activeFilter === status ? 'default' : 'outline'}
-                    size="sm"
-                    className={cn(
-                      'rounded-full font-medium transition-colors',
-                      activeFilter === status
-                        ? 'bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A] hover:bg-[#C9922A]/25 shadow-none font-bold'
-                        : 'text-muted-foreground',
-                    )}
-                  >
-                    {label}
-                  </Button>
-                )
-              })
-            })()}
-          </div>
+              const isActive = activeFilter === status
+              const isRevisar = status === 'Revisar'
 
-          <div className="rounded-md border overflow-x-auto">
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setActiveFilter(status)}
+                  className={cn(
+                    'h-7 px-2.5 text-xs rounded-md transition-all font-medium cursor-pointer select-none inline-flex items-center gap-1.5 border',
+                    isActive
+                      ? isRevisar
+                        ? 'bg-[#C77E1E] text-white border-[#C77E1E] font-semibold shadow-xs'
+                        : 'bg-[#161920] dark:bg-[#D9A94A] text-white dark:text-[#161920] border-[#161920] dark:border-[#D9A94A] font-semibold shadow-xs'
+                      : isRevisar
+                        ? 'border-[#C77E1E]/40 text-[#C77E1E] bg-[#C77E1E]/5 hover:bg-[#C77E1E]/15'
+                        : 'border-[#E4E7EB] dark:border-border text-[#78818E] dark:text-muted-foreground bg-white dark:bg-card hover:bg-[#F5F6F8] dark:hover:bg-muted/40 hover:text-[#252B34] dark:hover:text-foreground',
+                  )}
+                >
+                  {label}
+                </button>
+              )
+            })
+          })()}
+        </div>
+
+        {/* TABELA DE CONTRATOS — Padrão Corporativo Contemporâneo */}
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">NOME</TableHead>
-                  <TableHead className="whitespace-nowrap">FONE</TableHead>
-                  <TableHead className="whitespace-nowrap">BENEFÍCIO</TableHead>
-                  <TableHead className="whitespace-nowrap">RESP.</TableHead>
-                  <TableHead className="whitespace-nowrap">FUP</TableHead>
-                  <TableHead className="whitespace-nowrap">STATUS</TableHead>
-                  <TableHead className="whitespace-nowrap">ORIGEM</TableHead>
-                  <TableHead className="whitespace-nowrap">D. CONTRATO</TableHead>
-                  <TableHead className="whitespace-nowrap">D. CÁLCULO</TableHead>
-                  <TableHead className="whitespace-nowrap">D. PROTOCOLO</TableHead>
-                  <TableHead className="whitespace-nowrap">PARCERIA</TableHead>
-                  <TableHead className="whitespace-nowrap text-right">AÇÕES</TableHead>
+              <TableHeader className="bg-[#F5F6F8] dark:bg-muted/40 border-b border-[#E4E7EB] dark:border-border">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap pl-4">
+                    NOME
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    FONE
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    BENEFÍCIO
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    RESP.
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    FUP
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    STATUS
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    ORIGEM
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    D. CONTRATO
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    D. CÁLCULO
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    D. PROTOCOLO
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    PARCERIA
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap text-right pr-4">
+                    AÇÕES
+                  </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border">
                 {groupedFiltered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
-                      Nenhum contrato encontrado.
+                    <TableCell
+                      colSpan={12}
+                      className="text-center py-12 text-xs text-[#78818E] dark:text-muted-foreground"
+                    >
+                      Nenhum contrato encontrado para os filtros selecionados.
                     </TableCell>
                   </TableRow>
                 ) : (
                   groupedFiltered.map((group) => {
                     return (
                       <React.Fragment key={group.key}>
-                        <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                        <TableRow className="bg-[#F5F6F8]/80 dark:bg-muted/30 hover:bg-[#F5F6F8]/80 border-y border-[#E4E7EB] dark:border-border">
                           <TableCell
-                            colSpan={13}
-                            className="py-2 px-4 font-bold text-xs text-muted-foreground tracking-wider uppercase"
+                            colSpan={12}
+                            className="py-2.5 px-4 font-semibold text-[10px] tracking-wider uppercase text-[#78818E] dark:text-muted-foreground"
                           >
-                            {group.monthName} {group.year} &mdash; {group.items.length} CONTRATOS
-                            FECHADOS CONTABILIZADOS
+                            <span className="font-bold text-[#252B34] dark:text-foreground">
+                              {group.monthName} {group.year}
+                            </span>{' '}
+                            •{' '}
+                            <span className="text-[#C9922A] font-semibold tabular-nums">
+                              {group.items.length}{' '}
+                              {group.items.length === 1
+                                ? 'contrato contabilizado'
+                                : 'contratos contabilizados'}
+                            </span>
                           </TableCell>
                         </TableRow>
                         {group.items.map((contract: any) => {
@@ -807,32 +904,46 @@ export function ContractsTable({
                             <TableRow
                               key={contract.id}
                               className={cn(
-                                'transition-colors',
+                                'group transition-colors h-11 relative',
                                 contractArchived &&
-                                  'text-muted-foreground line-through opacity-70 hover:bg-muted/30',
+                                  'text-[#78818E] line-through opacity-65 hover:bg-[#F5F6F8]/50 dark:hover:bg-muted/20',
                                 !contractArchived &&
                                   isRDocs &&
-                                  'bg-[#E84040]/10 hover:bg-[#E84040]/20',
+                                  'bg-[#B4453C]/[0.05] hover:bg-[#B4453C]/[0.09] dark:bg-[#B4453C]/10',
                                 !contractArchived &&
                                   !isRDocs &&
                                   isAguardando &&
-                                  'bg-amber-50/70 hover:bg-amber-100/70 dark:bg-amber-950/20 dark:hover:bg-amber-950/30',
+                                  'bg-[#C77E1E]/[0.05] hover:bg-[#C77E1E]/[0.09] dark:bg-[#C77E1E]/10',
                                 !contractArchived &&
                                   !isRDocs &&
                                   !isAguardando &&
-                                  'hover:bg-muted/30',
+                                  'hover:bg-[#F5F6F8]/70 dark:hover:bg-muted/30',
                               )}
                             >
-                              <TableCell className="font-semibold">
-                                <div className="flex items-center gap-2">
-                                  {contract.nome}
+                              <TableCell className="font-semibold text-xs whitespace-nowrap pl-4 text-[#252B34] dark:text-foreground relative">
+                                {!contractArchived && isRDocs && (
+                                  <span
+                                    className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#B4453C]"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                                {!contractArchived && !isRDocs && isAguardando && (
+                                  <span
+                                    className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#C77E1E]"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="truncate max-w-[200px]" title={contract.nome}>
+                                    {contract.nome}
+                                  </span>
                                   {contract.observacoes && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
                                       </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="whitespace-pre-line">
+                                      <TooltipContent className="max-w-xs md:max-w-sm">
+                                        <p className="whitespace-pre-line text-xs">
                                           {contract.observacoes}
                                         </p>
                                       </TooltipContent>
@@ -845,18 +956,17 @@ export function ContractsTable({
                                           <CalendarClock
                                             className={cn(
                                               'h-3.5 w-3.5',
-                                              reviewStatus === 'past' &&
-                                                'text-red-500 hover:text-red-600',
+                                              reviewStatus === 'past' && 'text-[#B4453C]',
                                               reviewStatus === 'today' &&
-                                                'text-amber-500 hover:text-amber-600 animate-pulse',
+                                                'text-[#C77E1E] animate-pulse',
                                               reviewStatus === 'future' &&
-                                                'text-[#C9922A]/80 hover:text-[#C9922A]',
+                                                'text-[#78818E]/80 hover:text-[#C9922A]',
                                             )}
                                           />
                                         </span>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>
+                                        <p className="text-xs">
                                           Revisar em: {formatDate(reviewCivil)}
                                           {reviewStatus === 'past' && ' (Atrasada)'}
                                           {reviewStatus === 'today' && ' (Hoje)'}
@@ -867,10 +977,10 @@ export function ContractsTable({
                                   {contract.representante && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <UserCheck className="h-4 w-4 text-[#C9922A] cursor-help shrink-0" />
+                                        <UserCheck className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>
+                                        <p className="text-xs">
                                           Representante:{' '}
                                           {contract.representante_nome || 'Não informado'}
                                         </p>
@@ -880,157 +990,151 @@ export function ContractsTable({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 shrink-0"
+                                    className="h-6 w-6 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded"
                                     onClick={() => copyToClipboard(contract.nome, 'Nome copiado!')}
+                                    title="Copiar nome"
                                   >
-                                    <Copy className="h-3.5 w-3.5" />
+                                    <Copy className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-muted-foreground whitespace-nowrap">
+                              <TableCell className="text-[#78818E] dark:text-muted-foreground whitespace-nowrap text-xs tabular-nums">
                                 {contract.fone ? (
-                                  <span className="inline-flex items-center gap-1.5">
+                                  <span className="inline-flex items-center gap-1">
                                     {contract.fone}
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-6 w-6 shrink-0"
+                                      className="h-6 w-6 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded"
                                       onClick={() =>
                                         copyToClipboard(contract.fone, 'Telefone copiado!')
                                       }
+                                      title="Copiar telefone"
                                     >
-                                      <Copy className="h-3.5 w-3.5" />
+                                      <Copy className="h-3 w-3" />
                                     </Button>
                                   </span>
                                 ) : (
-                                  '-'
+                                  <span className="text-[#A0A7B5]">—</span>
                                 )}
                               </TableCell>
-                              <TableCell className="whitespace-nowrap">
-                                {contract.beneficio || '-'}
+                              <TableCell className="whitespace-nowrap text-xs text-[#78818E] dark:text-muted-foreground">
+                                {contract.beneficio || '—'}
                               </TableCell>
-                              <TableCell>{contract.responsavel || '-'}</TableCell>
-                              <TableCell>
+                              <TableCell className="whitespace-nowrap text-xs text-[#78818E] dark:text-muted-foreground font-medium">
+                                {contract.responsavel || '—'}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-xs">
                                 {contract.fup ? (
-                                  <span className="font-bold text-[#C9922A]">FUP</span>
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold text-[#C9922A] bg-[#C9922A]/10 border border-[#C9922A]/25">
+                                    FUP
+                                  </span>
                                 ) : (
-                                  '-'
+                                  <span className="text-[#A0A7B5]">—</span>
                                 )}
                               </TableCell>
                               <TableCell>
                                 {contract.status === 'OK' ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                                  >
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
                                     <CheckCircle2 className="h-3 w-3" /> OK
-                                  </Badge>
+                                  </span>
                                 ) : contract.status === 'R. Docs' ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="bg-[#C9922A]/10 text-[#C9922A] border-[#C9922A]/30 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                                  >
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B4453C]/10 text-[#B4453C] border border-[#B4453C]/25 whitespace-nowrap">
                                     <FileText className="h-3 w-3" /> Faltando Documentos
-                                  </Badge>
+                                  </span>
                                 ) : contract.status === 'Aguardando' ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="bg-amber-100/80 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 gap-1.5 whitespace-nowrap px-2 py-0.5 font-bold"
-                                  >
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#C77E1E]/10 text-[#C77E1E] border border-[#C77E1E]/25 whitespace-nowrap">
                                     <Clock className="h-3 w-3" /> Aguardando
-                                  </Badge>
+                                  </span>
                                 ) : contractArchived ? (
-                                  <Badge
-                                    variant="outline"
-                                    className="bg-stone-100 text-stone-600 border-stone-300 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-800 gap-1.5 whitespace-nowrap px-2 py-0.5"
-                                  >
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F6F8] text-[#78818E] border border-[#E4E7EB] dark:bg-muted dark:text-muted-foreground dark:border-border whitespace-nowrap">
                                     <AlertTriangle className="h-3 w-3" /> {contract.status}
-                                  </Badge>
+                                  </span>
                                 ) : (
-                                  <Badge
-                                    variant="outline"
-                                    className="whitespace-nowrap px-2 py-0.5 border-[#C9922A]/30 text-[#C9922A] bg-[#C9922A]/10 font-bold"
-                                  >
-                                    {contract.status || '-'}
-                                  </Badge>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border border-[#C9922A]/30 text-[#C9922A] bg-[#C9922A]/10 whitespace-nowrap">
+                                    {contract.status || '—'}
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell>
                                 {contract.origem === 'Campanha' ? (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#52B86E] bg-[#52B86E]/[0.13] text-xs whitespace-nowrap">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
                                     Campanha
                                   </span>
                                 ) : contract.origem === 'Particular' ? (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#5A9FD4] bg-[#5A9FD4]/[0.13] text-xs whitespace-nowrap">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#4A7FA5]/10 text-[#4A7FA5] border border-[#4A7FA5]/25 whitespace-nowrap">
                                     Particular
                                   </span>
                                 ) : contract.origem === 'Macohin' ? (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#8B5CF6] bg-[#8B5CF6]/[0.13] text-xs whitespace-nowrap">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8A56AC]/10 text-[#8A56AC] border border-[#8A56AC]/25 whitespace-nowrap">
                                     Macohin
                                   </span>
                                 ) : contract.origem === 'Indicação Macohin' ? (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 font-semibold text-[#D97706] bg-[#D97706]/[0.13] text-xs whitespace-nowrap">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#C77E1E]/10 text-[#C77E1E] border border-[#C77E1E]/25 whitespace-nowrap">
                                     Indicação Macohin
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-muted-foreground bg-gray-500/[0.08] text-[10px] italic whitespace-nowrap">
-                                    {contract.origem || 'Não classificado'}
-                                  </span>
+                                  <span className="text-xs text-[#A0A7B5]">—</span>
                                 )}
                               </TableCell>
                               <TableCell
                                 className={cn(
-                                  'whitespace-nowrap',
-                                  contractArchived ? 'text-muted-foreground' : 'text-foreground',
+                                  'whitespace-nowrap text-xs tabular-nums',
+                                  contractArchived
+                                    ? 'text-[#78818E]'
+                                    : 'text-[#78818E] dark:text-muted-foreground',
                                 )}
                               >
                                 {formatDate(contract.dcontrato)}
                               </TableCell>
                               <TableCell
                                 className={cn(
-                                  'whitespace-nowrap',
-                                  contractArchived ? 'text-muted-foreground' : 'text-foreground',
+                                  'whitespace-nowrap text-xs tabular-nums',
+                                  contractArchived
+                                    ? 'text-[#78818E]'
+                                    : 'text-[#78818E] dark:text-muted-foreground',
                                 )}
                               >
                                 {formatDate(contract.dcalculo)}
                               </TableCell>
                               <TableCell
                                 className={cn(
-                                  'whitespace-nowrap',
-                                  contractArchived ? 'text-muted-foreground' : 'text-foreground',
+                                  'whitespace-nowrap text-xs tabular-nums',
+                                  contractArchived
+                                    ? 'text-[#78818E]'
+                                    : 'text-[#78818E] dark:text-muted-foreground',
                                 )}
                               >
                                 {formatDate(contract.dprotocolo)}
                               </TableCell>
-                              <TableCell className="text-muted-foreground whitespace-nowrap">
+                              <TableCell className="whitespace-nowrap text-xs">
                                 {contract.parceria && contract.parceiro_nome ? (
-                                  <Badge
-                                    variant="secondary"
-                                    className="bg-[#C9922A]/15 text-[#C9922A] font-bold border border-[#C9922A]/30"
-                                  >
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A]/30">
                                     {contract.parceiro_nome}
-                                  </Badge>
+                                  </span>
                                 ) : (
-                                  '-'
+                                  <span className="text-[#A0A7B5]">—</span>
                                 )}
                               </TableCell>
-                              <TableCell className="text-right no-underline">
-                                <div className="flex justify-end gap-1 no-underline">
+                              <TableCell className="text-right pr-4">
+                                <div className="flex justify-end gap-1">
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 hover:bg-[#C9922A]/10 hover:text-[#C9922A] no-underline"
+                                    className="h-7 w-7 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded-md transition-colors"
                                     onClick={() => handleEdit(contract)}
+                                    title="Editar contrato"
                                   >
-                                    <Pencil className="h-4 w-4" />
+                                    <Pencil className="h-3.5 w-3.5" />
                                   </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 no-underline"
+                                    className="h-7 w-7 text-[#B4453C] hover:text-[#B4453C] hover:bg-[#B4453C]/10 rounded-md transition-colors"
                                     onClick={() => handleDelete(contract)}
+                                    title="Excluir contrato"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
                               </TableCell>
@@ -1044,8 +1148,8 @@ export function ContractsTable({
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <ContractModal
         isOpen={isModalOpen}

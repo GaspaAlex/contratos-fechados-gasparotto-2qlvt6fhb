@@ -101,72 +101,90 @@ export function RDocsDashboard({
 
   return (
     <Card
-      className="mt-8 border-border/60 shadow-sm animate-fade-in-up"
+      className="mt-6 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm animate-fade-in-up"
       style={{ animationDelay: '100ms' }}
     >
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-4">
-        <CardTitle className="text-xl font-bold">
-          Acompanhamento Fechamentos{' '}
-          <span className="text-muted-foreground text-sm font-normal">{subtitle}</span>
-        </CardTitle>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-[#E4E7EB]/70 dark:border-border/70">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-[#C9922A]" />
+          <CardTitle className="text-base sm:text-lg font-bold text-[#252B34] dark:text-foreground">
+            Acompanhamento de Fechamentos
+          </CardTitle>
+          {subtitle && (
+            <span className="text-xs text-[#78818E] dark:text-muted-foreground font-medium">
+              {subtitle}
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-[#78818E] dark:text-muted-foreground">
+          Meta de eficiência:{' '}
+          <strong className="text-[#252B34] dark:text-foreground">&ge; 50%</strong> liberados
+        </span>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-4">
-          <div className="p-4 border rounded-lg bg-card shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="text-4xl font-bold text-foreground mb-1">{metrics.total}</div>
-            <div className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+      <CardContent className="pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
+          {/* Card Ativos */}
+          <div className="p-4 border border-[#E4E7EB] dark:border-border rounded-[10px] bg-white dark:bg-card shadow-xs flex flex-col justify-center items-center text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-[#252B34] dark:text-foreground mb-1 tabular-nums">
+              {metrics.total}
+            </div>
+            <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-semibold uppercase tracking-wider">
               Contratos ativos
             </div>
           </div>
-          <div className="p-4 border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-500 mb-1">
+
+          {/* Card Liberados */}
+          <div className="p-4 border border-[#3E8E5A]/25 rounded-[10px] bg-[#3E8E5A]/[0.06] dark:bg-[#3E8E5A]/10 shadow-xs flex flex-col justify-center items-center text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-[#3E8E5A] dark:text-green-400 mb-1 tabular-nums">
               {metrics.liberados}
             </div>
-            <div className="text-sm text-emerald-800 dark:text-emerald-400 font-medium uppercase tracking-wide">
+            <div className="text-[11px] text-[#3E8E5A] dark:text-green-400 font-semibold uppercase tracking-wider">
               Liberados para protocolo
             </div>
           </div>
-          <div className="p-4 border border-red-100 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 rounded-lg shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="text-4xl font-bold text-red-600 dark:text-red-500 mb-1">
+
+          {/* Card Pendentes Faltando Docs */}
+          <div className="p-4 border border-[#B4453C]/25 rounded-[10px] bg-[#B4453C]/[0.06] dark:bg-[#B4453C]/10 shadow-xs flex flex-col justify-center items-center text-center">
+            <div className="text-3xl sm:text-4xl font-bold text-[#B4453C] dark:text-red-400 mb-1 tabular-nums">
               {metrics.pendentes}
             </div>
-            <div className="text-sm text-red-800 dark:text-red-400 font-medium uppercase tracking-wide">
+            <div className="text-[11px] text-[#B4453C] dark:text-red-400 font-semibold uppercase tracking-wider">
               Pendentes Faltando Docs
             </div>
           </div>
         </div>
 
-        <div className="space-y-3 bg-muted/30 p-5 rounded-lg border border-border/40">
-          <div className="flex justify-between text-xs font-bold text-muted-foreground">
+        {/* Barra de Progresso e Meta Semântica */}
+        <div className="space-y-3 bg-[#F5F6F8] dark:bg-muted/30 p-4 sm:p-5 rounded-[10px] border border-[#E4E7EB] dark:border-border">
+          <div className="flex justify-between text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground">
             <span>0%</span>
-            <span>50%</span>
+            <span className="text-[#C9922A] font-bold">Meta 50%</span>
             <span>100%</span>
           </div>
-          <Progress value={metrics.rate} className="h-3 bg-muted overflow-hidden" />
+          <div className="relative w-full h-2.5 bg-white dark:bg-muted rounded-full overflow-hidden border border-[#E4E7EB]/80 dark:border-border">
+            <div
+              className={cn(
+                'h-full transition-all duration-500 rounded-full',
+                isSuccess ? 'bg-[#3E8E5A]' : 'bg-[#B4453C]',
+              )}
+              style={{ width: `${Math.min(100, Math.max(0, metrics.rate))}%` }}
+            />
+          </div>
 
           <div
             className={cn(
-              'flex flex-col sm:flex-row sm:items-center gap-2 mt-4 font-semibold',
-              isSuccess
-                ? 'text-emerald-600 dark:text-emerald-500'
-                : 'text-red-600 dark:text-red-500',
+              'flex flex-col sm:flex-row sm:items-center gap-2 mt-3 font-semibold text-xs sm:text-sm',
+              isSuccess ? 'text-[#3E8E5A] dark:text-green-400' : 'text-[#B4453C] dark:text-red-400',
             )}
           >
-            <div className="flex items-center gap-1.5">
-              {isSuccess ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
-              <span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {isSuccess ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+              <span className="tabular-nums">
                 {metrics.rate}% {isSuccess ? 'Acima da meta' : 'Abaixo da meta'}
               </span>
             </div>
-            <span className="hidden sm:inline text-muted-foreground font-normal">|</span>
-            <p
-              className={cn(
-                'text-sm font-medium',
-                isSuccess
-                  ? 'text-emerald-700 dark:text-emerald-400/90'
-                  : 'text-red-700 dark:text-red-400/90',
-              )}
-            >
+            <span className="hidden sm:inline text-[#A0A7B5] font-normal">&bull;</span>
+            <p className="text-xs sm:text-sm font-medium text-[#252B34] dark:text-foreground">
               {message}
             </p>
           </div>

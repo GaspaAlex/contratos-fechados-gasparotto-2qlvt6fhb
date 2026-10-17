@@ -438,36 +438,51 @@ export function ContractModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#C9922A]">
-            {isEdit ? 'Editar Contrato' : 'Adicionar Contrato'}
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[10px] border border-[#E4E7EB] dark:border-border p-5 sm:p-6 shadow-lg bg-white dark:bg-card">
+        <DialogHeader className="pb-3 border-b border-[#E4E7EB]/80 dark:border-border/80">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              {isEdit ? 'EDIÇÃO' : 'NOVO CADASTRO'}
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            {isEdit ? 'Editar Contrato Fechado' : 'Adicionar Contrato Fechado'}
           </DialogTitle>
+          <p className="text-xs text-[#78818E] dark:text-muted-foreground">
+            Preencha os dados do cliente, benefício, datas e acompanhamento de revisão.
+          </p>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+
+        <form onSubmit={handleSubmit} className="space-y-5 mt-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>
-                Nome <span className="text-red-500">*</span>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Nome do Cliente <span className="text-[#B4453C]">*</span>
               </Label>
               <Input
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="focus-visible:ring-[#C9922A]"
+                placeholder="Nome completo do segurado"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Telefone</Label>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Telefone
+              </Label>
               <Input
                 value={formData.fone}
                 onChange={handlePhoneChange}
                 placeholder="(00) 00000-0000"
-                className="focus-visible:ring-[#C9922A]"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Benefício</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Benefício
+              </Label>
               <DynamicSelect
                 value={formData.beneficio}
                 onChange={(v) => setFormData({ ...formData, beneficio: v })}
@@ -475,12 +490,14 @@ export function ContractModal({
                 onAdd={handleAddBeneficio}
                 onEdit={handleEditBeneficio}
                 onDelete={handleDelBeneficio}
-                placeholder="Selecione..."
+                placeholder="Selecione o benefício..."
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Responsável</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Responsável
+              </Label>
               <DynamicSelect
                 value={formData.responsavel}
                 onChange={(v) => setFormData({ ...formData, responsavel: v })}
@@ -488,13 +505,13 @@ export function ContractModal({
                 onAdd={handleAddResp}
                 onEdit={handleEditResp}
                 onDelete={handleDelResp}
-                placeholder="Selecione..."
+                placeholder="Selecione o responsável..."
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[#C9922A] font-bold">
-                ORIGEM <span className="text-red-500">*</span>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#C9922A] uppercase tracking-wider">
+                Origem <span className="text-[#B4453C]">*</span>
               </Label>
               <Select
                 value={formData.origem || ''}
@@ -506,41 +523,55 @@ export function ContractModal({
                   })
                 }
               >
-                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
-                  <SelectValue placeholder="Selecione..." />
+                <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Selecione a origem..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Campanha">Campanha</SelectItem>
-                  <SelectItem value="Particular">Particular</SelectItem>
-                  <SelectItem value="Macohin">Macohin</SelectItem>
-                  <SelectItem value="Indicação Macohin">Indicação Macohin</SelectItem>
+                  <SelectItem value="Campanha" className="text-xs">
+                    Campanha
+                  </SelectItem>
+                  <SelectItem value="Particular" className="text-xs">
+                    Particular
+                  </SelectItem>
+                  <SelectItem value="Macohin" className="text-xs">
+                    Macohin
+                  </SelectItem>
+                  <SelectItem value="Indicação Macohin" className="text-xs">
+                    Indicação Macohin
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {formData.origem === 'Campanha' && (
-              <div className="space-y-2 animate-fade-in">
-                <Label className="text-[#C9922A] font-bold">
-                  Campanha de Origem <span className="text-red-500">*</span>
+              <div className="space-y-1.5 animate-fade-in">
+                <Label className="text-xs font-semibold text-[#C9922A] uppercase tracking-wider">
+                  Campanha de Origem <span className="text-[#B4453C]">*</span>
                 </Label>
                 <Select
                   value={formData.campanha_origem || ''}
                   onValueChange={(v) => setFormData({ ...formData, campanha_origem: v })}
                 >
-                  <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
-                    <SelectValue placeholder="Selecione..." />
+                  <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#C9922A]">
+                    <SelectValue placeholder="Selecione a campanha..." />
                   </SelectTrigger>
                   <SelectContent>
                     {campanhas.map((c) => (
-                      <SelectItem key={c.id} value={c.rotulo}>
+                      <SelectItem key={c.id} value={c.rotulo} className="text-xs">
                         {c.rotulo}
                       </SelectItem>
                     ))}
                     {campanhas.length === 0 && (
                       <>
-                        <SelectItem value="Aux. Acidente">Aux. Acidente</SelectItem>
-                        <SelectItem value="DER">DER</SelectItem>
-                        <SelectItem value="Ben. Análise">Ben. Análise</SelectItem>
+                        <SelectItem value="Aux. Acidente" className="text-xs">
+                          Aux. Acidente
+                        </SelectItem>
+                        <SelectItem value="DER" className="text-xs">
+                          DER
+                        </SelectItem>
+                        <SelectItem value="Ben. Análise" className="text-xs">
+                          Ben. Análise
+                        </SelectItem>
                       </>
                     )}
                   </SelectContent>
@@ -548,24 +579,32 @@ export function ContractModal({
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label>Acompanhamento (FUP)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Acompanhamento (FUP)
+              </Label>
               <Select
                 value={formData.fup ? 'FUP' : 'empty'}
                 onValueChange={(v) => setFormData({ ...formData, fup: v === 'FUP' })}
               >
-                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#C9922A]">
                   <SelectValue placeholder="Sem FUP" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="empty">Sem FUP</SelectItem>
-                  <SelectItem value="FUP">FUP</SelectItem>
+                  <SelectItem value="empty" className="text-xs">
+                    Sem FUP
+                  </SelectItem>
+                  <SelectItem value="FUP" className="text-xs">
+                    FUP (Follow Up Ativo)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Status</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Status
+              </Label>
               <DynamicSelect
                 value={formData.status}
                 onChange={(v) => setFormData({ ...formData, status: v })}
@@ -573,98 +612,114 @@ export function ContractModal({
                 onAdd={handleAddStatus}
                 onEdit={handleEditStatus}
                 onDelete={handleDelStatus}
-                placeholder="Status..."
+                placeholder="Selecione o status..."
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>
-                Data do Contrato <span className="text-red-500">*</span>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Data do Contrato <span className="text-[#B4453C]">*</span>
               </Label>
               <Input
                 type="date"
                 value={formData.dcontrato}
                 onChange={(e) => setFormData({ ...formData, dcontrato: e.target.value })}
-                className="focus-visible:ring-[#C9922A]"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
               />
             </div>
 
             {isEdit && (
               <>
-                <div className="space-y-2">
-                  <Label>Data do Cálculo</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                    Data do Cálculo
+                  </Label>
                   <Input
                     type="date"
                     value={formData.dcalculo}
                     onChange={(e) => setFormData({ ...formData, dcalculo: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Data do Protocolo</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                    Data do Protocolo
+                  </Label>
                   <Input
                     type="date"
                     value={formData.dprotocolo}
                     onChange={(e) => setFormData({ ...formData, dprotocolo: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
               </>
             )}
 
-            <div className="space-y-2">
-              <Label>Revisar em</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Revisar em
+              </Label>
               <Input
                 type="date"
                 value={formData.revisar_em}
                 onChange={(e) => setFormData({ ...formData, revisar_em: e.target.value })}
-                className="focus-visible:ring-[#C9922A]"
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Pendência Protocolo / Observações</Label>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Pendência Protocolo / Observações
+              </Label>
               <Textarea
                 rows={3}
                 value={formData.observacoes || ''}
                 onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                className="focus-visible:ring-[#C9922A]"
+                placeholder="Detalhes adicionais, pendências com cliente, documentos faltantes..."
+                className="text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
               />
             </div>
           </div>
 
           {isCurrentArchived && (
-            <div className="p-4 bg-[#C9922A]/10 border border-[#C9922A]/30 rounded-lg flex gap-3 text-[#C9922A]">
+            <div className="p-3.5 bg-[#C77E1E]/10 border border-[#C77E1E]/30 rounded-[10px] flex items-center gap-3 text-[#C77E1E]">
               <AlertTriangle className="h-5 w-5 shrink-0" />
-              <p className="text-sm font-bold">
-                ⚠️ Este caso será arquivado. Não será contabilizado nos fechamentos ativos.
+              <p className="text-xs font-semibold">
+                Este caso possui status de arquivamento e não será contabilizado nos fechamentos
+                ativos.
               </p>
             </div>
           )}
 
-          <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+          {/* Seção Parceria */}
+          <div className="p-3.5 border border-[#E4E7EB] dark:border-border rounded-[10px] bg-[#F5F6F8]/60 dark:bg-muted/20 space-y-3">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="parceria"
                 checked={formData.parceria}
                 onCheckedChange={(c) => setFormData({ ...formData, parceria: !!c })}
               />
-              <Label htmlFor="parceria" className="text-[#C9922A] font-bold cursor-pointer">
-                Caso de Parceria
+              <Label htmlFor="parceria" className="text-xs font-bold text-[#C9922A] cursor-pointer">
+                Caso com Parceiro
               </Label>
             </div>
             {formData.parceria && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Nome do Parceiro</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 animate-fade-in">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[#252B34] dark:text-foreground">
+                    Nome do Parceiro
+                  </Label>
                   <Input
                     value={formData.parceiro_nome}
                     onChange={(e) => setFormData({ ...formData, parceiro_nome: e.target.value })}
-                    className="focus-visible:ring-[#C9922A]"
+                    placeholder="Ex: Dr. Roberto / Previdenciarista"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Comissão (R$)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[#252B34] dark:text-foreground">
+                    Comissão Prevista (R$)
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -676,75 +731,99 @@ export function ContractModal({
                         parceiro_comissao: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="focus-visible:ring-[#C9922A]"
+                    placeholder="0,00"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+          {/* Seção Representante Legal */}
+          <div className="p-3.5 border border-[#E4E7EB] dark:border-border rounded-[10px] bg-[#F5F6F8]/60 dark:bg-muted/20 space-y-3">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="representante"
                 checked={formData.representante}
                 onCheckedChange={(c) => setFormData({ ...formData, representante: !!c })}
               />
-              <Label htmlFor="representante" className="text-[#C9922A] font-bold cursor-pointer">
+              <Label
+                htmlFor="representante"
+                className="text-xs font-bold text-[#C9922A] cursor-pointer"
+              >
                 Representante Legal
               </Label>
             </div>
             {formData.representante && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                <div className="space-y-2">
-                  <Label>
-                    Nome do Representante <span className="text-red-500">*</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 animate-fade-in">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[#252B34] dark:text-foreground">
+                    Nome do Representante <span className="text-[#B4453C]">*</span>
                   </Label>
                   <Input
                     value={formData.representante_nome}
                     onChange={(e) =>
                       setFormData({ ...formData, representante_nome: e.target.value })
                     }
-                    className="focus-visible:ring-[#C9922A]"
+                    placeholder="Nome completo do representante"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>CPF do Representante</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[#252B34] dark:text-foreground">
+                    CPF do Representante
+                  </Label>
                   <Input
                     value={formData.representante_cpf}
                     onChange={handleCpfChange}
                     placeholder="000.000.000-00"
-                    className="focus-visible:ring-[#C9922A]"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Parentesco / Vínculo</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[#252B34] dark:text-foreground">
+                    Parentesco / Vínculo
+                  </Label>
                   <Select
                     value={formData.representante_vinculo || 'empty'}
                     onValueChange={(v) =>
                       setFormData({ ...formData, representante_vinculo: v === 'empty' ? '' : v })
                     }
                   >
-                    <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
-                      <SelectValue placeholder="Selecione..." />
+                    <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#C9922A]">
+                      <SelectValue placeholder="Selecione o vínculo..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="empty">Selecione...</SelectItem>
-                      <SelectItem value="Pai/Mãe">Pai/Mãe</SelectItem>
-                      <SelectItem value="Tutor(a)">Tutor(a)</SelectItem>
-                      <SelectItem value="Curador(a)">Curador(a)</SelectItem>
-                      <SelectItem value="Cônjuge">Cônjuge</SelectItem>
-                      <SelectItem value="Outro">Outro</SelectItem>
+                      <SelectItem value="empty" className="text-xs">
+                        Selecione...
+                      </SelectItem>
+                      <SelectItem value="Pai/Mãe" className="text-xs">
+                        Pai/Mãe
+                      </SelectItem>
+                      <SelectItem value="Tutor(a)" className="text-xs">
+                        Tutor(a)
+                      </SelectItem>
+                      <SelectItem value="Curador(a)" className="text-xs">
+                        Curador(a)
+                      </SelectItem>
+                      <SelectItem value="Cônjuge" className="text-xs">
+                        Cônjuge
+                      </SelectItem>
+                      <SelectItem value="Outro" className="text-xs">
+                        Outro
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Telefone do Representante</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[#252B34] dark:text-foreground">
+                    Telefone do Representante
+                  </Label>
                   <Input
                     value={formData.representante_telefone}
                     onChange={handleRepPhoneChange}
                     placeholder="(00) 00000-0000"
-                    className="focus-visible:ring-[#C9922A]"
+                    className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                   />
                 </div>
               </div>
@@ -752,26 +831,26 @@ export function ContractModal({
           </div>
 
           {duplicateWarning && (
-            <div className="p-4 bg-amber-100 border border-amber-300 rounded-lg space-y-3">
-              <div className="flex gap-3 text-amber-800">
+            <div className="p-3.5 bg-[#C77E1E]/10 border border-[#C77E1E]/30 rounded-[10px] space-y-2.5">
+              <div className="flex gap-2.5 text-[#C77E1E]">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
-                <p className="text-sm font-semibold">
-                  Atenção: já existe um contrato cadastrado para <strong>{duplicateWarning}</strong>
-                  . Deseja continuar mesmo assim?
+                <p className="text-xs font-semibold">
+                  Atenção: já existe um contrato cadastrado com o nome{' '}
+                  <strong>{duplicateWarning}</strong>. Deseja continuar mesmo assim?
                 </p>
               </div>
               <div className="flex gap-2 justify-end">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-200"
+                  className="h-8 text-xs border-[#E4E7EB] dark:border-border rounded-md"
                   onClick={() => setDuplicateWarning(null)}
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="button"
-                  className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                  className="h-8 text-xs bg-[#C77E1E] hover:bg-[#b06f18] text-white rounded-md font-semibold"
                   onClick={() => {
                     setDuplicateWarning(null)
                     executeSave()
@@ -783,17 +862,23 @@ export function ContractModal({
             </div>
           )}
 
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+          <DialogFooter className="pt-3 border-t border-[#E4E7EB]/80 dark:border-border/80 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+              className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md text-[#78818E] hover:text-[#252B34]"
+            >
               Cancelar
             </Button>
             {!duplicateWarning && (
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-[#C9922A] hover:bg-[#C9922A]/90 text-white font-bold"
+                className="h-9 px-5 text-xs bg-[#C9922A] hover:bg-[#b58324] text-white font-semibold rounded-md shadow-sm"
               >
-                {loading ? 'Salvando...' : 'Salvar'}
+                {loading ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Cadastrar Contrato'}
               </Button>
             )}
           </DialogFooter>
