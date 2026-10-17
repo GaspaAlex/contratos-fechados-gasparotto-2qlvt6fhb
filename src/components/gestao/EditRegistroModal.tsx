@@ -110,92 +110,141 @@ export function EditRegistroModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Editar Registro — {format(rowData.date, 'dd/MM/yyyy')}</DialogTitle>
+      <DialogContent className="sm:max-w-[500px] rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-6 shadow-lg">
+        <DialogHeader className="space-y-1.5 pb-2 border-b border-[#E4E7EB]/80 dark:border-border/80">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              AJUSTE DE MARCAÇÃO
+            </span>
+          </div>
+          <DialogTitle className="text-xl font-bold text-[#252B34] dark:text-foreground">
+            Editar Registro — {format(rowData.date, 'dd/MM/yyyy')}
+          </DialogTitle>
+          <p className="text-xs text-[#78818E] dark:text-muted-foreground">
+            Colaborador(a):{' '}
+            <strong className="text-[#252B34] dark:text-foreground">{funcionario?.nome}</strong>
+          </p>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Entrada 1</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Entrada 1
+              </Label>
               <Input
                 type="time"
                 value={formData.entrada1}
                 onChange={(e) => setFormData({ ...formData, entrada1: e.target.value })}
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] rounded-md font-mono"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Saída 1</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Saída 1
+              </Label>
               <Input
                 type="time"
                 value={formData.saida1}
                 onChange={(e) => setFormData({ ...formData, saida1: e.target.value })}
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] rounded-md font-mono"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Entrada 2</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Entrada 2
+              </Label>
               <Input
                 type="time"
                 value={formData.entrada2}
                 onChange={(e) => setFormData({ ...formData, entrada2: e.target.value })}
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] rounded-md font-mono"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Saída 2</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Saída 2
+              </Label>
               <Input
                 type="time"
                 value={formData.saida2}
                 onChange={(e) => setFormData({ ...formData, saida2: e.target.value })}
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] rounded-md font-mono"
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Tipo do Dia</Label>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+              Tipo do Dia
+            </Label>
             <Select
               value={formData.tipo_dia}
               onValueChange={(v) => setFormData({ ...formData, tipo_dia: v })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="falta">Falta</SelectItem>
-                <SelectItem value="feriado">Feriado</SelectItem>
-                <SelectItem value="atestado">Atestado</SelectItem>
+                <SelectItem value="normal" className="text-xs">
+                  Normal
+                </SelectItem>
+                <SelectItem value="falta" className="text-xs">
+                  Falta
+                </SelectItem>
+                <SelectItem value="feriado" className="text-xs">
+                  Feriado
+                </SelectItem>
+                <SelectItem value="atestado" className="text-xs">
+                  Atestado
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+
           {formData.tipo_dia === 'atestado' && (
-            <div className="space-y-2">
-              <Label>Horas cobertas pelo atestado</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+                Horas cobertas pelo atestado
+              </Label>
               <Input
                 type="number"
                 step="0.5"
                 value={formData.horas_atestado}
                 onChange={(e) => setFormData({ ...formData, horas_atestado: e.target.value })}
+                className="h-9 text-xs border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] rounded-md font-mono"
               />
             </div>
           )}
-          <div className="space-y-2">
-            <Label>Justificativa</Label>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-[#252B34] dark:text-foreground">
+              Justificativa
+            </Label>
             <Textarea
               value={formData.justificativa}
               onChange={(e) => setFormData({ ...formData, justificativa: e.target.value })}
-              placeholder="Motivo da alteração, atestado, etc."
+              placeholder="Motivo da alteração, número de atestado médico, etc."
+              className="min-h-[80px] text-xs border-[#E4E7EB] dark:border-border focus-visible:ring-[#C9922A] rounded-md"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
+
+        <DialogFooter className="pt-2 border-t border-[#E4E7EB]/80 dark:border-border/80 gap-2 sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isSaving}
+            className="h-9 px-4 text-xs font-medium border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] rounded-md"
+          >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-[#C8922A] hover:bg-[#C8922A]/90"
+            className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white rounded-md shadow-sm transition-colors"
           >
-            {isSaving ? 'Salvando...' : 'Salvar'}
+            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </DialogFooter>
       </DialogContent>

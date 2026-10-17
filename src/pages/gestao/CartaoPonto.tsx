@@ -265,23 +265,33 @@ export default function CartaoPonto() {
 
   const getRowStyle = (tipo: string, isReal: boolean, isTodayOrFuture: boolean) => {
     if (!isReal && tipo === 'falta' && !isTodayOrFuture)
-      return 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 text-red-900 dark:text-red-300'
+      return 'bg-[#B4453C]/5 dark:bg-red-950/20 hover:bg-[#B4453C]/10 dark:hover:bg-red-950/30'
     if (tipo === 'feriado')
-      return 'bg-yellow-50 dark:bg-yellow-950/20 hover:bg-yellow-100 dark:hover:bg-yellow-950/40 text-yellow-900 dark:text-yellow-300'
+      return 'bg-[#C77E1E]/5 dark:bg-amber-950/20 hover:bg-[#C77E1E]/10 dark:hover:bg-amber-950/30'
     if (tipo === 'atestado')
-      return 'bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-950/40 text-blue-900 dark:text-blue-300'
+      return 'bg-[#4A7FA5]/5 dark:bg-blue-950/20 hover:bg-[#4A7FA5]/10 dark:hover:bg-blue-950/30'
     if (tipo === 'falta' && !isTodayOrFuture)
-      return 'bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/40 text-red-900 dark:text-red-300'
-    return 'bg-card hover:bg-muted/50'
+      return 'bg-[#B4453C]/5 dark:bg-red-950/20 hover:bg-[#B4453C]/10 dark:hover:bg-red-950/30'
+    return 'hover:bg-[#F5F6F8]/60 dark:hover:bg-muted/30 transition-colors'
   }
+
+  const headerClass =
+    'text-[10px] uppercase font-bold tracking-[0.8px] text-[#78818E] dark:text-muted-foreground py-3'
 
   if (isLoading)
     return (
-      <div className="p-8 text-center text-muted-foreground">Carregando cartão de ponto...</div>
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#C9922A] border-t-transparent animate-spin" />
+          <p className="text-xs uppercase tracking-wider text-[#78818E] dark:text-muted-foreground">
+            Carregando cartão de ponto...
+          </p>
+        </div>
+      </div>
     )
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 print:bg-white print:p-0">
+    <div className="min-h-screen bg-background pb-10 print:bg-white print:p-0">
       <style>{`
         @media print {
           body { background-color: white !important; }
@@ -311,7 +321,8 @@ export default function CartaoPonto() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto space-y-6 print:space-y-4">
+      <div className="space-y-6 animate-fade-in-up print:space-y-4">
+        {/* CABEÇALHO DA PÁGINA */}
         <div className="print-hide">
           <CartaoHeader
             funcionario={funcionario}
@@ -323,150 +334,273 @@ export default function CartaoPonto() {
           />
         </div>
 
-        <Card className="border border-border bg-card shadow-sm overflow-hidden print:shadow-none print:border print:border-gray-200">
+        {/* TABELA DE MARCAÇÕES */}
+        <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden print:shadow-none print:border print:border-gray-200">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-muted">
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Dia</TableHead>
-                  <TableHead>Entrada 1</TableHead>
-                  <TableHead>Saída 1</TableHead>
-                  <TableHead>Entrada 2</TableHead>
-                  <TableHead>Saída 2</TableHead>
-                  <TableHead>H. Trab.</TableHead>
-                  <TableHead>Saldo do Dia</TableHead>
-                  <TableHead>Justificativa</TableHead>
-                  <TableHead className="print-hide"></TableHead>
+              <TableHeader className="bg-[#F5F6F8] dark:bg-muted/40 border-b border-[#E4E7EB] dark:border-border">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className={headerClass}>DATA</TableHead>
+                  <TableHead className={headerClass}>DIA</TableHead>
+                  <TableHead className={`text-center ${headerClass}`}>ENTRADA 1</TableHead>
+                  <TableHead className={`text-center ${headerClass}`}>SAÍDA 1</TableHead>
+                  <TableHead className={`text-center ${headerClass}`}>ENTRADA 2</TableHead>
+                  <TableHead className={`text-center ${headerClass}`}>SAÍDA 2</TableHead>
+                  <TableHead className={`text-right ${headerClass}`}>H. TRAB.</TableHead>
+                  <TableHead className={`text-right ${headerClass}`}>SALDO DO DIA</TableHead>
+                  <TableHead className={headerClass}>JUSTIFICATIVA / TIPO</TableHead>
+                  <TableHead className={`w-20 text-center pr-4 print-hide ${headerClass}`}>
+                    AÇÕES
+                  </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                <TableRow className="bg-muted/50">
-                  <TableCell className="font-medium text-muted-foreground">Saldo Ant.</TableCell>
-                  <TableCell colSpan={6}></TableCell>
+              <TableBody className="divide-y divide-[#E4E7EB] dark:divide-border text-xs">
+                {/* Linha Saldo Anterior */}
+                <TableRow className="bg-[#FAF8F2]/60 dark:bg-muted/20 font-semibold border-b border-[#E4E7EB] dark:border-border">
+                  <TableCell className="text-[#252B34] dark:text-foreground font-bold py-3">
+                    Saldo Ant.
+                  </TableCell>
+                  <TableCell
+                    className="text-[#78818E] dark:text-muted-foreground italic"
+                    colSpan={5}
+                  >
+                    Saldo acumulado transferido do mês anterior
+                  </TableCell>
+                  <TableCell className="text-right text-[#78818E] dark:text-muted-foreground tabular-nums">
+                    —
+                  </TableCell>
                   <TableCell
                     className={cn(
-                      'font-bold',
-                      saldoAnteriorDinamico >= 0
-                        ? 'text-green-600 dark:text-green-500'
-                        : 'text-red-600 dark:text-red-500',
+                      'text-right font-bold tabular-nums py-3',
+                      saldoAnteriorDinamico >= 0 ? 'text-[#3E8E5A]' : 'text-[#B4453C]',
                     )}
                   >
-                    {formatBalance(saldoAnteriorDinamico, formatMinutesToHHMM)}
-                  </TableCell>
-                  <TableCell colSpan={2} className="text-xs text-muted-foreground opacity-80">
-                    Do mês anterior
-                  </TableCell>
-                </TableRow>
-                {tableRows.map((row, i) => (
-                  <TableRow
-                    key={i}
-                    className={getRowStyle(row.tipo_dia, row.isReal, row.isTodayOrFuture)}
-                  >
-                    <TableCell>{format(row.date, 'dd/MM')}</TableCell>
-                    <TableCell className="capitalize">
-                      {format(row.date, 'EEEE', { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>{row.entrada1 || '-'}</TableCell>
-                    <TableCell>{row.saida1 || '-'}</TableCell>
-                    <TableCell>{row.entrada2 || '-'}</TableCell>
-                    <TableCell>{row.saida2 || '-'}</TableCell>
-                    <TableCell className="font-medium">
-                      {formatMinutesToHHMM(row.horas_trabalhadas)}
-                    </TableCell>
-                    <TableCell
+                    <span
                       className={cn(
-                        'font-bold',
-                        row.saldo_dia > 0
-                          ? 'text-green-600 dark:text-green-500'
-                          : row.saldo_dia < 0
-                            ? 'text-red-600 dark:text-red-500'
-                            : 'text-muted-foreground',
+                        'inline-flex items-center px-2 py-0.5 rounded font-mono',
+                        saldoAnteriorDinamico >= 0
+                          ? 'bg-[#3E8E5A]/10 text-[#3E8E5A]'
+                          : 'bg-[#B4453C]/10 text-[#B4453C]',
                       )}
                     >
-                      {formatBalance(row.saldo_dia, formatMinutesToHHMM)}
-                    </TableCell>
-                    <TableCell
-                      className="max-w-[150px] truncate print:max-w-none print:whitespace-normal"
-                      title={row.justificativa}
+                      {formatBalance(saldoAnteriorDinamico, formatMinutesToHHMM)}
+                    </span>
+                  </TableCell>
+                  <TableCell
+                    className="text-[#78818E] dark:text-muted-foreground text-[11px]"
+                    colSpan={2}
+                  >
+                    Referência do período anterior
+                  </TableCell>
+                </TableRow>
+
+                {/* Linhas diárias */}
+                {tableRows.map((row, i) => {
+                  const isFalta = !row.isReal && row.tipo_dia === 'falta' && !row.isTodayOrFuture
+                  return (
+                    <TableRow
+                      key={i}
+                      className={cn(
+                        getRowStyle(row.tipo_dia, row.isReal, row.isTodayOrFuture),
+                        row.isToday &&
+                          'ring-1 ring-[#C9922A]/40 bg-[#FAF8F2]/40 dark:bg-[#C9922A]/5',
+                      )}
                     >
-                      {row.justificativa || '-'}
-                    </TableCell>
-                    <TableCell className="print-hide">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingRow(row)}
-                        className="text-[#C8922A] hover:text-[#C8922A] hover:bg-[#C8922A]/10"
+                      <TableCell className="py-2.5 font-medium tabular-nums text-[#252B34] dark:text-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <span>{format(row.date, 'dd/MM')}</span>
+                          {row.isToday && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider bg-[#C9922A] text-white px-1 py-0.2 rounded">
+                              Hoje
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="capitalize text-[#78818E] dark:text-muted-foreground py-2.5">
+                        {format(row.date, 'EEEE', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-[#252B34] dark:text-foreground tabular-nums py-2.5">
+                        {row.entrada1 || <span className="text-[#A5ADB9]">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-[#252B34] dark:text-foreground tabular-nums py-2.5">
+                        {row.saida1 || <span className="text-[#A5ADB9]">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-[#252B34] dark:text-foreground tabular-nums py-2.5">
+                        {row.entrada2 || <span className="text-[#A5ADB9]">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-[#252B34] dark:text-foreground tabular-nums py-2.5">
+                        {row.saida2 || <span className="text-[#A5ADB9]">—</span>}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-medium text-[#252B34] dark:text-foreground tabular-nums py-2.5">
+                        {formatMinutesToHHMM(row.horas_trabalhadas)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums py-2.5">
+                        <span
+                          className={cn(
+                            'inline-flex items-center font-semibold px-1.5 py-0.5 rounded text-xs',
+                            row.saldo_dia > 0
+                              ? 'bg-[#3E8E5A]/10 text-[#3E8E5A]'
+                              : row.saldo_dia < 0
+                                ? 'bg-[#B4453C]/10 text-[#B4453C]'
+                                : 'text-[#78818E] dark:text-muted-foreground',
+                          )}
+                        >
+                          {formatBalance(row.saldo_dia, formatMinutesToHHMM)}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className="max-w-[200px] truncate print:max-w-none print:whitespace-normal py-2.5"
+                        title={row.justificativa || row.tipo_dia}
                       >
-                        Editar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {row.tipo_dia && row.tipo_dia !== 'normal' && (
+                            <span
+                              className={cn(
+                                'inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border',
+                                row.tipo_dia === 'falta'
+                                  ? 'bg-[#B4453C]/10 text-[#B4453C] border-[#B4453C]/20'
+                                  : row.tipo_dia === 'feriado'
+                                    ? 'bg-[#C77E1E]/10 text-[#C77E1E] border-[#C77E1E]/20'
+                                    : row.tipo_dia === 'atestado'
+                                      ? 'bg-[#4A7FA5]/10 text-[#4A7FA5] border-[#4A7FA5]/20'
+                                      : 'bg-muted text-muted-foreground border-border',
+                              )}
+                            >
+                              {row.tipo_dia}
+                            </span>
+                          )}
+                          <span className="text-[#78818E] dark:text-muted-foreground truncate">
+                            {row.justificativa ||
+                              (!row.tipo_dia || row.tipo_dia === 'normal' ? '—' : '')}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center print-hide py-2.5 pr-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingRow(row)}
+                          className="h-7 px-2.5 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded transition-colors"
+                        >
+                          Editar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </div>
-        </Card>
+        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-card">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Horas Trabalhadas</p>
-              <p className="text-2xl font-bold text-foreground">
+        {/* 5. CARDS DE RESUMO DO RODAPÉ (GRAFITE PREMIUM 2.1) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 print:grid-cols-4">
+          {/* CARD 1 — HORAS TRABALHADAS */}
+          <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
+            <CardContent className="p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground block mb-2">
+                  Horas Trabalhadas
+                </span>
+                <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3">
+                  Total apurado no mês
+                </p>
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground font-mono tabular-nums">
                 {formatMinutesToHHMM(monthlyTotals.hTrab)}
-              </p>
+              </div>
             </CardContent>
           </Card>
-          <Card className="bg-card">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Saldo do Mês</p>
-              <p
+
+          {/* CARD 2 — SALDO DO MÊS */}
+          <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
+            <CardContent className="p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground block mb-2">
+                  Saldo do Mês
+                </span>
+                <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3">
+                  Balanço das marcações
+                </p>
+              </div>
+              <div
                 className={cn(
-                  'text-2xl font-bold',
-                  monthlyTotals.saldoMes >= 0
-                    ? 'text-green-600 dark:text-green-500'
-                    : 'text-red-600 dark:text-red-500',
+                  'text-2xl sm:text-3xl font-bold tracking-tight font-mono tabular-nums',
+                  monthlyTotals.saldoMes >= 0 ? 'text-[#3E8E5A]' : 'text-[#B4453C]',
                 )}
               >
                 {formatBalance(monthlyTotals.saldoMes, formatMinutesToHHMM)}
-              </p>
+              </div>
             </CardContent>
           </Card>
-          <Card className="bg-card">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Saldo Anterior</p>
-              <p
+
+          {/* CARD 3 — SALDO ANTERIOR */}
+          <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm">
+            <CardContent className="p-4 sm:p-5 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground block mb-2">
+                  Saldo Anterior
+                </span>
+                <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3">
+                  Acumulado até o mês anterior
+                </p>
+              </div>
+              <div
                 className={cn(
-                  'text-2xl font-bold',
-                  saldoAnteriorDinamico >= 0
-                    ? 'text-green-600 dark:text-green-500'
-                    : 'text-red-600 dark:text-red-500',
+                  'text-2xl sm:text-3xl font-bold tracking-tight font-mono tabular-nums',
+                  saldoAnteriorDinamico >= 0 ? 'text-[#3E8E5A]' : 'text-[#B4453C]',
                 )}
               >
                 {formatBalance(saldoAnteriorDinamico, formatMinutesToHHMM)}
-              </p>
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-[#C8922A] border-2 bg-card print:border-gray-200 print:border">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm font-semibold text-[#C8922A] print:text-gray-800 mb-1">
-                Saldo Acumulado
-              </p>
-              <p
-                className={cn(
-                  'text-3xl font-black print:text-black',
-                  saldoAcumulado >= 0
-                    ? 'text-green-600 dark:text-green-500'
-                    : 'text-red-600 dark:text-red-500',
-                )}
-              >
-                {formatBalance(saldoAcumulado, formatMinutesToHHMM)}
-              </p>
+
+          {/* CARD 4 — SALDO ACUMULADO (CARD EXECUTIVO GRAFITE PREMIUM #22262E) */}
+          <Card className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm flex flex-col justify-between print:bg-white print:text-black print:border-gray-300">
+            <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[11px] font-semibold tracking-wider uppercase text-[#9EA7B6] print:text-gray-700">
+                    Saldo Acumulado
+                  </span>
+                  <span className="inline-flex items-center text-[9px] font-bold tracking-wider uppercase text-[#D9A94A] bg-[#2B303C] print:bg-gray-100 print:text-black px-1.5 py-0.5 rounded">
+                    Total
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7C8596] print:text-gray-500 mb-3">
+                  Saldo anterior + saldo do mês
+                </p>
+              </div>
+
+              <div>
+                <div
+                  className={cn(
+                    'text-2xl sm:text-3xl font-bold tracking-tight font-mono tabular-nums',
+                    saldoAcumulado >= 0
+                      ? 'text-[#D9A94A] print:text-green-700'
+                      : 'text-[#F87171] print:text-red-700',
+                  )}
+                >
+                  {formatBalance(saldoAcumulado, formatMinutesToHHMM)}
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#A5ADB9] print:text-gray-600">
+                  <span
+                    className={cn(
+                      'inline-block h-1.5 w-1.5 rounded-full',
+                      saldoAcumulado >= 0 ? 'bg-[#3E8E5A]' : 'bg-[#B4453C]',
+                    )}
+                  />
+                  <span>
+                    {saldoAcumulado >= 0 ? 'Banco de horas positivo' : 'Banco de horas negativo'}
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
       <EditRegistroModal
         isOpen={!!editingRow}
         onClose={() => setEditingRow(null)}
@@ -476,32 +610,38 @@ export default function CartaoPonto() {
       />
 
       <Dialog open={exportModalOpen} onOpenChange={setExportModalOpen}>
-        <DialogContent className="sm:max-w-md bg-background border-border print-hide">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-foreground text-center">
+        <DialogContent className="sm:max-w-md bg-white dark:bg-card border border-[#E4E7EB] dark:border-border rounded-[10px] p-6 shadow-lg print-hide">
+          <DialogHeader className="space-y-1.5">
+            <span className="inline-flex items-center self-start text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              EXPORTAÇÃO
+            </span>
+            <DialogTitle className="text-xl font-bold text-[#252B34] dark:text-foreground">
               Exportar Relatório
             </DialogTitle>
-            <DialogDescription className="text-center text-muted-foreground">
-              Escolha o formato desejado para exportar o cartão de ponto de {funcionario?.nome}.
+            <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground">
+              Selecione o formato desejado para exportar o cartão de ponto de {funcionario?.nome}.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4 py-6">
+          <div className="flex flex-col gap-3 py-4">
             <Button
               onClick={handleExportPDF}
-              className="w-full h-14 text-lg bg-[#C8922A] hover:bg-[#b08020] text-white shadow-sm transition-all"
+              className="w-full h-11 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white shadow-sm transition-colors rounded-md"
             >
-              Exportar PDF
+              Exportar PDF para Impressão
             </Button>
             <Button
+              variant="outline"
               onClick={handleExportExcel}
-              className="w-full h-14 text-lg bg-[#C8922A] hover:bg-[#b08020] text-white shadow-sm transition-all"
+              className="w-full h-11 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#252B34] dark:text-foreground hover:bg-[#FAF8F2] dark:hover:bg-muted/40 transition-colors rounded-md"
             >
-              Exportar Excel
+              Exportar Planilha Excel (.xls)
             </Button>
+          </div>
+          <div className="pt-2 border-t border-[#E4E7EB] dark:border-border flex justify-end">
             <Button
               variant="ghost"
               onClick={() => setExportModalOpen(false)}
-              className="w-full text-muted-foreground hover:text-foreground mt-2"
+              className="h-9 px-4 text-xs text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground"
             >
               Cancelar
             </Button>

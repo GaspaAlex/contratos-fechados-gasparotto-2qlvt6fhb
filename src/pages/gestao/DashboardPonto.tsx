@@ -112,34 +112,45 @@ export default function DashboardPonto() {
 
   if (loading || !session) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[#C8922A]" />
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#C9922A]" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-2xl border shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#C8922A]/10 flex items-center justify-center border-2 border-[#C8922A]/20">
-            <Users className="w-6 h-6 text-[#C8922A]" />
+    <div className="space-y-6 animate-fade-in-up pb-10">
+      {/* 1. CABEÇALHO CORPORATIVO PADRONIZADO (GRAFITE PREMIUM 2.1) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+              GESTÃO DE PESSOAS
+            </span>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard de Ponto</h1>
-            <p className="text-sm font-medium text-muted-foreground capitalize mt-1">
-              {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy - HH:mm:ss", { locale: ptBR })}
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            Cartão de Ponto
+          </h1>
+          <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+            Painel corporativo da equipe, controle de jornadas e acesso aos cartões individuais.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap justify-end">
+        {/* Data/Hora atual e Botões de Ação */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
+          <div className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-[#E4E7EB] dark:border-border bg-white dark:bg-card text-xs text-[#78818E] dark:text-muted-foreground shadow-xs">
+            <Clock className="w-3.5 h-3.5 text-[#C9922A]" />
+            <span className="capitalize font-medium tabular-nums">
+              {format(currentTime, "EEEE, d 'de' MMMM 'de' yyyy • HH:mm:ss", { locale: ptBR })}
+            </span>
+          </div>
+
           {(session?.perfil === 'lider' || session?.perfil === 'admin') && (
             <Button
               onClick={handleRegistrarPonto}
-              className="bg-[#C8922A] hover:bg-[#b07c21] text-white rounded-xl h-11 px-5 shadow-sm transition-colors font-bold"
+              className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white whitespace-nowrap rounded-md shadow-sm transition-colors"
             >
-              <Clock className="w-4 h-4 mr-2" />
+              <Clock className="w-3.5 h-3.5 mr-1.5" />
               <span>Registrar Meu Ponto</span>
             </Button>
           )}
@@ -147,30 +158,42 @@ export default function DashboardPonto() {
           <Button
             variant="outline"
             onClick={handleLogout}
-            className="border-[#C8922A] text-[#C8922A] hover:bg-[#C8922A] hover:text-white rounded-xl h-11 px-5 shadow-sm transition-colors"
+            className="h-9 px-3.5 text-xs font-medium border-[#E4E7EB] dark:border-border hover:bg-red-50 dark:hover:bg-red-950/30 text-[#78818E] hover:text-[#B4453C] rounded-md transition-colors"
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            <span className="font-bold">Sair</span>
+            <LogOut className="w-3.5 h-3.5 mr-1.5" />
+            <span>Sair</span>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="rounded-[24px] border-0 shadow-sm overflow-hidden bg-card">
-          <CardHeader className="bg-muted/50 border-b pb-4">
-            <CardTitle className="text-lg flex items-center">
-              <Users className="w-5 h-5 mr-3 text-[#C8922A]" />
-              Equipe
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {funcionarios.map((func) => (
-                <div
-                  key={func.id}
-                  className="p-4 rounded-2xl border flex flex-col gap-4 bg-background hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-4">
+      {/* 2. BLOCO EQUIPE */}
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+        {/* Barra de título do bloco */}
+        <div className="p-4 sm:px-6 sm:py-4 border-b border-[#E4E7EB]/80 dark:border-border/80 flex flex-wrap items-center justify-between gap-2 bg-[#F5F6F8]/60 dark:bg-muted/20">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-md bg-[#FAF8F2] dark:bg-muted/40 flex items-center justify-center text-[#C9922A]">
+              <Users className="w-4 h-4" />
+            </div>
+            <h2 className="text-sm font-bold text-[#252B34] dark:text-foreground tracking-tight">
+              Colaboradores da Equipe
+            </h2>
+          </div>
+          <span className="text-xs text-[#78818E] dark:text-muted-foreground font-medium">
+            {funcionarios.length}{' '}
+            {funcionarios.length === 1 ? 'colaborador ativo' : 'colaboradores ativos'}
+          </span>
+        </div>
+
+        {/* Grade de colaboradores */}
+        <div className="p-5 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {funcionarios.map((func) => (
+              <div
+                key={func.id}
+                className="group relative flex flex-col justify-between p-4 rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card hover:border-[#C9922A]/40 hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="relative shrink-0">
                     <img
                       src={
                         func.foto
@@ -180,26 +203,41 @@ export default function DashboardPonto() {
                           : 'https://img.usecurling.com/ppl/thumbnail?gender=female'
                       }
                       alt={func.nome}
-                      className="w-12 h-12 rounded-full object-cover border-2"
+                      className="w-12 h-12 rounded-full object-cover border border-[#E4E7EB] dark:border-border ring-2 ring-[#C9922A]/15"
                     />
-                    <div>
-                      <div className="font-bold text-foreground">{func.nome}</div>
-                      <div className="text-sm text-muted-foreground capitalize">{func.perfil}</div>
+                    {func.ativo && (
+                      <span
+                        className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#3E8E5A] ring-2 ring-white dark:ring-card"
+                        title="Ativo"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-[#252B34] dark:text-foreground truncate group-hover:text-[#C9922A] transition-colors">
+                      {func.nome}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="inline-flex items-center text-[10px] font-medium tracking-wider uppercase text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8] dark:bg-muted/50 px-1.5 py-0.5 rounded border border-[#E4E7EB]/70 dark:border-border/60">
+                        {func.perfil || 'Colaborador'}
+                      </span>
                     </div>
                   </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-[#E4E7EB]/70 dark:border-border/60">
                   <Button
                     variant="outline"
-                    className="w-full rounded-xl border-[#C8922A]/30 text-[#C8922A] hover:bg-[#C8922A]/10 hover:text-[#C8922A]"
+                    className="w-full h-8 text-xs font-semibold rounded-md border-[#E4E7EB] dark:border-border hover:border-[#C9922A]/50 text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 transition-colors"
                     onClick={() => navigate(`/gestao/ponto/cartao/${func.id}`)}
                   >
-                    <CalendarDays className="w-4 h-4 mr-2" />
+                    <CalendarDays className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
                     Ver Cartão
                   </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
