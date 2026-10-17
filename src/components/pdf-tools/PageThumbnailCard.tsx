@@ -31,10 +31,11 @@ export interface PageThumbnailCardProps {
   /**
    * Modo de exibição:
    * - 'rotate': padrão atual do Rotacionar PDF (exibe botões de rotação, badges de ângulo, etc.)
-   * - 'delete': modo de marcação para exclusão (borda vermelha quando marcado, ícone de lixeira/exclusão, sem botões de giro)
+   * - 'delete': modo de marcação para exclusão (borda vermelha quando marcado, sem botões de giro)
    * - 'organize': modo de reordenação e exclusão (arrastar e soltar, botões mover esquerda/direita, badges de posição e exclusão)
+   * - 'extract': modo de extração de páginas (destaque dourado positivo na seleção, badge 'Extrair', sem vermelho de exclusão)
    */
-  mode?: 'rotate' | 'delete' | 'organize'
+  mode?: 'rotate' | 'delete' | 'organize' | 'extract'
   /**
    * Se true, indica que a página está marcada para ser excluída
    */
@@ -103,8 +104,10 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
   const isModified = normalizeAngle(deltaRotation) !== 0
   const isDeleteMode = mode === 'delete'
   const isOrganizeMode = mode === 'organize'
+  const isExtractMode = mode === 'extract'
+  const hasReorderControls = isOrganizeMode || isExtractMode
   const isPositionChanged =
-    isOrganizeMode && typeof currentPosition === 'number' && currentPosition !== pageNumber
+    hasReorderControls && typeof currentPosition === 'number' && currentPosition !== pageNumber
   const canMoveLeft = Boolean(
     onMoveLeft && typeof currentPosition === 'number' && currentPosition > 1,
   )
@@ -211,17 +214,23 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
           ? 'opacity-40 scale-[0.98] border-dashed border-[#C9922A] shadow-md ring-2 ring-[#C9922A]/40'
           : isDragOverThis
             ? 'border-[#C9922A] ring-2 ring-[#C9922A]/50 shadow-md bg-[#C9922A]/5'
-            : isDeleteMode || isOrganizeMode
-              ? isMarkedForDeletion
-                ? 'border-destructive/80 bg-destructive/[0.04] ring-2 ring-destructive/30 shadow-sm'
+            : isExtractMode
+              ? isSelected
+                ? 'border-[#C9922A] bg-[#C9922A]/[0.05] ring-2 ring-[#C9922A]/50 shadow-sm'
                 : isPositionChanged
-                  ? 'border-[#C9922A]/70 ring-1 ring-[#C9922A]/30 shadow-sm'
-                  : isSelected
-                    ? 'border-[#C9922A] ring-2 ring-[#C9922A]/30 shadow-sm'
-                    : 'border-border/80 hover:border-[#C9922A]/40 hover:shadow-subtle'
-              : isSelected
-                ? 'border-[#C9922A] ring-2 ring-[#C9922A]/30 shadow-sm'
-                : 'border-border/80 hover:border-border hover:shadow-subtle'
+                  ? 'border-[#C9922A]/60 ring-1 ring-[#C9922A]/20 shadow-xs'
+                  : 'border-border/80 hover:border-[#C9922A]/40 hover:shadow-subtle'
+              : isDeleteMode || isOrganizeMode
+                ? isMarkedForDeletion
+                  ? 'border-destructive/80 bg-destructive/[0.04] ring-2 ring-destructive/30 shadow-sm'
+                  : isPositionChanged
+                    ? 'border-[#C9922A]/70 ring-1 ring-[#C9922A]/30 shadow-sm'
+                    : isSelected
+                      ? 'border-[#C9922A] ring-2 ring-[#C9922A]/30 shadow-sm'
+                      : 'border-border/80 hover:border-[#C9922A]/40 hover:shadow-subtle'
+                : isSelected
+                  ? 'border-[#C9922A] ring-2 ring-[#C9922A]/30 shadow-sm'
+                  : 'border-border/80 hover:border-border hover:shadow-subtle'
       } ${disabled ? 'opacity-70 pointer-events-none' : ''}`}
     >
       {/* Indicador visual de inserção antes/depois no drop */}
@@ -240,8 +249,8 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
       {/* Cabeçalho do Card da Página */}
       <div className="flex items-center justify-between gap-1.5 pb-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          {/* Alça visual de arraste no modo organize */}
-          {isOrganizeMode && (
+          {/* Alça visual de arraste nos modos com suporte a reordenação */}
+          {hasReorderControls && (
             <div
               className="text-muted-foreground/50 hover:text-foreground cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded transition-colors"
               title="Arraste para reordenar esta página"
@@ -259,36 +268,52 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
             }}
             disabled={disabled}
             className={`w-4 h-4 rounded border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-              isDeleteMode || isOrganizeMode
-                ? isMarkedForDeletion
-                  ? 'bg-destructive border-destructive text-white'
-                  : isSelected
-                    ? 'bg-[#C9922A] border-[#C9922A] text-white'
-                    : 'border-muted-foreground/40 hover:border-destructive bg-background'
-                : isSelected
+              isExtractMode
+                ? isSelected
                   ? 'bg-[#C9922A] border-[#C9922A] text-white'
                   : 'border-muted-foreground/40 hover:border-[#C9922A] bg-background'
+                : isDeleteMode || isOrganizeMode
+                  ? isMarkedForDeletion
+                    ? 'bg-destructive border-destructive text-white'
+                    : isSelected
+                      ? 'bg-[#C9922A] border-[#C9922A] text-white'
+                      : 'border-muted-foreground/40 hover:border-destructive bg-background'
+                  : isSelected
+                    ? 'bg-[#C9922A] border-[#C9922A] text-white'
+                    : 'border-muted-foreground/40 hover:border-[#C9922A] bg-background'
             }`}
             title={
-              isDeleteMode || isOrganizeMode
-                ? isMarkedForDeletion
-                  ? 'Desmarcar exclusão da página'
-                  : 'Marcar página para exclusão'
-                : isSelected
-                  ? 'Desmarcar página'
-                  : 'Selecionar página'
+              isExtractMode
+                ? isSelected
+                  ? 'Desmarcar página para extração'
+                  : 'Selecionar página para extração'
+                : isDeleteMode || isOrganizeMode
+                  ? isMarkedForDeletion
+                    ? 'Desmarcar exclusão da página'
+                    : 'Marcar página para exclusão'
+                  : isSelected
+                    ? 'Desmarcar página'
+                    : 'Selecionar página'
             }
             aria-label={`Página original ${pageNumber}`}
           >
-            {(isMarkedForDeletion || isSelected) && <Check className="w-3 h-3 stroke-[3]" />}
+            {(isExtractMode ? isSelected : isMarkedForDeletion || isSelected) && (
+              <Check className="w-3 h-3 stroke-[3]" />
+            )}
           </button>
 
           <div className="flex flex-col min-w-0 leading-tight">
-            {isOrganizeMode && typeof currentPosition === 'number' ? (
+            {hasReorderControls && typeof currentPosition === 'number' ? (
               <>
                 <span
                   className={`text-xs font-bold truncate ${
-                    isMarkedForDeletion ? 'text-destructive' : 'text-foreground'
+                    isExtractMode
+                      ? isSelected
+                        ? 'text-[#C9922A]'
+                        : 'text-foreground'
+                      : isMarkedForDeletion
+                        ? 'text-destructive'
+                        : 'text-foreground'
                   }`}
                   title={`Posição atual na sequência: ${currentPosition}`}
                 >
@@ -317,7 +342,32 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
 
         {/* Badges de Estado */}
         <div className="flex items-center gap-1 shrink-0">
-          {isOrganizeMode ? (
+          {isExtractMode ? (
+            isSelected ? (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-semibold px-1.5 py-0 border-[#C9922A]/60 bg-[#C9922A]/15 text-[#C9922A]"
+                title="Esta página será incluída no PDF extraído"
+              >
+                Extrair
+              </Badge>
+            ) : isPositionChanged ? (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-medium px-1.5 py-0 border-[#C9922A]/30 bg-[#C9922A]/5 text-[#C9922A]"
+                title={`Página original ${pageNumber} movida para posição ${currentPosition}`}
+              >
+                Movida
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-normal px-1.5 py-0 border-border text-muted-foreground bg-muted/30"
+              >
+                #{currentPosition}
+              </Badge>
+            )
+          ) : isOrganizeMode ? (
             isMarkedForDeletion ? (
               <Badge
                 variant="outline"
@@ -380,18 +430,26 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
       <div
         onClick={() => onToggleSelect(pageNumber)}
         className={`relative flex items-center justify-center min-h-[170px] max-h-[190px] w-full rounded-lg p-2 overflow-hidden cursor-pointer border transition-colors ${
-          (isDeleteMode || isOrganizeMode) && isMarkedForDeletion
-            ? 'bg-destructive/[0.06] border-destructive/30 hover:bg-destructive/[0.10]'
-            : 'bg-muted/40 border-border/40 hover:bg-muted/60'
+          isExtractMode
+            ? isSelected
+              ? 'bg-[#C9922A]/[0.08] border-[#C9922A]/40 hover:bg-[#C9922A]/[0.12]'
+              : 'bg-muted/40 border-border/40 hover:bg-muted/60'
+            : (isDeleteMode || isOrganizeMode) && isMarkedForDeletion
+              ? 'bg-destructive/[0.06] border-destructive/30 hover:bg-destructive/[0.10]'
+              : 'bg-muted/40 border-border/40 hover:bg-muted/60'
         }`}
         title={
-          isOrganizeMode
+          isExtractMode
             ? `Página original ${pageNumber} (Posição ${currentPosition}). Clique para ${
-                isMarkedForDeletion ? 'manter' : 'marcar para exclusão'
+                isSelected ? 'desmarcar da extração' : 'selecionar para extração'
               } ou arraste para reordenar.`
-            : isDeleteMode
-              ? `Clique para ${isMarkedForDeletion ? 'manter' : 'marcar para exclusão'} a página ${pageNumber}`
-              : `Clique para ${isSelected ? 'desmarcar' : 'selecionar'} a página ${pageNumber}`
+            : isOrganizeMode
+              ? `Página original ${pageNumber} (Posição ${currentPosition}). Clique para ${
+                  isMarkedForDeletion ? 'manter' : 'marcar para exclusão'
+                } ou arraste para reordenar.`
+              : isDeleteMode
+                ? `Clique para ${isMarkedForDeletion ? 'manter' : 'marcar para exclusão'} a página ${pageNumber}`
+                : `Clique para ${isSelected ? 'desmarcar' : 'selecionar'} a página ${pageNumber}`
         }
       >
         {/* Placeholder enquanto não entra no viewport */}
@@ -406,18 +464,32 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
           ref={canvasRef}
           className={`max-h-[160px] max-w-[130px] rounded shadow-sm object-contain transition-all duration-200 pointer-events-none ${
             isVisible && !isRendering && !renderError
-              ? (isDeleteMode || isOrganizeMode) && isMarkedForDeletion
-                ? 'opacity-40 grayscale contrast-75'
-                : 'opacity-100'
+              ? isExtractMode
+                ? isSelected
+                  ? 'opacity-100'
+                  : 'opacity-70'
+                : (isDeleteMode || isOrganizeMode) && isMarkedForDeletion
+                  ? 'opacity-40 grayscale contrast-75'
+                  : 'opacity-100'
               : 'opacity-40'
           }`}
         />
 
-        {/* Overlay de exclusão visual discreto quando marcada */}
-        {(isDeleteMode || isOrganizeMode) && isMarkedForDeletion && (
+        {/* Overlay de exclusão visual discreto quando marcada para exclusão (modo delete/organize) */}
+        {!isExtractMode && (isDeleteMode || isOrganizeMode) && isMarkedForDeletion && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/15 backdrop-blur-[0.5px] pointer-events-none transition-opacity">
             <span className="text-[11px] font-semibold text-destructive px-2 py-0.5 rounded bg-background/90 shadow-xs border border-destructive/30">
               Será excluída
+            </span>
+          </div>
+        )}
+
+        {/* Overlay sutil positivo de extração quando selecionada (modo extract) */}
+        {isExtractMode && isSelected && (
+          <div className="absolute top-2 right-2 pointer-events-none">
+            <span className="text-[10px] font-bold text-[#C9922A] px-1.5 py-0.5 rounded bg-background/95 shadow-xs border border-[#C9922A]/40 flex items-center gap-1">
+              <Check className="w-3 h-3 stroke-[3]" />
+              Extrair
             </span>
           </div>
         )}
@@ -438,8 +510,8 @@ export const PageThumbnailCard = memo(function PageThumbnailCard({
         )}
       </div>
 
-      {/* Controles de Reordenação Alternativos (Modo organize: mover esquerda / direita) */}
-      {isOrganizeMode && (
+      {/* Controles de Reordenação Alternativos (Modos organize e extract: mover esquerda / direita) */}
+      {hasReorderControls && (
         <div className="flex items-center justify-between gap-1 pt-2 mt-auto border-t border-dashed border-border/60">
           <Button
             type="button"

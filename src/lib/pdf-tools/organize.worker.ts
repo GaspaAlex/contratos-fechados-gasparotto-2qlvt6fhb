@@ -5,7 +5,9 @@ export type OrganizeWorkerInMessage =
       type: 'START_ORGANIZE'
       fileName: string
       buffer: ArrayBuffer
+      mode?: 'organize' | 'extract'
       excludedPages?: number[]
+      selectedPages?: number[]
       pageOrder?: number[]
       allowSignedDocument?: boolean
     }
@@ -25,9 +27,12 @@ export type OrganizeWorkerOutMessage =
       totalOriginalPages: number
       totalExcludedPages: number
       totalRemainingPages: number
+      totalSelectedPages?: number
+      totalUnselectedPages?: number
       reorderedCount?: number
       isOrderModified?: boolean
       hasSignedDocument: boolean
+      mode?: 'organize' | 'extract'
     }
   | {
       type: 'ERROR'
@@ -48,13 +53,23 @@ self.addEventListener('message', async (event: MessageEvent<OrganizeWorkerInMess
 
   if (data.type === 'START_ORGANIZE') {
     isCancelled = false
-    const { fileName, buffer, excludedPages, pageOrder, allowSignedDocument } = data
+    const {
+      fileName,
+      buffer,
+      mode = 'organize',
+      excludedPages,
+      selectedPages,
+      pageOrder,
+      allowSignedDocument,
+    } = data
 
     try {
       const result = await organizePdfLocally({
         fileName,
         buffer,
+        mode,
         excludedPages,
+        selectedPages,
         pageOrder,
         allowSignedDocument,
         onProgress: (progress) => {
@@ -78,13 +93,18 @@ self.addEventListener('message', async (event: MessageEvent<OrganizeWorkerInMess
           {
             type: 'SUCCESS',
             organizedBuffer: result.organizedBuffer,
-            fileName: result.fileName || 'documento-organizado.pdf',
+            fileName:
+              result.fileName ||
+              (mode === 'extract' ? 'documento-extraido.pdf' : 'documento-organizado.pdf'),
             totalOriginalPages: result.totalOriginalPages,
             totalExcludedPages: result.totalExcludedPages,
             totalRemainingPages: result.totalRemainingPages,
+            totalSelectedPages: result.totalSelectedPages,
+            totalUnselectedPages: result.totalUnselectedPages,
             reorderedCount: result.reorderedCount,
             isOrderModified: result.isOrderModified,
             hasSignedDocument: result.hasSignedDocument,
+            mode: result.mode,
           } satisfies OrganizeWorkerOutMessage,
           transferables,
         )

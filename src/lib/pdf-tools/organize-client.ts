@@ -9,7 +9,9 @@ import { organizePdfLocally } from './pdf-organizer'
 export interface OrganizeExecutionClientOptions {
   fileName: string
   buffer: ArrayBuffer
+  mode?: 'organize' | 'extract'
   excludedPages?: number[]
+  selectedPages?: number[]
   pageOrder?: number[]
   allowSignedDocument?: boolean
   onProgress?: (progress: OrganizePdfProgressUpdate) => void
@@ -32,7 +34,9 @@ export function executePdfOrganize(
   const {
     fileName,
     buffer,
+    mode = 'organize',
     excludedPages,
+    selectedPages,
     pageOrder,
     allowSignedDocument = false,
     onProgress,
@@ -91,9 +95,12 @@ export function executePdfOrganize(
               totalOriginalPages: msg.totalOriginalPages,
               totalExcludedPages: msg.totalExcludedPages,
               totalRemainingPages: msg.totalRemainingPages,
+              totalSelectedPages: msg.totalSelectedPages,
+              totalUnselectedPages: msg.totalUnselectedPages,
               reorderedCount: msg.reorderedCount,
               isOrderModified: msg.isOrderModified,
               hasSignedDocument: msg.hasSignedDocument,
+              mode: msg.mode,
             })
           }
         } else if (msg.type === 'ERROR') {
@@ -129,7 +136,9 @@ export function executePdfOrganize(
           type: 'START_ORGANIZE',
           fileName,
           buffer: slice,
+          mode,
           excludedPages,
+          selectedPages,
           pageOrder,
           allowSignedDocument,
         } satisfies OrganizeWorkerInMessage,
@@ -163,7 +172,9 @@ async function fallbackLocalOrganize(
   return organizePdfLocally({
     fileName: options.fileName,
     buffer: options.buffer.slice(0),
+    mode: options.mode,
     excludedPages: options.excludedPages,
+    selectedPages: options.selectedPages,
     pageOrder: options.pageOrder,
     allowSignedDocument: options.allowSignedDocument,
     onProgress: options.onProgress,

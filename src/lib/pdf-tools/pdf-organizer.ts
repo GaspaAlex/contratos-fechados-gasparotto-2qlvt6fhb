@@ -15,9 +15,12 @@ export interface OrganizePdfResult {
   totalOriginalPages: number
   totalExcludedPages: number
   totalRemainingPages: number
+  totalSelectedPages?: number
+  totalUnselectedPages?: number
   reorderedCount?: number
   isOrderModified?: boolean
   hasSignedDocument: boolean
+  mode?: 'organize' | 'extract'
   error?: string
   errorCode?:
     | 'INVALID_HEADER'
@@ -27,6 +30,7 @@ export interface OrganizePdfResult {
     | 'PARSE_ERROR'
     | 'ALL_PAGES_EXCLUDED'
     | 'NO_PAGES_EXCLUDED'
+    | 'NO_PAGES_SELECTED'
     | 'NO_CHANGES_MADE'
     | 'INVALID_PAGE_SELECTION'
     | 'OUT_OF_MEMORY'
@@ -38,14 +42,25 @@ export interface OrganizeExecutionOptions {
   fileName: string
   buffer: ArrayBuffer
   /**
+   * Modalidade de processamento:
+   * - 'organize': Organizar / Excluir páginas (padrão)
+   * - 'extract': Extrair páginas selecionadas
+   */
+  mode?: 'organize' | 'extract'
+  /**
    * Conjunto ou array de números de páginas a excluir (1-based, ex: [4] para excluir página original 4).
-   * Opcional se customPageOrder for fornecido com reordenação.
+   * Utilizado quando mode === 'organize'.
    */
   excludedPages?: number[]
   /**
+   * Conjunto ou array de números de páginas a extrair (1-based, ex: [2, 5, 8]).
+   * Utilizado quando mode === 'extract'.
+   */
+  selectedPages?: number[]
+  /**
    * Sequência personalizada das páginas originais desejadas (1-based).
    * Exemplo: para documento de 6 páginas com a 6 na 1ª posição e 3 excluída: [6, 1, 2, 4, 5].
-   * Se omitido, utiliza a ordem natural das páginas 1..N exceto excludedPages.
+   * Se omitido, utiliza a ordem natural das páginas 1..N.
    */
   pageOrder?: number[]
   allowSignedDocument?: boolean
@@ -55,16 +70,25 @@ export interface OrganizeExecutionOptions {
 
 /**
  * Gera o nome de arquivo de saída segundo as regras da especificação:
+ * Modo organize:
  * - base + "-organizado.pdf" (ex: contrato-organizado.pdf)
  * - Com assinatura digital detectada: base + "-organizado-copia.pdf"
+ * Modo extract:
+ * - base + "-extraido.pdf" (ex: contrato-extraido.pdf)
+ * - Com assinatura digital detectada: base + "-extraido-copia.pdf"
  */
-export function buildOrganizedFileName(rawName: string, hasSignature: boolean): string {
+export function buildOrganizedFileName(
+  rawName: string,
+  hasSignature: boolean,
+  mode: 'organize' | 'extract' = 'organize',
+): string {
   const withoutExt = rawName.replace(/\.pdf$/i, '').trim()
   const clean = withoutExt || 'documento'
+  const suffix = mode === 'extract' ? 'extraido' : 'organizado'
   if (hasSignature) {
-    return `${clean}-organizado-copia.pdf`
+    return `${clean}-${suffix}-copia.pdf`
   }
-  return `${clean}-organizado.pdf`
+  return `${clean}-${suffix}.pdf`
 }
 
 /**
@@ -79,12 +103,15 @@ export async function organizePdfLocally(
   const {
     fileName,
     buffer,
+    mode = 'organize',
     excludedPages = [],
+    selectedPages = [],
     pageOrder,
     allowSignedDocument = false,
     onProgress,
     checkCancelled,
   } = options
+  const isExtractMode = mode === 'extract'
 
   const isCancelled = () => Boolean(checkCancelled && checkCancelled())
 
@@ -232,75 +259,159 @@ export async function organizePdfLocally(
       totalExcludedPages: 0,
       totalRemainingPages: totalOriginalPages,
       hasSignedDocument: true,
+      mode,
       errorCode: 'SIGNATURE_DETECTED',
-      error:
-        'Foram detectados indícios de assinatura digital no documento. A exclusão de páginas poderá invalidar a autenticidade criptográfica. Confirmação expressa é necessária para prosseguir.',
+      error: isExtractMode
+        ? 'Foram detectados indícios de assinatura digital no documento. A extração de páginas poderá invalidar a autenticidade criptográfica. Confirmação expressa é necessária para prosseguir.'
+        : 'Foram detectados indícios de assinatura digital no documento. A exclusão de páginas poderá invalidar a autenticidade criptográfica. Confirmação expressa é necessária para prosseguir.',
     }
   }
 
-  // 4. Validar conjunto de páginas a excluir
-  const excludedSet = new Set(
-    excludedPages.filter((p) => Number.isInteger(p) && p >= 1 && p <= totalOriginalPages),
-  )
-
-  // Checagem se alguma página inválida foi passada na exclusão
-  for (const p of excludedPages) {
-    if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
-      return {
-        success: false,
-        totalOriginalPages,
-        totalExcludedPages: 0,
-        totalRemainingPages: totalOriginalPages,
-        hasSignedDocument: hasSignature,
-        errorCode: 'INVALID_PAGE_SELECTION',
-        error: `A página ${p} não existe no documento (intervalo válido: 1 a ${totalOriginalPages}).`,
-      }
-    }
-  }
-
-  // 5. Determinar a sequência de páginas resultantes
-  // Se pageOrder for fornecido, usamos pageOrder excluindo as que estiverem no excludedSet.
-  // Caso pageOrder não seja fornecido, usamos a sequência original 1..totalOriginalPages excluindo as marcadas.
+  // 4. Validar e computar sequência conforme a modalidade
   let finalSequence1Based: number[] = []
+  let totalExcludedPagesCount = 0
+  let totalSelectedPagesCount = 0
+  let totalUnselectedPagesCount = 0
 
-  if (Array.isArray(pageOrder) && pageOrder.length > 0) {
-    // Validar itens do pageOrder
-    const seenInOrder = new Set<number>()
-    for (const p of pageOrder) {
+  if (isExtractMode) {
+    // MODALIDADE EXTRAÇÃO
+    const selectedSet = new Set(
+      selectedPages.filter((p) => Number.isInteger(p) && p >= 1 && p <= totalOriginalPages),
+    )
+
+    for (const p of selectedPages) {
       if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
         return {
           success: false,
           totalOriginalPages,
-          totalExcludedPages: excludedSet.size,
+          totalExcludedPages: 0,
           totalRemainingPages: 0,
           hasSignedDocument: hasSignature,
+          mode,
           errorCode: 'INVALID_PAGE_SELECTION',
-          error: `A sequência contém página inválida: ${p} (documento possui ${totalOriginalPages} páginas).`,
+          error: `A página ${p} não existe no documento (intervalo válido: 1 a ${totalOriginalPages}).`,
+        }
+      }
+    }
+
+    if (selectedSet.size === 0) {
+      return {
+        success: false,
+        totalOriginalPages,
+        totalExcludedPages: 0,
+        totalRemainingPages: 0,
+        hasSignedDocument: hasSignature,
+        mode,
+        errorCode: 'NO_PAGES_SELECTED',
+        error: 'Nenhuma página foi selecionada para extração. Selecione ao menos uma página.',
+      }
+    }
+
+    // A extração respeita a ordem visual das miniaturas (pageOrder)
+    const baseSequence =
+      Array.isArray(pageOrder) && pageOrder.length > 0
+        ? pageOrder
+        : Array.from({ length: totalOriginalPages }, (_, i) => i + 1)
+
+    // Validar pageOrder se fornecido
+    const seenInOrder = new Set<number>()
+    for (const p of baseSequence) {
+      if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
+        return {
+          success: false,
+          totalOriginalPages,
+          totalExcludedPages: 0,
+          totalRemainingPages: 0,
+          hasSignedDocument: hasSignature,
+          mode,
+          errorCode: 'INVALID_PAGE_SELECTION',
+          error: `A sequência visual contém página inválida: ${p} (documento possui ${totalOriginalPages} páginas).`,
         }
       }
       if (seenInOrder.has(p)) {
         return {
           success: false,
           totalOriginalPages,
-          totalExcludedPages: excludedSet.size,
+          totalExcludedPages: 0,
           totalRemainingPages: 0,
           hasSignedDocument: hasSignature,
+          mode,
           errorCode: 'INVALID_PAGE_SELECTION',
-          error: `A página ${p} foi duplicada na sequência de organização.`,
+          error: `A página ${p} foi duplicada na sequência visual.`,
         }
       }
       seenInOrder.add(p)
-      if (!excludedSet.has(p)) {
+      if (selectedSet.has(p)) {
         finalSequence1Based.push(p)
       }
     }
+
+    totalSelectedPagesCount = finalSequence1Based.length
+    totalUnselectedPagesCount = Math.max(0, totalOriginalPages - totalSelectedPagesCount)
+    totalExcludedPagesCount = totalUnselectedPagesCount
   } else {
-    // Sequência natural 1..totalOriginalPages
-    for (let i = 1; i <= totalOriginalPages; i++) {
-      if (!excludedSet.has(i)) {
-        finalSequence1Based.push(i)
+    // MODALIDADE ORGANIZAR / EXCLUIR (comportamento original preservado integralmente)
+    const excludedSet = new Set(
+      excludedPages.filter((p) => Number.isInteger(p) && p >= 1 && p <= totalOriginalPages),
+    )
+
+    // Checagem se alguma página inválida foi passada na exclusão
+    for (const p of excludedPages) {
+      if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
+        return {
+          success: false,
+          totalOriginalPages,
+          totalExcludedPages: 0,
+          totalRemainingPages: totalOriginalPages,
+          hasSignedDocument: hasSignature,
+          mode,
+          errorCode: 'INVALID_PAGE_SELECTION',
+          error: `A página ${p} não existe no documento (intervalo válido: 1 a ${totalOriginalPages}).`,
+        }
       }
     }
+
+    if (Array.isArray(pageOrder) && pageOrder.length > 0) {
+      const seenInOrder = new Set<number>()
+      for (const p of pageOrder) {
+        if (!Number.isInteger(p) || p < 1 || p > totalOriginalPages) {
+          return {
+            success: false,
+            totalOriginalPages,
+            totalExcludedPages: excludedSet.size,
+            totalRemainingPages: 0,
+            hasSignedDocument: hasSignature,
+            mode,
+            errorCode: 'INVALID_PAGE_SELECTION',
+            error: `A sequência contém página inválida: ${p} (documento possui ${totalOriginalPages} páginas).`,
+          }
+        }
+        if (seenInOrder.has(p)) {
+          return {
+            success: false,
+            totalOriginalPages,
+            totalExcludedPages: excludedSet.size,
+            totalRemainingPages: 0,
+            hasSignedDocument: hasSignature,
+            mode,
+            errorCode: 'INVALID_PAGE_SELECTION',
+            error: `A página ${p} foi duplicada na sequência de organização.`,
+          }
+        }
+        seenInOrder.add(p)
+        if (!excludedSet.has(p)) {
+          finalSequence1Based.push(p)
+        }
+      }
+    } else {
+      for (let i = 1; i <= totalOriginalPages; i++) {
+        if (!excludedSet.has(i)) {
+          finalSequence1Based.push(i)
+        }
+      }
+    }
+
+    totalExcludedPagesCount = excludedSet.size
   }
 
   // Verificar se há páginas restantes
@@ -309,34 +420,37 @@ export async function organizePdfLocally(
     return {
       success: false,
       totalOriginalPages,
-      totalExcludedPages: excludedSet.size,
+      totalExcludedPages: totalExcludedPagesCount,
       totalRemainingPages: 0,
       hasSignedDocument: hasSignature,
-      errorCode: 'ALL_PAGES_EXCLUDED',
-      error:
-        'Não é permitido gerar um PDF com zero páginas. Ao menos uma página deve ser preservada.',
+      mode,
+      errorCode: isExtractMode ? 'NO_PAGES_SELECTED' : 'ALL_PAGES_EXCLUDED',
+      error: isExtractMode
+        ? 'Nenhuma página foi selecionada para extração.'
+        : 'Não é permitido gerar um PDF com zero páginas. Ao menos uma página deve ser preservada.',
     }
   }
 
-  // Verificar se houve alguma alteração (seja exclusão ou reordenação)
-  // Ordem natural esperada sem alterações: 1, 2, ..., totalOriginalPages
+  // Verificar se houve alguma alteração (no modo organize)
+  // No modo extrair, o usuário está explicitamente extraindo uma seleção (mesmo que seja todas as páginas para gerar um novo arquivo extraído)
   const isOrderModified =
     finalSequence1Based.length !== totalOriginalPages ||
     finalSequence1Based.some((origNum, posIdx) => origNum !== posIdx + 1)
 
-  const hasExclusion = excludedSet.size > 0
+  const hasExclusion = totalExcludedPagesCount > 0
   const hasReorder =
     Array.isArray(pageOrder) &&
     pageOrder.length === totalOriginalPages &&
     pageOrder.some((origNum, posIdx) => origNum !== posIdx + 1)
 
-  if (!hasExclusion && !hasReorder) {
+  if (!isExtractMode && !hasExclusion && !hasReorder) {
     return {
       success: false,
       totalOriginalPages,
       totalExcludedPages: 0,
       totalRemainingPages: totalOriginalPages,
       hasSignedDocument: hasSignature,
+      mode,
       errorCode: 'NO_CHANGES_MADE',
       error:
         'Nenhuma alteração foi realizada (nenhuma página excluída e a ordem original permanece a mesma).',
@@ -351,6 +465,12 @@ export async function organizePdfLocally(
         reorderedCount++
       }
     })
+  } else {
+    finalSequence1Based.forEach((origNum, posIdx) => {
+      if (origNum !== posIdx + 1) {
+        reorderedCount++
+      }
+    })
   }
 
   // Converter finalSequence1Based para índices 0-based do pdf-lib
@@ -360,9 +480,10 @@ export async function organizePdfLocally(
     return {
       success: false,
       totalOriginalPages,
-      totalExcludedPages: excludedSet.size,
+      totalExcludedPages: totalExcludedPagesCount,
       totalRemainingPages,
       hasSignedDocument: hasSignature,
+      mode,
       errorCode: 'CANCELLED',
       error: 'Operação cancelada pelo usuário.',
     }
@@ -391,9 +512,10 @@ export async function organizePdfLocally(
         return {
           success: false,
           totalOriginalPages,
-          totalExcludedPages: excludedSet.size,
+          totalExcludedPages: totalExcludedPagesCount,
           totalRemainingPages,
           hasSignedDocument: hasSignature,
+          mode,
           errorCode: 'CANCELLED',
           error: 'Operação cancelada pelo usuário.',
         }
@@ -415,9 +537,10 @@ export async function organizePdfLocally(
     return {
       success: false,
       totalOriginalPages,
-      totalExcludedPages: excludedSet.size,
+      totalExcludedPages: totalExcludedPagesCount,
       totalRemainingPages,
       hasSignedDocument: hasSignature,
+      mode,
       errorCode: 'GENERIC_ERROR',
       error: `Erro ao extrair e compor as páginas do documento: ${msg}`,
     }
@@ -427,9 +550,10 @@ export async function organizePdfLocally(
     return {
       success: false,
       totalOriginalPages,
-      totalExcludedPages: excludedSet.size,
+      totalExcludedPages: totalExcludedPagesCount,
       totalRemainingPages,
       hasSignedDocument: hasSignature,
+      mode,
       errorCode: 'CANCELLED',
       error: 'Operação cancelada pelo usuário.',
     }
@@ -452,18 +576,21 @@ export async function organizePdfLocally(
       savedBytes.byteOffset + savedBytes.byteLength,
     ) as ArrayBuffer
 
-    const outputName = buildOrganizedFileName(fileName, hasSignature)
+    const outputName = buildOrganizedFileName(fileName, hasSignature, mode)
 
     return {
       success: true,
       organizedBuffer: arrayBuffer,
       fileName: outputName,
       totalOriginalPages,
-      totalExcludedPages: excludedSet.size,
+      totalExcludedPages: totalExcludedPagesCount,
       totalRemainingPages,
+      totalSelectedPages: isExtractMode ? totalSelectedPagesCount : undefined,
+      totalUnselectedPages: isExtractMode ? totalUnselectedPagesCount : undefined,
       reorderedCount,
       isOrderModified,
       hasSignedDocument: hasSignature,
+      mode,
     }
   } catch (saveErr: unknown) {
     const msg = saveErr instanceof Error ? saveErr.message : String(saveErr)
@@ -475,20 +602,24 @@ export async function organizePdfLocally(
       return {
         success: false,
         totalOriginalPages,
-        totalExcludedPages: excludedSet.size,
+        totalExcludedPages: totalExcludedPagesCount,
         totalRemainingPages,
         hasSignedDocument: hasSignature,
+        mode,
         errorCode: 'OUT_OF_MEMORY',
-        error: 'Memória insuficiente no navegador ao salvar o PDF organizado.',
+        error: isExtractMode
+          ? 'Memória insuficiente no navegador ao salvar o PDF extraído.'
+          : 'Memória insuficiente no navegador ao salvar o PDF organizado.',
       }
     }
 
     return {
       success: false,
       totalOriginalPages,
-      totalExcludedPages: excludedSet.size,
+      totalExcludedPages: totalExcludedPagesCount,
       totalRemainingPages,
       hasSignedDocument: hasSignature,
+      mode,
       errorCode: 'GENERIC_ERROR',
       error: `Erro ao salvar documento organizado: ${msg}`,
     }
