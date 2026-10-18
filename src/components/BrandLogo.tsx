@@ -38,14 +38,14 @@ export function BrandLogo({
       role="img"
       aria-label={alt}
       className={cn(
-        'relative inline-flex items-center justify-center select-none rounded-lg',
-        'bg-[#161920] border border-[#262B38] shadow-[0_4px_16px_rgba(0,0,0,0.35)]',
+        'relative flex items-center justify-center select-none rounded-lg',
+        'bg-[#161920] border border-[#262B38]/60 shadow-[0_2px_10px_rgba(0,0,0,0.25)]',
         'transition-all overflow-hidden',
         isCompact
-          ? 'p-1.5 max-w-[190px]'
+          ? 'p-1 w-full max-w-[200px]'
           : isLarge
-            ? 'p-3 sm:p-4 max-w-[340px]'
-            : 'p-2 max-w-[240px]',
+            ? 'p-1.5 sm:p-2 w-full max-w-[360px]'
+            : 'p-1 w-full max-w-full',
         className,
       )}
       {...props}
@@ -56,8 +56,8 @@ export function BrandLogo({
         loading="eager"
         decoding="sync"
         className={cn(
-          'w-full h-auto object-contain block select-none pointer-events-none rounded-[6px]',
-          isCompact ? 'max-h-[50px]' : isLarge ? 'max-h-[96px]' : 'max-h-[68px]',
+          'w-full h-auto object-contain block select-none pointer-events-none rounded-[4px]',
+          isCompact ? 'max-h-[54px]' : isLarge ? 'max-h-[110px]' : 'max-h-[82px]',
         )}
       />
     </div>

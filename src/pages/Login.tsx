@@ -69,7 +69,7 @@ export default function Login() {
       >
         <div className="mb-[28px] flex flex-col items-center text-center">
           <div className="w-full flex justify-center mb-3">
-            <BrandLogo size="default" className="w-full max-w-[280px]" />
+            <BrandLogo size="default" className="w-full" />
           </div>
           <div
             className="inline-block px-[8px] py-[3px] rounded-[4px] text-[10px] font-bold tracking-wider mt-1"

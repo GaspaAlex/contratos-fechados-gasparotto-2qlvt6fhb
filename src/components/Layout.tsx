@@ -221,12 +221,12 @@ export default function Layout() {
           collapsible="offcanvas"
           className="border-r border-[#222733] bg-[#161920] text-[#B5BAC4] shrink-0"
         >
-          {/* Header da Sidebar — Fundo Grafite #161920 com superfície sutil para a BrandLogo e texto institucional */}
+          {/* Header da Sidebar — Fundo Grafite #161920 com a BrandLogo ocupando o espaço útil */}
           <SidebarHeader className="p-0 border-b border-[#232836] bg-[#161920]">
-            <div className="flex flex-col items-center justify-center px-3 pt-3 pb-3 w-full">
+            <div className="flex flex-col items-center justify-center p-2 w-full">
               <Link
                 to="/"
-                className="group w-full max-w-[230px] block transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A] rounded-lg"
+                className="group w-full block transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A] rounded-lg"
                 title="Advocacia Gasparotto - Início"
               >
                 <BrandLogo
