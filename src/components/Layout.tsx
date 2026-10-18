@@ -19,7 +19,6 @@ import {
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
-import { BrandLogo } from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import {
   Sidebar,
@@ -221,18 +220,25 @@ export default function Layout() {
           collapsible="offcanvas"
           className="border-r border-[#222733] bg-[#161920] text-[#B5BAC4] shrink-0"
         >
-          {/* Header da Sidebar — Fundo Grafite #161920 com a BrandLogo ocupando o espaço útil */}
+          {/* Header da Sidebar — Fundo Grafite #161920 — Exclusivamente Tipográfico */}
           <SidebarHeader className="p-0 border-b border-[#232836] bg-[#161920]">
-            <div className="flex flex-col items-center justify-center p-2 w-full">
+            <div className="flex flex-col items-center justify-center p-3 w-full">
               <Link
                 to="/"
-                className="group w-full block transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A] rounded-lg"
+                className="group w-full block rounded-lg px-3 py-3 transition-colors bg-[#191D26] hover:bg-[#1D222E] border border-[#272D3D]/60 hover:border-[#D9A94A]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A94A] text-center select-none"
                 title="Advocacia Gasparotto - Início"
               >
-                <BrandLogo
-                  className="w-full hover:border-[#3D445A] transition-colors"
-                  size="default"
-                />
+                <div className="flex flex-col items-center justify-center text-center">
+                  <span className="font-serif text-[15px] sm:text-[15.5px] font-bold tracking-[0.08em] text-[#E8ECF2] group-hover:text-[#F3F5F8] transition-colors leading-tight">
+                    ADVOCACIA GASPAROTTO
+                  </span>
+                  <span
+                    className="mt-1.5 text-[10px] sm:text-[10.5px] font-semibold text-[#D9A94A] tracking-[0.24em] uppercase leading-none"
+                    style={{ wordSpacing: '0.35em' }}
+                  >
+                    SISTEMA DE GESTÃO
+                  </span>
+                </div>
               </Link>
             </div>
           </SidebarHeader>
@@ -251,12 +257,14 @@ export default function Layout() {
                       onClick={() => toggleSection(section.id)}
                       aria-expanded={isExpanded}
                       aria-controls={contentId}
-                      className="group/sec-header flex w-full items-center justify-between px-3 py-1.5 mb-1 rounded text-[10px] uppercase font-semibold tracking-[1.2px] text-[#9299A9] hover:text-[#E4E7EB] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#D9A94A] cursor-pointer select-none"
+                      className="group/sec-header flex w-full items-center justify-between px-3 py-1.5 mb-1 rounded text-[10px] uppercase font-semibold tracking-[1.2px] text-[#9299A9] hover:text-[#E3B259] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#D9A94A] cursor-pointer select-none"
                     >
-                      <span className="truncate">{section.label}</span>
+                      <span className="truncate transition-colors duration-150">
+                        {section.label}
+                      </span>
                       <ChevronDown
                         className={cn(
-                          'h-3.5 w-3.5 shrink-0 text-[#9299A9] transition-transform duration-200 group-hover/sec-header:text-[#E4E7EB]',
+                          'h-3.5 w-3.5 shrink-0 text-[#9299A9] transition-all duration-200 group-hover/sec-header:text-[#E3B259]',
                           isExpanded && 'rotate-180',
                         )}
                         aria-hidden="true"
@@ -274,10 +282,10 @@ export default function Layout() {
                                   asChild
                                   isActive={isActive}
                                   className={cn(
-                                    'relative w-full h-11 px-3 py-2 text-sm transition-all duration-150 rounded-[9px] overflow-hidden',
+                                    'group/menu-btn relative w-full h-11 px-3 py-2 text-sm transition-all duration-150 rounded-[9px] overflow-hidden',
                                     isActive
                                       ? 'bg-[#2B2927] text-[#F1C078] font-semibold shadow-sm hover:bg-[#322F2D] hover:text-[#F1C078]'
-                                      : 'text-[#B5BAC4] hover:bg-[#1E222B] hover:text-[#F0F2F5] font-medium',
+                                      : 'text-[#B5BAC4] bg-transparent font-medium hover:bg-[#D9A94A]/12 hover:text-[#F3CE85]',
                                   )}
                                 >
                                   <Link to={item.path} className="flex items-center gap-3">
@@ -290,11 +298,15 @@ export default function Layout() {
                                     )}
                                     <item.icon
                                       className={cn(
-                                        'h-4 w-4 shrink-0 transition-colors',
-                                        isActive ? 'text-[#D9A94A]' : 'text-[#8E95A5]',
+                                        'h-4 w-4 shrink-0 transition-colors duration-150',
+                                        isActive
+                                          ? 'text-[#D9A94A]'
+                                          : 'text-[#8E95A5] group-hover/menu-btn:text-[#E3B259]',
                                       )}
                                     />
-                                    <span className="truncate tracking-wide">{item.name}</span>
+                                    <span className="truncate tracking-wide transition-colors duration-150">
+                                      {item.name}
+                                    </span>
                                   </Link>
                                 </SidebarMenuButton>
                               </SidebarMenuItem>
