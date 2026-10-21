@@ -286,6 +286,18 @@ export function printReport<T = any>(options: PrintReportOptions<T>): void {
       border: 1px solid #F3DFB4;
     }
 
+    .badge-indigo {
+      background-color: #E0E7FF !important;
+      color: #3730A3 !important;
+      border: 1px solid #C7D2FE;
+    }
+
+    .badge-cyan {
+      background-color: #E0F2FE !important;
+      color: #0369A1 !important;
+      border: 1px solid #BAE6FD;
+    }
+
     .summary-section {
       margin-top: 14px;
     }

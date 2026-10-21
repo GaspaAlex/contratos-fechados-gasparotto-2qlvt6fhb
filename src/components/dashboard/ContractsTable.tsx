@@ -56,7 +56,9 @@ const filters = [
   'FUP',
   'R. Docs',
   'L. Cálculos',
-  'OK',
+  'Concluído',
+  'Cadastrar Intranet',
+  'Agendar Inicial',
   'Ag. Perícia',
   'Arquivados',
   'Parceria',
@@ -65,7 +67,16 @@ const filters = [
   'Macohin',
   'Indicação Macohin',
 ]
-const ATIVOS_STATUSES = ['R. Docs', 'L. Cálculos', 'OK', 'Ag. Perícia']
+const ATIVOS_STATUSES = [
+  'R. Docs',
+  'L. Cálculos',
+  'Concluído',
+  'Cadastrar Intranet',
+  'Agendar Inicial',
+  'Ag. Perícia',
+  'Aguardando',
+  'L. Análise',
+]
 
 const MONTHS = [
   'JANEIRO',
@@ -276,8 +287,12 @@ export function ContractsTable({
       result = result.filter((c) => c.status === 'R. Docs')
     } else if (activeFilter === 'L. Cálculos') {
       result = result.filter((c) => c.status === 'L. Cálculos')
-    } else if (activeFilter === 'OK') {
-      result = result.filter((c) => c.status === 'OK')
+    } else if (activeFilter === 'Concluído') {
+      result = result.filter((c) => c.status === 'Concluído')
+    } else if (activeFilter === 'Cadastrar Intranet') {
+      result = result.filter((c) => c.status === 'Cadastrar Intranet')
+    } else if (activeFilter === 'Agendar Inicial') {
+      result = result.filter((c) => c.status === 'Agendar Inicial')
     } else if (activeFilter === 'Ag. Perícia') {
       result = result.filter((c) => c.status === 'Ag. Perícia')
     } else if (activeFilter === 'Arquivados') {
@@ -370,8 +385,14 @@ export function ContractsTable({
   const getStatusBadgeHtml = (st?: string) => {
     if (!st) return '-'
     const archived = isArchived(st)
-    if (st === 'OK') {
-      return '<span class="badge badge-recebido">OK</span>'
+    if (st === 'Concluído') {
+      return '<span class="badge badge-recebido">Concluído</span>'
+    }
+    if (st === 'Cadastrar Intranet') {
+      return '<span class="badge badge-indigo">Cadastrar Intranet</span>'
+    }
+    if (st === 'Agendar Inicial') {
+      return '<span class="badge badge-cyan">Agendar Inicial</span>'
     }
     if (st === 'R. Docs') {
       return '<span class="badge badge-gold">Falt. Docs</span>'
@@ -1034,9 +1055,17 @@ export function ContractsTable({
                                 )}
                               </TableCell>
                               <TableCell>
-                                {contract.status === 'OK' ? (
+                                {contract.status === 'Concluído' ? (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
-                                    <CheckCircle2 className="h-3 w-3" /> OK
+                                    <CheckCircle2 className="h-3 w-3" /> Concluído
+                                  </span>
+                                ) : contract.status === 'Cadastrar Intranet' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#4A7FA5]/10 text-[#4A7FA5] border border-[#4A7FA5]/25 whitespace-nowrap">
+                                    <Clock className="h-3 w-3" /> Cadastrar Intranet
+                                  </span>
+                                ) : contract.status === 'Agendar Inicial' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7C6F93]/10 text-[#7C6F93] border border-[#7C6F93]/25 whitespace-nowrap">
+                                    <CalendarClock className="h-3 w-3" /> Agendar Inicial
                                   </span>
                                 ) : contract.status === 'R. Docs' ? (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B4453C]/10 text-[#B4453C] border border-[#B4453C]/25 whitespace-nowrap">
