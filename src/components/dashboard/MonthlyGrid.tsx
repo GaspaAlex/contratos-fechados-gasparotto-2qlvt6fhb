@@ -50,10 +50,7 @@ export function MonthlyGrid({
     const campanhaCount = activeContratos.filter((c) => c.origem === 'Campanha').length
     const particularCount = activeContratos.filter((c) => c.origem === 'Particular').length
     const macohinCount = activeContratos.filter((c) => c.origem === 'Macohin').length
-    const indicacaoMacohinCount = activeContratos.filter(
-      (c) => c.origem === 'Indicação Macohin',
-    ).length
-    const totalMacohin = macohinCount + indicacaoMacohinCount
+    const totalMacohin = macohinCount
 
     return {
       name,
@@ -62,7 +59,6 @@ export function MonthlyGrid({
       campanhaCount,
       particularCount,
       macohinCount,
-      indicacaoMacohinCount,
       totalMacohin,
     }
   }).filter((m) => month === 'Todos os meses' || m.name === month)
@@ -80,19 +76,13 @@ export function MonthlyGrid({
   const todayCampanhaCount = todayActiveContratos.filter((c) => c.origem === 'Campanha').length
   const todayParticularCount = todayActiveContratos.filter((c) => c.origem === 'Particular').length
   const todayMacohinCount = todayActiveContratos.filter((c) => c.origem === 'Macohin').length
-  const todayIndicacaoMacohinCount = todayActiveContratos.filter(
-    (c) => c.origem === 'Indicação Macohin',
-  ).length
-  const todayTotalMacohin = todayMacohinCount + todayIndicacaoMacohinCount
+  const todayTotalMacohin = todayMacohinCount
 
   const totalActiveContratos = yearContratos.filter((c) => !isArchived(c))
   const totalCampanhaCount = totalActiveContratos.filter((c) => c.origem === 'Campanha').length
   const totalParticularCount = totalActiveContratos.filter((c) => c.origem === 'Particular').length
   const totalMacohinCount = totalActiveContratos.filter((c) => c.origem === 'Macohin').length
-  const totalIndicacaoMacohinCount = totalActiveContratos.filter(
-    (c) => c.origem === 'Indicação Macohin',
-  ).length
-  const totalTotalMacohin = totalMacohinCount + totalIndicacaoMacohinCount
+  const totalTotalMacohin = totalMacohinCount
 
   return (
     <div className="space-y-4">
@@ -155,11 +145,11 @@ export function MonthlyGrid({
 
                 {hasContracts ? (
                   <div className="mt-2 space-y-2 pt-2 border-t border-[#E4E7EB]/70 dark:border-border/70">
-                    {/* Grade 2x2 das 4 origens */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {/* Linha 1: Campanha (Verde #3E8E5A) | Particular (Azul #4A7FA5) */}
-                      <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#3E8E5A]/10 text-[#252B34] dark:text-foreground border border-[#3E8E5A]/20">
-                        <span className="truncate text-[10px] text-[#3E8E5A] font-semibold">
+                    {/* Grade das 3 origens */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {/* Campanha (Verde #3E8E5A) */}
+                      <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#3E8E5A]/10 text-[#252B34] dark:text-foreground border border-[#3E8E5A]/20">
+                        <span className="truncate text-[9.5px] text-[#3E8E5A] font-semibold">
                           Campanha
                         </span>
                         <span className="font-bold text-xs shrink-0 tabular-nums text-[#3E8E5A]">
@@ -167,8 +157,9 @@ export function MonthlyGrid({
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#4A7FA5]/10 text-[#252B34] dark:text-foreground border border-[#4A7FA5]/20">
-                        <span className="truncate text-[10px] text-[#4A7FA5] font-semibold">
+                      {/* Particular (Azul #4A7FA5) */}
+                      <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#4A7FA5]/10 text-[#252B34] dark:text-foreground border border-[#4A7FA5]/20">
+                        <span className="truncate text-[9.5px] text-[#4A7FA5] font-semibold">
                           Particular
                         </span>
                         <span className="font-bold text-xs shrink-0 tabular-nums text-[#4A7FA5]">
@@ -176,35 +167,23 @@ export function MonthlyGrid({
                         </span>
                       </div>
 
-                      {/* Linha 2: Macohin (Roxo #8A56AC) | Indicação Macohin (Âmbar #C77E1E) */}
-                      <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#8A56AC]/10 text-[#252B34] dark:text-foreground border border-[#8A56AC]/20">
-                        <span className="truncate text-[10px] text-[#8A56AC] font-semibold">
+                      {/* Macohin (Roxo #8A56AC) */}
+                      <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#8A56AC]/10 text-[#252B34] dark:text-foreground border border-[#8A56AC]/20">
+                        <span className="truncate text-[9.5px] text-[#8A56AC] font-semibold">
                           Macohin
                         </span>
                         <span className="font-bold text-xs shrink-0 tabular-nums text-[#8A56AC]">
                           {monthItem.macohinCount}
                         </span>
                       </div>
-
-                      <div
-                        className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#C77E1E]/10 text-[#252B34] dark:text-foreground border border-[#C77E1E]/20"
-                        title={`${monthItem.indicacaoMacohinCount} Indicação Macohin`}
-                      >
-                        <span className="truncate text-[10px] text-[#C77E1E] font-semibold">
-                          Ind. Macohin
-                        </span>
-                        <span className="font-bold text-xs shrink-0 tabular-nums text-[#C77E1E]">
-                          {monthItem.indicacaoMacohinCount}
-                        </span>
-                      </div>
                     </div>
 
                     {/* Destaque Próprio para Total Macohin */}
-                    <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#C9922A]/10 border border-[#C9922A]/25">
-                      <span className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground tracking-tight">
+                    <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#8A56AC]/10 border border-[#8A56AC]/25">
+                      <span className="text-[11px] font-semibold text-[#8A56AC] dark:text-purple-300 tracking-tight">
                         Total Macohin
                       </span>
-                      <span className="text-sm font-bold text-[#C9922A] leading-none tabular-nums">
+                      <span className="text-sm font-bold text-[#8A56AC] dark:text-purple-300 leading-none tabular-nums">
                         {monthItem.totalMacohin}
                       </span>
                     </div>
@@ -261,9 +240,9 @@ export function MonthlyGrid({
             </div>
 
             <div className="mt-2 space-y-2 pt-2 border-t border-[#E4E7EB]/70 dark:border-border/70">
-              <div className="grid grid-cols-2 gap-1.5">
-                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#3E8E5A]/10 text-[#252B34] dark:text-foreground border border-[#3E8E5A]/20">
-                  <span className="truncate text-[10px] text-[#3E8E5A] font-semibold">
+              <div className="grid grid-cols-3 gap-1.5">
+                <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#3E8E5A]/10 text-[#252B34] dark:text-foreground border border-[#3E8E5A]/20">
+                  <span className="truncate text-[9.5px] text-[#3E8E5A] font-semibold">
                     Campanha
                   </span>
                   <span className="font-bold text-xs shrink-0 tabular-nums text-[#3E8E5A]">
@@ -271,8 +250,8 @@ export function MonthlyGrid({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#4A7FA5]/10 text-[#252B34] dark:text-foreground border border-[#4A7FA5]/20">
-                  <span className="truncate text-[10px] text-[#4A7FA5] font-semibold">
+                <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#4A7FA5]/10 text-[#252B34] dark:text-foreground border border-[#4A7FA5]/20">
+                  <span className="truncate text-[9.5px] text-[#4A7FA5] font-semibold">
                     Particular
                   </span>
                   <span className="font-bold text-xs shrink-0 tabular-nums text-[#4A7FA5]">
@@ -280,31 +259,21 @@ export function MonthlyGrid({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#8A56AC]/10 text-[#252B34] dark:text-foreground border border-[#8A56AC]/20">
-                  <span className="truncate text-[10px] text-[#8A56AC] font-semibold">Macohin</span>
+                <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#8A56AC]/10 text-[#252B34] dark:text-foreground border border-[#8A56AC]/20">
+                  <span className="truncate text-[9.5px] text-[#8A56AC] font-semibold">
+                    Macohin
+                  </span>
                   <span className="font-bold text-xs shrink-0 tabular-nums text-[#8A56AC]">
                     {todayMacohinCount}
                   </span>
                 </div>
-
-                <div
-                  className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#C77E1E]/10 text-[#252B34] dark:text-foreground border border-[#C77E1E]/20"
-                  title={`${todayIndicacaoMacohinCount} Indicação Macohin`}
-                >
-                  <span className="truncate text-[10px] text-[#C77E1E] font-semibold">
-                    Ind. Macohin
-                  </span>
-                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#C77E1E]">
-                    {todayIndicacaoMacohinCount}
-                  </span>
-                </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#C9922A]/10 border border-[#C9922A]/25">
-                <span className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground tracking-tight">
+              <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#8A56AC]/10 border border-[#8A56AC]/25">
+                <span className="text-[11px] font-semibold text-[#8A56AC] dark:text-purple-300 tracking-tight">
                   Total Macohin
                 </span>
-                <span className="text-sm font-bold text-[#C9922A] leading-none tabular-nums">
+                <span className="text-sm font-bold text-[#8A56AC] dark:text-purple-300 leading-none tabular-nums">
                   {todayTotalMacohin}
                 </span>
               </div>
@@ -341,9 +310,9 @@ export function MonthlyGrid({
             </div>
 
             <div className="mt-2 space-y-2 pt-2 border-t border-[#2E3440]">
-              <div className="grid grid-cols-2 gap-1.5">
-                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#3E8E5A]/30">
-                  <span className="truncate text-[10px] text-[#52B86E] font-semibold">
+              <div className="grid grid-cols-3 gap-1.5">
+                <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#3E8E5A]/30">
+                  <span className="truncate text-[9.5px] text-[#52B86E] font-semibold">
                     Campanha
                   </span>
                   <span className="font-bold text-xs shrink-0 tabular-nums text-[#52B86E]">
@@ -351,8 +320,8 @@ export function MonthlyGrid({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#5A9FD4]/30">
-                  <span className="truncate text-[10px] text-[#5A9FD4] font-semibold">
+                <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#5A9FD4]/30">
+                  <span className="truncate text-[9.5px] text-[#5A9FD4] font-semibold">
                     Particular
                   </span>
                   <span className="font-bold text-xs shrink-0 tabular-nums text-[#5A9FD4]">
@@ -360,31 +329,21 @@ export function MonthlyGrid({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#8B5CF6]/30">
-                  <span className="truncate text-[10px] text-[#A78BFA] font-semibold">Macohin</span>
+                <div className="flex items-center justify-between rounded-md px-1.5 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#8B5CF6]/30">
+                  <span className="truncate text-[9.5px] text-[#A78BFA] font-semibold">
+                    Macohin
+                  </span>
                   <span className="font-bold text-xs shrink-0 tabular-nums text-[#A78BFA]">
                     {totalMacohinCount}
                   </span>
                 </div>
-
-                <div
-                  className="flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium leading-tight min-w-0 bg-[#2B303C] text-white border border-[#D97706]/30"
-                  title={`${totalIndicacaoMacohinCount} Indicação Macohin`}
-                >
-                  <span className="truncate text-[10px] text-[#FBBF24] font-semibold">
-                    Ind. Macohin
-                  </span>
-                  <span className="font-bold text-xs shrink-0 tabular-nums text-[#FBBF24]">
-                    {totalIndicacaoMacohinCount}
-                  </span>
-                </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#2B303C] border border-[#D9A94A]/30">
-                <span className="text-[11px] font-semibold text-[#A5ADB9] tracking-tight">
+              <div className="flex items-center justify-between rounded-md px-2.5 py-1 bg-[#2B303C] border border-[#8B5CF6]/40">
+                <span className="text-[11px] font-semibold text-[#A78BFA] tracking-tight">
                   Total Macohin
                 </span>
-                <span className="text-sm font-bold text-[#D9A94A] leading-none tabular-nums">
+                <span className="text-sm font-bold text-[#A78BFA] leading-none tabular-nums">
                   {totalTotalMacohin}
                 </span>
               </div>

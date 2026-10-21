@@ -46,8 +46,6 @@ export function RDocsDashboard({
       periodContratos = periodContratos.filter((c) => c.origem === 'Particular')
     } else if (activeFilter === 'Macohin') {
       periodContratos = periodContratos.filter((c) => c.origem === 'Macohin')
-    } else if (activeFilter === 'Indicação Macohin') {
-      periodContratos = periodContratos.filter((c) => c.origem === 'Indicação Macohin')
     }
 
     if (month !== 'Todos os meses') {
@@ -77,10 +75,7 @@ export function RDocsDashboard({
     month !== 'Todos os meses' ? month.charAt(0).toUpperCase() + month.slice(1).toLowerCase() : ''
 
   const isOriginSelected =
-    activeFilter === 'Campanha' ||
-    activeFilter === 'Particular' ||
-    activeFilter === 'Macohin' ||
-    activeFilter === 'Indicação Macohin'
+    activeFilter === 'Campanha' || activeFilter === 'Particular' || activeFilter === 'Macohin'
 
   let subtitle = ''
   if (!displayMonth && !isOriginSelected) {

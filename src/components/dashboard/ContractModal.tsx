@@ -403,13 +403,34 @@ export function ContractModal({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    const validOrigins = ['Campanha', 'Particular', 'Macohin', 'Indicação Macohin']
+    const validOrigins = ['Campanha', 'Particular', 'Macohin']
     if (!formData.nome || !formData.dcontrato)
       return toast.error('Preencha Nome e Data do Contrato.')
     if (!formData.origem || !validOrigins.includes(formData.origem))
       return toast.error('Selecione a origem do caso')
-    if (formData.origem === 'Campanha' && !formData.campanha_origem)
-      return toast.error('Selecione a campanha de origem.')
+    if (formData.origem === 'Campanha') {
+      if (!formData.campanha_origem) {
+        return toast.error('Selecione a campanha de origem.')
+      }
+      const validCampanhas = [
+        'Aux. Acidente META',
+        'Aux. Acidente Google',
+        'DER Google',
+        'DER Canal',
+      ]
+      if (!validCampanhas.includes(formData.campanha_origem)) {
+        return toast.error('Campanha de origem inválida para Origem Campanha.')
+      }
+    } else if (formData.origem === 'Macohin') {
+      const validMacohinCampanhas = ['Baú de Ouro', 'Diligências', 'Indicação']
+      if (formData.campanha_origem && !validMacohinCampanhas.includes(formData.campanha_origem)) {
+        return toast.error('Campanha de origem inválida para Origem Macohin.')
+      }
+    } else if (formData.origem === 'Particular') {
+      if (formData.campanha_origem) {
+        formData.campanha_origem = ''
+      }
+    }
     if (formData.representante && !formData.representante_nome)
       return toast.error('Preencha o Nome do Representante Legal.')
 
@@ -515,13 +536,13 @@ export function ContractModal({
               </Label>
               <Select
                 value={formData.origem || ''}
-                onValueChange={(v) =>
-                  setFormData({
-                    ...formData,
+                onValueChange={(v) => {
+                  setFormData((prev) => ({
+                    ...prev,
                     origem: v,
-                    campanha_origem: v !== 'Campanha' ? '' : formData.campanha_origem,
-                  })
-                }
+                    campanha_origem: '',
+                  }))
+                }}
               >
                 <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#C9922A]">
                   <SelectValue placeholder="Selecione a origem..." />
@@ -535,9 +556,6 @@ export function ContractModal({
                   </SelectItem>
                   <SelectItem value="Macohin" className="text-xs">
                     Macohin
-                  </SelectItem>
-                  <SelectItem value="Indicação Macohin" className="text-xs">
-                    Indicação Macohin
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -556,24 +574,53 @@ export function ContractModal({
                     <SelectValue placeholder="Selecione a campanha..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {campanhas.map((c) => (
-                      <SelectItem key={c.id} value={c.rotulo} className="text-xs">
-                        {c.rotulo}
-                      </SelectItem>
-                    ))}
-                    {campanhas.length === 0 && (
-                      <>
-                        <SelectItem value="Aux. Acidente" className="text-xs">
-                          Aux. Acidente
-                        </SelectItem>
-                        <SelectItem value="DER" className="text-xs">
-                          DER
-                        </SelectItem>
-                        <SelectItem value="Ben. Análise" className="text-xs">
-                          Ben. Análise
-                        </SelectItem>
-                      </>
-                    )}
+                    <SelectItem value="Aux. Acidente META" className="text-xs">
+                      Aux. Acidente META
+                    </SelectItem>
+                    <SelectItem value="Aux. Acidente Google" className="text-xs">
+                      Aux. Acidente Google
+                    </SelectItem>
+                    <SelectItem value="DER Google" className="text-xs">
+                      DER Google
+                    </SelectItem>
+                    <SelectItem value="DER Canal" className="text-xs">
+                      DER Canal
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {formData.origem === 'Macohin' && (
+              <div className="space-y-1.5 animate-fade-in">
+                <Label className="text-xs font-semibold text-[#8A56AC] uppercase tracking-wider">
+                  Campanha de Origem
+                </Label>
+                <Select
+                  value={formData.campanha_origem || 'empty'}
+                  onValueChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      campanha_origem: v === 'empty' ? '' : v,
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus:ring-[#8A56AC]">
+                    <SelectValue placeholder="Selecione a classificação..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="empty" className="text-xs text-muted-foreground">
+                      Não classificado (opcional)
+                    </SelectItem>
+                    <SelectItem value="Baú de Ouro" className="text-xs">
+                      Baú de Ouro
+                    </SelectItem>
+                    <SelectItem value="Diligências" className="text-xs">
+                      Diligências
+                    </SelectItem>
+                    <SelectItem value="Indicação" className="text-xs">
+                      Indicação
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

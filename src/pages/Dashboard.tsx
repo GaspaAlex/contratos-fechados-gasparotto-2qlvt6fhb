@@ -42,8 +42,6 @@ export default function Dashboard() {
       result = result.filter((c) => c.origem === 'Particular')
     } else if (activeFilter === 'Macohin') {
       result = result.filter((c) => c.origem === 'Macohin')
-    } else if (activeFilter === 'Indicação Macohin') {
-      result = result.filter((c) => c.origem === 'Indicação Macohin')
     }
     return result
   }, [contratos, activeFilter])

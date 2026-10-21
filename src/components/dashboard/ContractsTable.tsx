@@ -65,7 +65,6 @@ const filters = [
   'Campanha',
   'Particular',
   'Macohin',
-  'Indicação Macohin',
 ]
 const ATIVOS_STATUSES = [
   'R. Docs',
@@ -110,6 +109,7 @@ export function ContractsTable({
   const [tableWeek, setTableWeek] = useState<string>('Todas as semanas')
   const [tableBeneficio, setTableBeneficio] = useState<string>('Todos os benefícios')
   const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
+  const [tableCampanhaOrigem, setTableCampanhaOrigem] = useState<string>('Todas as campanhas')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
   const { toast } = useToast()
 
@@ -271,6 +271,14 @@ export function ContractsTable({
       )
     }
 
+    if (tableCampanhaOrigem !== 'Todas as campanhas') {
+      result = result.filter(
+        (c) =>
+          (c.campanha_origem || '').trim().toLowerCase() ===
+          tableCampanhaOrigem.trim().toLowerCase(),
+      )
+    }
+
     if (activeFilter === 'Todos') {
       // no-op, include all
     } else if (activeFilter === 'Ativos') {
@@ -305,8 +313,6 @@ export function ContractsTable({
       result = result.filter((c) => c.origem === 'Particular')
     } else if (activeFilter === 'Macohin') {
       result = result.filter((c) => c.origem === 'Macohin')
-    } else if (activeFilter === 'Indicação Macohin') {
-      result = result.filter((c) => c.origem === 'Indicação Macohin')
     }
 
     return result
@@ -320,6 +326,7 @@ export function ContractsTable({
     currentWeeks,
     tableBeneficio,
     tableResponsavel,
+    tableCampanhaOrigem,
   ])
 
   const groupedFiltered = useMemo(() => {
@@ -412,21 +419,21 @@ export function ContractsTable({
     return `<span class="badge badge-gold">${st}</span>`
   }
 
-  const getOrigemBadgeHtml = (origem?: string) => {
+  const getOrigemBadgeHtml = (origem?: string, campanhaOrigem?: string) => {
     if (!origem) return '-'
+    let mainBadge = `<span class="badge badge-gray">${origem}</span>`
     if (origem === 'Campanha') {
-      return '<span class="badge badge-recebido">Campanha</span>'
+      mainBadge = '<span class="badge badge-recebido">Campanha</span>'
+    } else if (origem === 'Particular') {
+      mainBadge = '<span class="badge badge-aguardando">Particular</span>'
+    } else if (origem === 'Macohin') {
+      mainBadge = '<span class="badge badge-purple">Macohin</span>'
     }
-    if (origem === 'Particular') {
-      return '<span class="badge badge-aguardando">Particular</span>'
+
+    if (campanhaOrigem && campanhaOrigem.trim()) {
+      return `<div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">${mainBadge}<span style="font-size: 8.5px; color: #78716c; font-weight: 600; white-space: nowrap;">${campanhaOrigem}</span></div>`
     }
-    if (origem === 'Macohin') {
-      return '<span class="badge badge-purple">Macohin</span>'
-    }
-    if (origem === 'Indicação Macohin') {
-      return '<span class="badge badge-orange">Indicação Macohin</span>'
-    }
-    return `<span class="badge badge-gray">${origem}</span>`
+    return mainBadge
   }
 
   const handlePrintReport = () => {
@@ -440,6 +447,9 @@ export function ContractsTable({
     }
     if (tableResponsavel !== 'Todos os responsáveis') {
       activeFiltersList.push(`Responsável: ${tableResponsavel}`)
+    }
+    if (tableCampanhaOrigem !== 'Todas as campanhas') {
+      activeFiltersList.push(`Campanha de Origem: ${tableCampanhaOrigem}`)
     }
     if (tableMonth !== 'Todos os meses') {
       activeFiltersList.push(`Mês: ${tableMonth}`)
@@ -502,7 +512,7 @@ export function ContractsTable({
       },
       {
         header: 'Origem',
-        accessor: (item) => getOrigemBadgeHtml(item.origem),
+        accessor: (item) => getOrigemBadgeHtml(item.origem, item.campanha_origem),
         align: 'center',
       },
       {
@@ -699,6 +709,39 @@ export function ContractsTable({
                     {r}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            {/* Select Campanha de Origem */}
+            <Select value={tableCampanhaOrigem} onValueChange={setTableCampanhaOrigem}>
+              <SelectTrigger className="w-full sm:w-48 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
+                <SelectValue placeholder="Todas as campanhas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todas as campanhas" className="text-xs">
+                  Todas as campanhas
+                </SelectItem>
+                <SelectItem value="Aux. Acidente META" className="text-xs">
+                  Aux. Acidente META (Campanha)
+                </SelectItem>
+                <SelectItem value="Aux. Acidente Google" className="text-xs">
+                  Aux. Acidente Google (Campanha)
+                </SelectItem>
+                <SelectItem value="DER Google" className="text-xs">
+                  DER Google (Campanha)
+                </SelectItem>
+                <SelectItem value="DER Canal" className="text-xs">
+                  DER Canal (Campanha)
+                </SelectItem>
+                <SelectItem value="Baú de Ouro" className="text-xs">
+                  Baú de Ouro (Macohin)
+                </SelectItem>
+                <SelectItem value="Diligências" className="text-xs">
+                  Diligências (Macohin)
+                </SelectItem>
+                <SelectItem value="Indicação" className="text-xs">
+                  Indicação (Macohin)
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -1087,21 +1130,31 @@ export function ContractsTable({
                               </TableCell>
                               <TableCell>
                                 {contract.origem === 'Campanha' ? (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
-                                    Campanha
-                                  </span>
+                                  <div className="flex flex-col items-start gap-0.5">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
+                                      Campanha
+                                    </span>
+                                    {contract.campanha_origem && (
+                                      <span className="text-[9px] font-medium text-[#78818E] dark:text-muted-foreground whitespace-nowrap">
+                                        {contract.campanha_origem}
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : contract.origem === 'Particular' ? (
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#4A7FA5]/10 text-[#4A7FA5] border border-[#4A7FA5]/25 whitespace-nowrap">
                                     Particular
                                   </span>
                                 ) : contract.origem === 'Macohin' ? (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8A56AC]/10 text-[#8A56AC] border border-[#8A56AC]/25 whitespace-nowrap">
-                                    Macohin
-                                  </span>
-                                ) : contract.origem === 'Indicação Macohin' ? (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#C77E1E]/10 text-[#C77E1E] border border-[#C77E1E]/25 whitespace-nowrap">
-                                    Indicação Macohin
-                                  </span>
+                                  <div className="flex flex-col items-start gap-0.5">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8A56AC]/10 text-[#8A56AC] border border-[#8A56AC]/25 whitespace-nowrap">
+                                      Macohin
+                                    </span>
+                                    {contract.campanha_origem && (
+                                      <span className="text-[9px] font-medium text-[#8A56AC] dark:text-purple-300 whitespace-nowrap">
+                                        {contract.campanha_origem}
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : (
                                   <span className="text-xs text-[#A0A7B5]">—</span>
                                 )}
