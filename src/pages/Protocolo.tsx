@@ -19,13 +19,13 @@ export default function Protocolo() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Todos')
   const [origem, setOrigem] = useState('Todos')
+  const [parceiro, setParceiro] = useState('Todos')
   const [tipo, setTipo] = useState('Todos')
   const [responsavel, setResponsavel] = useState('Todos')
   const [month, setMonth] = useState('Todos')
   const [year, setYear] = useState(new Date().getFullYear().toString())
   const [monthStart, setMonthStart] = useState('Todos')
   const [monthEnd, setMonthEnd] = useState('Todos')
-
   const loadData = async () => {
     try {
       const [p, t, r] = await Promise.all([getProtocolos(), getTiposAcao(), getResponsaveis()])
@@ -64,6 +64,7 @@ export default function Protocolo() {
         tipo={tipo}
         responsavel={responsavel}
         origem={origem}
+        parceiro={parceiro}
         month={month}
         year={year}
         monthStart={monthStart}
@@ -80,6 +81,8 @@ export default function Protocolo() {
         setStatus={setStatus}
         origem={origem}
         setOrigem={setOrigem}
+        parceiro={parceiro}
+        setParceiro={setParceiro}
         tipo={tipo}
         setTipo={setTipo}
         responsavel={responsavel}

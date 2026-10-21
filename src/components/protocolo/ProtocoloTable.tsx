@@ -60,6 +60,8 @@ export function ProtocoloTable({
   setStatus,
   origem,
   setOrigem,
+  parceiro = 'Todos',
+  setParceiro,
   tipo,
   setTipo,
   responsavel,
@@ -103,12 +105,11 @@ export function ProtocoloTable({
 
   // Filters
   const filtered = data.filter((d: any) => {
-    if (origem !== 'Todos') {
-      if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
-        if (d.parceiro !== origem) return false
-      } else if (d.origem !== origem) {
-        return false
-      }
+    if (origem !== 'Todos' && d.origem !== origem) {
+      return false
+    }
+    if (parceiro !== 'Todos' && d.parceiro !== parceiro) {
+      return false
     }
     const searchNormalized = normalizeText(search)
     if (searchNormalized) {
@@ -246,7 +247,10 @@ export function ProtocoloTable({
       }
     }
     if (origem !== 'Todos') {
-      activeFiltersList.push(`Origem/Parceiro: ${origem}`)
+      activeFiltersList.push(`Origem: ${origem}`)
+    }
+    if (parceiro !== 'Todos') {
+      activeFiltersList.push(`Parceiro: ${parceiro}`)
     }
     if (monthStart !== 'Todos' && monthEnd !== 'Todos') {
       const startIdx = parseInt(monthStart, 10)
@@ -300,11 +304,20 @@ export function ProtocoloTable({
         header: 'Origem',
         accessor: (item) => {
           if (!item.origem) return '-'
-          if (item.origem === 'Campanha') {
-            return '<span class="badge badge-recebido">Campanha</span>'
+          if (item.origem === 'Campanha Meta' || item.origem === 'Campanha') {
+            return '<span class="badge badge-recebido">Campanha Meta</span>'
+          }
+          if (item.origem === 'Campanha Google') {
+            return '<span class="badge badge-aguardando">Campanha Google</span>'
+          }
+          if (item.origem === 'Canal YouTube') {
+            return '<span class="badge badge-red">Canal YouTube</span>'
+          }
+          if (item.origem === 'Macohin') {
+            return '<span class="badge badge-purple">Macohin</span>'
           }
           if (item.origem === 'Particular') {
-            return '<span class="badge badge-aguardando">Particular</span>'
+            return '<span class="badge badge-gray">Particular</span>'
           }
           return item.origem
         },
@@ -427,7 +440,9 @@ export function ProtocoloTable({
     { value: 'R. Docs', label: 'Falt. Docs' },
   ]
 
-  const origemPills = ['Campanha', 'Particular', 'Previdenciarista', 'Carnevale', 'Macohin']
+  const origemPills = ['Campanha Meta', 'Campanha Google', 'Canal YouTube', 'Macohin', 'Particular']
+
+  const parceiroPills = ['Previdenciarista', 'Carnevale', 'Macohin']
 
   return (
     <div className="space-y-4">
@@ -741,7 +756,7 @@ export function ProtocoloTable({
             })}
           </div>
 
-          {/* Origem / Parceiro Pills */}
+          {/* Origem Pills */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] uppercase font-bold tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
               ORIGEM:
@@ -761,6 +776,31 @@ export function ProtocoloTable({
                   )}
                 >
                   {o}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Parceiro Pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-[#78818E] dark:text-muted-foreground mr-1">
+              PARCEIRO:
+            </span>
+            {parceiroPills.map((p) => {
+              const isActive = parceiro === p
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setParceiro && setParceiro(parceiro === p ? 'Todos' : p)}
+                  className={cn(
+                    'h-7 px-2.5 text-xs rounded-md transition-all font-medium cursor-pointer select-none border',
+                    isActive
+                      ? 'bg-[#161920] dark:bg-[#D9A94A] text-white dark:text-[#161920] border-[#161920] dark:border-[#D9A94A] font-semibold shadow-xs'
+                      : 'border-[#E4E7EB] dark:border-border text-[#78818E] dark:text-muted-foreground bg-white dark:bg-card hover:bg-[#F5F6F8] dark:hover:bg-muted/40 hover:text-[#252B34] dark:hover:text-foreground',
+                  )}
+                >
+                  {p}
                 </button>
               )
             })}

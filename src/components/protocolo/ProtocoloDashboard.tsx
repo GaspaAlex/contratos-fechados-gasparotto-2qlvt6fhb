@@ -9,6 +9,7 @@ interface Props {
   tipo: string
   responsavel: string
   origem: string
+  parceiro?: string
   month: string
   year: string
   monthStart: string
@@ -21,6 +22,7 @@ export function ProtocoloDashboard({
   tipo,
   responsavel,
   origem,
+  parceiro = 'Todos',
   month,
   year,
   monthStart,
@@ -29,13 +31,8 @@ export function ProtocoloDashboard({
 }: Props) {
   const filteredData = useMemo(() => {
     return data.filter((d) => {
-      if (origem !== 'Todos') {
-        if (['Previdenciarista', 'Carnevale', 'Macohin'].includes(origem)) {
-          if (d.parceiro !== origem) return false
-        } else if (d.origem !== origem) {
-          return false
-        }
-      }
+      if (origem !== 'Todos' && d.origem !== origem) return false
+      if (parceiro !== 'Todos' && d.parceiro !== parceiro) return false
       if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
       const respName = d.expand?.responsavel?.nome || d.responsavel || ''
       if (responsavel !== 'Todos' && respName !== responsavel) return false
@@ -71,7 +68,7 @@ export function ProtocoloDashboard({
       }
       return true
     })
-  }, [data, tipo, responsavel, origem, year, month, monthStart, monthEnd])
+  }, [data, tipo, responsavel, origem, parceiro, year, month, monthStart, monthEnd])
 
   const filteredByStatus = useMemo(() => {
     return filteredData.filter((d) => {

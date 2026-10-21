@@ -486,17 +486,19 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                   <FormItem>
                     <FormLabel>Origem</FormLabel>
                     <Select
-                      onValueChange={(val) => field.onChange(val === 'none' ? '' : val)}
-                      value={field.value || 'none'}
+                      onValueChange={(val) => field.onChange(val || '')}
+                      value={field.value || ''}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
+                          <SelectValue placeholder="Selecione a origem..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">Não informado</SelectItem>
-                        <SelectItem value="Campanha">Campanha</SelectItem>
+                        <SelectItem value="Campanha Meta">Campanha Meta</SelectItem>
+                        <SelectItem value="Campanha Google">Campanha Google</SelectItem>
+                        <SelectItem value="Canal YouTube">Canal YouTube</SelectItem>
+                        <SelectItem value="Macohin">Macohin</SelectItem>
                         <SelectItem value="Particular">Particular</SelectItem>
                       </SelectContent>
                     </Select>

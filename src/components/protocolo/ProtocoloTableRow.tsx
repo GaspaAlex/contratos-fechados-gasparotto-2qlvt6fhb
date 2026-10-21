@@ -187,13 +187,29 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
 
       {/* Origem */}
       <TableCell>
-        {item.origem === 'Campanha' ? (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25">
-            Campanha
+        {item.origem === 'Campanha Meta' || item.origem === 'Campanha' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
+            Campanha Meta
+          </span>
+        ) : item.origem === 'Campanha Google' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#4A7FA5]/10 text-[#4A7FA5] border border-[#4A7FA5]/25 whitespace-nowrap">
+            Campanha Google
+          </span>
+        ) : item.origem === 'Canal YouTube' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B4453C]/10 text-[#B4453C] border border-[#B4453C]/25 whitespace-nowrap">
+            Canal YouTube
+          </span>
+        ) : item.origem === 'Macohin' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8A56AC]/10 text-[#8A56AC] border border-[#8A56AC]/25 whitespace-nowrap">
+            Macohin
           </span>
         ) : item.origem === 'Particular' ? (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#4A7FA5]/10 text-[#4A7FA5] border border-[#4A7FA5]/25">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#78818E]/10 text-[#252B34] dark:text-[#E4E7EB] border border-[#78818E]/25 whitespace-nowrap">
             Particular
+          </span>
+        ) : item.origem ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F5F6F8] dark:bg-muted text-[#252B34] dark:text-foreground border border-[#E4E7EB] dark:border-border whitespace-nowrap">
+            {item.origem}
           </span>
         ) : (
           <span className="text-xs text-[#A0A7B5]">—</span>

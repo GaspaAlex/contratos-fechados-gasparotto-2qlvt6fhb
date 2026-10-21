@@ -61,6 +61,8 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
     nautos: '',
     valor: undefined as unknown as number,
     decisao: 'Aguardando',
+    origem: '',
+    parceiro: '',
     observacoes: '',
     revisar_em: '',
   })
@@ -82,6 +84,8 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           nautos: protocolo.nautos || '',
           valor: protocolo.valor === 0 ? undefined : protocolo.valor,
           decisao: protocolo.decisao || 'Aguardando',
+          origem: protocolo.origem || '',
+          parceiro: protocolo.parceiro || '',
           observacoes: protocolo.observacoes || '',
           revisar_em: toYMD(protocolo.revisar_em) || '',
         })
@@ -98,6 +102,8 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
           nautos: '',
           valor: undefined as unknown as number,
           decisao: 'Aguardando',
+          origem: '',
+          parceiro: '',
           observacoes: '',
           revisar_em: '',
         })
@@ -105,7 +111,6 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
       setDuplicateWarning(null)
     }
   }, [isOpen, protocolo])
-
   const loadDependencies = async () => {
     try {
       const [bRes, rRes] = await Promise.all([getTiposAcao(), getResponsaveisAtivos()])
@@ -351,6 +356,43 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
             </div>
 
             <div className="space-y-2">
+              <Label>Origem</Label>
+              <Select
+                value={formData.origem}
+                onValueChange={(v) => setFormData({ ...formData, origem: v || '' })}
+              >
+                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Selecione a origem..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-gray-900 dark:bg-[#1b1f17] dark:text-[#eceee8]">
+                  <SelectItem value="Campanha Meta">Campanha Meta</SelectItem>
+                  <SelectItem value="Campanha Google">Campanha Google</SelectItem>
+                  <SelectItem value="Canal YouTube">Canal YouTube</SelectItem>
+                  <SelectItem value="Macohin">Macohin</SelectItem>
+                  <SelectItem value="Particular">Particular</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Parceiro</Label>
+              <Select
+                value={formData.parceiro || 'none'}
+                onValueChange={(v) => setFormData({ ...formData, parceiro: v === 'none' ? '' : v })}
+              >
+                <SelectTrigger className="border-[#C9922A]/30 focus:ring-[#C9922A]">
+                  <SelectValue placeholder="Selecione o parceiro..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-gray-900 dark:bg-[#1b1f17] dark:text-[#eceee8]">
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  <SelectItem value="Previdenciarista">Previdenciarista</SelectItem>
+                  <SelectItem value="Carnevale">Carnevale</SelectItem>
+                  <SelectItem value="Macohin">Macohin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Data do Protocolo</Label>
               <Input
                 type="date"
@@ -359,7 +401,6 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                 className="focus-visible:ring-[#C9922A]"
               />
             </div>
-
             <div className="space-y-2">
               <Label>Data do Cálculo</Label>
               <Input
