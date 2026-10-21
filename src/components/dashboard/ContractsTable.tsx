@@ -419,21 +419,18 @@ export function ContractsTable({
     return `<span class="badge badge-gold">${st}</span>`
   }
 
-  const getOrigemBadgeHtml = (origem?: string, campanhaOrigem?: string) => {
+  const getOrigemBadgeHtml = (origem?: string) => {
     if (!origem) return '-'
-    let mainBadge = `<span class="badge badge-gray">${origem}</span>`
     if (origem === 'Campanha') {
-      mainBadge = '<span class="badge badge-recebido">Campanha</span>'
-    } else if (origem === 'Particular') {
-      mainBadge = '<span class="badge badge-aguardando">Particular</span>'
-    } else if (origem === 'Macohin') {
-      mainBadge = '<span class="badge badge-purple">Macohin</span>'
+      return '<span class="badge badge-recebido">Campanha</span>'
     }
-
-    if (campanhaOrigem && campanhaOrigem.trim()) {
-      return `<div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">${mainBadge}<span style="font-size: 8.5px; color: #78716c; font-weight: 600; white-space: nowrap;">${campanhaOrigem}</span></div>`
+    if (origem === 'Particular') {
+      return '<span class="badge badge-aguardando">Particular</span>'
     }
-    return mainBadge
+    if (origem === 'Macohin') {
+      return '<span class="badge badge-purple">Macohin</span>'
+    }
+    return `<span class="badge badge-gray">${origem}</span>`
   }
 
   const handlePrintReport = () => {
@@ -512,7 +509,12 @@ export function ContractsTable({
       },
       {
         header: 'Origem',
-        accessor: (item) => getOrigemBadgeHtml(item.origem, item.campanha_origem),
+        accessor: (item) => getOrigemBadgeHtml(item.origem),
+        align: 'center',
+      },
+      {
+        header: 'Camp. Origem',
+        accessor: (item) => (item.campanha_origem && item.campanha_origem.trim()) || '—',
         align: 'center',
       },
       {
@@ -911,6 +913,9 @@ export function ContractsTable({
                     ORIGEM
                   </TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
+                    CAMP. ORIGEM
+                  </TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
                     D. CONTRATO
                   </TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap">
@@ -931,7 +936,7 @@ export function ContractsTable({
                 {groupedFiltered.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={12}
+                      colSpan={13}
                       className="text-center py-12 text-xs text-[#78818E] dark:text-muted-foreground"
                     >
                       Nenhum contrato encontrado para os filtros selecionados.
@@ -943,7 +948,7 @@ export function ContractsTable({
                       <React.Fragment key={group.key}>
                         <TableRow className="bg-[#F5F6F8]/80 dark:bg-muted/30 hover:bg-[#F5F6F8]/80 border-y border-[#E4E7EB] dark:border-border">
                           <TableCell
-                            colSpan={12}
+                            colSpan={13}
                             className="py-2.5 px-4 font-semibold text-[10px] tracking-wider uppercase text-[#78818E] dark:text-muted-foreground"
                           >
                             <span className="font-bold text-[#252B34] dark:text-foreground">
@@ -1130,33 +1135,26 @@ export function ContractsTable({
                               </TableCell>
                               <TableCell>
                                 {contract.origem === 'Campanha' ? (
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
-                                      Campanha
-                                    </span>
-                                    {contract.campanha_origem && (
-                                      <span className="text-[9px] font-medium text-[#78818E] dark:text-muted-foreground whitespace-nowrap">
-                                        {contract.campanha_origem}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#3E8E5A]/10 text-[#3E8E5A] border border-[#3E8E5A]/25 whitespace-nowrap">
+                                    Campanha
+                                  </span>
                                 ) : contract.origem === 'Particular' ? (
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#4A7FA5]/10 text-[#4A7FA5] border border-[#4A7FA5]/25 whitespace-nowrap">
                                     Particular
                                   </span>
                                 ) : contract.origem === 'Macohin' ? (
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8A56AC]/10 text-[#8A56AC] border border-[#8A56AC]/25 whitespace-nowrap">
-                                      Macohin
-                                    </span>
-                                    {contract.campanha_origem && (
-                                      <span className="text-[9px] font-medium text-[#8A56AC] dark:text-purple-300 whitespace-nowrap">
-                                        {contract.campanha_origem}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8A56AC]/10 text-[#8A56AC] border border-[#8A56AC]/25 whitespace-nowrap">
+                                    Macohin
+                                  </span>
                                 ) : (
                                   <span className="text-xs text-[#A0A7B5]">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-xs text-[#78818E] dark:text-muted-foreground">
+                                {contract.campanha_origem && contract.campanha_origem.trim() ? (
+                                  <span>{contract.campanha_origem}</span>
+                                ) : (
+                                  <span className="text-[#A0A7B5]">—</span>
                                 )}
                               </TableCell>
                               <TableCell
