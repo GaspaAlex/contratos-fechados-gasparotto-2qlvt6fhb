@@ -3,7 +3,6 @@ import { useDashboardData } from '@/hooks/use-dashboard-data'
 import { useRealtime } from '@/hooks/use-realtime'
 import { OverviewStats } from '@/components/dashboard/OverviewStats'
 import { OverviewCharts } from '@/components/dashboard/OverviewCharts'
-import { OverviewTeamAlerts } from '@/components/dashboard/OverviewTeamAlerts'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Index() {
@@ -37,13 +36,9 @@ export default function Index() {
           <Skeleton className="h-28 w-full rounded-xl" />
           <Skeleton className="h-28 w-full rounded-xl" />
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Skeleton className="h-[400px] w-full rounded-xl" />
-          <Skeleton className="h-[400px] w-full rounded-xl" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-32 w-full rounded-xl lg:col-span-1" />
-          <Skeleton className="h-32 w-full rounded-xl lg:col-span-2" />
+        <div className="space-y-6">
+          <Skeleton className="h-[320px] w-full rounded-[10px]" />
+          <Skeleton className="h-[280px] w-full rounded-[10px]" />
         </div>
       </div>
     )
@@ -62,13 +57,12 @@ export default function Index() {
           Visão Geral
         </h1>
         <p className="text-sm text-[#78818E] dark:text-muted-foreground">
-          Monitore métricas em tempo real, honorários e desempenho da equipe.
+          Monitore métricas em tempo real, honorários e volume de ações distribuídas.
         </p>
       </div>
 
       <OverviewStats protocolos={protocolos} contratos={contratos} />
       <OverviewCharts protocolos={protocolos} />
-      <OverviewTeamAlerts protocolos={protocolos} />
     </div>
   )
 }
