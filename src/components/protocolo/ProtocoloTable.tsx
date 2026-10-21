@@ -216,6 +216,7 @@ export function ProtocoloTable({
     if (!st) return '-'
     let badgeClass = 'badge-gray'
     if (st === 'Protocolado Judicial') badgeClass = 'badge-recebido'
+    else if (st === 'Protocolado Administrativo') badgeClass = 'badge-recebido'
     else if (st === 'Requerimento Adm.') badgeClass = 'badge-purple'
     else if (st === 'Prov. Inicial') badgeClass = 'badge-aguardando'
     else if (st === 'R. Docs') badgeClass = 'badge-gold'
@@ -420,6 +421,7 @@ export function ProtocoloTable({
     },
     { value: 'Calculado', label: 'Calculado' },
     { value: 'Protocolado Judicial', label: 'Judicial' },
+    { value: 'Protocolado Administrativo', label: 'Prot. Adm.' },
     { value: 'Requerimento Adm.', label: 'Administrativo' },
     { value: 'Prov. Inicial', label: 'Inicial' },
     { value: 'R. Docs', label: 'Falt. Docs' },
@@ -812,6 +814,7 @@ export function ProtocoloTable({
                   (i) =>
                     [
                       'Protocolado Judicial',
+                      'Protocolado Administrativo',
                       'Requerimento Adm.',
                       'Prov. Inicial',
                       'Calculado',

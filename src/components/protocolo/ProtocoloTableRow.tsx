@@ -41,6 +41,10 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       color: 'text-[#3E8E5A] bg-[#3E8E5A]/10 border border-[#3E8E5A]/25 dark:text-green-400',
       icon: CheckCircle2,
     },
+    'Protocolado Administrativo': {
+      color: 'text-[#2E7D5B] bg-[#2E7D5B]/10 border border-[#2E7D5B]/25 dark:text-emerald-400',
+      icon: CheckCircle2,
+    },
     'Requerimento Adm.': {
       color: 'text-[#4A7FA5] bg-[#4A7FA5]/10 border border-[#4A7FA5]/25 dark:text-sky-400',
       icon: ClipboardList,

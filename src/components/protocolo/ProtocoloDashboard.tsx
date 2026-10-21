@@ -76,30 +76,45 @@ export function ProtocoloDashboard({
   const filteredByStatus = useMemo(() => {
     return filteredData.filter((d) => {
       if (status === 'Todos') {
-        return ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(
-          d.status,
-        )
+        return [
+          'Protocolado Judicial',
+          'Protocolado Administrativo',
+          'Requerimento Adm.',
+          'Prov. Inicial',
+          'Calculado',
+        ].includes(d.status)
       }
       return d.status === status
     })
   }, [filteredData, status])
 
   const totalAcoes = filteredByStatus.filter((d) =>
-    ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(d.status),
+    [
+      'Protocolado Judicial',
+      'Protocolado Administrativo',
+      'Requerimento Adm.',
+      'Prov. Inicial',
+      'Calculado',
+    ].includes(d.status),
   ).length
 
   const projHonorariosTicketMedio = filteredByStatus
     .filter(
       (d) =>
-        ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial', 'Calculado'].includes(
-          d.status,
-        ) && d.decisao !== 'Improcedente',
+        [
+          'Protocolado Judicial',
+          'Protocolado Administrativo',
+          'Requerimento Adm.',
+          'Prov. Inicial',
+          'Calculado',
+        ].includes(d.status) && d.decisao !== 'Improcedente',
     )
     .reduce((sum, d) => sum + (d.valor || 0) * (d.parceiro ? 0.15 : 0.3), 0)
 
   const ticketMedio = totalAcoes > 0 ? projHonorariosTicketMedio / totalAcoes : null
 
   const cProtJud = filteredData.filter((d) => d.status === 'Protocolado Judicial').length
+  const cProtAdm = filteredData.filter((d) => d.status === 'Protocolado Administrativo').length
   const cReqAdm = filteredData.filter((d) => d.status === 'Requerimento Adm.').length
   const cProv = filteredData.filter((d) => d.status === 'Prov. Inicial').length
   const cDocs = filteredData.filter((d) => d.status === 'R. Docs').length
@@ -179,7 +194,7 @@ export function ProtocoloDashboard({
                 {totalAcoes}
               </div>
               <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
-                Judicial, Adm., Inicial e Calculado
+                Judicial, Prot. Adm., Req. Adm., Inicial e Calculado
               </p>
             </div>
           </CardContent>
@@ -269,6 +284,14 @@ export function ProtocoloDashboard({
               <span className="text-[#78818E] dark:text-muted-foreground">Prot. Judicial:</span>
               <strong className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
                 {cProtJud}
+              </strong>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#2E7D5B]" />
+              <span className="text-[#78818E] dark:text-muted-foreground">Prot. Adm.:</span>
+              <strong className="font-semibold text-[#252B34] dark:text-foreground tabular-nums">
+                {cProtAdm}
               </strong>
             </div>
 

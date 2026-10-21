@@ -338,7 +338,11 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent className="bg-white text-gray-900 dark:bg-[#1b1f17] dark:text-[#eceee8]">
+                  <SelectItem value="Calculado">Calculado</SelectItem>
                   <SelectItem value="Protocolado Judicial">Protocolado Judicial</SelectItem>
+                  <SelectItem value="Protocolado Administrativo">
+                    Protocolado Administrativo
+                  </SelectItem>
                   <SelectItem value="Requerimento Adm.">Requerimento Adm.</SelectItem>
                   <SelectItem value="Prov. Inicial">Prov. Inicial</SelectItem>
                   <SelectItem value="R. Docs">Faltando Documentos</SelectItem>
