@@ -92,7 +92,6 @@ export default function Layout() {
         id: 'gestao-pessoas',
         label: 'GESTÃO DE PESSOAS',
         items: [
-          { name: 'Acesso Sistemas', path: '/gestao/acessos', icon: KeyRound },
           { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
           { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
           { name: 'Responsáveis', path: '/gestao/responsaveis', icon: UserCog },
@@ -101,7 +100,10 @@ export default function Layout() {
       {
         id: 'ferramentas',
         label: 'FERRAMENTAS',
-        items: [{ name: 'Editor de PDFs', path: '/ferramentas-pdf', icon: Files }],
+        items: [
+          { name: 'Acesso Sistemas', path: '/gestao/acessos', icon: KeyRound },
+          { name: 'Editor de PDFs', path: '/ferramentas-pdf', icon: Files },
+        ],
       },
     ],
     [isGestor],
@@ -149,21 +151,6 @@ export default function Layout() {
     )
     const activeId = matched ? matched.id : null
 
-    try {
-      const saved = localStorage.getItem(SIDEBAR_PREFS_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved) as Record<string, boolean>
-        if (parsed && typeof parsed === 'object') {
-          if (activeId) {
-            return { ...parsed, [activeId]: true }
-          }
-          return parsed
-        }
-      }
-    } catch {
-      // Falha ao ler localStorage, usa padrão
-    }
-
     const initial: Record<string, boolean> = {
       'visao-geral': false,
       'gestao-casos': false,
@@ -171,17 +158,57 @@ export default function Layout() {
       'gestao-pessoas': false,
       ferramentas: false,
     }
+
+    // Se houver uma rota ativa correspondente a um grupo, ela tem prioridade no acordeão
     if (activeId) {
-      initial[activeId] = true
+      const singleState = { ...initial, [activeId]: true }
+      try {
+        localStorage.setItem(SIDEBAR_PREFS_KEY, JSON.stringify(singleState))
+      } catch {
+        // localStorage indisponível
+      }
+      return singleState
     }
+
+    // Se nenhuma rota estiver em grupo específico, verifica estado salvo normalizando para no máximo 1 grupo
+    try {
+      const saved = localStorage.getItem(SIDEBAR_PREFS_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<string, boolean>
+        if (parsed && typeof parsed === 'object') {
+          // Normalização: encontra o primeiro grupo com valor true (ou null se nenhum)
+          const openSectionId = Object.keys(initial).find((key) => !!parsed[key])
+          const normalized = { ...initial }
+          if (openSectionId) {
+            normalized[openSectionId] = true
+          }
+          return normalized
+        }
+      }
+    } catch {
+      // Falha ao ler localStorage, usa padrão com todos fechados
+    }
+
     return initial
   })
 
   useEffect(() => {
     if (activeSectionId) {
       setExpandedSections((prev) => {
-        if (prev[activeSectionId]) return prev
-        const updated = { ...prev, [activeSectionId]: true }
+        // Se já está aberto com apenas activeSectionId ativo, não re-renderiza
+        const isOnlyActiveExpanded =
+          prev[activeSectionId] &&
+          Object.keys(prev).every((key) => key === activeSectionId || !prev[key])
+        if (isOnlyActiveExpanded) return prev
+
+        const updated: Record<string, boolean> = {
+          'visao-geral': false,
+          'gestao-casos': false,
+          'captacao-leads': false,
+          'gestao-pessoas': false,
+          ferramentas: false,
+          [activeSectionId]: true,
+        }
         try {
           localStorage.setItem(SIDEBAR_PREFS_KEY, JSON.stringify(updated))
         } catch {
@@ -194,10 +221,20 @@ export default function Layout() {
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => {
-      const updated = {
-        ...prev,
-        [sectionId]: !prev[sectionId],
+      const isCurrentlyOpen = !!prev[sectionId]
+      const updated: Record<string, boolean> = {
+        'visao-geral': false,
+        'gestao-casos': false,
+        'captacao-leads': false,
+        'gestao-pessoas': false,
+        ferramentas: false,
       }
+
+      // Se estava fechado, abre exclusivamente este. Se já estava aberto, fecha-o (ficando todos false).
+      if (!isCurrentlyOpen) {
+        updated[sectionId] = true
+      }
+
       try {
         localStorage.setItem(SIDEBAR_PREFS_KEY, JSON.stringify(updated))
       } catch {
