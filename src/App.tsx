@@ -31,6 +31,7 @@ const JuntarPdf = lazy(() => import('./pages/ferramentas-pdf/JuntarPdf'))
 const DividirPdf = lazy(() => import('./pages/ferramentas-pdf/DividirPdf'))
 const RotacionarPdf = lazy(() => import('./pages/ferramentas-pdf/RotacionarPdf'))
 const OrganizarPdf = lazy(() => import('./pages/ferramentas-pdf/OrganizarPdf'))
+const ImagensParaPdf = lazy(() => import('./pages/ferramentas-pdf/ImagensParaPdf'))
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -126,6 +127,20 @@ const App = () => (
                           }
                         >
                           <OrganizarPdf />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/ferramentas-pdf/imagens-para-pdf"
+                      element={
+                        <Suspense
+                          fallback={
+                            <div className="p-8 text-sm text-muted-foreground">
+                              Carregando Imagens para PDF...
+                            </div>
+                          }
+                        >
+                          <ImagensParaPdf />
                         </Suspense>
                       }
                     />

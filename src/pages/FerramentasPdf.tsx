@@ -68,10 +68,10 @@ const PDF_TOOLS: PdfToolCard[] = [
   {
     id: 'imagens-para-pdf',
     title: 'Imagens para PDF',
-    description: 'Converta imagens JPG e PNG em documentos PDF.',
+    description: 'Converta imagens JPG e PNG em um único documento PDF.',
     icon: FileImage,
-    status: 'development',
-    statusLabel: 'Em desenvolvimento',
+    status: 'active',
+    href: '/ferramentas-pdf/imagens-para-pdf',
   },
 ]
 
