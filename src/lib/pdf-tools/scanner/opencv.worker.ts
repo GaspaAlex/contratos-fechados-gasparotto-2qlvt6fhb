@@ -480,7 +480,10 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         durationMs,
       }
       // Transfer the underlying array buffer for zero-copy performance
-      const post = self.postMessage as unknown as (message: unknown, transfer?: Transferable[]) => void
+      const post = self.postMessage as unknown as (
+        message: unknown,
+        transfer?: Transferable[],
+      ) => void
       post(res, [warpedData.data.buffer])
     } catch (err) {
       const durationMs = Math.round(performance.now() - t0)
