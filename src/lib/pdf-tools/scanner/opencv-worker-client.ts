@@ -130,8 +130,14 @@ class ScanWorkerClient {
       return this.initPromise
     }
 
+    const tInitStart = performance.now()
+
     if (!this.worker) {
+      const tWorkerStart = performance.now()
       this.worker = this.createWorker()
+      console.log(
+        `[ScanWorkerClient] Preparação do worker: ${(performance.now() - tWorkerStart).toFixed(2)}ms`,
+      )
     }
 
     this.initPromise = new Promise<void>((resolve, reject) => {
@@ -142,20 +148,27 @@ class ScanWorkerClient {
           this.pendingInitResolvers.splice(idx, 1)
         }
         this.terminate(
-          new Error('Tempo limite esgotado ao inicializar motor OpenCV (timeout de 25s)'),
+          new Error('Tempo limite esgotado ao inicializar motor OpenCV (timeout de 35s)'),
         )
         this.initPromise = null
-        reject(new Error('Tempo limite esgotado ao inicializar motor OpenCV (timeout de 25s)'))
+        reject(new Error('Tempo limite esgotado ao inicializar motor OpenCV (timeout de 35s)'))
       }, INIT_TIMEOUT_MS)
 
       this.pendingInitResolvers.push({
         resolve: () => {
           clearTimeout(timer)
+          const totalInitMs = Math.round(performance.now() - tInitStart)
+          console.log(`[ScanWorkerClient] Init do OpenCV concluída com sucesso em ${totalInitMs}ms`)
           resolve()
         },
         reject: (err: Error) => {
           clearTimeout(timer)
           this.initPromise = null
+          const totalInitMs = Math.round(performance.now() - tInitStart)
+          console.warn(
+            `[ScanWorkerClient] Init do OpenCV falhou após ${totalInitMs}ms:`,
+            err.message,
+          )
           reject(err)
         },
       })
@@ -189,6 +202,10 @@ class ScanWorkerClient {
       await this.ensureInitialized()
     } catch (initErr) {
       const durationMs = Math.round(performance.now() - t0)
+      console.warn(
+        `[ScanWorkerClient] Falha ao inicializar motor antes da detecção (${durationMs}ms):`,
+        initErr,
+      )
       return {
         corners: getDefaultCorners(originalWidth, originalHeight),
         confidence: 0,
@@ -216,6 +233,7 @@ class ScanWorkerClient {
         if (req) {
           this.pendingRequests.delete(id)
           const durationMs = Math.round(performance.now() - t0)
+          console.warn(`[ScanWorkerClient] Detecção atingiu timeout de ${DETECT_TIMEOUT_MS}ms`)
           resolve({
             corners: getDefaultCorners(originalWidth, originalHeight),
             confidence: 0,
@@ -229,6 +247,10 @@ class ScanWorkerClient {
 
       this.pendingRequests.set(id, {
         resolve: (msg: WorkerDetectSuccessResponse) => {
+          const clientElapsed = Math.round(performance.now() - t0)
+          console.log(
+            `[ScanWorkerClient] Detecção de cantos concluída: worker=${msg.durationMs}ms, total=${clientElapsed}ms, detectado=${msg.detected}`,
+          )
           resolve({
             corners: msg.corners,
             confidence: msg.confidence,
@@ -241,6 +263,10 @@ class ScanWorkerClient {
         reject: (err: Error) => {
           const durationMs = Math.round(performance.now() - t0)
           const isUserCancel = err.message && err.message.includes('usuário')
+          console.log(
+            `[ScanWorkerClient] Detecção encerrada (${isUserCancel ? 'cancelada' : 'erro'} em ${durationMs}ms):`,
+            err.message,
+          )
           resolve({
             corners: getDefaultCorners(originalWidth, originalHeight),
             confidence: 0,
@@ -268,6 +294,15 @@ class ScanWorkerClient {
   /**
    * Perspective warp executed inside worker
    */
+  public isReady(): boolean {
+    return this.isInitialized && this.worker !== null
+  }
+
+  /**
+   * Perspective warp executed inside worker.
+   * Fails immediately (in milliseconds) if worker/OpenCV is not ready,
+   * without waiting for timeouts or triggering implicit initialization.
+   */
   public async warpPerspective(
     imageData: ImageData,
     corners: DocumentCorners,
@@ -275,24 +310,29 @@ class ScanWorkerClient {
     targetHeight: number,
     requestId?: string,
   ): Promise<WarpResult> {
-    const id = requestId || `warp_${++this.requestCounter}`
     const t0 = performance.now()
 
-    await this.ensureInitialized()
-
-    if (!this.worker) {
-      throw new Error('Worker indisponível para warp de perspectiva')
+    if (!this.isReady()) {
+      const checkMs = (performance.now() - t0).toFixed(2)
+      console.log(`[ScanWorkerClient] warpPerspective rejeitado: opencv-not-ready (${checkMs}ms)`)
+      throw new Error('opencv-not-ready')
     }
+
+    const id = requestId || `warp_${++this.requestCounter}`
 
     return new Promise<WarpResult>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingRequests.delete(id)
-        this.terminate()
+        this.terminate(new Error('Tempo limite esgotado no recorte de perspectiva (timeout)'))
         reject(new Error('Tempo limite esgotado no recorte de perspectiva (timeout)'))
       }, WARP_TIMEOUT_MS)
 
       this.pendingRequests.set(id, {
         resolve: (msg: WorkerWarpSuccessResponse) => {
+          const clientElapsed = Math.round(performance.now() - t0)
+          console.log(
+            `[ScanWorkerClient] warpPerspective concluído: worker=${msg.durationMs}ms, roundtrip=${clientElapsed}ms`,
+          )
           resolve({
             imageData: msg.imageData,
             width: msg.width,
@@ -301,6 +341,11 @@ class ScanWorkerClient {
           })
         },
         reject: (err: Error) => {
+          const clientElapsed = Math.round(performance.now() - t0)
+          console.warn(
+            `[ScanWorkerClient] warpPerspective falhou após ${clientElapsed}ms:`,
+            err.message,
+          )
           reject(err)
         },
         timer,
@@ -357,7 +402,7 @@ class ScanWorkerClient {
   }
 
   public getInitialized(): boolean {
-    return this.isInitialized
+    return this.isInitialized && this.worker !== null
   }
 }
 

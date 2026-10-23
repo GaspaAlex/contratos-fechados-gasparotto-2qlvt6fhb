@@ -94,6 +94,7 @@ let cvInstance: any = null
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let initPromise: Promise<any> | null = null
 let currentCancelledId: string | null = null
+let cachedScriptCode: string | null = null
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
@@ -105,12 +106,86 @@ async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
   }
 
   initPromise = (async () => {
-    const t0 = performance.now()
-    const res = await fetch(opencvUrl)
-    if (!res.ok) {
-      throw new Error(`Falha ao carregar OpenCV do caminho local (HTTP ${res.status})`)
+    const tInitStart = performance.now()
+
+    // Estratégia 1: tentar importScripts caso o ambiente suporte (worker clássico)
+    if (
+      typeof (self as unknown as { importScripts?: (...urls: string[]) => void }).importScripts ===
+      'function'
+    ) {
+      try {
+        const tImportStart = performance.now()
+        console.log(`[ScanWorker] Tentando carregamento via importScripts: ${opencvUrl}`)
+
+        const cvPromise = new Promise((resolve, reject) => {
+          let isResolved = false
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const Module: Record<string, any> = {
+            wasmBinaryFile: undefined,
+            onRuntimeInitialized() {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const cvObj = (self as any).cv || (self as any).Module
+              if (!isResolved) {
+                isResolved = true
+                resolve(cvObj)
+              }
+            },
+          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(self as any).Module = Module
+
+          try {
+            ;(self as unknown as { importScripts: (...urls: string[]) => void }).importScripts(
+              opencvUrl,
+            )
+            // Se cv já estiver disponível síncronamente
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const syncCv = (self as any).cv
+            if (syncCv && syncCv.Mat && !isResolved) {
+              isResolved = true
+              resolve(syncCv)
+            }
+          } catch (importErr) {
+            reject(importErr)
+          }
+        })
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cvLoaded: any = await cvPromise
+        if (cvLoaded && cvLoaded.Mat) {
+          cvInstance = cvLoaded
+          const elapsed = Math.round(performance.now() - tInitStart)
+          const importElapsed = Math.round(performance.now() - tImportStart)
+          console.log(
+            `[ScanWorker] OpenCV carregado via importScripts em ${importElapsed}ms (total init: ${elapsed}ms)`,
+          )
+          return cvInstance
+        }
+      } catch (importErr) {
+        console.warn(
+          '[ScanWorker] importScripts indisponível ou falhou, migrando para cache de script:',
+          importErr,
+        )
+      }
     }
-    const scriptCode = await res.text()
+
+    // Estratégia 2: fetch + cache em memória da sessão do worker + new Function
+    let scriptCode = cachedScriptCode
+    if (!scriptCode) {
+      const tFetchStart = performance.now()
+      const res = await fetch(opencvUrl)
+      if (!res.ok) {
+        throw new Error(`Falha ao carregar OpenCV do caminho local (HTTP ${res.status})`)
+      }
+      scriptCode = await res.text()
+      cachedScriptCode = scriptCode
+      const fetchMs = Math.round(performance.now() - tFetchStart)
+      console.log(
+        `[ScanWorker] Download do arquivo OpenCV concluído em ${fetchMs}ms (${(scriptCode.length / (1024 * 1024)).toFixed(2)} MB em cache)`,
+      )
+    } else {
+      console.log('[ScanWorker] Reutilizando script OpenCV do cache em memória do worker')
+    }
 
     return new Promise((resolve, reject) => {
       let isResolved = false
@@ -120,8 +195,8 @@ async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
         if (!isResolved) {
           isResolved = true
           cvInstance = cv
-          const elapsed = Math.round(performance.now() - t0)
-          console.log(`[ScanWorker] OpenCV inicializado em ${elapsed}ms`)
+          const elapsed = Math.round(performance.now() - tInitStart)
+          console.log(`[ScanWorker] Init do OpenCV concluída com sucesso em ${elapsed}ms`)
           resolve(cv)
         }
       }

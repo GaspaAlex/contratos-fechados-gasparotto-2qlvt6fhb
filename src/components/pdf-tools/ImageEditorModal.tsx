@@ -527,6 +527,7 @@ export function ImageEditorModal({
   const handleApply = async () => {
     if (!currentCanvas || !corners) return
 
+    const tApplyStart = performance.now()
     setIsWarping(true)
     try {
       const warpedCanvas = await applyPerspectiveWarp(
@@ -541,6 +542,7 @@ export function ImageEditorModal({
         fineTiltAngle !== 0 ? applyFineTiltToCanvas(warpedCanvas, fineTiltAngle) : warpedCanvas
 
       // Exportar como blob de alta qualidade no tipo original (jpeg ou png)
+      const tEncodeStart = performance.now()
       const mime = imageType === 'image/png' ? 'image/png' : 'image/jpeg'
       const quality = mime === 'image/jpeg' ? 0.96 : undefined
 
@@ -552,8 +554,17 @@ export function ImageEditorModal({
         throw new Error('Falha ao serializar imagem processada.')
       }
 
+      const encodeMs = Math.round(performance.now() - tEncodeStart)
       const buffer = await blob.arrayBuffer()
       const previewUrl = URL.createObjectURL(blob)
+      const totalApplyMs = Math.round(performance.now() - tApplyStart)
+
+      console.log(
+        `[ImageEditor] Codificação da imagem: ${encodeMs}ms (${(blob.size / 1024).toFixed(1)} KB)`,
+      )
+      console.log(
+        `[ImageEditor] Total "Aplicar ajustes": ${totalApplyMs}ms (${outCanvas.width}x${outCanvas.height})`,
+      )
 
       onApply({
         buffer,

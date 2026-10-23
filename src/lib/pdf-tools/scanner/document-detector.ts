@@ -87,41 +87,48 @@ export async function applyPerspectiveWarp(
 ): Promise<HTMLCanvasElement> {
   const targetDims = computeTargetDimensions(corners)
 
-  // If worker is already initialized or accessible, use worker warp to keep main thread fluid
-  try {
-    const fullCanvas = document.createElement('canvas')
-    fullCanvas.width = sourceWidth
-    fullCanvas.height = sourceHeight
-    const fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true })
-    if (fullCtx) {
-      fullCtx.drawImage(source, 0, 0, sourceWidth, sourceHeight)
-      const fullImageData = fullCtx.getImageData(0, 0, sourceWidth, sourceHeight)
+  // Se o motor OpenCV estiver pronto no worker, tenta o warp via worker sem bloquear a main thread
+  if (scanWorkerClient.isReady()) {
+    const tWarpOpenCv = performance.now()
+    try {
+      const fullCanvas = document.createElement('canvas')
+      fullCanvas.width = sourceWidth
+      fullCanvas.height = sourceHeight
+      const fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true })
+      if (fullCtx) {
+        fullCtx.drawImage(source, 0, 0, sourceWidth, sourceHeight)
+        const fullImageData = fullCtx.getImageData(0, 0, sourceWidth, sourceHeight)
 
-      const warpResult = await scanWorkerClient.warpPerspective(
-        fullImageData,
-        corners,
-        targetDims.width,
-        targetDims.height,
-        requestId,
-      )
+        const warpResult = await scanWorkerClient.warpPerspective(
+          fullImageData,
+          corners,
+          targetDims.width,
+          targetDims.height,
+          requestId,
+        )
 
-      const outCanvas = document.createElement('canvas')
-      outCanvas.width = warpResult.width
-      outCanvas.height = warpResult.height
-      const outCtx = outCanvas.getContext('2d')
-      if (outCtx) {
-        outCtx.putImageData(warpResult.imageData, 0, 0)
-        return outCanvas
+        const outCanvas = document.createElement('canvas')
+        outCanvas.width = warpResult.width
+        outCanvas.height = warpResult.height
+        const outCtx = outCanvas.getContext('2d')
+        if (outCtx) {
+          outCtx.putImageData(warpResult.imageData, 0, 0)
+          console.log(
+            `[Scanner] Recorte OpenCV concluído em ${(performance.now() - tWarpOpenCv).toFixed(2)}ms (${warpResult.width}x${warpResult.height})`,
+          )
+          return outCanvas
+        }
       }
+    } catch (workerErr) {
+      const errMsg = workerErr instanceof Error ? workerErr.message : String(workerErr)
+      console.log(
+        `[Scanner] Worker warp indisponível/falhou (${errMsg}), caindo imediatamente no fallback de Canvas 2D`,
+      )
     }
-  } catch (workerErr) {
-    console.warn(
-      '[Scanner] Worker warp falhou ou indisponível, usando fallback de Canvas 2D:',
-      workerErr,
-    )
   }
 
-  // Graceful Canvas 2D fallback: 100% functional without OpenCV!
+  // Graceful Canvas 2D fallback: imediato (milisegundos), 100% funcional sem OpenCV e sem bloquear
+  const tCanvasFallback = performance.now()
   const fallbackCanvas = document.createElement('canvas')
   fallbackCanvas.width = sourceWidth
   fallbackCanvas.height = sourceHeight
@@ -131,7 +138,7 @@ export async function applyPerspectiveWarp(
   }
   fallbackCtx.drawImage(source, 0, 0, sourceWidth, sourceHeight)
 
-  return warpPerspectiveCanvas(
+  const resultCanvas = warpPerspectiveCanvas(
     fallbackCtx,
     sourceWidth,
     sourceHeight,
@@ -139,4 +146,8 @@ export async function applyPerspectiveWarp(
     targetDims.width,
     targetDims.height,
   )
+  console.log(
+    `[Scanner] Recorte Canvas 2D (fallback) concluído em ${(performance.now() - tCanvasFallback).toFixed(2)}ms (${targetDims.width}x${targetDims.height})`,
+  )
+  return resultCanvas
 }
