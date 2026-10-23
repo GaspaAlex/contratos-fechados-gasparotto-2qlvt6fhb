@@ -54,6 +54,7 @@ interface SelectedImageItem {
   validationStatus: 'valid' | 'invalid'
   errorMessage?: string
   isEdited?: boolean
+  filterMode?: string
 }
 
 function formatBytes(bytes: number, decimals = 2): string {
@@ -364,6 +365,7 @@ export default function ImagensParaPdf() {
             height: output.height,
             size: output.size,
             isEdited: true,
+            filterMode: output.filterMode,
           }
         }
         return it
@@ -883,7 +885,11 @@ export default function ImagensParaPdf() {
                           </span>
                           {item.isEdited && (
                             <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A]/30">
-                              Editada
+                              {item.filterMode === 'shadow_removal'
+                                ? 'Sem sombra'
+                                : item.filterMode === 'enhance'
+                                  ? 'Melhorada'
+                                  : 'Editada'}
                             </span>
                           )}
                         </div>

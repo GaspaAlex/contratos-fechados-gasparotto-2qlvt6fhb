@@ -3,7 +3,7 @@
  * Modal de Edição Inteligente de Imagem (estilo CamScanner)
  * Sistema de Gestão da Advocacia Gasparotto (Identidade visual Grafite Premium)
  *
- * Funcionalidades do Bloco 1:
+ * Funcionalidades Preservadas do Bloco 1:
  * - Detecção automática dos limites do documento com OpenCV.js (lazy loaded)
  * - Indicador de incerteza da detecção e ajuste manual imediato
  * - 4 cantos arrastáveis independentes com coordenadas convertidas da prévia para a imagem real
@@ -13,7 +13,17 @@
  * - "Visualizar recorte" (alterna entre visualização do corte e modo edição)
  * - "Restaurar original" (desfaz recortes, rotações e distorções da sessão)
  * - "Cancelar" (mantém imagem da lista intacta)
- * - "Aplicar ajustes" (gera blob e buffer atualizados sem alterar o original arquivado)
+ * - Controle fino de "Endireitar" (slider de -15° a +15°)
+ *
+ * Funcionalidades do Bloco 2:
+ * - 3 Modos de tratamento documental:
+ *   A) ORIGINAL: não modifica cores, iluminação ou contraste (padrão inicial)
+ *   B) SEM SOMBRA: estima iluminação desigual de fundo e a neutraliza (divisão local)
+ *   C) MELHORAR: fundo uniforme claro, contraste e nitidez aprimorados para textos
+ * - Comparador visual Antes/Depois com controle deslizante wipe interativo
+ * - Modos de comparação: Wipe deslizante e Lado a Lado
+ * - Prévia em resolução leve e processamento completo com medição em milissegundos
+ * - 100% no navegador (Client-side, sem APIs externas)
  */
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
@@ -31,6 +41,10 @@ import {
   Crop,
   Layers,
   Undo2,
+  SunMedium,
+  Sliders,
+  Columns,
+  Split,
 } from 'lucide-react'
 import {
   Dialog,
@@ -41,13 +55,11 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   type DocumentCorners,
   type Point2D,
   isValidConvexQuad,
   orderCorners,
-  estimateQuadTiltDegrees,
 } from '@/lib/pdf-tools/scanner/perspective-math'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -56,6 +68,11 @@ import {
   getDefaultCorners,
 } from '@/lib/pdf-tools/scanner/document-detector'
 import { scanWorkerClient } from '@/lib/pdf-tools/scanner/opencv-worker-client'
+import {
+  type DocumentFilterMode,
+  processDocumentFilter,
+} from '@/lib/pdf-tools/scanner/document-filters'
+import { documentFiltersClient } from '@/lib/pdf-tools/scanner/document-filters-client'
 
 export interface ImageEditorOutput {
   buffer: ArrayBuffer
@@ -64,6 +81,7 @@ export interface ImageEditorOutput {
   height: number
   size: number
   type: 'image/jpeg' | 'image/png'
+  filterMode?: DocumentFilterMode
 }
 
 interface ImageEditorModalProps {
@@ -83,6 +101,32 @@ const CORNER_LABELS: Record<CornerKey, string> = {
   bottomRight: 'Inferior Direito',
   bottomLeft: 'Inferior Esquerdo',
 }
+
+const FILTER_MODES: {
+  id: DocumentFilterMode
+  label: string
+  shortDesc: string
+  icon: typeof SunMedium
+}[] = [
+  {
+    id: 'original',
+    label: 'Original',
+    shortDesc: 'Cores e iluminação intactas',
+    icon: Crop,
+  },
+  {
+    id: 'shadow_removal',
+    label: 'Sem sombra',
+    shortDesc: 'Remove sombras desiguais',
+    icon: SunMedium,
+  },
+  {
+    id: 'enhance',
+    label: 'Melhorar',
+    shortDesc: 'Legibilidade e nitidez máxima',
+    icon: Sparkles,
+  },
+]
 
 export function ImageEditorModal({
   isOpen,
@@ -115,6 +159,19 @@ export function ImageEditorModal({
   // Modo de prévia do recorte (alternância antes de aplicar)
   const [isPreviewWarp, setIsPreviewWarp] = useState<boolean>(false)
   const [previewWarpCanvas, setPreviewWarpCanvas] = useState<HTMLCanvasElement | null>(null)
+
+  // Tratamentos Documentais (Bloco 2)
+  const [selectedFilter, setSelectedFilter] = useState<DocumentFilterMode>('original')
+  const [isProcessingFilter, setIsProcessingFilter] = useState<boolean>(false)
+  const [filterDurationMs, setFilterDurationMs] = useState<number | null>(null)
+  const [filteredPreviewCanvas, setFilteredPreviewCanvas] = useState<HTMLCanvasElement | null>(null)
+
+  // Comparação Antes / Depois
+  const [isComparing, setIsComparing] = useState<boolean>(false)
+  const [compareStyle, setCompareStyle] = useState<'wipe' | 'sideBySide'>('wipe')
+  const [wipePercent, setWipePercent] = useState<number>(50)
+  const [isWipeDragging, setIsWipeDragging] = useState<boolean>(false)
+  const wipeContainerRef = useRef<HTMLDivElement>(null)
 
   // Dragging de cantos
   const [activeCorner, setActiveCorner] = useState<CornerKey | null>(null)
@@ -242,6 +299,10 @@ export function ImageEditorModal({
         setSuggestedTilt(null)
         setIsPreviewWarp(false)
         setPreviewWarpCanvas(null)
+        setSelectedFilter('original')
+        setFilteredPreviewCanvas(null)
+        setFilterDurationMs(null)
+        setIsComparing(false)
         setIsLoadingImage(false)
 
         // Iniciar detecção automática apenas após imagem estar 100% pronta e com dimensões válidas
@@ -287,6 +348,10 @@ export function ImageEditorModal({
       setCorners(null)
       setIsPreviewWarp(false)
       setPreviewWarpCanvas(null)
+      setSelectedFilter('original')
+      setFilteredPreviewCanvas(null)
+      setFilterDurationMs(null)
+      setIsComparing(false)
       setLoadError(null)
       setIsLoadingImage(false)
       setIsDetecting(false)
@@ -388,8 +453,6 @@ export function ImageEditorModal({
     ctx.restore()
 
     // Transformar as coordenadas dos 4 cantos junto com a rotação
-    // Para deltaAngle === 90 (horário): novo_x = oldH - old_y, novo_y = old_x
-    // Para deltaAngle === -90 (anti-horário): novo_x = old_y, novo_y = oldW - old_x
     const transformPoint = (p: Point2D): Point2D => {
       if (deltaAngle === 90) {
         return {
@@ -422,6 +485,7 @@ export function ImageEditorModal({
     setCorners(newOrderedCorners)
     setIsPreviewWarp(false)
     setPreviewWarpCanvas(null)
+    setFilteredPreviewCanvas(null)
 
     // Forçar recálculo imediato do layout de stage para nova orientação
     requestAnimationFrame(() => {
@@ -452,11 +516,6 @@ export function ImageEditorModal({
     const w = sourceCanvas.width
     const h = sourceCanvas.height
 
-    // Tamanho do maior retângulo central contido sem bordas vazias
-    // Para rotações pequenas (<= 15°):
-    // cropW = w - h * absSin
-    // cropH = h - w * absSin
-    // Ou fórmula exata de corte inscrito:
     const cropW = Math.max(
       20,
       Math.floor((w * absCos - h * absSin) / (absCos * absCos - absSin * absSin)),
@@ -466,7 +525,6 @@ export function ImageEditorModal({
       Math.floor((h * absCos - w * absSin) / (absCos * absCos - absSin * absSin)),
     )
 
-    // Para evitar distorções se o ângulo for no limite, limitamos a proporção razoável
     const targetW = Math.min(
       w,
       Math.max(20, cropW > 0 && cropW <= w ? cropW : Math.round(w * (1 - absSin * 0.5))),
@@ -491,10 +549,25 @@ export function ImageEditorModal({
     return out
   }
 
+  // Gerar o canvas retificado base (warp + inclinação) para prévia e filtros
+  const generateBaseWarpedCanvas = async (): Promise<HTMLCanvasElement | null> => {
+    if (!currentCanvas || !corners) return null
+
+    const warpedCanvas = await applyPerspectiveWarp(
+      currentCanvas,
+      corners,
+      currentCanvas.width,
+      currentCanvas.height,
+    )
+
+    return fineTiltAngle !== 0 ? applyFineTiltToCanvas(warpedCanvas, fineTiltAngle) : warpedCanvas
+  }
+
   // Alternar prévia do recorte de perspectiva
   const togglePreviewWarp = async () => {
     if (isPreviewWarp) {
       setIsPreviewWarp(false)
+      setIsComparing(false)
       return
     }
 
@@ -502,24 +575,85 @@ export function ImageEditorModal({
 
     setIsWarping(true)
     try {
-      const warpedCanvas = await applyPerspectiveWarp(
-        currentCanvas,
-        corners,
-        currentCanvas.width,
-        currentCanvas.height,
-      )
+      const baseWarp = await generateBaseWarpedCanvas()
+      if (!baseWarp) return
 
-      // Aplicar rotação fina também na prévia se fineTiltAngle !== 0
-      const finalCanvas =
-        fineTiltAngle !== 0 ? applyFineTiltToCanvas(warpedCanvas, fineTiltAngle) : warpedCanvas
-
-      setPreviewWarpCanvas(finalCanvas)
+      setPreviewWarpCanvas(baseWarp)
       setIsPreviewWarp(true)
+
+      // Atualizar prévia do filtro ativo
+      if (selectedFilter !== 'original') {
+        await updateFilterPreview(baseWarp, selectedFilter)
+      } else {
+        setFilteredPreviewCanvas(null)
+      }
     } catch (err) {
       console.error('Erro ao gerar prévia da transformação de perspectiva:', err)
       setDetectionMessage('Não foi possível gerar a prévia da perspectiva. Ajuste os cantos.')
     } finally {
       setIsWarping(false)
+    }
+  }
+
+  // Atualizar prévia do filtro documental na resolução da visualização
+  const updateFilterPreview = async (baseCanvas: HTMLCanvasElement, mode: DocumentFilterMode) => {
+    if (mode === 'original') {
+      setFilteredPreviewCanvas(null)
+      setFilterDurationMs(null)
+      return
+    }
+
+    setIsProcessingFilter(true)
+    const t0 = performance.now()
+    try {
+      // Processa a prévia com limite de dimensão (1200px) para ser instantâneo (sub-segundo)
+      const res = await processDocumentFilter(baseCanvas, {
+        mode,
+        maxPreviewDimension: 1200,
+      })
+      setFilteredPreviewCanvas(res.canvas)
+      const ms = Math.round(performance.now() - t0)
+      setFilterDurationMs(ms)
+      console.log(`[ImageEditor] Filtro "${mode}" prévia: ${ms}ms (${res.width}x${res.height})`)
+    } catch (err) {
+      console.error('Erro ao processar prévia do filtro:', err)
+      setDetectionMessage('Não foi possível gerar a prévia do filtro documental.')
+    } finally {
+      setIsProcessingFilter(false)
+    }
+  }
+
+  // Alterar modo de filtro
+  const handleSelectFilter = async (mode: DocumentFilterMode) => {
+    setSelectedFilter(mode)
+
+    // Se estiver no modo de ajuste de cantos, muda para prévia para o usuário ver o efeito
+    if (!isPreviewWarp) {
+      setIsWarping(true)
+      try {
+        const baseWarp = await generateBaseWarpedCanvas()
+        if (baseWarp) {
+          setPreviewWarpCanvas(baseWarp)
+          setIsPreviewWarp(true)
+          if (mode !== 'original') {
+            await updateFilterPreview(baseWarp, mode)
+          } else {
+            setFilteredPreviewCanvas(null)
+          }
+        }
+      } finally {
+        setIsWarping(false)
+      }
+      return
+    }
+
+    if (previewWarpCanvas) {
+      if (mode === 'original') {
+        setFilteredPreviewCanvas(null)
+        setFilterDurationMs(null)
+      } else {
+        await updateFilterPreview(previewWarpCanvas, mode)
+      }
     }
   }
 
@@ -530,6 +664,7 @@ export function ImageEditorModal({
     const tApplyStart = performance.now()
     setIsWarping(true)
     try {
+      // 1. Recorte e retificação geométrica em resolução original
       const warpedCanvas = await applyPerspectiveWarp(
         currentCanvas,
         corners,
@@ -537,17 +672,32 @@ export function ImageEditorModal({
         currentCanvas.height,
       )
 
-      // Aplicar correção fina de inclinação se selecionada
-      const outCanvas =
+      // 2. Correção fina de inclinação se selecionada
+      const rectifiedCanvas =
         fineTiltAngle !== 0 ? applyFineTiltToCanvas(warpedCanvas, fineTiltAngle) : warpedCanvas
 
-      // Exportar como blob de alta qualidade no tipo original (jpeg ou png)
+      // 3. Aplicação do filtro documental selecionado na resolução completa
+      let finalCanvas = rectifiedCanvas
+      if (selectedFilter !== 'original') {
+        const tFiltStart = performance.now()
+        const filterResult = await documentFiltersClient.applyFilter(
+          rectifiedCanvas,
+          selectedFilter,
+        )
+        finalCanvas = filterResult.canvas
+        const filterElapsedMs = Math.round(performance.now() - tFiltStart)
+        console.log(
+          `[ImageEditor] Tratamento "${selectedFilter}" aplicado na imagem final: ${filterElapsedMs}ms (${finalCanvas.width}x${finalCanvas.height})`,
+        )
+      }
+
+      // 4. Exportar como blob de alta qualidade no tipo original (jpeg ou png)
       const tEncodeStart = performance.now()
       const mime = imageType === 'image/png' ? 'image/png' : 'image/jpeg'
       const quality = mime === 'image/jpeg' ? 0.96 : undefined
 
       const blob = await new Promise<Blob | null>((resolve) => {
-        outCanvas.toBlob((b) => resolve(b), mime, quality)
+        finalCanvas.toBlob((b) => resolve(b), mime, quality)
       })
 
       if (!blob) {
@@ -563,20 +713,21 @@ export function ImageEditorModal({
         `[ImageEditor] Codificação da imagem: ${encodeMs}ms (${(blob.size / 1024).toFixed(1)} KB)`,
       )
       console.log(
-        `[ImageEditor] Total "Aplicar ajustes": ${totalApplyMs}ms (${outCanvas.width}x${outCanvas.height})`,
+        `[ImageEditor] Total "Aplicar ajustes": ${totalApplyMs}ms (${finalCanvas.width}x${finalCanvas.height}) [Modo: ${selectedFilter}]`,
       )
 
       onApply({
         buffer,
         previewUrl,
-        width: outCanvas.width,
-        height: outCanvas.height,
+        width: finalCanvas.width,
+        height: finalCanvas.height,
         size: blob.size,
         type: imageType,
+        filterMode: selectedFilter,
       })
       onClose()
     } catch (err) {
-      console.error('Erro ao aplicar recorte:', err)
+      console.error('Erro ao aplicar recorte e tratamento:', err)
       setDetectionMessage(
         `Erro ao finalizar documento: ${err instanceof Error ? err.message : String(err)}`,
       )
@@ -631,7 +782,7 @@ export function ImageEditorModal({
     [currentCanvas],
   )
 
-  // Manipulação de ponteiro (Pointer / Touch / Mouse) para arrastar cantos
+  // Manipulação de ponteiro para arrastar cantos
   const handlePointerDownCorner = (cornerKey: CornerKey, e: React.PointerEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -699,7 +850,36 @@ export function ImageEditorModal({
     }
   }
 
-  // DataURL para exibição da imagem atual no elemento img
+  // Wipe slider drag controls
+  const handleWipePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsWipeDragging(true)
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }
+
+  const handleWipePointerMove = (e: React.PointerEvent) => {
+    if (!isWipeDragging || !wipeContainerRef.current) return
+    e.preventDefault()
+    const rect = wipeContainerRef.current.getBoundingClientRect()
+    if (rect.width <= 0) return
+    const relX = e.clientX - rect.left
+    const pct = Math.max(0, Math.min(100, Math.round((relX / rect.width) * 100)))
+    setWipePercent(pct)
+  }
+
+  const handleWipePointerUp = (e: React.PointerEvent) => {
+    if (isWipeDragging) {
+      try {
+        ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+      } catch {
+        // ignore
+      }
+      setIsWipeDragging(false)
+    }
+  }
+
+  // DataURLs para exibição
   const currentImageUrl = useMemo(() => {
     if (!currentCanvas) return ''
     return currentCanvas.toDataURL()
@@ -709,6 +889,11 @@ export function ImageEditorModal({
     if (!previewWarpCanvas) return ''
     return previewWarpCanvas.toDataURL()
   }, [previewWarpCanvas])
+
+  const filteredPreviewUrl = useMemo(() => {
+    if (!filteredPreviewCanvas) return ''
+    return filteredPreviewCanvas.toDataURL()
+  }, [filteredPreviewCanvas])
 
   // Coordenadas percentuais para posicionar SVG e controles com precisão sobre o layout responsivo
   const percentCorners = useMemo(() => {
@@ -742,7 +927,7 @@ export function ImageEditorModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isWarping && onClose()}>
       <DialogContent className="max-w-5xl w-[95vw] h-[92vh] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-[#F5F6F8] dark:bg-card border-[#E4E7EB] dark:border-border rounded-xl shadow-2xl">
         {/* Cabeçalho */}
-        <DialogHeader className="px-5 py-3.5 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex-row items-center justify-between space-y-0 shrink-0">
+        <DialogHeader className="px-5 py-3 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex-row items-center justify-between space-y-0 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
               <Crop className="w-4 h-4 text-[#C9922A]" />
@@ -756,7 +941,7 @@ export function ImageEditorModal({
                   variant="outline"
                   className="text-[10px] uppercase font-mono px-1.5 py-0 border-[#E4E7EB] text-[#78818E]"
                 >
-                  CamScanner Bloco 1
+                  CamScanner Bloco 2
                 </Badge>
                 {!isConfident && !isDetecting && (
                   <Badge
@@ -804,8 +989,8 @@ export function ImageEditorModal({
           </div>
         )}
 
-        {/* Barra de Ferramentas Superior */}
-        <div className="px-5 py-2.5 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+        {/* Barra de Ferramentas Superior: Rotação, Detecção e Modo de Visualização */}
+        <div className="px-5 py-2 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
           {/* Controles de Rotação e Detecção */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <Button
@@ -900,8 +1085,116 @@ export function ImageEditorModal({
           </div>
         </div>
 
+        {/* Barra de Tratamento Documental (CamScanner Bloco 2) */}
+        <div className="px-5 py-2.5 bg-[#FAF8F2]/90 dark:bg-card/80 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
+          {/* Seletor dos 3 Modos de Filtro */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-[#252B34] dark:text-foreground whitespace-nowrap flex items-center gap-1.5">
+              <SunMedium className="w-3.5 h-3.5 text-[#C9922A]" />
+              Modo de tratamento:
+            </span>
+
+            <div className="inline-flex rounded-lg border border-[#E4E7EB] dark:border-border p-0.5 bg-white dark:bg-background shadow-xs">
+              {FILTER_MODES.map((mode) => {
+                const isSelected = selectedFilter === mode.id
+                const Icon = mode.icon
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => handleSelectFilter(mode.id)}
+                    disabled={isDetecting || isWarping}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-[#252B34] dark:bg-primary text-white shadow-xs font-semibold'
+                        : 'text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground hover:bg-[#F5F6F8]'
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#C9922A]' : ''}`} />
+                    <span>{mode.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Indicador do Tratamento Ativo e Tempo Medido */}
+            <div className="flex items-center gap-1.5">
+              <Badge
+                variant="outline"
+                className={`text-[10px] font-mono px-2 py-0.5 ${
+                  selectedFilter === 'original'
+                    ? 'border-[#E4E7EB] text-[#78818E] bg-white'
+                    : 'border-[#C9922A]/40 text-[#C9922A] bg-[#FAF8F2] font-semibold'
+                }`}
+              >
+                {selectedFilter === 'original' && 'Padrão: sem alterações'}
+                {selectedFilter === 'shadow_removal' && 'Iluminação uniforme'}
+                {selectedFilter === 'enhance' && 'Alto contraste documental'}
+              </Badge>
+
+              {filterDurationMs !== null && (
+                <span className="text-[10px] text-[#78818E] font-mono">({filterDurationMs}ms)</span>
+              )}
+
+              {isProcessingFilter && (
+                <span className="text-[10px] text-[#C9922A] flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Processando...
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Comparador Antes / Depois (habilitado quando em prévia com filtro ativo) */}
+          {isPreviewWarp && selectedFilter !== 'original' && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={isComparing ? 'secondary' : 'outline'}
+                size="sm"
+                className={`h-7 px-2.5 text-xs font-semibold ${
+                  isComparing
+                    ? 'bg-[#C9922A]/20 text-[#C9922A] border-[#C9922A]'
+                    : 'border-[#E4E7EB] text-[#252B34] dark:text-foreground hover:bg-white'
+                }`}
+                onClick={() => setIsComparing((prev) => !prev)}
+              >
+                <Split className="w-3 h-3 mr-1" />
+                {isComparing ? 'Ocultar comparação' : 'Comparar Antes/Depois'}
+              </Button>
+
+              {isComparing && (
+                <div className="inline-flex rounded-md border border-[#E4E7EB] p-0.5 bg-white text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setCompareStyle('wipe')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                      compareStyle === 'wipe'
+                        ? 'bg-[#252B34] text-white font-bold'
+                        : 'text-[#78818E]'
+                    }`}
+                  >
+                    Divisor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCompareStyle('sideBySide')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                      compareStyle === 'sideBySide'
+                        ? 'bg-[#252B34] text-white font-bold'
+                        : 'text-[#78818E]'
+                    }`}
+                  >
+                    Lado a lado
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Barra de Correção Fina de Inclinação ("Endireitar") */}
-        <div className="px-5 py-2 bg-[#FAF8F2]/60 dark:bg-card/70 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-1.5 bg-[#FAF8F2]/40 dark:bg-card/60 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 flex-1 min-w-[280px] max-w-lg">
             <span className="text-xs font-semibold text-[#252B34] dark:text-foreground whitespace-nowrap">
               Endireitar:
@@ -919,6 +1212,7 @@ export function ImageEditorModal({
                   if (isPreviewWarp) {
                     setIsPreviewWarp(false)
                     setPreviewWarpCanvas(null)
+                    setFilteredPreviewCanvas(null)
                   }
                 }}
                 disabled={isDetecting || isWarping}
@@ -954,6 +1248,7 @@ export function ImageEditorModal({
                   if (isPreviewWarp) {
                     setIsPreviewWarp(false)
                     setPreviewWarpCanvas(null)
+                    setFilteredPreviewCanvas(null)
                   }
                 }}
               >
@@ -972,6 +1267,7 @@ export function ImageEditorModal({
                   if (isPreviewWarp) {
                     setIsPreviewWarp(false)
                     setPreviewWarpCanvas(null)
+                    setFilteredPreviewCanvas(null)
                   }
                 }}
                 title="Aplica correção automática baseada na inclinação das bordas detectadas"
@@ -1050,23 +1346,139 @@ export function ImageEditorModal({
 
           {isPreviewWarp ? (
             /* Modo Prévia do Documento Já Retificado e Recortado */
-            <div className="relative max-h-full max-w-full flex flex-col items-center justify-center animate-fade-in">
-              {previewWarpUrl ? (
-                <img
-                  src={previewWarpUrl}
-                  alt="Prévia do recorte"
-                  style={{
-                    maxWidth: stageLayout.width > 0 ? `${stageLayout.width}px` : '100%',
-                    maxHeight: stageLayout.height > 0 ? `${stageLayout.height}px` : '70vh',
-                  }}
-                  className="object-contain rounded shadow-2xl border border-white/20 block"
-                />
+            <div className="relative max-h-full max-w-full flex flex-col items-center justify-center animate-fade-in w-full h-full">
+              {isComparing &&
+              selectedFilter !== 'original' &&
+              filteredPreviewUrl &&
+              previewWarpUrl ? (
+                /* MODO COMPARAÇÃO ANTES / DEPOIS */
+                compareStyle === 'wipe' ? (
+                  /* Divisor Wipe Interativo */
+                  <div
+                    ref={wipeContainerRef}
+                    onPointerMove={handleWipePointerMove}
+                    onPointerUp={handleWipePointerUp}
+                    className="relative max-h-[68vh] max-w-[85vw] flex items-center justify-center overflow-hidden rounded shadow-2xl border border-white/20 select-none touch-none"
+                    style={{
+                      width: stageLayout.width > 0 ? `${stageLayout.width}px` : 'auto',
+                      height: stageLayout.height > 0 ? `${stageLayout.height}px` : 'auto',
+                    }}
+                  >
+                    {/* Imagem Original (Fundo) */}
+                    <img
+                      src={previewWarpUrl}
+                      alt="Original antes do tratamento"
+                      className="block w-full h-full object-contain pointer-events-none"
+                      draggable={false}
+                    />
+
+                    {/* Imagem Tratada (Camada Superior com recorte via clipPath) */}
+                    <div
+                      className="absolute inset-0 overflow-hidden pointer-events-none"
+                      style={{
+                        clipPath: `polygon(${wipePercent}% 0, 100% 0, 100% 100%, ${wipePercent}% 100%)`,
+                      }}
+                    >
+                      <img
+                        src={filteredPreviewUrl}
+                        alt="Depois do tratamento"
+                        className="block w-full h-full object-contain pointer-events-none"
+                        draggable={false}
+                      />
+                    </div>
+
+                    {/* Linha Divisória Deslizante */}
+                    <div
+                      onPointerDown={handleWipePointerDown}
+                      className="absolute top-0 bottom-0 w-1 bg-[#C9922A] cursor-ew-resize z-30 shadow-lg flex items-center justify-center"
+                      style={{ left: `${wipePercent}%`, transform: 'translateX(-50%)' }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-[#C9922A] text-white flex items-center justify-center shadow-md border border-white">
+                        <Split className="w-3.5 h-3.5 rotate-90" />
+                      </div>
+                    </div>
+
+                    {/* Rótulos Antes / Depois */}
+                    <div className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded bg-black/70 text-white text-[10px] font-mono backdrop-blur-xs">
+                      Antes (Original)
+                    </div>
+                    <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded bg-[#C9922A]/90 text-white text-[10px] font-mono font-bold backdrop-blur-xs">
+                      Depois ({selectedFilter === 'shadow_removal' ? 'Sem sombra' : 'Melhorar'})
+                    </div>
+                  </div>
+                ) : (
+                  /* Modo Lado a Lado */
+                  <div className="flex flex-row items-center justify-center gap-3 max-h-[68vh] max-w-full overflow-hidden">
+                    <div className="flex flex-col items-center">
+                      <span className="text-[11px] font-mono text-white/80 mb-1">
+                        Antes (Original)
+                      </span>
+                      <img
+                        src={previewWarpUrl}
+                        alt="Original"
+                        style={{
+                          maxHeight: '62vh',
+                          maxWidth: '42vw',
+                        }}
+                        className="object-contain rounded shadow-lg border border-white/20"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-[11px] font-mono text-[#C9922A] font-bold mb-1">
+                        Depois ({selectedFilter === 'shadow_removal' ? 'Sem sombra' : 'Melhorar'})
+                      </span>
+                      <img
+                        src={filteredPreviewUrl}
+                        alt="Tratada"
+                        style={{
+                          maxHeight: '62vh',
+                          maxWidth: '42vw',
+                        }}
+                        className="object-contain rounded shadow-lg border border-[#C9922A]/40"
+                      />
+                    </div>
+                  </div>
+                )
               ) : (
-                <div className="text-white text-sm">Gerando enquadramento...</div>
+                /* Visualização Padrão da Prévia */
+                <>
+                  {selectedFilter !== 'original' && filteredPreviewUrl ? (
+                    <img
+                      src={filteredPreviewUrl}
+                      alt="Prévia com tratamento documental"
+                      style={{
+                        maxWidth: stageLayout.width > 0 ? `${stageLayout.width}px` : '100%',
+                        maxHeight: stageLayout.height > 0 ? `${stageLayout.height}px` : '68vh',
+                      }}
+                      className="object-contain rounded shadow-2xl border border-white/20 block"
+                    />
+                  ) : previewWarpUrl ? (
+                    <img
+                      src={previewWarpUrl}
+                      alt="Prévia do recorte"
+                      style={{
+                        maxWidth: stageLayout.width > 0 ? `${stageLayout.width}px` : '100%',
+                        maxHeight: stageLayout.height > 0 ? `${stageLayout.height}px` : '68vh',
+                      }}
+                      className="object-contain rounded shadow-2xl border border-white/20 block"
+                    />
+                  ) : (
+                    <div className="text-white text-sm">Gerando enquadramento...</div>
+                  )}
+                </>
               )}
+
+              {/* Legenda Informativa */}
               <div className="mt-3 px-3 py-1 rounded-full bg-black/60 text-white text-[11px] backdrop-blur-xs flex items-center gap-2">
                 <Check className="w-3 h-3 text-emerald-400" />
-                Perspectiva corrigida e fundo removido (sem alterações de iluminação ou cores)
+                <span>
+                  {selectedFilter === 'original' &&
+                    'Perspectiva corrigida e fundo removido (modo Original: cores e iluminação preservadas)'}
+                  {selectedFilter === 'shadow_removal' &&
+                    'Tratamento Sem sombra: iluminação de fundo neutralizada, cores e assinaturas preservadas'}
+                  {selectedFilter === 'enhance' &&
+                    'Tratamento Melhorar: fundo uniforme e legibilidade otimizada para textos'}
+                </span>
               </div>
             </div>
           ) : (
@@ -1179,11 +1591,13 @@ export function ImageEditorModal({
         </div>
 
         {/* Rodapé com Ações */}
-        <div className="px-5 py-3.5 bg-white dark:bg-card border-t border-[#E4E7EB] dark:border-border flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-3 bg-white dark:bg-card border-t border-[#E4E7EB] dark:border-border flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 text-xs text-[#78818E] dark:text-muted-foreground">
             <HelpCircle className="w-3.5 h-3.5 text-[#C9922A] shrink-0" />
             <span>
-              Arraste os 4 círculos verdes para alinhar perfeitamente com os limites do documento.
+              {isPreviewWarp
+                ? 'Escolha o modo de tratamento e compare o resultado antes de confirmar.'
+                : 'Arraste os 4 círculos verdes para alinhar perfeitamente com os limites do documento.'}
             </span>
           </div>
 
