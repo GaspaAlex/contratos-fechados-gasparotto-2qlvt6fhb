@@ -40,6 +40,9 @@ export interface WorkerInitSuccessResponse {
   type: 'init_success'
   id: string
   durationMs: number
+  strategy: 'importScripts' | 'fetch_fallback'
+  scriptLoadMs: number
+  wasmInitMs: number
 }
 
 export interface WorkerInitErrorResponse {
@@ -108,69 +111,116 @@ async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
   initPromise = (async () => {
     const tInitStart = performance.now()
 
-    // Estratégia 1: tentar importScripts caso o ambiente suporte (worker clássico)
+    // Estratégia 1 (Principal): importScripts no worker clássico (asset local /opencv/opencv.js)
     if (
       typeof (self as unknown as { importScripts?: (...urls: string[]) => void }).importScripts ===
       'function'
     ) {
       try {
-        const tImportStart = performance.now()
-        console.log(`[ScanWorker] Tentando carregamento via importScripts: ${opencvUrl}`)
+        const tScriptStart = performance.now()
+        console.log(`[ScanWorker] Carregando OpenCV via importScripts: ${opencvUrl}`)
 
-        const cvPromise = new Promise((resolve, reject) => {
-          let isResolved = false
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const Module: Record<string, any> = {
-            wasmBinaryFile: undefined,
-            onRuntimeInitialized() {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const cvObj = (self as any).cv || (self as any).Module
-              if (!isResolved) {
-                isResolved = true
-                resolve(cvObj)
-              }
-            },
-          }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ;(self as any).Module = Module
+        let scriptLoadMs = 0
+        let wasmInitMs = 0
 
-          try {
-            ;(self as unknown as { importScripts: (...urls: string[]) => void }).importScripts(
-              opencvUrl,
-            )
-            // Se cv já estiver disponível síncronamente
+        const cvPromise = new Promise<{ cv: any; scriptMs: number; wasmMs: number }>(
+          (resolve, reject) => {
+            let isResolved = false
+            const tWasmStart = performance.now()
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const syncCv = (self as any).cv
-            if (syncCv && syncCv.Mat && !isResolved) {
-              isResolved = true
-              resolve(syncCv)
+            const Module: Record<string, any> = {
+              wasmBinaryFile: undefined,
+              onRuntimeInitialized() {
+                wasmInitMs = Math.round(performance.now() - tWasmStart)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const cvObj = (self as any).cv || (self as any).Module
+                if (!isResolved) {
+                  isResolved = true
+                  resolve({ cv: cvObj, scriptMs: scriptLoadMs, wasmMs: wasmInitMs })
+                }
+              },
             }
-          } catch (importErr) {
-            reject(importErr)
-          }
-        })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ;(self as any).Module = Module
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cvLoaded: any = await cvPromise
-        if (cvLoaded && cvLoaded.Mat) {
+            try {
+              ;(self as unknown as { importScripts: (...urls: string[]) => void }).importScripts(
+                opencvUrl,
+              )
+              scriptLoadMs = Math.round(performance.now() - tScriptStart)
+
+              // Se cv já inicializou ou está disponível
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const syncCv = (self as any).cv
+              if (syncCv && syncCv.Mat && !isResolved) {
+                isResolved = true
+                wasmInitMs = Math.round(performance.now() - tWasmStart)
+                resolve({ cv: syncCv, scriptMs: scriptLoadMs, wasmMs: wasmInitMs })
+              }
+            } catch (importErr) {
+              reject(importErr)
+            }
+          },
+        )
+
+        const { cv: cvLoaded, scriptMs, wasmMs } = await cvPromise
+
+        // Validação estrita de disponibilidade dos métodos essenciais do OpenCV
+        if (
+          cvLoaded &&
+          cvLoaded.Mat &&
+          typeof cvLoaded.imread === 'function' &&
+          typeof cvLoaded.matFromImageData === 'function' &&
+          typeof cvLoaded.Canny === 'function' &&
+          typeof cvLoaded.findContours === 'function' &&
+          typeof cvLoaded.warpPerspective === 'function'
+        ) {
           cvInstance = cvLoaded
-          const elapsed = Math.round(performance.now() - tInitStart)
-          const importElapsed = Math.round(performance.now() - tImportStart)
+          const totalInitMs = Math.round(performance.now() - tInitStart)
           console.log(
-            `[ScanWorker] OpenCV carregado via importScripts em ${importElapsed}ms (total init: ${elapsed}ms)`,
+            `[ScanWorker] OpenCV pronto via importScripts em ${totalInitMs}ms (script: ${scriptMs}ms, WASM: ${wasmMs}ms, métodos validados: Mat, matFromImageData, Canny, findContours, warpPerspective)`,
           )
-          return cvInstance
+          return {
+            cv: cvInstance,
+            strategy: 'importScripts' as const,
+            scriptLoadMs: scriptMs,
+            wasmInitMs: wasmMs,
+          }
+        } else if (cvLoaded && cvLoaded.Mat) {
+          // Mat presente mas métodos faltando
+          cvInstance = cvLoaded
+          const totalInitMs = Math.round(performance.now() - tInitStart)
+          console.log(
+            `[ScanWorker] OpenCV carregado via importScripts em ${totalInitMs}ms (script: ${scriptMs}ms, WASM: ${wasmMs}ms)`,
+          )
+          return {
+            cv: cvInstance,
+            strategy: 'importScripts' as const,
+            scriptLoadMs: scriptMs,
+            wasmInitMs: wasmMs,
+          }
+        } else {
+          throw new Error('Objeto OpenCV carregado não contém a propriedade Mat esperada')
         }
       } catch (importErr) {
-        console.warn(
-          '[ScanWorker] importScripts indisponível ou falhou, migrando para cache de script:',
-          importErr,
+        const importErrMsg = importErr instanceof Error ? importErr.message : String(importErr)
+        console.error(
+          `[ScanWorker] FALHA TÉCNICA na Estratégia 1 (importScripts: ${opencvUrl}): ${importErrMsg}. Tentando fallback secundário...`,
         )
       }
+    } else {
+      console.error(
+        '[ScanWorker] FALHA TÉCNICA: importScripts não está disponível no contexto do worker. Tentando fallback secundário...',
+      )
     }
 
-    // Estratégia 2: fetch + cache em memória da sessão do worker + new Function
+    // Estratégia 2 (Fallback): fetch + cache em memória da sessão do worker + new Function
+    console.warn(
+      '[ScanWorker] Executando Estratégia 2 de fallback (fetch + new Function). Isto indica que importScripts falhou.',
+    )
     let scriptCode = cachedScriptCode
+    let scriptFetchMs = 0
     if (!scriptCode) {
       const tFetchStart = performance.now()
       const res = await fetch(opencvUrl)
@@ -179,9 +229,9 @@ async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
       }
       scriptCode = await res.text()
       cachedScriptCode = scriptCode
-      const fetchMs = Math.round(performance.now() - tFetchStart)
+      scriptFetchMs = Math.round(performance.now() - tFetchStart)
       console.log(
-        `[ScanWorker] Download do arquivo OpenCV concluído em ${fetchMs}ms (${(scriptCode.length / (1024 * 1024)).toFixed(2)} MB em cache)`,
+        `[ScanWorker] Download fallback do OpenCV concluído em ${scriptFetchMs}ms (${(scriptCode.length / (1024 * 1024)).toFixed(2)} MB)`,
       )
     } else {
       console.log('[ScanWorker] Reutilizando script OpenCV do cache em memória do worker')
@@ -189,15 +239,24 @@ async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
 
     return new Promise((resolve, reject) => {
       let isResolved = false
+      const tWasmStart = performance.now()
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const finishResolve = (cv: any) => {
         if (!isResolved) {
           isResolved = true
           cvInstance = cv
-          const elapsed = Math.round(performance.now() - tInitStart)
-          console.log(`[ScanWorker] Init do OpenCV concluída com sucesso em ${elapsed}ms`)
-          resolve(cv)
+          const wasmInitMs = Math.round(performance.now() - tWasmStart)
+          const totalElapsed = Math.round(performance.now() - tInitStart)
+          console.log(
+            `[ScanWorker] Init fallback do OpenCV concluída em ${totalElapsed}ms (fetch: ${scriptFetchMs}ms, WASM: ${wasmInitMs}ms)`,
+          )
+          resolve({
+            cv,
+            strategy: 'fetch_fallback' as const,
+            scriptLoadMs: scriptFetchMs,
+            wasmInitMs,
+          })
         }
       }
 
@@ -621,12 +680,15 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
   if (msg.type === 'init') {
     const t0 = performance.now()
     try {
-      await loadOpenCvInWorker(msg.opencvUrl)
+      const initResult = await loadOpenCvInWorker(msg.opencvUrl)
       const durationMs = Math.round(performance.now() - t0)
       const res: WorkerInitSuccessResponse = {
         type: 'init_success',
         id: msg.id,
         durationMs,
+        strategy: initResult?.strategy || 'importScripts',
+        scriptLoadMs: initResult?.scriptLoadMs || 0,
+        wasmInitMs: initResult?.wasmInitMs || 0,
       }
       self.postMessage(res)
     } catch (err) {

@@ -33,6 +33,12 @@ class ScanWorkerClient {
   private worker: Worker | null = null
   private isInitialized = false
   private initPromise: Promise<void> | null = null
+  private lastInitDetails: {
+    strategy: 'importScripts' | 'fetch_fallback'
+    scriptLoadMs: number
+    wasmInitMs: number
+    totalInitMs: number
+  } | null = null
   private pendingInitResolvers: {
     resolve: () => void
     reject: (err: Error) => void
@@ -46,9 +52,7 @@ class ScanWorkerClient {
   private requestCounter = 0
 
   private createWorker(): Worker {
-    const w = new Worker(new URL('./opencv.worker.ts', import.meta.url), {
-      type: 'module',
-    })
+    const w = new Worker(new URL('./opencv.worker.ts', import.meta.url))
 
     w.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
       const msg = e.data
@@ -56,6 +60,12 @@ class ScanWorkerClient {
 
       if (msg.type === 'init_success') {
         this.isInitialized = true
+        this.lastInitDetails = {
+          strategy: msg.strategy,
+          scriptLoadMs: msg.scriptLoadMs,
+          wasmInitMs: msg.wasmInitMs,
+          totalInitMs: msg.durationMs,
+        }
         const callbacks = [...this.pendingInitResolvers]
         this.pendingInitResolvers = []
         callbacks.forEach((cb) => cb.resolve())
@@ -158,14 +168,17 @@ class ScanWorkerClient {
         resolve: () => {
           clearTimeout(timer)
           const totalInitMs = Math.round(performance.now() - tInitStart)
-          console.log(`[ScanWorkerClient] Init do OpenCV concluída com sucesso em ${totalInitMs}ms`)
+          const details = this.lastInitDetails
+          console.log(
+            `[ScanWorkerClient] Init do OpenCV concluída com sucesso em ${totalInitMs}ms (estratégia=${details?.strategy ?? 'importScripts'}, script=${details?.scriptLoadMs ?? 0}ms, wasm=${details?.wasmInitMs ?? 0}ms)`,
+          )
           resolve()
         },
         reject: (err: Error) => {
           clearTimeout(timer)
           this.initPromise = null
           const totalInitMs = Math.round(performance.now() - tInitStart)
-          console.warn(
+          console.error(
             `[ScanWorkerClient] Init do OpenCV falhou após ${totalInitMs}ms:`,
             err.message,
           )
@@ -403,6 +416,10 @@ class ScanWorkerClient {
 
   public getInitialized(): boolean {
     return this.isInitialized && this.worker !== null
+  }
+
+  public getInitDetails() {
+    return this.lastInitDetails
   }
 }
 
