@@ -1,397 +1,142 @@
-// src/lib/pdf-tools/scanner/document-detector.ts
 /**
- * Motor de detecção automática de bordas de documentos retangulares.
- * Utiliza OpenCV.js (cv.Canny, GaussianBlur, findContours, approxPolyDP, minAreaRect)
- * com fallback inteligente para contorno padrão com margem caso a imagem não tenha
- * contraste suficiente para detecção segura.
- *
- * Licença OpenCV: Apache-2.0
+ * Scanner module facade and fallback implementations
  */
-
-import { loadOpenCv, isOpenCvLoaded } from './opencv-loader'
+import type { DocumentCorners } from './perspective-math'
 import {
-  type DocumentCorners,
-  type Point2D,
-  orderCorners,
-  isValidConvexQuad,
   computeTargetDimensions,
+  getDefaultCorners,
   warpPerspectiveCanvas,
 } from './perspective-math'
+import { scanWorkerClient, type DetectionResult, type WarpResult } from './opencv-worker-client'
 
-export interface DetectionResult {
-  success: boolean
-  corners: DocumentCorners
-  isConfident: boolean
-  sourceWidth: number
-  sourceHeight: number
-  message?: string
-  engineState: 'ready' | 'failed' | 'not_loaded'
-  engineInitDurationMs?: number
-  detectionDurationMs?: number
-  failureReason?: string
-}
+export type { DetectionResult, WarpResult }
+export { getDefaultCorners }
+
+const MAX_DETECTION_DIMENSION = 900
 
 /**
- * Cria cantos padrão cobrindo 88% da área central com 6% de margem em cada borda.
+ * Resizes an HTMLImageElement or Canvas to an offscreen canvas with max dimension.
  */
-export function getDefaultCorners(width: number, height: number): DocumentCorners {
-  const marginX = Math.round(width * 0.06)
-  const marginY = Math.round(height * 0.06)
+function createScaledImageData(
+  source: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number,
+  maxDim: number = MAX_DETECTION_DIMENSION,
+): { imageData: ImageData; scale: number; procWidth: number; procHeight: number } {
+  let scale = 1
+  let procWidth = sourceWidth
+  let procHeight = sourceHeight
 
-  return {
-    topLeft: { x: marginX, y: marginY },
-    topRight: { x: width - marginX, y: marginY },
-    bottomRight: { x: width - marginX, y: height - marginY },
-    bottomLeft: { x: marginX, y: height - marginY },
+  if (Math.max(sourceWidth, sourceHeight) > maxDim) {
+    if (sourceWidth >= sourceHeight) {
+      scale = sourceWidth / maxDim
+      procWidth = maxDim
+      procHeight = Math.round(sourceHeight / scale)
+    } else {
+      scale = sourceHeight / maxDim
+      procHeight = maxDim
+      procWidth = Math.round(sourceWidth / scale)
+    }
   }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = procWidth
+  canvas.height = procHeight
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) {
+    throw new Error('Falha ao obter contexto 2D para redimensionamento de detecção')
+  }
+
+  ctx.drawImage(source, 0, 0, procWidth, procHeight)
+  const imageData = ctx.getImageData(0, 0, procWidth, procHeight)
+  return { imageData, scale, procWidth, procHeight }
 }
 
 /**
- * Executa detecção de bordas sobre um elemento de imagem ou canvas.
+ * Detects document corners asynchronously via the dedicated Web Worker.
+ * If the worker fails or times out, safely falls back to default corners
+ * without blocking the main UI thread.
  */
 export async function detectDocumentCorners(
-  sourceImage: HTMLImageElement | HTMLCanvasElement,
+  imageSource: CanvasImageSource,
+  originalWidth: number,
+  originalHeight: number,
+  requestId?: string,
 ): Promise<DetectionResult> {
-  const naturalWidth = 'naturalWidth' in sourceImage ? sourceImage.naturalWidth : sourceImage.width
-  const naturalHeight =
-    'naturalHeight' in sourceImage ? sourceImage.naturalHeight : sourceImage.height
+  const { imageData, scale } = createScaledImageData(
+    imageSource,
+    originalWidth,
+    originalHeight,
+    MAX_DETECTION_DIMENSION,
+  )
 
-  if (!naturalWidth || !naturalHeight) {
-    throw new Error('Dimensões da imagem inválidas para detecção.')
-  }
-
-  const startDetectionTime = performance.now()
-
-  // 1. Tentar inicializar OpenCV.js
-  let cv: any = null
-  let engineInitDurationMs: number | undefined
-  try {
-    cv = await loadOpenCv()
-    engineInitDurationMs = typeof window !== 'undefined' ? window._opencvInitDurationMs : undefined
-  } catch (cvErr: any) {
-    const errMessage = cvErr?.message || 'Motor de visão computacional indisponível'
-    console.warn(
-      '[Detector] OpenCV não pôde ser inicializado, utilizando cantos manuais pré-definidos:',
-      cvErr,
-    )
-    return {
-      success: false,
-      corners: getDefaultCorners(naturalWidth, naturalHeight),
-      isConfident: false,
-      sourceWidth: naturalWidth,
-      sourceHeight: naturalHeight,
-      engineState: 'failed',
-      failureReason: errMessage,
-      detectionDurationMs: Math.round(performance.now() - startDetectionTime),
-      message:
-        'Motor de visão computacional indisponível no momento. Ajuste os cantos manualmente.',
-    }
-  }
-
-  // 2. Preparar imagem redimensionada para processamento rápido (evitar travar thread)
-  // Escala para dimensão máxima de 1000px
-  const maxDim = 1000
-  const scale = Math.min(1, maxDim / Math.max(naturalWidth, naturalHeight))
-  const procW = Math.round(naturalWidth * scale)
-  const procH = Math.round(naturalHeight * scale)
-
-  const tempCanvas = document.createElement('canvas')
-  tempCanvas.width = procW
-  tempCanvas.height = procH
-  const tempCtx = tempCanvas.getContext('2d')
-  if (!tempCtx) {
-    return {
-      success: false,
-      corners: getDefaultCorners(naturalWidth, naturalHeight),
-      isConfident: false,
-      sourceWidth: naturalWidth,
-      sourceHeight: naturalHeight,
-      engineState: 'ready',
-      engineInitDurationMs,
-      detectionDurationMs: Math.round(performance.now() - startDetectionTime),
-      failureReason: 'Falha ao alocar contexto 2D.',
-      message: 'Falha ao alocar contexto gráfico.',
-    }
-  }
-
-  tempCtx.drawImage(sourceImage, 0, 0, procW, procH)
-
-  // 3. Processamento OpenCV
-  let srcMat: any = null
-  let grayMat: any = null
-  let blurMat: any = null
-  let edgesMat: any = null
-  let dilatedMat: any = null
-  let contours: any = null
-  let hierarchy: any = null
-  let approx: any = null
-
-  try {
-    srcMat = cv.imread(tempCanvas)
-    grayMat = new cv.Mat()
-    cv.cvtColor(srcMat, grayMat, cv.COLOR_RGBA2GRAY)
-
-    blurMat = new cv.Mat()
-    cv.GaussianBlur(grayMat, blurMat, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT)
-
-    // Detecção com Canny
-    edgesMat = new cv.Mat()
-    cv.Canny(blurMat, edgesMat, 50, 150)
-
-    // Dilatação leve para fechar contornos rompidos
-    dilatedMat = new cv.Mat()
-    const kernel = cv.Mat.ones(3, 3, cv.CV_8U)
-    cv.dilate(edgesMat, dilatedMat, kernel)
-    kernel.delete()
-
-    contours = new cv.MatVector()
-    hierarchy = new cv.Mat()
-    cv.findContours(dilatedMat, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
-
-    const totalArea = procW * procH
-    const minDocumentArea = totalArea * 0.15 // ao menos 15% da imagem
-    let bestContour: any = null
-    let bestArea = 0
-    let bestCorners: DocumentCorners | null = null
-    let isConfident = false
-
-    approx = new cv.Mat()
-
-    // Procurar melhor contorno de 4 lados
-    for (let i = 0; i < contours.size(); ++i) {
-      const cnt = contours.get(i)
-      const area = cv.contourArea(cnt)
-      if (area < minDocumentArea || area <= bestArea) {
-        continue
-      }
-
-      const perimeter = cv.arcLength(cnt, true)
-      cv.approxPolyDP(cnt, approx, 0.02 * perimeter, true)
-
-      if (approx.rows === 4 && cv.isContourConvex(approx)) {
-        // Extrair os 4 pontos
-        const pts: Point2D[] = []
-        for (let j = 0; j < 4; j++) {
-          const x = approx.data32S[j * 2] / scale
-          const y = approx.data32S[j * 2 + 1] / scale
-          pts.push({
-            x: Math.max(0, Math.min(naturalWidth, x)),
-            y: Math.max(0, Math.min(naturalHeight, y)),
-          })
-        }
-
-        try {
-          const ordered = orderCorners(pts)
-          if (isValidConvexQuad(ordered)) {
-            bestArea = area
-            bestContour = cnt
-            bestCorners = ordered
-            isConfident = true
-          }
-        } catch {
-          // continua buscando
-        }
-      }
-    }
-
-    // Se não encontrou quadrilátero exato de 4 vértices, tentar pelo maior contorno via minAreaRect
-    if (!bestCorners) {
-      let maxArea = 0
-      let maxContourIdx = -1
-      for (let i = 0; i < contours.size(); ++i) {
-        const cnt = contours.get(i)
-        const area = cv.contourArea(cnt)
-        if (area > maxArea && area >= minDocumentArea) {
-          maxArea = area
-          maxContourIdx = i
-        }
-      }
-
-      if (maxContourIdx >= 0) {
-        const maxCnt = contours.get(maxContourIdx)
-        const rect = cv.minAreaRect(maxCnt)
-        // Obter os 4 vértices da caixa rotacionada
-        const boxPts = cv.RotatedRect.points(rect)
-        const pts: Point2D[] = []
-        for (let k = 0; k < 4; k++) {
-          const px = boxPts[k].x / scale
-          const py = boxPts[k].y / scale
-          pts.push({
-            x: Math.max(0, Math.min(naturalWidth, px)),
-            y: Math.max(0, Math.min(naturalHeight, py)),
-          })
-        }
-
-        try {
-          const ordered = orderCorners(pts)
-          if (isValidConvexQuad(ordered)) {
-            bestCorners = ordered
-            // Menor grau de certeza, requer verificação do usuário
-            isConfident = false
-          }
-        } catch {
-          // Fallback abaixo
-        }
-      }
-    }
-
-    const detectionDurationMs = Math.round(performance.now() - startDetectionTime)
-    console.info(
-      `[Detector] Detecção concluída em ${detectionDurationMs}ms (inicialização prévia: ${engineInitDurationMs ?? 0}ms)`,
-    )
-
-    if (bestCorners && isValidConvexQuad(bestCorners)) {
-      return {
-        success: true,
-        corners: bestCorners,
-        isConfident,
-        sourceWidth: naturalWidth,
-        sourceHeight: naturalHeight,
-        engineState: 'ready',
-        engineInitDurationMs,
-        detectionDurationMs,
-        message: isConfident
-          ? 'Bordas do documento detectadas com sucesso.'
-          : 'Detecção aproximada. Ajuste os cantos se necessário.',
-      }
-    }
-
-    // Se tudo falhar (motor OK, mas contraste/forma não identificados como quadrilátero)
-    return {
-      success: false,
-      corners: getDefaultCorners(naturalWidth, naturalHeight),
-      isConfident: false,
-      sourceWidth: naturalWidth,
-      sourceHeight: naturalHeight,
-      engineState: 'ready',
-      engineInitDurationMs,
-      detectionDurationMs,
-      failureReason: 'Contornos nítidos de documento não isolados.',
-      message:
-        'Motor ativo: não foi possível detectar bordas nítidas automaticamente neste enquadramento. Ajuste os cantos manualmente.',
-    }
-  } catch (err: any) {
-    const detectionDurationMs = Math.round(performance.now() - startDetectionTime)
-    console.error('Erro durante detecção com OpenCV:', err)
-    return {
-      success: false,
-      corners: getDefaultCorners(naturalWidth, naturalHeight),
-      isConfident: false,
-      sourceWidth: naturalWidth,
-      sourceHeight: naturalHeight,
-      engineState: 'ready',
-      engineInitDurationMs,
-      detectionDurationMs,
-      failureReason: err?.message || 'Erro durante a análise do algoritmo de bordas',
-      message: 'Erro durante análise de imagem. Utilize o ajuste manual.',
-    }
-  } finally {
-    // Liberação estrita de recursos nativos OpenCV
-    if (approx) approx.delete()
-    if (contours) contours.delete()
-    if (hierarchy) hierarchy.delete()
-    if (dilatedMat) dilatedMat.delete()
-    if (edgesMat) edgesMat.delete()
-    if (blurMat) blurMat.delete()
-    if (grayMat) grayMat.delete()
-    if (srcMat) srcMat.delete()
-  }
+  return scanWorkerClient.detectCorners(imageData, scale, originalWidth, originalHeight, requestId)
 }
 
 /**
- * Aplica recorte e transformação de perspectiva sobre a imagem.
- * Utiliza cv.warpPerspective de alta precisão ou fallback determinístico em canvas.
+ * Applies perspective warp to extract a rectified rectangular document image.
+ * Tries the worker first (non-blocking, full-resolution). If worker is unavailable
+ * or fails, falls back gracefully to standard 2D canvas interpolation.
  */
 export async function applyPerspectiveWarp(
-  sourceImage: HTMLImageElement | HTMLCanvasElement,
+  source: CanvasImageSource,
   corners: DocumentCorners,
-): Promise<{ canvas: HTMLCanvasElement; width: number; height: number }> {
-  const naturalWidth = 'naturalWidth' in sourceImage ? sourceImage.naturalWidth : sourceImage.width
-  const naturalHeight =
-    'naturalHeight' in sourceImage ? sourceImage.naturalHeight : sourceImage.height
+  sourceWidth: number,
+  sourceHeight: number,
+  requestId?: string,
+): Promise<HTMLCanvasElement> {
+  const targetDims = computeTargetDimensions(corners)
 
-  const targetDim = computeTargetDimensions(corners)
-  const targetW = targetDim.width
-  const targetH = targetDim.height
+  // If worker is already initialized or accessible, use worker warp to keep main thread fluid
+  try {
+    const fullCanvas = document.createElement('canvas')
+    fullCanvas.width = sourceWidth
+    fullCanvas.height = sourceHeight
+    const fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true })
+    if (fullCtx) {
+      fullCtx.drawImage(source, 0, 0, sourceWidth, sourceHeight)
+      const fullImageData = fullCtx.getImageData(0, 0, sourceWidth, sourceHeight)
 
-  // 1. Tentar com OpenCV se disponível
-  if (isOpenCvLoaded()) {
-    const cv = window.cv
-    let srcMat: any = null
-    let warpedMat: any = null
-    let srcTri: any = null
-    let dstTri: any = null
-    let M: any = null
-
-    try {
-      const inCanvas = document.createElement('canvas')
-      inCanvas.width = naturalWidth
-      inCanvas.height = naturalHeight
-      const inCtx = inCanvas.getContext('2d')
-      if (!inCtx) throw new Error('Falha ao obter contexto 2D')
-      inCtx.drawImage(sourceImage, 0, 0, naturalWidth, naturalHeight)
-
-      srcMat = cv.imread(inCanvas)
-      warpedMat = new cv.Mat()
-
-      srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-        corners.topLeft.x,
-        corners.topLeft.y,
-        corners.topRight.x,
-        corners.topRight.y,
-        corners.bottomRight.x,
-        corners.bottomRight.y,
-        corners.bottomLeft.x,
-        corners.bottomLeft.y,
-      ])
-
-      dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, targetW, 0, targetW, targetH, 0, targetH])
-
-      M = cv.getPerspectiveTransform(srcTri, dstTri)
-      const dsize = new cv.Size(targetW, targetH)
-      cv.warpPerspective(
-        srcMat,
-        warpedMat,
-        M,
-        dsize,
-        cv.INTER_LINEAR,
-        cv.BORDER_CONSTANT,
-        new cv.Scalar(255, 255, 255, 255),
+      const warpResult = await scanWorkerClient.warpPerspective(
+        fullImageData,
+        corners,
+        targetDims.width,
+        targetDims.height,
+        requestId,
       )
 
       const outCanvas = document.createElement('canvas')
-      outCanvas.width = targetW
-      outCanvas.height = targetH
-      cv.imshow(outCanvas, warpedMat)
-
-      return { canvas: outCanvas, width: targetW, height: targetH }
-    } catch (err) {
-      console.warn('Warp OpenCV falhou, aplicando fallback de perspectiva:', err)
-    } finally {
-      if (srcTri) srcTri.delete()
-      if (dstTri) dstTri.delete()
-      if (M) M.delete()
-      if (warpedMat) warpedMat.delete()
-      if (srcMat) srcMat.delete()
+      outCanvas.width = warpResult.width
+      outCanvas.height = warpResult.height
+      const outCtx = outCanvas.getContext('2d')
+      if (outCtx) {
+        outCtx.putImageData(warpResult.imageData, 0, 0)
+        return outCanvas
+      }
     }
+  } catch (workerErr) {
+    console.warn(
+      '[Scanner] Worker warp falhou ou indisponível, usando fallback de Canvas 2D:',
+      workerErr,
+    )
   }
 
-  // 2. Fallback matemático nativo (DLT + Bilinear interpolation)
-  const inCanvas = document.createElement('canvas')
-  inCanvas.width = naturalWidth
-  inCanvas.height = naturalHeight
-  const inCtx = inCanvas.getContext('2d')
-  if (!inCtx) throw new Error('Falha ao obter contexto 2D de origem')
-  inCtx.drawImage(sourceImage, 0, 0, naturalWidth, naturalHeight)
+  // Graceful Canvas 2D fallback: 100% functional without OpenCV!
+  const fallbackCanvas = document.createElement('canvas')
+  fallbackCanvas.width = sourceWidth
+  fallbackCanvas.height = sourceHeight
+  const fallbackCtx = fallbackCanvas.getContext('2d', { willReadFrequently: true })
+  if (!fallbackCtx) {
+    throw new Error('Falha ao obter contexto 2D para fallback de warp')
+  }
+  fallbackCtx.drawImage(source, 0, 0, sourceWidth, sourceHeight)
 
-  const warpedCanvas = warpPerspectiveCanvas(
-    inCtx,
-    naturalWidth,
-    naturalHeight,
+  return warpPerspectiveCanvas(
+    fallbackCtx,
+    sourceWidth,
+    sourceHeight,
     corners,
-    targetW,
-    targetH,
+    targetDims.width,
+    targetDims.height,
   )
-
-  return { canvas: warpedCanvas, width: targetW, height: targetH }
 }

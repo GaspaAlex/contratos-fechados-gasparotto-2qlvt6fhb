@@ -93,6 +93,20 @@ export function orderCorners(pts: Point2D[]): DocumentCorners {
  * Verifica se os 4 cantos formam um quadrilátero convexo simples (sem cruzamentos).
  * Utiliza o produto vetorial (cross product) entre arestas consecutivas.
  */
+/**
+ * Retorna os 4 cantos padrão com margem de 8% de margem interna.
+ */
+export function getDefaultCorners(width: number, height: number): DocumentCorners {
+  const insetX = width * 0.08
+  const insetY = height * 0.08
+  return {
+    topLeft: { x: insetX, y: insetY },
+    topRight: { x: width - insetX, y: insetY },
+    bottomRight: { x: width - insetX, y: height - insetY },
+    bottomLeft: { x: insetX, y: height - insetY },
+  }
+}
+
 export function isValidConvexQuad(corners: DocumentCorners): boolean {
   const pts = [corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft]
 

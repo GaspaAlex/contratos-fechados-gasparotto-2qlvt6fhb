@@ -53,6 +53,7 @@ import {
   applyPerspectiveWarp,
   getDefaultCorners,
 } from '@/lib/pdf-tools/scanner/document-detector'
+import { scanWorkerClient } from '@/lib/pdf-tools/scanner/opencv-worker-client'
 
 export interface ImageEditorOutput {
   buffer: ArrayBuffer
@@ -95,8 +96,11 @@ export function ImageEditorModal({
   const [naturalHeight, setNaturalHeight] = useState<number>(0)
   const [rotationAngle, setRotationAngle] = useState<number>(0) // rotação cumulativa 0, 90, 180, 270
 
-  // Estado da detecção
+  // Estado da detecção e inicialização
   const [isDetecting, setIsDetecting] = useState<boolean>(false)
+  const [detectStepText, setDetectStepText] = useState<string>(
+    'Analisando contornos do documento com OpenCV...',
+  )
   const [isWarping, setIsWarping] = useState<boolean>(false)
   const [corners, setCorners] = useState<DocumentCorners | null>(null)
   const [isConfident, setIsConfident] = useState<boolean>(true)
@@ -248,6 +252,21 @@ export function ImageEditorModal({
     [imageType],
   )
 
+  // Pular detecção e permitir ajuste manual imediatamente
+  const handleSkipDetection = useCallback(() => {
+    if (!currentCanvas) return
+    // Invalidar requisições pendentes da sessão anterior
+    activeSessionTokenRef.current++
+    scanWorkerClient.cancel(`req_${activeSessionTokenRef.current}`)
+    setIsDetecting(false)
+    if (!corners) {
+      const def = getDefaultCorners(currentCanvas.width, currentCanvas.height)
+      setCorners(def)
+    }
+    setIsConfident(false)
+    setDetectionMessage('Detecção automática pulada. Ajuste os cantos manualmente.')
+  }, [currentCanvas, corners])
+
   // Inicializar sempre que a modal abrir ou quando trocar o buffer/imagem
   useEffect(() => {
     if (isOpen && originalBuffer && originalBuffer.byteLength > 0) {
@@ -262,6 +281,7 @@ export function ImageEditorModal({
       setPreviewWarpCanvas(null)
       setLoadError(null)
       setIsLoadingImage(false)
+      setIsDetecting(false)
     }
   }, [isOpen, originalBuffer, initFromBuffer])
 
@@ -271,26 +291,43 @@ export function ImageEditorModal({
     setIsDetecting(true)
     setDetectionMessage(null)
 
+    // Indicar estado correto na UI (iniciando motor vs analisando contornos)
+    if (!scanWorkerClient.getInitialized()) {
+      setDetectStepText('Iniciando motor de digitalização (OpenCV)...')
+    } else {
+      setDetectStepText('Analisando contornos do documento com OpenCV...')
+    }
+
     try {
-      const result = await detectDocumentCorners(canvasToDetect)
+      const requestId = `scan_${currentToken}`
+      const result = await detectDocumentCorners(
+        canvasToDetect,
+        canvasToDetect.width,
+        canvasToDetect.height,
+        requestId,
+      )
+
       if (currentToken !== activeSessionTokenRef.current) {
         return // Descarte de resultados obsoletos
       }
 
       setCorners(result.corners)
-      setIsConfident(result.isConfident)
+      setIsConfident(result.detected && result.confidence >= 0.3)
 
       // Exibir mensagens claras discriminando falha do motor vs contornos não detectados
-      if (result.engineState === 'failed') {
+      if (result.status === 'error') {
         setDetectionMessage(
-          `Motor OpenCV indisponível (${result.failureReason || 'erro ao carregar runtime'}). Ajuste os cantos manualmente.`,
+          `Motor OpenCV indisponível (${result.error || 'erro ao carregar runtime'}). Ajuste os cantos manualmente.`,
         )
-      } else if (!result.success) {
+      } else if (result.status === 'timeout') {
         setDetectionMessage(
-          result.message ||
-            'Não foi possível identificar bordas de papel com contraste suficiente. Ajuste os cantos manualmente.',
+          'A detecção excedeu o tempo limite. Os 4 cantos padrão foram aplicados para ajuste manual.',
         )
-      } else if (!result.isConfident) {
+      } else if (!result.detected) {
+        setDetectionMessage(
+          'Não foi possível identificar bordas de papel com contraste suficiente. Ajuste os cantos manualmente.',
+        )
+      } else if (result.confidence < 0.4) {
         setDetectionMessage(
           'Detecção com baixa certeza. Verifique e ajuste os cantos se necessário.',
         )
@@ -299,7 +336,7 @@ export function ImageEditorModal({
       }
     } catch (err: any) {
       if (currentToken !== activeSessionTokenRef.current) return
-      console.warn('Erro na detecção automática:', err)
+      console.warn('[ImageEditor] Erro na detecção automática:', err)
       const def = getDefaultCorners(canvasToDetect.width, canvasToDetect.height)
       setCorners(def)
       setIsConfident(false)
@@ -395,8 +432,13 @@ export function ImageEditorModal({
 
     setIsWarping(true)
     try {
-      const result = await applyPerspectiveWarp(currentCanvas, corners)
-      setPreviewWarpCanvas(result.canvas)
+      const outCanvas = await applyPerspectiveWarp(
+        currentCanvas,
+        corners,
+        currentCanvas.width,
+        currentCanvas.height,
+      )
+      setPreviewWarpCanvas(outCanvas)
       setIsPreviewWarp(true)
     } catch (err) {
       console.error('Erro ao gerar prévia da transformação de perspectiva:', err)
@@ -412,8 +454,12 @@ export function ImageEditorModal({
 
     setIsWarping(true)
     try {
-      const warped = await applyPerspectiveWarp(currentCanvas, corners)
-      const outCanvas = warped.canvas
+      const outCanvas = await applyPerspectiveWarp(
+        currentCanvas,
+        corners,
+        currentCanvas.width,
+        currentCanvas.height,
+      )
 
       // Exportar como blob de alta qualidade no tipo original (jpeg ou png)
       const mime = imageType === 'image/png' ? 'image/png' : 'image/jpeg'
@@ -433,8 +479,8 @@ export function ImageEditorModal({
       onApply({
         buffer,
         previewUrl,
-        width: warped.width,
-        height: warped.height,
+        width: outCanvas.width,
+        height: outCanvas.height,
         size: blob.size,
         type: imageType,
       })
@@ -700,27 +746,31 @@ export function ImageEditorModal({
 
             <div className="h-4 w-px bg-[#E4E7EB] mx-1 hidden sm:block" />
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
-              onClick={() => currentCanvas && runDetection(currentCanvas)}
-              disabled={isDetecting || isWarping || isPreviewWarp}
-              title="Detectar novamente as bordas do documento"
-            >
-              {isDetecting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-[#C9922A]" />
-                  Detectando...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
-                  Detectar novamente
-                </>
-              )}
-            </Button>
+            {isDetecting ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 px-2.5 text-xs text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-50"
+                onClick={handleSkipDetection}
+                title="Pular análise e ajustar cantos manualmente"
+              >
+                Pular detecção
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+                onClick={() => currentCanvas && runDetection(currentCanvas)}
+                disabled={isWarping || isPreviewWarp}
+                title="Detectar novamente as bordas do documento"
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
+                Detectar novamente
+              </Button>
+            )}
 
             <Button
               type="button"
@@ -807,12 +857,21 @@ export function ImageEditorModal({
           )}
 
           {isDetecting && (
-            <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center text-white">
-              <Loader2 className="w-8 h-8 animate-spin text-[#C9922A] mb-2" />
-              <p className="text-sm font-semibold">
-                Analisando contornos do documento com OpenCV...
+            <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white p-4">
+              <Loader2 className="w-8 h-8 animate-spin text-[#C9922A] mb-3" />
+              <p className="text-sm font-semibold text-center">{detectStepText}</p>
+              <p className="text-xs text-white/70 mt-1 text-center">
+                Identificando os 4 cantos do papel em segundo plano
               </p>
-              <p className="text-xs text-white/70 mt-1">Identificando os 4 cantos do papel</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSkipDetection}
+                className="mt-4 h-8 px-3 text-xs bg-black/40 hover:bg-black/60 border-white/40 text-white hover:text-white"
+              >
+                Pular detecção e ajustar manualmente
+              </Button>
             </div>
           )}
 
