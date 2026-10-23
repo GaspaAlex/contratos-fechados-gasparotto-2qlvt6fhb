@@ -47,7 +47,9 @@ import {
   type Point2D,
   isValidConvexQuad,
   orderCorners,
+  estimateQuadTiltDegrees,
 } from '@/lib/pdf-tools/scanner/perspective-math'
+import { Slider } from '@/components/ui/slider'
 import {
   detectDocumentCorners,
   applyPerspectiveWarp,
@@ -95,6 +97,10 @@ export function ImageEditorModal({
   const [naturalWidth, setNaturalWidth] = useState<number>(0)
   const [naturalHeight, setNaturalHeight] = useState<number>(0)
   const [rotationAngle, setRotationAngle] = useState<number>(0) // rotação cumulativa 0, 90, 180, 270
+
+  // Correção fina de inclinação (-15° a +15° em passos de 0,5°)
+  const [fineTiltAngle, setFineTiltAngle] = useState<number>(0)
+  const [suggestedTilt, setSuggestedTilt] = useState<number | null>(null)
 
   // Estado da detecção e inicialização
   const [isDetecting, setIsDetecting] = useState<boolean>(false)
@@ -232,6 +238,8 @@ export function ImageEditorModal({
         setNaturalWidth(nw)
         setNaturalHeight(nh)
         setRotationAngle(0)
+        setFineTiltAngle(0)
+        setSuggestedTilt(null)
         setIsPreviewWarp(false)
         setPreviewWarpCanvas(null)
         setIsLoadingImage(false)
@@ -312,7 +320,14 @@ export function ImageEditorModal({
       }
 
       setCorners(result.corners)
-      setIsConfident(result.detected && result.confidence >= 0.3)
+      const confident = result.detected && result.confidence >= 0.35
+      setIsConfident(confident)
+
+      if (result.estimatedTiltAngle !== undefined && Math.abs(result.estimatedTiltAngle) <= 15) {
+        setSuggestedTilt(-result.estimatedTiltAngle)
+      } else {
+        setSuggestedTilt(null)
+      }
 
       // Exibir mensagens claras discriminando falha do motor vs contornos não detectados
       if (result.status === 'error') {
@@ -321,15 +336,11 @@ export function ImageEditorModal({
         )
       } else if (result.status === 'timeout') {
         setDetectionMessage(
-          'A detecção excedeu o tempo limite. Os 4 cantos padrão foram aplicados para ajuste manual.',
+          'A detecção excedeu o tempo limite. Sugestão de enquadramento aplicada para ajuste manual.',
         )
-      } else if (!result.detected) {
+      } else if (!confident) {
         setDetectionMessage(
-          'Não foi possível identificar bordas de papel com contraste suficiente. Ajuste os cantos manualmente.',
-        )
-      } else if (result.confidence < 0.4) {
-        setDetectionMessage(
-          'Detecção com baixa certeza. Verifique e ajuste os cantos se necessário.',
+          'Sugestão de enquadramento (confiança moderada). Confira e ajuste os cantos se necessário.',
         )
       } else {
         setDetectionMessage(null)
@@ -406,6 +417,8 @@ export function ImageEditorModal({
     setNaturalWidth(newW)
     setNaturalHeight(newH)
     setRotationAngle((prev) => (prev + deltaAngle + 360) % 360)
+    setFineTiltAngle(0) // zerar ajuste fino ao fazer rotação ortogonal de 90°
+    setSuggestedTilt(null)
     setCorners(newOrderedCorners)
     setIsPreviewWarp(false)
     setPreviewWarpCanvas(null)
@@ -421,6 +434,63 @@ export function ImageEditorModal({
     initFromBuffer(originalBuffer)
   }
 
+  // Aplica rotação fina em torno do centro com recorte inteligente evitando bordas vazias
+  const applyFineTiltToCanvas = (
+    sourceCanvas: HTMLCanvasElement,
+    angleDeg: number,
+  ): HTMLCanvasElement => {
+    if (Math.abs(angleDeg) < 0.05) {
+      return sourceCanvas
+    }
+
+    const rad = (angleDeg * Math.PI) / 180
+    const cos = Math.cos(rad)
+    const sin = Math.sin(rad)
+    const absCos = Math.abs(cos)
+    const absSin = Math.abs(sin)
+
+    const w = sourceCanvas.width
+    const h = sourceCanvas.height
+
+    // Tamanho do maior retângulo central contido sem bordas vazias
+    // Para rotações pequenas (<= 15°):
+    // cropW = w - h * absSin
+    // cropH = h - w * absSin
+    // Ou fórmula exata de corte inscrito:
+    const cropW = Math.max(
+      20,
+      Math.floor((w * absCos - h * absSin) / (absCos * absCos - absSin * absSin)),
+    )
+    const cropH = Math.max(
+      20,
+      Math.floor((h * absCos - w * absSin) / (absCos * absCos - absSin * absSin)),
+    )
+
+    // Para evitar distorções se o ângulo for no limite, limitamos a proporção razoável
+    const targetW = Math.min(
+      w,
+      Math.max(20, cropW > 0 && cropW <= w ? cropW : Math.round(w * (1 - absSin * 0.5))),
+    )
+    const targetH = Math.min(
+      h,
+      Math.max(20, cropH > 0 && cropH <= h ? cropH : Math.round(h * (1 - absSin * 0.5))),
+    )
+
+    const out = document.createElement('canvas')
+    out.width = targetW
+    out.height = targetH
+    const ctx = out.getContext('2d')
+    if (!ctx) return sourceCanvas
+
+    ctx.save()
+    ctx.translate(targetW / 2, targetH / 2)
+    ctx.rotate(rad)
+    ctx.drawImage(sourceCanvas, -w / 2, -h / 2)
+    ctx.restore()
+
+    return out
+  }
+
   // Alternar prévia do recorte de perspectiva
   const togglePreviewWarp = async () => {
     if (isPreviewWarp) {
@@ -432,13 +502,18 @@ export function ImageEditorModal({
 
     setIsWarping(true)
     try {
-      const outCanvas = await applyPerspectiveWarp(
+      const warpedCanvas = await applyPerspectiveWarp(
         currentCanvas,
         corners,
         currentCanvas.width,
         currentCanvas.height,
       )
-      setPreviewWarpCanvas(outCanvas)
+
+      // Aplicar rotação fina também na prévia se fineTiltAngle !== 0
+      const finalCanvas =
+        fineTiltAngle !== 0 ? applyFineTiltToCanvas(warpedCanvas, fineTiltAngle) : warpedCanvas
+
+      setPreviewWarpCanvas(finalCanvas)
       setIsPreviewWarp(true)
     } catch (err) {
       console.error('Erro ao gerar prévia da transformação de perspectiva:', err)
@@ -454,12 +529,16 @@ export function ImageEditorModal({
 
     setIsWarping(true)
     try {
-      const outCanvas = await applyPerspectiveWarp(
+      const warpedCanvas = await applyPerspectiveWarp(
         currentCanvas,
         corners,
         currentCanvas.width,
         currentCanvas.height,
       )
+
+      // Aplicar correção fina de inclinação se selecionada
+      const outCanvas =
+        fineTiltAngle !== 0 ? applyFineTiltToCanvas(warpedCanvas, fineTiltAngle) : warpedCanvas
 
       // Exportar como blob de alta qualidade no tipo original (jpeg ou png)
       const mime = imageType === 'image/png' ? 'image/png' : 'image/jpeg'
@@ -810,6 +889,89 @@ export function ImageEditorModal({
           </div>
         </div>
 
+        {/* Barra de Correção Fina de Inclinação ("Endireitar") */}
+        <div className="px-5 py-2 bg-[#FAF8F2]/60 dark:bg-card/70 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3 flex-1 min-w-[280px] max-w-lg">
+            <span className="text-xs font-semibold text-[#252B34] dark:text-foreground whitespace-nowrap">
+              Endireitar:
+            </span>
+            <div className="flex-1 flex items-center gap-2">
+              <span className="text-[10px] text-[#78818E] font-mono">-15°</span>
+              <Slider
+                value={[fineTiltAngle]}
+                min={-15}
+                max={15}
+                step={0.5}
+                onValueChange={(val) => {
+                  const angle = val[0] ?? 0
+                  setFineTiltAngle(angle)
+                  if (isPreviewWarp) {
+                    setIsPreviewWarp(false)
+                    setPreviewWarpCanvas(null)
+                  }
+                }}
+                disabled={isDetecting || isWarping}
+                className="flex-1 py-1"
+              />
+              <span className="text-[10px] text-[#78818E] font-mono">+15°</span>
+            </div>
+            <div className="min-w-[48px] text-center">
+              <Badge
+                variant="outline"
+                className={`text-[11px] font-mono px-1.5 py-0.5 ${
+                  fineTiltAngle !== 0
+                    ? 'bg-[#C9922A]/15 text-[#C9922A] border-[#C9922A]/40 font-bold'
+                    : 'text-[#78818E] border-[#E4E7EB]'
+                }`}
+              >
+                {fineTiltAngle > 0
+                  ? `+${fineTiltAngle.toFixed(1)}°`
+                  : `${fineTiltAngle.toFixed(1)}°`}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {fineTiltAngle !== 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-[#78818E] hover:text-[#252B34]"
+                onClick={() => {
+                  setFineTiltAngle(0)
+                  if (isPreviewWarp) {
+                    setIsPreviewWarp(false)
+                    setPreviewWarpCanvas(null)
+                  }
+                }}
+              >
+                Zerar inclinação
+              </Button>
+            )}
+
+            {isConfident && suggestedTilt !== null && Math.abs(suggestedTilt) >= 0.5 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 px-2.5 text-xs text-[#C9922A] border-[#C9922A]/40 bg-[#FAF8F2] hover:bg-[#C9922A]/10 font-medium"
+                onClick={() => {
+                  setFineTiltAngle(suggestedTilt)
+                  if (isPreviewWarp) {
+                    setIsPreviewWarp(false)
+                    setPreviewWarpCanvas(null)
+                  }
+                }}
+                title="Aplica correção automática baseada na inclinação das bordas detectadas"
+              >
+                <Sparkles className="w-3 h-3 mr-1 text-[#C9922A]" />
+                Auto: {suggestedTilt > 0 ? `+${suggestedTilt}°` : `${suggestedTilt}°`}
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Área Central de Visualização / Manipulação do Documento */}
         <div
           ref={containerRef}
@@ -917,6 +1079,18 @@ export function ImageEditorModal({
                   className="block object-contain rounded shadow-lg pointer-events-none"
                   draggable={false}
                   onLoad={updateStageLayout}
+                />
+              )}
+
+              {/* Linhas de grade sutis para auxílio de nivelamento quando houver inclinação fina */}
+              {fineTiltAngle !== 0 && (
+                <div
+                  className="absolute inset-0 pointer-events-none border border-white/20"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px)',
+                    backgroundSize: '30px 30px',
+                  }}
                 />
               )}
 

@@ -30,6 +30,35 @@ export function distance(p1: Point2D, p2: Point2D): number {
 }
 
 /**
+ * Calcula o ângulo em graus de inclinação (tilt) do quadrilátero em relação à horizontal (-45° a +45°).
+ * Retorna valores positivos para rotação horária e negativos para anti-horária.
+ */
+export function estimateQuadTiltDegrees(corners: DocumentCorners): number {
+  // Vetor do topo: topLeft -> topRight
+  const dxTop = corners.topRight.x - corners.topLeft.x
+  const dyTop = corners.topRight.y - corners.topLeft.y
+  const angleTopRad = Math.atan2(dyTop, dxTop)
+  const angleTopDeg = (angleTopRad * 180) / Math.PI
+
+  // Vetor da base: bottomLeft -> bottomRight
+  const dxBottom = corners.bottomRight.x - corners.bottomLeft.x
+  const dyBottom = corners.bottomRight.y - corners.bottomLeft.y
+  const angleBottomRad = Math.atan2(dyBottom, dxBottom)
+  const angleBottomDeg = (angleBottomRad * 180) / Math.PI
+
+  // Média ponderada dos dois lados horizontais
+  const avgDeg = (angleTopDeg + angleBottomDeg) / 2
+
+  // Normalizar para faixa entre -45° e +45°
+  let normalized = avgDeg
+  while (normalized > 45) normalized -= 90
+  while (normalized < -45) normalized += 90
+
+  // Arredondar para 1 casa decimal
+  return Math.round(normalized * 10) / 10
+}
+
+/**
  * Ordena 4 cantos arbitrários em: [TopLeft, TopRight, BottomRight, BottomLeft].
  * Algoritmo:
  * - A soma (x + y) é mínima no TopLeft e máxima no BottomRight.

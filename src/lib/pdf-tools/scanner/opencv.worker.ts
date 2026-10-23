@@ -55,6 +55,7 @@ export interface WorkerDetectSuccessResponse {
   confidence: number
   durationMs: number
   detected: boolean
+  estimatedTiltAngle?: number
 }
 
 export interface WorkerDetectErrorResponse {
@@ -175,6 +176,14 @@ async function loadOpenCvInWorker(opencvUrl: string): Promise<any> {
   return initPromise
 }
 
+interface CandidateQuad {
+  corners: DocumentCorners
+  procCorners: DocumentCorners
+  area: number
+  score: number
+  confidence: number
+}
+
 function processDetection(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cv: any,
@@ -182,96 +191,255 @@ function processDetection(
   scale: number,
   originalWidth: number,
   originalHeight: number,
-): { corners: DocumentCorners; confidence: number; detected: boolean } {
+): {
+  corners: DocumentCorners
+  confidence: number
+  detected: boolean
+  estimatedTiltAngle?: number
+} {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let srcMat: any = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let gray: any = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let enhanced: any = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let blurred: any = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let edges: any = null
+  let morphKernel: any = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let dilated: any = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let M: any = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let contours: any = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let hierarchy: any = null
+  let clahe: any = null
 
   try {
     srcMat = cv.matFromImageData(imageData)
     gray = new cv.Mat()
     cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY)
 
+    // Correção preliminar de iluminação local apenas para detecção (CLAHE)
+    enhanced = new cv.Mat()
+    try {
+      clahe = new cv.CLAHE(2.0, new cv.Size(8, 8))
+      clahe.apply(gray, enhanced)
+    } catch {
+      // Se CLAHE falhar ou não estiver no build, usar equalização ou cinza puro
+      gray.copyTo(enhanced)
+    }
+
     blurred = new cv.Mat()
     const ksize = new cv.Size(5, 5)
-    cv.GaussianBlur(gray, blurred, ksize, 0, 0, cv.BORDER_DEFAULT)
+    cv.GaussianBlur(enhanced, blurred, ksize, 0, 0, cv.BORDER_DEFAULT)
 
-    edges = new cv.Mat()
-    cv.Canny(blurred, edges, 50, 150, 3, false)
-
-    dilated = new cv.Mat()
-    M = cv.Mat.ones(3, 3, cv.CV_8U)
+    morphKernel = cv.Mat.ones(3, 3, cv.CV_8U)
     const anchor = new cv.Point(-1, -1)
-    cv.dilate(edges, dilated, M, anchor, 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue())
-
-    contours = new cv.MatVector()
-    hierarchy = new cv.Mat()
-    cv.findContours(dilated, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
     const procWidth = imageData.width
     const procHeight = imageData.height
-    const minArea = procWidth * procHeight * 0.05
-    const maxArea = procWidth * procHeight * 0.98
+    const totalProcArea = procWidth * procHeight
+    const minArea = totalProcArea * 0.08
+    const maxArea = totalProcArea * 0.96
 
-    let bestCorners: DocumentCorners | null = null
-    let maxFoundArea = 0
+    // Testar múltiplos esquemas de Canny e parâmetros de dilatação/fechamento
+    const passes = [
+      { low: 30, high: 100, close: true, eps: 0.02 },
+      { low: 50, high: 150, close: false, eps: 0.025 },
+      { low: 75, high: 200, close: true, eps: 0.03 },
+    ]
 
-    const numContours = contours.size()
-    for (let i = 0; i < numContours; i++) {
-      const contour = contours.get(i)
+    const candidates: CandidateQuad[] = []
+
+    for (const pass of passes) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let approx: any = null
+      let edges: any = null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let morphed: any = null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let contours: any = null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let hierarchy: any = null
+
       try {
-        const area = cv.contourArea(contour)
-        if (area < minArea || area > maxArea) {
-          continue
+        edges = new cv.Mat()
+        cv.Canny(blurred, edges, pass.low, pass.high, 3, false)
+
+        morphed = new cv.Mat()
+        if (pass.close) {
+          // Fechamento morfológico para unir bordas pontilhadas de RGs/plásticos
+          cv.morphologyEx(
+            edges,
+            morphed,
+            cv.MORPH_CLOSE,
+            morphKernel,
+            anchor,
+            1,
+            cv.BORDER_CONSTANT,
+            cv.morphologyDefaultBorderValue(),
+          )
+        } else {
+          cv.dilate(
+            edges,
+            morphed,
+            morphKernel,
+            anchor,
+            1,
+            cv.BORDER_CONSTANT,
+            cv.morphologyDefaultBorderValue(),
+          )
         }
 
-        const peri = cv.arcLength(contour, true)
-        approx = new cv.Mat()
-        cv.approxPolyDP(contour, approx, peri * 0.02, true)
+        contours = new cv.MatVector()
+        hierarchy = new cv.Mat()
+        cv.findContours(morphed, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
-        if (approx.rows === 4) {
-          const rawPts: Point2D[] = []
-          for (let r = 0; r < 4; r++) {
-            rawPts.push({
-              x: approx.data32S[r * 2] * scale,
-              y: approx.data32S[r * 2 + 1] * scale,
-            })
-          }
+        const numContours = contours.size()
+        for (let i = 0; i < numContours; i++) {
+          const contour = contours.get(i)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let approx: any = null
+          try {
+            const area = cv.contourArea(contour)
+            if (area < minArea || area > maxArea) {
+              continue
+            }
 
-          const ordered = orderCorners(rawPts)
-          if (isValidConvexQuad(ordered) && area > maxFoundArea) {
-            maxFoundArea = area
-            bestCorners = ordered
+            const peri = cv.arcLength(contour, true)
+            approx = new cv.Mat()
+            cv.approxPolyDP(contour, approx, peri * pass.eps, true)
+
+            // Se for 4 pontos, avaliar
+            if (approx.rows === 4) {
+              const rawPtsProc: Point2D[] = []
+              const rawPtsOrig: Point2D[] = []
+              for (let r = 0; r < 4; r++) {
+                const px = approx.data32S[r * 2]
+                const py = approx.data32S[r * 2 + 1]
+                rawPtsProc.push({ x: px, y: py })
+                rawPtsOrig.push({
+                  x: Math.max(0, Math.min(originalWidth, px * scale)),
+                  y: Math.max(0, Math.min(originalHeight, py * scale)),
+                })
+              }
+
+              const orderedProc = orderCorners(rawPtsProc)
+              const orderedOrig = orderCorners(rawPtsOrig)
+
+              if (!isValidConvexQuad(orderedProc)) {
+                continue
+              }
+
+              // CRITÉRIOS DE AVALIAÇÃO E RANKING:
+              // 1. Proporção de aspecto (RG, A4, CNH, carteiras): típica 1.25 a 1.65 (horizontal ou vertical)
+              const wTop = Math.hypot(
+                orderedProc.topRight.x - orderedProc.topLeft.x,
+                orderedProc.topRight.y - orderedProc.topLeft.y,
+              )
+              const wBot = Math.hypot(
+                orderedProc.bottomRight.x - orderedProc.bottomLeft.x,
+                orderedProc.bottomRight.y - orderedProc.bottomLeft.y,
+              )
+              const hLeft = Math.hypot(
+                orderedProc.bottomLeft.x - orderedProc.topLeft.x,
+                orderedProc.bottomLeft.y - orderedProc.topLeft.y,
+              )
+              const hRight = Math.hypot(
+                orderedProc.bottomRight.x - orderedProc.topRight.x,
+                orderedProc.bottomRight.y - orderedProc.topRight.y,
+              )
+
+              const avgW = (wTop + wBot) / 2
+              const avgH = (hLeft + hRight) / 2
+              if (avgW < 40 || avgH < 40) continue
+
+              const aspect = Math.max(avgW / avgH, avgH / avgW)
+              // Documentos brasileiros (RG aberto ~1.43, RG fechado ~1.42, A4 ~1.414, CNH ~1.45)
+              let aspectScore = 1.0
+              if (aspect >= 1.2 && aspect <= 1.7) {
+                aspectScore = 1.25
+              } else if (aspect > 2.5 || aspect < 1.05) {
+                aspectScore = 0.5
+              }
+
+              // 2. Proximidade de paralelismo (lados opostos devem ter tamanhos similares)
+              const ratioW = Math.min(wTop, wBot) / Math.max(wTop, wBot)
+              const ratioH = Math.min(hLeft, hRight) / Math.max(hLeft, hRight)
+              const parallelismScore = (ratioW + ratioH) / 2
+
+              // 3. Afastamento das bordas da imagem (evitar confundir com o quadro da própria foto)
+              const marginMargin = 8
+              const touchesBorder = [
+                orderedProc.topLeft,
+                orderedProc.topRight,
+                orderedProc.bottomRight,
+                orderedProc.bottomLeft,
+              ].some(
+                (p) =>
+                  p.x <= marginMargin ||
+                  p.x >= procWidth - marginMargin ||
+                  p.y <= marginMargin ||
+                  p.y >= procHeight - marginMargin,
+              )
+              const borderPenalty = touchesBorder ? 0.6 : 1.0
+
+              // 4. Área relativa (ideal entre 15% e 85% da imagem total)
+              const areaFraction = area / totalProcArea
+              let areaScore = 1.0
+              if (areaFraction >= 0.2 && areaFraction <= 0.85) {
+                areaScore = 1.2
+              } else if (areaFraction > 0.92) {
+                areaScore = 0.5 // quase o frame todo
+              }
+
+              // 5. Pontuação agregada
+              const score = area * aspectScore * parallelismScore * borderPenalty * areaScore
+              const confidence = Math.min(
+                0.98,
+                Math.max(
+                  0.15,
+                  (parallelismScore * 0.4 + areaFraction * 0.3 + (aspectScore / 1.25) * 0.3) *
+                    borderPenalty,
+                ),
+              )
+
+              candidates.push({
+                corners: orderedOrig,
+                procCorners: orderedProc,
+                area,
+                score,
+                confidence,
+              })
+            }
+          } finally {
+            contour?.delete?.()
+            approx?.delete?.()
           }
         }
       } finally {
-        contour?.delete?.()
-        approx?.delete?.()
+        edges?.delete?.()
+        morphed?.delete?.()
+        contours?.delete?.()
+        hierarchy?.delete?.()
       }
     }
 
-    if (bestCorners) {
-      const totalArea = procWidth * procHeight
-      const confidence = Math.min(1, Math.max(0.3, maxFoundArea / totalArea))
+    if (candidates.length > 0) {
+      // Ordenar pelo ranking com múltiplos critérios
+      candidates.sort((a, b) => b.score - a.score)
+      const best = candidates[0]
+
+      // Estimar inclinação das bordas do documento detectado
+      const dx = best.corners.topRight.x - best.corners.topLeft.x
+      const dy = best.corners.topRight.y - best.corners.topLeft.y
+      let tilt = (Math.atan2(dy, dx) * 180) / Math.PI
+      while (tilt > 45) tilt -= 90
+      while (tilt < -45) tilt += 90
+      const estimatedTiltAngle = Math.round(tilt * 10) / 10
+
+      // Se a confiança for maior ou igual a 0.35, consideramos detecção confiável
+      const isConfident = best.confidence >= 0.35
       return {
-        corners: bestCorners,
-        confidence,
-        detected: true,
+        corners: best.corners,
+        confidence: best.confidence,
+        detected: isConfident,
+        estimatedTiltAngle,
       }
     }
 
@@ -289,14 +457,12 @@ function processDetection(
       detected: false,
     }
   } finally {
+    clahe?.delete?.()
     srcMat?.delete?.()
     gray?.delete?.()
+    enhanced?.delete?.()
     blurred?.delete?.()
-    edges?.delete?.()
-    dilated?.delete?.()
-    M?.delete?.()
-    contours?.delete?.()
-    hierarchy?.delete?.()
+    morphKernel?.delete?.()
   }
 }
 
@@ -430,6 +596,7 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         corners: result.corners,
         confidence: result.confidence,
         detected: result.detected,
+        estimatedTiltAngle: result.estimatedTiltAngle,
         durationMs,
       }
       self.postMessage(res)

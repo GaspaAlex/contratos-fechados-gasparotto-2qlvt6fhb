@@ -12,6 +12,7 @@ export interface DetectionResult {
   confidence: number
   durationMs: number
   detected: boolean
+  estimatedTiltAngle?: number
   status: 'success' | 'no_document' | 'error' | 'cancelled' | 'timeout'
   error?: string
 }
@@ -24,9 +25,9 @@ export interface WarpResult {
 }
 
 // Timeout configs (controlled in main thread while worker runs)
-const INIT_TIMEOUT_MS = 25000
-const DETECT_TIMEOUT_MS = 12000
-const WARP_TIMEOUT_MS = 15000
+const INIT_TIMEOUT_MS = 35000
+const DETECT_TIMEOUT_MS = 15000
+const WARP_TIMEOUT_MS = 18000
 
 class ScanWorkerClient {
   private worker: Worker | null = null
@@ -140,7 +141,9 @@ class ScanWorkerClient {
         if (idx !== -1) {
           this.pendingInitResolvers.splice(idx, 1)
         }
-        this.terminate()
+        this.terminate(
+          new Error('Tempo limite esgotado ao inicializar motor OpenCV (timeout de 25s)'),
+        )
         this.initPromise = null
         reject(new Error('Tempo limite esgotado ao inicializar motor OpenCV (timeout de 25s)'))
       }, INIT_TIMEOUT_MS)
@@ -209,18 +212,19 @@ class ScanWorkerClient {
 
     return new Promise<DetectionResult>((resolve) => {
       const timer = setTimeout(() => {
-        this.pendingRequests.delete(id)
-        // Terminate worker to free blocked resources, replacement will be lazily created
-        this.terminate()
-        const durationMs = Math.round(performance.now() - t0)
-        resolve({
-          corners: getDefaultCorners(originalWidth, originalHeight),
-          confidence: 0,
-          durationMs,
-          detected: false,
-          status: 'timeout',
-          error: 'Detecção cancelada por tempo limite (timeout)',
-        })
+        const req = this.pendingRequests.get(id)
+        if (req) {
+          this.pendingRequests.delete(id)
+          const durationMs = Math.round(performance.now() - t0)
+          resolve({
+            corners: getDefaultCorners(originalWidth, originalHeight),
+            confidence: 0,
+            durationMs,
+            detected: false,
+            status: 'timeout',
+            error: 'Detecção cancelada por tempo limite (timeout)',
+          })
+        }
       }, DETECT_TIMEOUT_MS)
 
       this.pendingRequests.set(id, {
@@ -230,17 +234,19 @@ class ScanWorkerClient {
             confidence: msg.confidence,
             durationMs: msg.durationMs,
             detected: msg.detected,
+            estimatedTiltAngle: msg.estimatedTiltAngle,
             status: msg.detected ? 'success' : 'no_document',
           })
         },
         reject: (err: Error) => {
           const durationMs = Math.round(performance.now() - t0)
+          const isUserCancel = err.message && err.message.includes('usuário')
           resolve({
             corners: getDefaultCorners(originalWidth, originalHeight),
             confidence: 0,
             durationMs,
             detected: false,
-            status: 'error',
+            status: isUserCancel ? 'cancelled' : 'error',
             error: err.message,
           })
         },
@@ -314,13 +320,15 @@ class ScanWorkerClient {
   }
 
   /**
-   * Signal cancellation of a specific request
+   * Signal cancellation of a specific request triggered explicitly by user action
    */
   public cancel(requestId: string): void {
     const pending = this.pendingRequests.get(requestId)
     if (pending) {
       clearTimeout(pending.timer)
       this.pendingRequests.delete(requestId)
+      // Resolve or reject gracefully without destroying the shared worker
+      pending.reject(new Error('Operação cancelada pelo usuário'))
     }
     if (this.worker) {
       try {
@@ -332,9 +340,9 @@ class ScanWorkerClient {
   }
 
   /**
-   * Terminate the worker and reset all state to allow clean retry
+   * Terminate the worker and reset state only when an unrecoverable crash or explicit reset occurs
    */
-  public terminate(): void {
+  public terminate(reason?: Error): void {
     if (this.worker) {
       try {
         this.worker.terminate()
@@ -345,7 +353,7 @@ class ScanWorkerClient {
     }
     this.isInitialized = false
     this.initPromise = null
-    this.rejectAllPending(new Error('Operação cancelada ou worker reiniciado'))
+    this.rejectAllPending(reason || new Error('Worker reiniciado'))
   }
 
   public getInitialized(): boolean {
