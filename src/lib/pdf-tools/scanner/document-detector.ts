@@ -25,6 +25,10 @@ export interface DetectionResult {
   sourceWidth: number
   sourceHeight: number
   message?: string
+  engineState: 'ready' | 'failed' | 'not_loaded'
+  engineInitDurationMs?: number
+  detectionDurationMs?: number
+  failureReason?: string
 }
 
 /**
@@ -56,13 +60,18 @@ export async function detectDocumentCorners(
     throw new Error('Dimensões da imagem inválidas para detecção.')
   }
 
+  const startDetectionTime = performance.now()
+
   // 1. Tentar inicializar OpenCV.js
   let cv: any = null
+  let engineInitDurationMs: number | undefined
   try {
     cv = await loadOpenCv()
-  } catch (cvErr) {
+    engineInitDurationMs = typeof window !== 'undefined' ? window._opencvInitDurationMs : undefined
+  } catch (cvErr: any) {
+    const errMessage = cvErr?.message || 'Motor de visão computacional indisponível'
     console.warn(
-      'OpenCV não pôde ser inicializado, utilizando cantos manuais pré-definidos:',
+      '[Detector] OpenCV não pôde ser inicializado, utilizando cantos manuais pré-definidos:',
       cvErr,
     )
     return {
@@ -71,6 +80,9 @@ export async function detectDocumentCorners(
       isConfident: false,
       sourceWidth: naturalWidth,
       sourceHeight: naturalHeight,
+      engineState: 'failed',
+      failureReason: errMessage,
+      detectionDurationMs: Math.round(performance.now() - startDetectionTime),
       message:
         'Motor de visão computacional indisponível no momento. Ajuste os cantos manualmente.',
     }
@@ -94,6 +106,10 @@ export async function detectDocumentCorners(
       isConfident: false,
       sourceWidth: naturalWidth,
       sourceHeight: naturalHeight,
+      engineState: 'ready',
+      engineInitDurationMs,
+      detectionDurationMs: Math.round(performance.now() - startDetectionTime),
+      failureReason: 'Falha ao alocar contexto 2D.',
       message: 'Falha ao alocar contexto gráfico.',
     }
   }
@@ -219,6 +235,11 @@ export async function detectDocumentCorners(
       }
     }
 
+    const detectionDurationMs = Math.round(performance.now() - startDetectionTime)
+    console.info(
+      `[Detector] Detecção concluída em ${detectionDurationMs}ms (inicialização prévia: ${engineInitDurationMs ?? 0}ms)`,
+    )
+
     if (bestCorners && isValidConvexQuad(bestCorners)) {
       return {
         success: true,
@@ -226,23 +247,31 @@ export async function detectDocumentCorners(
         isConfident,
         sourceWidth: naturalWidth,
         sourceHeight: naturalHeight,
+        engineState: 'ready',
+        engineInitDurationMs,
+        detectionDurationMs,
         message: isConfident
           ? 'Bordas do documento detectadas com sucesso.'
           : 'Detecção aproximada. Ajuste os cantos se necessário.',
       }
     }
 
-    // Se tudo falhar, devolve cantos padrão para o usuário posicionar manualmente
+    // Se tudo falhar (motor OK, mas contraste/forma não identificados como quadrilátero)
     return {
       success: false,
       corners: getDefaultCorners(naturalWidth, naturalHeight),
       isConfident: false,
       sourceWidth: naturalWidth,
       sourceHeight: naturalHeight,
+      engineState: 'ready',
+      engineInitDurationMs,
+      detectionDurationMs,
+      failureReason: 'Contornos nítidos de documento não isolados.',
       message:
-        'Não foi possível detectar bordas nítidas automaticamente. Ajuste os cantos manualmente.',
+        'Motor ativo: não foi possível detectar bordas nítidas automaticamente neste enquadramento. Ajuste os cantos manualmente.',
     }
-  } catch (err) {
+  } catch (err: any) {
+    const detectionDurationMs = Math.round(performance.now() - startDetectionTime)
     console.error('Erro durante detecção com OpenCV:', err)
     return {
       success: false,
@@ -250,6 +279,10 @@ export async function detectDocumentCorners(
       isConfident: false,
       sourceWidth: naturalWidth,
       sourceHeight: naturalHeight,
+      engineState: 'ready',
+      engineInitDurationMs,
+      detectionDurationMs,
+      failureReason: err?.message || 'Erro durante a análise do algoritmo de bordas',
       message: 'Erro durante análise de imagem. Utilize o ajuste manual.',
     }
   } finally {

@@ -329,9 +329,15 @@ export default function ImagensParaPdf() {
     setDragOverIndex(null)
   }
 
-  // Abrir editor de imagem
+  // Abrir editor de imagem (clona o buffer ou garante referência íntegra)
   const handleOpenEditor = (item: SelectedImageItem) => {
     if (isConverting) return
+    if (!item.originalBuffer || item.originalBuffer.byteLength === 0) {
+      setErrorMessage(
+        `Não foi possível abrir "${item.name}": arquivo de imagem corrompido ou vazio.`,
+      )
+      return
+    }
     setEditingImageItem(item)
   }
 
@@ -342,8 +348,12 @@ export default function ImagensParaPdf() {
     setImages((prev) =>
       prev.map((it) => {
         if (it.id === editingImageItem.id) {
-          // Revoga URL temporária antiga
-          if (it.previewUrl && it.previewUrl.startsWith('blob:')) {
+          // Revoga URL temporária antiga apenas se for diferente
+          if (
+            it.previewUrl &&
+            it.previewUrl.startsWith('blob:') &&
+            it.previewUrl !== output.previewUrl
+          ) {
             URL.revokeObjectURL(it.previewUrl)
           }
           return {

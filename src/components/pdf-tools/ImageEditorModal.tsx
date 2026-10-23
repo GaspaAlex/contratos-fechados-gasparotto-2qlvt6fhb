@@ -109,42 +109,138 @@ export function ImageEditorModal({
   // Dragging de cantos
   const [activeCorner, setActiveCorner] = useState<CornerKey | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const imageElementRef = useRef<HTMLImageElement>(null)
+  const stageBoxRef = useRef<HTMLDivElement>(null)
+
+  // Dimensões do viewport e do stage calculadas com base no contêiner disponível
+  const [stageLayout, setStageLayout] = useState<{
+    width: number
+    height: number
+    scale: number
+  }>({ width: 0, height: 0, scale: 1 })
 
   // Lupa de precisão ao arrastar cantos
   const [magnifierPos, setMagnifierPos] = useState<{ x: number; y: number } | null>(null)
   const magnifierCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Carregar imagem inicial a partir do originalBuffer
+  // Recalcular enquadramento perfeito (object-fit: contain) considerando as dimensões reais do contêiner
+  const updateStageLayout = useCallback(() => {
+    if (!containerRef.current || naturalWidth <= 0 || naturalHeight <= 0) return
+
+    const containerRect = containerRef.current.getBoundingClientRect()
+    // Margem de segurança de respiração (padding interno) para garantir que
+    // as alças e anéis verdes dos 4 cantos nunca sejam cortados
+    const horizontalPadding = 32
+    const verticalPadding = 32
+
+    const availW = Math.max(100, containerRect.width - horizontalPadding)
+    const availH = Math.max(100, containerRect.height - verticalPadding)
+
+    const scale = Math.min(availW / naturalWidth, availH / naturalHeight)
+    const renderW = Math.round(naturalWidth * scale)
+    const renderH = Math.round(naturalHeight * scale)
+
+    setStageLayout({
+      width: renderW,
+      height: renderH,
+      scale,
+    })
+  }, [naturalWidth, naturalHeight])
+
+  // ResizeObserver e window resize listener
+  useEffect(() => {
+    updateStageLayout()
+
+    const containerEl = containerRef.current
+    if (!containerEl) return
+
+    let resizeObserver: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateStageLayout()
+      })
+      resizeObserver.observe(containerEl)
+    }
+
+    const handleWindowResize = () => {
+      updateStageLayout()
+    }
+    window.addEventListener('resize', handleWindowResize)
+    window.addEventListener('orientationchange', handleWindowResize)
+
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect()
+      window.removeEventListener('resize', handleWindowResize)
+      window.removeEventListener('orientationchange', handleWindowResize)
+    }
+  }, [updateStageLayout])
+
+  // Controle de requisição / token assíncrono para evitar condições de corrida
+  const activeSessionTokenRef = useRef<number>(0)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [isLoadingImage, setIsLoadingImage] = useState<boolean>(false)
+
+  // Carregar imagem inicial a partir do originalBuffer com cancelamento seguro
   const initFromBuffer = useCallback(
     (buf: ArrayBuffer) => {
+      // Incrementar token de sessão para invalidar qualquer operação assíncrona anterior
+      const sessionToken = ++activeSessionTokenRef.current
+
+      if (!buf || buf.byteLength === 0) {
+        setLoadError('O buffer da imagem está vazio ou corrompido.')
+        return
+      }
+
+      setIsLoadingImage(true)
+      setLoadError(null)
+      setDetectionMessage(null)
+
       const blob = new Blob([buf], { type: imageType })
       const url = URL.createObjectURL(blob)
       const img = new Image()
 
       img.onload = () => {
+        // Se a sessão mudou durante a decodificação da imagem, aborta
+        if (sessionToken !== activeSessionTokenRef.current) {
+          URL.revokeObjectURL(url)
+          return
+        }
+
+        const nw = img.naturalWidth
+        const nh = img.naturalHeight
+
+        if (!nw || !nh || nw <= 0 || nh <= 0) {
+          URL.revokeObjectURL(url)
+          setIsLoadingImage(false)
+          setLoadError('Não foi possível determinar as dimensões da imagem (0×0px).')
+          return
+        }
+
         const c = document.createElement('canvas')
-        c.width = img.naturalWidth
-        c.height = img.naturalHeight
+        c.width = nw
+        c.height = nh
         const ctx = c.getContext('2d')
         if (ctx) {
           ctx.drawImage(img, 0, 0)
         }
+        URL.revokeObjectURL(url)
+
         setCurrentCanvas(c)
-        setNaturalWidth(img.naturalWidth)
-        setNaturalHeight(img.naturalHeight)
+        setNaturalWidth(nw)
+        setNaturalHeight(nh)
         setRotationAngle(0)
         setIsPreviewWarp(false)
         setPreviewWarpCanvas(null)
-        URL.revokeObjectURL(url)
+        setIsLoadingImage(false)
 
-        // Iniciar detecção automática imediatamente
-        runDetection(c)
+        // Iniciar detecção automática apenas após imagem estar 100% pronta e com dimensões válidas
+        runDetection(c, sessionToken)
       }
 
       img.onerror = () => {
         URL.revokeObjectURL(url)
-        setDetectionMessage('Erro ao decodificar imagem para edição.')
+        if (sessionToken !== activeSessionTokenRef.current) return
+        setIsLoadingImage(false)
+        setLoadError('Falha ao decodificar a imagem selecionada. Verifique se o arquivo é válido.')
       }
 
       img.src = url
@@ -152,37 +248,66 @@ export function ImageEditorModal({
     [imageType],
   )
 
-  // Inicializar sempre que a modal abrir
+  // Inicializar sempre que a modal abrir ou quando trocar o buffer/imagem
   useEffect(() => {
-    if (isOpen && originalBuffer) {
+    if (isOpen && originalBuffer && originalBuffer.byteLength > 0) {
       initFromBuffer(originalBuffer)
     } else {
+      activeSessionTokenRef.current++
       setCurrentCanvas(null)
+      setNaturalWidth(0)
+      setNaturalHeight(0)
       setCorners(null)
       setIsPreviewWarp(false)
       setPreviewWarpCanvas(null)
+      setLoadError(null)
+      setIsLoadingImage(false)
     }
   }, [isOpen, originalBuffer, initFromBuffer])
 
-  // Executar detecção de bordas
-  const runDetection = async (canvasToDetect: HTMLCanvasElement) => {
+  // Executar detecção de bordas com verificação estrita do sessionToken
+  const runDetection = async (canvasToDetect: HTMLCanvasElement, token?: number) => {
+    const currentToken = token ?? activeSessionTokenRef.current
     setIsDetecting(true)
     setDetectionMessage(null)
+
     try {
       const result = await detectDocumentCorners(canvasToDetect)
+      if (currentToken !== activeSessionTokenRef.current) {
+        return // Descarte de resultados obsoletos
+      }
+
       setCorners(result.corners)
       setIsConfident(result.isConfident)
-      if (result.message) {
-        setDetectionMessage(result.message)
+
+      // Exibir mensagens claras discriminando falha do motor vs contornos não detectados
+      if (result.engineState === 'failed') {
+        setDetectionMessage(
+          `Motor OpenCV indisponível (${result.failureReason || 'erro ao carregar runtime'}). Ajuste os cantos manualmente.`,
+        )
+      } else if (!result.success) {
+        setDetectionMessage(
+          result.message ||
+            'Não foi possível identificar bordas de papel com contraste suficiente. Ajuste os cantos manualmente.',
+        )
+      } else if (!result.isConfident) {
+        setDetectionMessage(
+          'Detecção com baixa certeza. Verifique e ajuste os cantos se necessário.',
+        )
+      } else {
+        setDetectionMessage(null)
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (currentToken !== activeSessionTokenRef.current) return
       console.warn('Erro na detecção automática:', err)
       const def = getDefaultCorners(canvasToDetect.width, canvasToDetect.height)
       setCorners(def)
       setIsConfident(false)
-      setDetectionMessage('A detecção automática falhou. Posicione os cantos manualmente.')
+      setDetectionMessage('Falha na análise dos contornos. Posicione os cantos manualmente.')
     } finally {
-      setIsDetecting(false)
+      if (currentToken === activeSessionTokenRef.current) {
+        setIsDetecting(false)
+      }
     }
   }
 
@@ -215,8 +340,8 @@ export function ImageEditorModal({
     ctx.restore()
 
     // Transformar as coordenadas dos 4 cantos junto com a rotação
-    // Para deltaAngle === 90: novo_x = oldH - old_y, novo_y = old_x
-    // Para deltaAngle === -90: novo_x = old_y, novo_y = oldW - old_x
+    // Para deltaAngle === 90 (horário): novo_x = oldH - old_y, novo_y = old_x
+    // Para deltaAngle === -90 (anti-horário): novo_x = old_y, novo_y = oldW - old_x
     const transformPoint = (p: Point2D): Point2D => {
       if (deltaAngle === 90) {
         return {
@@ -247,6 +372,11 @@ export function ImageEditorModal({
     setCorners(newOrderedCorners)
     setIsPreviewWarp(false)
     setPreviewWarpCanvas(null)
+
+    // Forçar recálculo imediato do layout de stage para nova orientação
+    requestAnimationFrame(() => {
+      updateStageLayout()
+    })
   }
 
   // Restaurar original da sessão de edição
@@ -378,22 +508,22 @@ export function ImageEditorModal({
   }
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!activeCorner || !corners || !imageElementRef.current || !containerRef.current) return
+    if (!activeCorner || !corners || !stageBoxRef.current) return
     e.preventDefault()
 
-    const imgRect = imageElementRef.current.getBoundingClientRect()
-    if (imgRect.width === 0 || imgRect.height === 0) return
+    const stageRect = stageBoxRef.current.getBoundingClientRect()
+    if (stageRect.width === 0 || stageRect.height === 0) return
 
-    // Coordenadas relativas à imagem exibida
     const clientX = e.clientX
     const clientY = e.clientY
 
-    const relX = Math.max(0, Math.min(imgRect.width, clientX - imgRect.left))
-    const relY = Math.max(0, Math.min(imgRect.height, clientY - imgRect.top))
+    // Posição relativa dentro da caixa renderizada da imagem
+    const relX = Math.max(0, Math.min(stageRect.width, clientX - stageRect.left))
+    const relY = Math.max(0, Math.min(stageRect.height, clientY - stageRect.top))
 
-    // Converter para escala real da imagem original
-    const realX = Math.round((relX / imgRect.width) * naturalWidth)
-    const realY = Math.round((relY / imgRect.height) * naturalHeight)
+    // Mapeamento exato para a resolução nativa da imagem
+    const realX = Math.round((relX / stageRect.width) * naturalWidth)
+    const realY = Math.round((relY / stageRect.height) * naturalHeight)
 
     const updatedCorners: DocumentCorners = {
       ...corners,
@@ -635,10 +765,49 @@ export function ImageEditorModal({
           ref={containerRef}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          className="relative flex-1 bg-[#1E232A] flex items-center justify-center p-3 sm:p-6 overflow-hidden select-none touch-none"
+          className="relative flex-1 bg-[#1E232A] flex items-center justify-center p-3 sm:p-5 overflow-hidden select-none touch-none min-h-[360px]"
         >
+          {/* Indicador de carregamento inicial da imagem */}
+          {isLoadingImage && (
+            <div className="absolute inset-0 z-50 bg-[#1E232A] flex flex-col items-center justify-center text-white p-4">
+              <Loader2 className="w-8 h-8 animate-spin text-[#C9922A] mb-2" />
+              <p className="text-sm font-semibold">Carregando imagem no editor...</p>
+            </div>
+          )}
+
+          {/* Erro de carregamento recuperável */}
+          {loadError && (
+            <div className="absolute inset-0 z-50 bg-[#1E232A] flex flex-col items-center justify-center text-center p-6 text-white max-w-md mx-auto">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center mb-3 text-red-400">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h4 className="text-base font-bold text-white mb-1">Falha ao abrir a imagem</h4>
+              <p className="text-xs text-white/70 mb-4">{loadError}</p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="bg-transparent border-white/30 text-white hover:bg-white/10"
+                  onClick={onClose}
+                >
+                  Fechar
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-[#C9922A] hover:bg-[#b58324] text-white"
+                  onClick={() => originalBuffer && initFromBuffer(originalBuffer)}
+                >
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                  Tentar novamente
+                </Button>
+              </div>
+            </div>
+          )}
+
           {isDetecting && (
-            <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center text-white">
+            <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center text-white">
               <Loader2 className="w-8 h-8 animate-spin text-[#C9922A] mb-2" />
               <p className="text-sm font-semibold">
                 Analisando contornos do documento com OpenCV...
@@ -654,7 +823,11 @@ export function ImageEditorModal({
                 <img
                   src={previewWarpUrl}
                   alt="Prévia do recorte"
-                  className="max-h-[70vh] max-w-full object-contain rounded shadow-2xl border border-white/20"
+                  style={{
+                    maxWidth: stageLayout.width > 0 ? `${stageLayout.width}px` : '100%',
+                    maxHeight: stageLayout.height > 0 ? `${stageLayout.height}px` : '70vh',
+                  }}
+                  className="object-contain rounded shadow-2xl border border-white/20 block"
                 />
               ) : (
                 <div className="text-white text-sm">Gerando enquadramento...</div>
@@ -665,15 +838,26 @@ export function ImageEditorModal({
               </div>
             </div>
           ) : (
-            /* Modo de Edição com Cantos Interativos */
-            <div className="relative inline-block max-h-[70vh] max-w-full">
+            /* Modo de Edição com Cantos Interativos e Enquadramento Responsivo Exato */
+            <div
+              ref={stageBoxRef}
+              style={{
+                width: stageLayout.width > 0 ? `${stageLayout.width}px` : 'auto',
+                height: stageLayout.height > 0 ? `${stageLayout.height}px` : 'auto',
+              }}
+              className="relative inline-block transition-[width,height] duration-75"
+            >
               {currentImageUrl && (
                 <img
-                  ref={imageElementRef}
                   src={currentImageUrl}
                   alt="Documento em edição"
-                  className="block max-h-[70vh] max-w-full object-contain rounded shadow-lg pointer-events-none"
+                  style={{
+                    width: stageLayout.width > 0 ? `${stageLayout.width}px` : 'auto',
+                    height: stageLayout.height > 0 ? `${stageLayout.height}px` : 'auto',
+                  }}
+                  className="block object-contain rounded shadow-lg pointer-events-none"
                   draggable={false}
+                  onLoad={updateStageLayout}
                 />
               )}
 
@@ -684,7 +868,6 @@ export function ImageEditorModal({
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
                 >
-                  {/* Máscara de recorte invertida ou polígono semi-transparente */}
                   <polygon
                     points={polygonSvgPoints}
                     fill="rgba(34, 197, 94, 0.22)"
@@ -711,7 +894,7 @@ export function ImageEditorModal({
                         top: `${pt.y}%`,
                         transform: 'translate(-50%, -50%)',
                       }}
-                      className="absolute z-30 cursor-grab active:cursor-grabbing p-2 group"
+                      className="absolute z-30 cursor-grab active:cursor-grabbing p-2 group touch-none"
                       title={`Arrastar canto: ${CORNER_LABELS[cornerKey]}`}
                     >
                       {/* Ponto visual estilizado com anéis contrastantes */}
