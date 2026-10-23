@@ -7,17 +7,29 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '..')
 
-const OPENCV_URL = 'https://docs.opencv.org/4.10.0/opencv.js'
+const OPENCV_URLS = [
+  'https://docs.opencv.org/4.x/opencv.js',
+  'https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js',
+  'https://unpkg.com/@techstark/opencv-js@4.10.0-release.1/dist/opencv.js',
+]
 const TARGET_DIR = path.join(rootDir, 'public', 'opencv')
 const TARGET_FILE = path.join(TARGET_DIR, 'opencv.js')
-const MIN_SIZE_BYTES = 5 * 1024 * 1024 // Pelo menos 5 MB para OpenCV.js 4.10.0
+const MIN_SIZE_BYTES = 5 * 1024 * 1024 // Pelo menos 5 MB para OpenCV.js
 
 async function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, (res) => {
+    const req = https.get(
+      url,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          Accept: '*/*',
+        },
+      },
+      (res) => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          return downloadFile(res.headers.location, dest).then(resolve).catch(reject)
+          const redirectUrl = new URL(res.headers.location, url).toString()
+          return downloadFile(redirectUrl, dest).then(resolve).catch(reject)
         }
         if (res.statusCode !== 200) {
           return reject(new Error(`HTTP status ${res.statusCode} ao baixar ${url}`))
@@ -31,10 +43,11 @@ async function downloadFile(url, dest) {
           fs.unlink(dest, () => {})
           reject(err)
         })
-      })
-      .on('error', (err) => {
-        reject(err)
-      })
+      },
+    )
+    req.on('error', (err) => {
+      reject(err)
+    })
   })
 }
 
@@ -57,40 +70,62 @@ async function ensureOpenCv() {
   }
 
   const tempFile = `${TARGET_FILE}.tmp`
-  console.log(`[fetch-opencv] Baixando OpenCV.js 4.10.0 de ${OPENCV_URL}...`)
+  let downloadSuccess = false
+  let lastErr = null
 
-  try {
-    await downloadFile(OPENCV_URL, tempFile)
-    const stat = fs.statSync(tempFile)
-    if (stat.size < MIN_SIZE_BYTES) {
-      fs.unlinkSync(tempFile)
-      throw new Error(
-        `Arquivo baixado muito pequeno (${stat.size} bytes), possível página de erro.`,
+  for (const url of OPENCV_URLS) {
+    console.log(`[fetch-opencv] Tentando baixar OpenCV.js de ${url}...`)
+    try {
+      if (fs.existsSync(tempFile)) {
+        try {
+          fs.unlinkSync(tempFile)
+        } catch {}
+      }
+      await downloadFile(url, tempFile)
+      const stat = fs.statSync(tempFile)
+      if (stat.size < MIN_SIZE_BYTES) {
+        throw new Error(
+          `Arquivo baixado muito pequeno (${stat.size} bytes), possível página de erro.`,
+        )
+      }
+
+      // Validação de conteúdo: deve conter código JS, não HTML
+      const sample = fs.readFileSync(tempFile, { encoding: 'utf8', flag: 'r' }).slice(0, 500)
+      if (
+        sample.toLowerCase().includes('<!doctype html') ||
+        sample.toLowerCase().includes('<html')
+      ) {
+        throw new Error('O conteúdo baixado parece ser HTML e não JavaScript válido.')
+      }
+
+      fs.renameSync(tempFile, TARGET_FILE)
+      console.log(
+        `[fetch-opencv] OpenCV.js baixado com sucesso em ${TARGET_FILE} (${(stat.size / (1024 * 1024)).toFixed(2)} MB) a partir de ${url}.`,
       )
+      downloadSuccess = true
+      break
+    } catch (err) {
+      console.warn(`[fetch-opencv] Falha ao baixar de ${url}: ${err.message}`)
+      lastErr = err
+      if (fs.existsSync(tempFile)) {
+        try {
+          fs.unlinkSync(tempFile)
+        } catch {}
+      }
     }
+  }
 
-    // Validação de conteúdo: deve conter código JS, não HTML
-    const sample = fs.readFileSync(tempFile, { encoding: 'utf8', flag: 'r' }).slice(0, 500)
-    if (sample.toLowerCase().includes('<!doctype html') || sample.toLowerCase().includes('<html')) {
-      fs.unlinkSync(tempFile)
-      throw new Error('O conteúdo baixado parece ser HTML e não JavaScript válido.')
+  if (!downloadSuccess) {
+    if (fs.existsSync(TARGET_FILE)) {
+      const stat = fs.statSync(TARGET_FILE)
+      if (stat.size >= MIN_SIZE_BYTES) {
+        console.warn(
+          `[fetch-opencv] Falha ao atualizar, mas arquivo já existente é válido (${stat.size} bytes).`,
+        )
+        return
+      }
     }
-
-    fs.renameSync(tempFile, TARGET_FILE)
-    console.log(
-      `[fetch-opencv] OpenCV.js 4.10.0 baixado com sucesso em ${TARGET_FILE} (${(stat.size / (1024 * 1024)).toFixed(2)} MB).`,
-    )
-  } catch (err) {
-    if (fs.existsSync(tempFile)) {
-      try {
-        fs.unlinkSync(tempFile)
-      } catch {}
-    }
-    console.error(`[fetch-opencv] Erro ao obter opencv.js:`, err.message)
-    // Se o arquivo destino não existir, propagar o erro para não buildar em falso
-    if (!fs.existsSync(TARGET_FILE)) {
-      throw err
-    }
+    throw lastErr || new Error('Falha ao obter OpenCV.js de todas as fontes disponíveis.')
   }
 }
 

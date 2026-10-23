@@ -15,6 +15,7 @@
 declare global {
   interface Window {
     cv?: any
+    Module?: any
     _opencvInitDurationMs?: number
   }
 }
@@ -99,38 +100,62 @@ export async function loadOpenCv(): Promise<any> {
       return false
     }
 
-    // Configuração do objeto Module do Emscripten para localização de assets locais
+    // Configuração do objeto Module do Emscripten ANTES de injetar o script.
+    // O opencv.js ao executar inicializa `Module = typeof cv !== "undefined" ? cv : {}`
+    // ou lê `Module` global caso já exista. Para garantir que `locateFile` e
+    // callbacks sejam sempre respeitados independentemente de sobrescrita de window.cv,
+    // configuramos tanto window.Module quanto window.cv.
     const baseOrigin = window.location.origin
     const localBasePath = `${baseOrigin}/opencv/`
 
-    if (!window.cv) {
-      window.cv = {
-        locateFile: (path: string) => {
-          if (path.endsWith('.wasm')) {
-            return `${localBasePath}${path}`
-          }
-          return `${localBasePath}${path}`
-        },
-        onRuntimeInitialized: () => {
-          if (checkRuntime(window.cv)) return
-        },
-        onAbort: (msg: string) => {
-          console.warn('[OpenCV.js] Abort emitido:', msg)
-        },
+    const locateFn = (path: string, prefix?: string) => {
+      // Se for requisitado o arquivo WASM ou qualquer recurso auxiliar, resolve a partir de /opencv/
+      return `${localBasePath}${path}`
+    }
+
+    const onRuntimeInitFn = () => {
+      if (checkRuntime(window.cv)) return
+      if (checkRuntime(window.Module)) {
+        window.cv = window.Module
+        handleReady(window.Module)
       }
+    }
+
+    const onAbortFn = (msg: string) => {
+      console.warn('[OpenCV.js] Abort emitido:', msg)
+    }
+
+    // 1. Configurar window.Module
+    if (!window.Module) {
+      window.Module = {
+        locateFile: locateFn,
+        onRuntimeInitialized: onRuntimeInitFn,
+        onAbort: onAbortFn,
+      }
+    } else {
+      const prevLocate = window.Module.locateFile
+      window.Module.locateFile = (path: string, prefix?: string) => {
+        return prevLocate ? prevLocate(path, prefix) : locateFn(path, prefix)
+      }
+      const prevInit = window.Module.onRuntimeInitialized
+      window.Module.onRuntimeInitialized = () => {
+        if (prevInit) prevInit()
+        onRuntimeInitFn()
+      }
+    }
+
+    // 2. Configurar window.cv (caso o build use cv em vez de Module diretamente)
+    if (!window.cv) {
+      window.cv = window.Module
     } else {
       const prevLocate = window.cv.locateFile
       window.cv.locateFile = (path: string, prefix?: string) => {
-        if (path.endsWith('.wasm')) {
-          return `${localBasePath}${path}`
-        }
-        return prevLocate ? prevLocate(path, prefix) : `${localBasePath}${path}`
+        return prevLocate ? prevLocate(path, prefix) : locateFn(path, prefix)
       }
-
       const origInit = window.cv.onRuntimeInitialized
       window.cv.onRuntimeInitialized = () => {
         if (origInit) origInit()
-        checkRuntime(window.cv)
+        onRuntimeInitFn()
       }
     }
 
@@ -139,8 +164,8 @@ export async function loadOpenCv(): Promise<any> {
       'script[data-opencv-loader="true"]',
     ) as HTMLScriptElement | null
 
-    if (existingScript && checkRuntime(window.cv)) {
-      handleReady(window.cv)
+    if (existingScript && (checkRuntime(window.cv) || checkRuntime(window.Module))) {
+      handleReady(window.cv || window.Module)
       return
     }
 
@@ -157,8 +182,15 @@ export async function loadOpenCv(): Promise<any> {
       if (checkRuntime(window.cv)) {
         return
       }
-      if (window.cv && typeof window.cv.then === 'function') {
-        window.cv
+      if (checkRuntime(window.Module)) {
+        window.cv = window.Module
+        handleReady(window.Module)
+        return
+      }
+
+      const targetCv = window.cv || window.Module
+      if (targetCv && typeof targetCv.then === 'function') {
+        targetCv
           .then((resolvedCv: any) => {
             window.cv = resolvedCv
             handleReady(resolvedCv)
@@ -180,6 +212,12 @@ export async function loadOpenCv(): Promise<any> {
         attempts++
         if (checkRuntime(window.cv)) {
           clearInterval(pollTimer)
+          return
+        }
+        if (checkRuntime(window.Module)) {
+          clearInterval(pollTimer)
+          window.cv = window.Module
+          handleReady(window.Module)
           return
         }
         if (attempts >= maxAttempts) {
