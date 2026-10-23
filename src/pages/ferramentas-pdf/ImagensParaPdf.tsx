@@ -36,19 +36,24 @@ import {
   type ImagePageLayout,
   type ImageToPdfProgressUpdate,
 } from '@/lib/pdf-tools/image-to-pdf'
+import { ImageEditorModal, type ImageEditorOutput } from '@/components/pdf-tools/ImageEditorModal'
+import { Crop } from 'lucide-react'
 
 interface SelectedImageItem {
   id: string
   file: File
   name: string
   size: number
-  buffer: ArrayBuffer
+  buffer: ArrayBuffer // Buffer ativo utilizado na conversão do PDF
+  originalBuffer: ArrayBuffer // Preserva integralmente a imagem original na memória
+  originalSize: number
   type: 'image/jpeg' | 'image/png'
   previewUrl: string
   width?: number
   height?: number
   validationStatus: 'valid' | 'invalid'
   errorMessage?: string
+  isEdited?: boolean
 }
 
 function formatBytes(bytes: number, decimals = 2): string {
@@ -73,6 +78,9 @@ export default function ImagensParaPdf() {
   // Drag and drop entre cards
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  // Modal de Edição Inteligente de Imagem (CamScanner Bloco 1)
+  const [editingImageItem, setEditingImageItem] = useState<SelectedImageItem | null>(null)
 
   // Resultado
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
@@ -146,6 +154,8 @@ export default function ImagensParaPdf() {
             name: file.name,
             size: file.size,
             buffer,
+            originalBuffer: buffer.slice(0),
+            originalSize: file.size,
             type: 'image/jpeg',
             previewUrl: '',
             validationStatus: 'invalid',
@@ -183,11 +193,14 @@ export default function ImagensParaPdf() {
           name: file.name,
           size: file.size,
           buffer,
+          originalBuffer: buffer.slice(0),
+          originalSize: file.size,
           type: mimeType,
           previewUrl,
           width,
           height,
           validationStatus: 'valid',
+          isEdited: false,
         })
       } catch (err) {
         newItems.push({
@@ -196,6 +209,8 @@ export default function ImagensParaPdf() {
           name: file.name,
           size: file.size,
           buffer: new ArrayBuffer(0),
+          originalBuffer: new ArrayBuffer(0),
+          originalSize: file.size,
           type: 'image/jpeg',
           previewUrl: '',
           validationStatus: 'invalid',
@@ -314,6 +329,64 @@ export default function ImagensParaPdf() {
     setDragOverIndex(null)
   }
 
+  // Abrir editor de imagem
+  const handleOpenEditor = (item: SelectedImageItem) => {
+    if (isConverting) return
+    setEditingImageItem(item)
+  }
+
+  // Aplicar alterações do editor de imagem
+  const handleApplyEditor = (output: ImageEditorOutput) => {
+    if (!editingImageItem) return
+
+    setImages((prev) =>
+      prev.map((it) => {
+        if (it.id === editingImageItem.id) {
+          // Revoga URL temporária antiga
+          if (it.previewUrl && it.previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(it.previewUrl)
+          }
+          return {
+            ...it,
+            buffer: output.buffer,
+            previewUrl: output.previewUrl,
+            width: output.width,
+            height: output.height,
+            size: output.size,
+            isEdited: true,
+          }
+        }
+        return it
+      }),
+    )
+
+    setEditingImageItem(null)
+  }
+
+  // Restaurar imagem da lista ao seu arquivo original não editado
+  const handleRestoreItemOriginal = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setImages((prev) =>
+      prev.map((it) => {
+        if (it.id === id && it.isEdited) {
+          if (it.previewUrl && it.previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(it.previewUrl)
+          }
+          const blob = new Blob([it.originalBuffer], { type: it.type })
+          const newPreviewUrl = URL.createObjectURL(blob)
+          return {
+            ...it,
+            buffer: it.originalBuffer.slice(0),
+            previewUrl: newPreviewUrl,
+            size: it.originalSize,
+            isEdited: false,
+          }
+        }
+        return it
+      }),
+    )
+  }
+
   // Remover imagem individual
   const removeItem = (id: string) => {
     setImages((prev) => {
@@ -323,6 +396,9 @@ export default function ImagensParaPdf() {
       }
       return prev.filter((it) => it.id !== id)
     })
+    if (editingImageItem?.id === id) {
+      setEditingImageItem(null)
+    }
     setErrorMessage(null)
   }
 
@@ -795,22 +871,29 @@ export default function ImagensParaPdf() {
                           <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
                             Pág. {idx + 1}
                           </span>
+                          {item.isEdited && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A]/30">
+                              Editada
+                            </span>
+                          )}
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-[#78818E] hover:text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded"
-                          disabled={isConverting}
-                          onClick={() => removeItem(item.id)}
-                          title="Remover imagem"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-[#78818E] hover:text-[#B4453C] hover:bg-red-50 dark:hover:bg-red-950/30 rounded"
+                            disabled={isConverting}
+                            onClick={() => removeItem(item.id)}
+                            title="Remover imagem"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
 
-                      {/* Miniatura visual da imagem */}
-                      <div className="relative aspect-[4/3] bg-[#F5F6F8] dark:bg-muted/30 flex items-center justify-center overflow-hidden p-2">
+                      {/* Miniatura visual da imagem com botão de overlay para editar */}
+                      <div className="relative aspect-[4/3] bg-[#F5F6F8] dark:bg-muted/30 flex items-center justify-center overflow-hidden p-2 group/thumb">
                         {item.previewUrl ? (
                           <img
                             src={item.previewUrl}
@@ -824,6 +907,22 @@ export default function ImagensParaPdf() {
                             <span className="text-[10px] font-semibold">Sem miniatura</span>
                           </div>
                         )}
+
+                        {/* Botão de Atalho Rápido "Editar imagem" no hover da miniatura */}
+                        {!isInvalid && !isConverting && (
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-7 px-2.5 text-[11px] font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white shadow-sm rounded"
+                              onClick={() => handleOpenEditor(item)}
+                            >
+                              <Crop className="w-3 h-3 mr-1" />
+                              Editar imagem
+                            </Button>
+                          </div>
+                        )}
+
                         <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-black/60 text-white backdrop-blur-xs">
                           {item.type === 'image/jpeg' ? 'JPG' : 'PNG'}
                         </span>
@@ -852,32 +951,63 @@ export default function ImagensParaPdf() {
                           </p>
                         )}
 
-                        {/* Botões de Mover Anterior / Próxima */}
-                        <div className="pt-2 border-t border-[#E4E7EB]/60 dark:border-border/40 flex items-center justify-between gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[11px] text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded flex-1"
-                            disabled={idx === 0 || isConverting}
-                            onClick={() => moveLeft(idx)}
-                            title="Mover para a esquerda"
-                          >
-                            <MoveLeft className="w-3 h-3 mr-1" />
-                            Anterior
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[11px] text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded flex-1"
-                            disabled={idx === images.length - 1 || isConverting}
-                            onClick={() => moveRight(idx)}
-                            title="Mover para a direita"
-                          >
-                            Próxima
-                            <MoveRight className="w-3 h-3 ml-1" />
-                          </Button>
+                        {/* Ação Principal: Editar Imagem + Reordenação */}
+                        <div className="pt-1.5 space-y-1.5 border-t border-[#E4E7EB]/60 dark:border-border/40">
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 text-[11px] font-semibold border-[#E4E7EB] dark:border-border text-[#252B34] dark:text-foreground hover:bg-[#FAF8F2] hover:text-[#C9922A] hover:border-[#C9922A]/40 rounded flex-1 shadow-2xs"
+                              disabled={isInvalid || isConverting}
+                              onClick={() => handleOpenEditor(item)}
+                              title="Editar limites, bordas e rotação (estilo CamScanner)"
+                            >
+                              <Crop className="w-3 h-3 mr-1 text-[#C9922A]" />
+                              Editar imagem
+                            </Button>
+
+                            {item.isEdited && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-1.5 text-[10px] text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] rounded"
+                                disabled={isConverting}
+                                onClick={(e) => handleRestoreItemOriginal(item.id, e)}
+                                title="Desfazer edição e restaurar original"
+                              >
+                                Reverter
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1.5 text-[10px] text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded flex-1"
+                              disabled={idx === 0 || isConverting}
+                              onClick={() => moveLeft(idx)}
+                              title="Mover para a esquerda"
+                            >
+                              <MoveLeft className="w-3 h-3 mr-1" />
+                              Anterior
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1.5 text-[10px] text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded flex-1"
+                              disabled={idx === images.length - 1 || isConverting}
+                              onClick={() => moveRight(idx)}
+                              title="Mover para a direita"
+                            >
+                              Próxima
+                              <MoveRight className="w-3 h-3 ml-1" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -965,6 +1095,18 @@ export default function ImagensParaPdf() {
           nuvem, garantindo sigilo absoluto conforme as diretrizes institucionais.
         </p>
       </div>
+
+      {/* Modal de Edição Inteligente (CamScanner Bloco 1) */}
+      {editingImageItem && (
+        <ImageEditorModal
+          isOpen={Boolean(editingImageItem)}
+          onClose={() => setEditingImageItem(null)}
+          imageName={editingImageItem.name}
+          imageType={editingImageItem.type}
+          originalBuffer={editingImageItem.originalBuffer}
+          onApply={handleApplyEditor}
+        />
+      )}
     </div>
   )
 }

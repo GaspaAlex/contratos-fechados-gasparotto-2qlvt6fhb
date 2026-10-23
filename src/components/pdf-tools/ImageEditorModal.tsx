@@ -1,0 +1,799 @@
+// src/components/pdf-tools/ImageEditorModal.tsx
+/**
+ * Modal de Edição Inteligente de Imagem (estilo CamScanner)
+ * Sistema de Gestão da Advocacia Gasparotto (Identidade visual Grafite Premium)
+ *
+ * Funcionalidades do Bloco 1:
+ * - Detecção automática dos limites do documento com OpenCV.js (lazy loaded)
+ * - Indicador de incerteza da detecção e ajuste manual imediato
+ * - 4 cantos arrastáveis independentes com coordenadas convertidas da prévia para a imagem real
+ * - Polígono verde institucional semitransparente destacando a área a ser preservada
+ * - Rotação de 90° à esquerda e à direita mantendo sincronização de coordenadas dos cantos
+ * - "Detectar novamente"
+ * - "Visualizar recorte" (alterna entre visualização do corte e modo edição)
+ * - "Restaurar original" (desfaz recortes, rotações e distorções da sessão)
+ * - "Cancelar" (mantém imagem da lista intacta)
+ * - "Aplicar ajustes" (gera blob e buffer atualizados sem alterar o original arquivado)
+ */
+
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import {
+  RotateCcw,
+  RotateCw,
+  Sparkles,
+  Eye,
+  Check,
+  X,
+  RefreshCw,
+  Loader2,
+  AlertCircle,
+  HelpCircle,
+  Crop,
+  Layers,
+  Undo2,
+} from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  type DocumentCorners,
+  type Point2D,
+  isValidConvexQuad,
+  orderCorners,
+} from '@/lib/pdf-tools/scanner/perspective-math'
+import {
+  detectDocumentCorners,
+  applyPerspectiveWarp,
+  getDefaultCorners,
+} from '@/lib/pdf-tools/scanner/document-detector'
+
+export interface ImageEditorOutput {
+  buffer: ArrayBuffer
+  previewUrl: string
+  width: number
+  height: number
+  size: number
+  type: 'image/jpeg' | 'image/png'
+}
+
+interface ImageEditorModalProps {
+  isOpen: boolean
+  onClose: () => void
+  imageName: string
+  imageType: 'image/jpeg' | 'image/png'
+  originalBuffer: ArrayBuffer
+  onApply: (output: ImageEditorOutput) => void
+}
+
+type CornerKey = 'topLeft' | 'topRight' | 'bottomRight' | 'bottomLeft'
+
+const CORNER_LABELS: Record<CornerKey, string> = {
+  topLeft: 'Superior Esquerdo',
+  topRight: 'Superior Direito',
+  bottomRight: 'Inferior Direito',
+  bottomLeft: 'Inferior Esquerdo',
+}
+
+export function ImageEditorModal({
+  isOpen,
+  onClose,
+  imageName,
+  imageType,
+  originalBuffer,
+  onApply,
+}: ImageEditorModalProps) {
+  // Imagem em edição (pode sofrer rotações 90º durante a sessão)
+  const [currentCanvas, setCurrentCanvas] = useState<HTMLCanvasElement | null>(null)
+  const [naturalWidth, setNaturalWidth] = useState<number>(0)
+  const [naturalHeight, setNaturalHeight] = useState<number>(0)
+  const [rotationAngle, setRotationAngle] = useState<number>(0) // rotação cumulativa 0, 90, 180, 270
+
+  // Estado da detecção
+  const [isDetecting, setIsDetecting] = useState<boolean>(false)
+  const [isWarping, setIsWarping] = useState<boolean>(false)
+  const [corners, setCorners] = useState<DocumentCorners | null>(null)
+  const [isConfident, setIsConfident] = useState<boolean>(true)
+  const [detectionMessage, setDetectionMessage] = useState<string | null>(null)
+
+  // Modo de prévia do recorte (alternância antes de aplicar)
+  const [isPreviewWarp, setIsPreviewWarp] = useState<boolean>(false)
+  const [previewWarpCanvas, setPreviewWarpCanvas] = useState<HTMLCanvasElement | null>(null)
+
+  // Dragging de cantos
+  const [activeCorner, setActiveCorner] = useState<CornerKey | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const imageElementRef = useRef<HTMLImageElement>(null)
+
+  // Lupa de precisão ao arrastar cantos
+  const [magnifierPos, setMagnifierPos] = useState<{ x: number; y: number } | null>(null)
+  const magnifierCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  // Carregar imagem inicial a partir do originalBuffer
+  const initFromBuffer = useCallback(
+    (buf: ArrayBuffer) => {
+      const blob = new Blob([buf], { type: imageType })
+      const url = URL.createObjectURL(blob)
+      const img = new Image()
+
+      img.onload = () => {
+        const c = document.createElement('canvas')
+        c.width = img.naturalWidth
+        c.height = img.naturalHeight
+        const ctx = c.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0)
+        }
+        setCurrentCanvas(c)
+        setNaturalWidth(img.naturalWidth)
+        setNaturalHeight(img.naturalHeight)
+        setRotationAngle(0)
+        setIsPreviewWarp(false)
+        setPreviewWarpCanvas(null)
+        URL.revokeObjectURL(url)
+
+        // Iniciar detecção automática imediatamente
+        runDetection(c)
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url)
+        setDetectionMessage('Erro ao decodificar imagem para edição.')
+      }
+
+      img.src = url
+    },
+    [imageType],
+  )
+
+  // Inicializar sempre que a modal abrir
+  useEffect(() => {
+    if (isOpen && originalBuffer) {
+      initFromBuffer(originalBuffer)
+    } else {
+      setCurrentCanvas(null)
+      setCorners(null)
+      setIsPreviewWarp(false)
+      setPreviewWarpCanvas(null)
+    }
+  }, [isOpen, originalBuffer, initFromBuffer])
+
+  // Executar detecção de bordas
+  const runDetection = async (canvasToDetect: HTMLCanvasElement) => {
+    setIsDetecting(true)
+    setDetectionMessage(null)
+    try {
+      const result = await detectDocumentCorners(canvasToDetect)
+      setCorners(result.corners)
+      setIsConfident(result.isConfident)
+      if (result.message) {
+        setDetectionMessage(result.message)
+      }
+    } catch (err) {
+      console.warn('Erro na detecção automática:', err)
+      const def = getDefaultCorners(canvasToDetect.width, canvasToDetect.height)
+      setCorners(def)
+      setIsConfident(false)
+      setDetectionMessage('A detecção automática falhou. Posicione os cantos manualmente.')
+    } finally {
+      setIsDetecting(false)
+    }
+  }
+
+  // Rotação de 90° à esquerda (-90) ou à direita (+90)
+  const rotateCanvas = (deltaAngle: 90 | -90) => {
+    if (!currentCanvas || !corners) return
+
+    const oldW = currentCanvas.width
+    const oldH = currentCanvas.height
+    const newW = oldH
+    const newH = oldW
+
+    const rotated = document.createElement('canvas')
+    rotated.width = newW
+    rotated.height = newH
+    const ctx = rotated.getContext('2d')
+    if (!ctx) return
+
+    ctx.save()
+    if (deltaAngle === 90) {
+      // 90° horário: translate(newW, 0) + rotate(90deg)
+      ctx.translate(newW, 0)
+      ctx.rotate((90 * Math.PI) / 180)
+    } else {
+      // 90° anti-horário: translate(0, newH) + rotate(-90deg)
+      ctx.translate(0, newH)
+      ctx.rotate((-90 * Math.PI) / 180)
+    }
+    ctx.drawImage(currentCanvas, 0, 0)
+    ctx.restore()
+
+    // Transformar as coordenadas dos 4 cantos junto com a rotação
+    // Para deltaAngle === 90: novo_x = oldH - old_y, novo_y = old_x
+    // Para deltaAngle === -90: novo_x = old_y, novo_y = oldW - old_x
+    const transformPoint = (p: Point2D): Point2D => {
+      if (deltaAngle === 90) {
+        return {
+          x: Math.max(0, Math.min(newW, oldH - p.y)),
+          y: Math.max(0, Math.min(newH, p.x)),
+        }
+      } else {
+        return {
+          x: Math.max(0, Math.min(newW, p.y)),
+          y: Math.max(0, Math.min(newH, oldW - p.x)),
+        }
+      }
+    }
+
+    const newPoints = [
+      transformPoint(corners.topLeft),
+      transformPoint(corners.topRight),
+      transformPoint(corners.bottomRight),
+      transformPoint(corners.bottomLeft),
+    ]
+
+    const newOrderedCorners = orderCorners(newPoints)
+
+    setCurrentCanvas(rotated)
+    setNaturalWidth(newW)
+    setNaturalHeight(newH)
+    setRotationAngle((prev) => (prev + deltaAngle + 360) % 360)
+    setCorners(newOrderedCorners)
+    setIsPreviewWarp(false)
+    setPreviewWarpCanvas(null)
+  }
+
+  // Restaurar original da sessão de edição
+  const handleRestoreOriginal = () => {
+    initFromBuffer(originalBuffer)
+  }
+
+  // Alternar prévia do recorte de perspectiva
+  const togglePreviewWarp = async () => {
+    if (isPreviewWarp) {
+      setIsPreviewWarp(false)
+      return
+    }
+
+    if (!currentCanvas || !corners) return
+
+    setIsWarping(true)
+    try {
+      const result = await applyPerspectiveWarp(currentCanvas, corners)
+      setPreviewWarpCanvas(result.canvas)
+      setIsPreviewWarp(true)
+    } catch (err) {
+      console.error('Erro ao gerar prévia da transformação de perspectiva:', err)
+      setDetectionMessage('Não foi possível gerar a prévia da perspectiva. Ajuste os cantos.')
+    } finally {
+      setIsWarping(false)
+    }
+  }
+
+  // Aplicar ajustes e finalizar
+  const handleApply = async () => {
+    if (!currentCanvas || !corners) return
+
+    setIsWarping(true)
+    try {
+      const warped = await applyPerspectiveWarp(currentCanvas, corners)
+      const outCanvas = warped.canvas
+
+      // Exportar como blob de alta qualidade no tipo original (jpeg ou png)
+      const mime = imageType === 'image/png' ? 'image/png' : 'image/jpeg'
+      const quality = mime === 'image/jpeg' ? 0.96 : undefined
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        outCanvas.toBlob((b) => resolve(b), mime, quality)
+      })
+
+      if (!blob) {
+        throw new Error('Falha ao serializar imagem processada.')
+      }
+
+      const buffer = await blob.arrayBuffer()
+      const previewUrl = URL.createObjectURL(blob)
+
+      onApply({
+        buffer,
+        previewUrl,
+        width: warped.width,
+        height: warped.height,
+        size: blob.size,
+        type: imageType,
+      })
+      onClose()
+    } catch (err) {
+      console.error('Erro ao aplicar recorte:', err)
+      setDetectionMessage(
+        `Erro ao finalizar documento: ${err instanceof Error ? err.message : String(err)}`,
+      )
+    } finally {
+      setIsWarping(false)
+    }
+  }
+
+  // Atualizar lupa quando arrastando
+  const updateMagnifier = useCallback(
+    (pointInCanvas: Point2D) => {
+      if (!currentCanvas || !magnifierCanvasRef.current) return
+      const magCanvas = magnifierCanvasRef.current
+      const magCtx = magCanvas.getContext('2d')
+      if (!magCtx) return
+
+      const zoom = 2.5
+      const size = 120
+      magCanvas.width = size
+      magCanvas.height = size
+
+      magCtx.clearRect(0, 0, size, size)
+      magCtx.imageSmoothingEnabled = true
+
+      // Recorte ao redor do ponto no canvas de resolução natural
+      const cropW = size / zoom
+      const cropH = size / zoom
+      const cropX = pointInCanvas.x - cropW / 2
+      const cropY = pointInCanvas.y - cropH / 2
+
+      magCtx.drawImage(currentCanvas, cropX, cropY, cropW, cropH, 0, 0, size, size)
+
+      // Mira central na lupa
+      magCtx.strokeStyle = '#C9922A'
+      magCtx.lineWidth = 1.5
+      magCtx.beginPath()
+      // linha vertical
+      magCtx.moveTo(size / 2, size / 2 - 12)
+      magCtx.lineTo(size / 2, size / 2 + 12)
+      // linha horizontal
+      magCtx.moveTo(size / 2 - 12, size / 2)
+      magCtx.lineTo(size / 2 + 12, size / 2)
+      magCtx.stroke()
+
+      // Borda circular
+      magCtx.strokeStyle = '#252B34'
+      magCtx.lineWidth = 2
+      magCtx.beginPath()
+      magCtx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2)
+      magCtx.stroke()
+    },
+    [currentCanvas],
+  )
+
+  // Manipulação de ponteiro (Pointer / Touch / Mouse) para arrastar cantos
+  const handlePointerDownCorner = (cornerKey: CornerKey, e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    setActiveCorner(cornerKey)
+    if (corners) {
+      updateMagnifier(corners[cornerKey])
+      setMagnifierPos({ x: e.clientX, y: e.clientY })
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!activeCorner || !corners || !imageElementRef.current || !containerRef.current) return
+    e.preventDefault()
+
+    const imgRect = imageElementRef.current.getBoundingClientRect()
+    if (imgRect.width === 0 || imgRect.height === 0) return
+
+    // Coordenadas relativas à imagem exibida
+    const clientX = e.clientX
+    const clientY = e.clientY
+
+    const relX = Math.max(0, Math.min(imgRect.width, clientX - imgRect.left))
+    const relY = Math.max(0, Math.min(imgRect.height, clientY - imgRect.top))
+
+    // Converter para escala real da imagem original
+    const realX = Math.round((relX / imgRect.width) * naturalWidth)
+    const realY = Math.round((relY / imgRect.height) * naturalHeight)
+
+    const updatedCorners: DocumentCorners = {
+      ...corners,
+      [activeCorner]: {
+        x: Math.max(0, Math.min(naturalWidth, realX)),
+        y: Math.max(0, Math.min(naturalHeight, realY)),
+      },
+    }
+
+    setCorners(updatedCorners)
+    updateMagnifier(updatedCorners[activeCorner])
+    setMagnifierPos({ x: clientX, y: clientY })
+  }
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (activeCorner) {
+      try {
+        ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+      } catch {
+        // ignore
+      }
+      setActiveCorner(null)
+      setMagnifierPos(null)
+
+      // Garantir convexidade / reordenar se houver inversão acidental de vértices
+      if (corners) {
+        if (!isValidConvexQuad(corners)) {
+          const reordered = orderCorners([
+            corners.topLeft,
+            corners.topRight,
+            corners.bottomRight,
+            corners.bottomLeft,
+          ])
+          setCorners(reordered)
+        }
+      }
+    }
+  }
+
+  // DataURL para exibição da imagem atual no elemento img
+  const currentImageUrl = useMemo(() => {
+    if (!currentCanvas) return ''
+    return currentCanvas.toDataURL()
+  }, [currentCanvas])
+
+  const previewWarpUrl = useMemo(() => {
+    if (!previewWarpCanvas) return ''
+    return previewWarpCanvas.toDataURL()
+  }, [previewWarpCanvas])
+
+  // Coordenadas percentuais para posicionar SVG e controles com precisão sobre o layout responsivo
+  const percentCorners = useMemo(() => {
+    if (!corners || naturalWidth === 0 || naturalHeight === 0) return null
+    return {
+      topLeft: {
+        x: (corners.topLeft.x / naturalWidth) * 100,
+        y: (corners.topLeft.y / naturalHeight) * 100,
+      },
+      topRight: {
+        x: (corners.topRight.x / naturalWidth) * 100,
+        y: (corners.topRight.y / naturalHeight) * 100,
+      },
+      bottomRight: {
+        x: (corners.bottomRight.x / naturalWidth) * 100,
+        y: (corners.bottomRight.y / naturalHeight) * 100,
+      },
+      bottomLeft: {
+        x: (corners.bottomLeft.x / naturalWidth) * 100,
+        y: (corners.bottomLeft.y / naturalHeight) * 100,
+      },
+    }
+  }, [corners, naturalWidth, naturalHeight])
+
+  const polygonSvgPoints = useMemo(() => {
+    if (!percentCorners) return ''
+    return `${percentCorners.topLeft.x},${percentCorners.topLeft.y} ${percentCorners.topRight.x},${percentCorners.topRight.y} ${percentCorners.bottomRight.x},${percentCorners.bottomRight.y} ${percentCorners.bottomLeft.x},${percentCorners.bottomLeft.y}`
+  }, [percentCorners])
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isWarping && onClose()}>
+      <DialogContent className="max-w-5xl w-[95vw] h-[92vh] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-[#F5F6F8] dark:bg-card border-[#E4E7EB] dark:border-border rounded-xl shadow-2xl">
+        {/* Cabeçalho */}
+        <DialogHeader className="px-5 py-3.5 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex-row items-center justify-between space-y-0 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
+              <Crop className="w-4 h-4 text-[#C9922A]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <DialogTitle className="text-sm sm:text-base font-bold text-[#252B34] dark:text-foreground">
+                  Editar e Enquadrar Imagem
+                </DialogTitle>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] uppercase font-mono px-1.5 py-0 border-[#E4E7EB] text-[#78818E]"
+                >
+                  CamScanner Bloco 1
+                </Badge>
+                {!isConfident && !isDetecting && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/30 dark:text-amber-400"
+                  >
+                    Ajuste Manual Recomendado
+                  </Badge>
+                )}
+              </div>
+              <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground truncate max-w-md">
+                {imageName} ({naturalWidth}×{naturalHeight}px)
+              </DialogDescription>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-[#78818E] hover:text-[#252B34] rounded-md"
+              onClick={onClose}
+              disabled={isWarping}
+            >
+              <X className="w-4 h-4" />
+              <span className="sr-only">Fechar</span>
+            </Button>
+          </div>
+        </DialogHeader>
+
+        {/* Alerta de aviso ou incerteza da detecção */}
+        {detectionMessage && (
+          <div className="px-5 py-2 bg-amber-50/90 dark:bg-amber-950/30 border-b border-amber-200/80 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+              <span>{detectionMessage}</span>
+            </div>
+            <button
+              onClick={() => setDetectionMessage(null)}
+              className="text-amber-800 hover:text-amber-950 text-[11px] underline ml-2"
+            >
+              Dispensar
+            </button>
+          </div>
+        )}
+
+        {/* Barra de Ferramentas Superior */}
+        <div className="px-5 py-2.5 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+          {/* Controles de Rotação e Detecção */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+              onClick={() => rotateCanvas(-90)}
+              disabled={isDetecting || isWarping || isPreviewWarp}
+              title="Girar 90° à esquerda (anti-horário)"
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+              Girar 90° Esq.
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+              onClick={() => rotateCanvas(90)}
+              disabled={isDetecting || isWarping || isPreviewWarp}
+              title="Girar 90° à direita (horário)"
+            >
+              <RotateCw className="w-3.5 h-3.5 mr-1.5" />
+              Girar 90° Dir.
+            </Button>
+
+            <div className="h-4 w-px bg-[#E4E7EB] mx-1 hidden sm:block" />
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+              onClick={() => currentCanvas && runDetection(currentCanvas)}
+              disabled={isDetecting || isWarping || isPreviewWarp}
+              title="Detectar novamente as bordas do documento"
+            >
+              {isDetecting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-[#C9922A]" />
+                  Detectando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
+                  Detectar novamente
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2.5 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2]"
+              onClick={handleRestoreOriginal}
+              disabled={isDetecting || isWarping}
+              title="Desfaz recortes, rotações e distorções desta sessão"
+            >
+              <Undo2 className="w-3.5 h-3.5 mr-1.5" />
+              Restaurar original
+            </Button>
+          </div>
+
+          {/* Alternar Prévia do Recorte */}
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              variant={isPreviewWarp ? 'secondary' : 'outline'}
+              size="sm"
+              className={`h-8 px-3 text-xs font-semibold ${
+                isPreviewWarp
+                  ? 'bg-[#C9922A]/15 text-[#C9922A] border-[#C9922A]'
+                  : 'border-[#E4E7EB] text-[#252B34] dark:text-foreground hover:bg-[#FAF8F2] hover:text-[#C9922A]'
+              }`}
+              onClick={togglePreviewWarp}
+              disabled={isDetecting || isWarping}
+            >
+              {isWarping ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              {isPreviewWarp ? 'Voltar para Ajuste dos Cantos' : 'Visualizar recorte'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Área Central de Visualização / Manipulação do Documento */}
+        <div
+          ref={containerRef}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          className="relative flex-1 bg-[#1E232A] flex items-center justify-center p-3 sm:p-6 overflow-hidden select-none touch-none"
+        >
+          {isDetecting && (
+            <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center text-white">
+              <Loader2 className="w-8 h-8 animate-spin text-[#C9922A] mb-2" />
+              <p className="text-sm font-semibold">
+                Analisando contornos do documento com OpenCV...
+              </p>
+              <p className="text-xs text-white/70 mt-1">Identificando os 4 cantos do papel</p>
+            </div>
+          )}
+
+          {isPreviewWarp ? (
+            /* Modo Prévia do Documento Já Retificado e Recortado */
+            <div className="relative max-h-full max-w-full flex flex-col items-center justify-center animate-fade-in">
+              {previewWarpUrl ? (
+                <img
+                  src={previewWarpUrl}
+                  alt="Prévia do recorte"
+                  className="max-h-[70vh] max-w-full object-contain rounded shadow-2xl border border-white/20"
+                />
+              ) : (
+                <div className="text-white text-sm">Gerando enquadramento...</div>
+              )}
+              <div className="mt-3 px-3 py-1 rounded-full bg-black/60 text-white text-[11px] backdrop-blur-xs flex items-center gap-2">
+                <Check className="w-3 h-3 text-emerald-400" />
+                Perspectiva corrigida e fundo removido (sem alterações de iluminação ou cores)
+              </div>
+            </div>
+          ) : (
+            /* Modo de Edição com Cantos Interativos */
+            <div className="relative inline-block max-h-[70vh] max-w-full">
+              {currentImageUrl && (
+                <img
+                  ref={imageElementRef}
+                  src={currentImageUrl}
+                  alt="Documento em edição"
+                  className="block max-h-[70vh] max-w-full object-contain rounded shadow-lg pointer-events-none"
+                  draggable={false}
+                />
+              )}
+
+              {/* Camada SVG: Polígono Verde Semitransparente que indica a área preservada */}
+              {percentCorners && (
+                <svg
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                >
+                  {/* Máscara de recorte invertida ou polígono semi-transparente */}
+                  <polygon
+                    points={polygonSvgPoints}
+                    fill="rgba(34, 197, 94, 0.22)"
+                    stroke="#22C55E"
+                    strokeWidth="0.8"
+                    strokeDasharray="2, 1"
+                    className="drop-shadow-sm"
+                  />
+                </svg>
+              )}
+
+              {/* 4 Pontos de Controle Interativos e Arrastáveis */}
+              {percentCorners &&
+                (Object.keys(percentCorners) as CornerKey[]).map((cornerKey) => {
+                  const pt = percentCorners[cornerKey]
+                  const isActive = activeCorner === cornerKey
+
+                  return (
+                    <div
+                      key={cornerKey}
+                      onPointerDown={(e) => handlePointerDownCorner(cornerKey, e)}
+                      style={{
+                        left: `${pt.x}%`,
+                        top: `${pt.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                      className="absolute z-30 cursor-grab active:cursor-grabbing p-2 group"
+                      title={`Arrastar canto: ${CORNER_LABELS[cornerKey]}`}
+                    >
+                      {/* Ponto visual estilizado com anéis contrastantes */}
+                      <div
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-transform ${
+                          isActive
+                            ? 'scale-125 ring-4 ring-[#C9922A] bg-white'
+                            : 'bg-emerald-500 hover:scale-110 ring-2 ring-white shadow-md'
+                        }`}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            isActive ? 'bg-[#C9922A]' : 'bg-white'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+
+          {/* Lupa flutuante durante o arrasto de precisão */}
+          {activeCorner && magnifierPos && (
+            <div
+              style={{
+                left: Math.max(20, Math.min(window.innerWidth - 150, magnifierPos.x - 70)),
+                top: Math.max(80, magnifierPos.y - 150),
+              }}
+              className="pointer-events-none fixed z-50 rounded-full border-2 border-white bg-black/90 p-1 shadow-2xl"
+            >
+              <canvas ref={magnifierCanvasRef} className="rounded-full w-[120px] h-[120px] block" />
+              <span className="absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-black/80 text-white backdrop-blur-xs whitespace-nowrap">
+                {CORNER_LABELS[activeCorner]}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Rodapé com Ações */}
+        <div className="px-5 py-3.5 bg-white dark:bg-card border-t border-[#E4E7EB] dark:border-border flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-xs text-[#78818E] dark:text-muted-foreground">
+            <HelpCircle className="w-3.5 h-3.5 text-[#C9922A] shrink-0" />
+            <span>
+              Arraste os 4 círculos verdes para alinhar perfeitamente com os limites do documento.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              disabled={isWarping}
+              className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#252B34]"
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleApply}
+              disabled={isDetecting || isWarping || !corners}
+              className="h-9 px-5 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
+            >
+              {isWarping ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                  Processando enquadramento...
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5 mr-2" />
+                  Aplicar ajustes
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
