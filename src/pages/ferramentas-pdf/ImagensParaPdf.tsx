@@ -55,6 +55,7 @@ interface SelectedImageItem {
   errorMessage?: string
   isEdited?: boolean
   filterMode?: string
+  shadowIntensity?: string
 }
 
 function formatBytes(bytes: number, decimals = 2): string {
@@ -366,6 +367,7 @@ export default function ImagensParaPdf() {
             size: output.size,
             isEdited: true,
             filterMode: output.filterMode,
+            shadowIntensity: output.shadowIntensity,
           }
         }
         return it
@@ -886,7 +888,7 @@ export default function ImagensParaPdf() {
                           {item.isEdited && (
                             <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A]/30">
                               {item.filterMode === 'shadow_removal'
-                                ? 'Sem sombra'
+                                ? `Sem sombra (${item.shadowIntensity === 'low' ? 'Suave' : item.shadowIntensity === 'high' ? 'Forte' : 'Média'})`
                                 : item.filterMode === 'enhance'
                                   ? 'Melhorada'
                                   : 'Editada'}

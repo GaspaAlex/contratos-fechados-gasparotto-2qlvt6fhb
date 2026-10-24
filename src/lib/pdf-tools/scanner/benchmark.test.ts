@@ -73,9 +73,9 @@ export function runInMemoryFilterBenchmark(): {
   // Ponto de amostra da caneta azul (x=200, y=403)
   const pxBeforeBlue = ctx.getImageData(200, 403, 1, 1).data
 
-  // TESTE 1: MODO SEM SOMBRA
+  // TESTE 1: MODO SEM SOMBRA (Padrão: medium)
   const t0Shadow = performance.now()
-  const shadowCanvas = applyShadowRemovalFilter(canvas)
+  const shadowCanvas = applyShadowRemovalFilter(canvas, 'medium')
   const tEndShadow = performance.now() - t0Shadow
 
   const shadowCtx = shadowCanvas.getContext('2d')!

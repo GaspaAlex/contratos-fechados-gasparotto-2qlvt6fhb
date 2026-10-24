@@ -8,6 +8,7 @@
 
 import {
   type DocumentFilterMode,
+  type ShadowRemovalIntensity,
   processDocumentFilter,
   type FilterResult,
 } from './document-filters'
@@ -78,6 +79,7 @@ class DocumentFiltersClient {
     sourceCanvas: HTMLCanvasElement,
     mode: DocumentFilterMode,
     maxPreviewDimension?: number,
+    shadowIntensity?: ShadowRemovalIntensity,
   ): Promise<FilterResult> {
     const t0 = performance.now()
 
@@ -111,6 +113,7 @@ class DocumentFiltersClient {
               type: 'filter',
               id: reqId,
               mode,
+              shadowIntensity,
               imageData: imgData,
             }
             worker.postMessage(msg, [imgData.data.buffer])
@@ -138,7 +141,7 @@ class DocumentFiltersClient {
     }
 
     // Processamento local via Canvas 2D
-    return processDocumentFilter(sourceCanvas, { mode, maxPreviewDimension })
+    return processDocumentFilter(sourceCanvas, { mode, shadowIntensity, maxPreviewDimension })
   }
 }
 

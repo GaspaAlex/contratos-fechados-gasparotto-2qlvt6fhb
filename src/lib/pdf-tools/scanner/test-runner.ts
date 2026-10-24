@@ -216,10 +216,27 @@ export async function runSyntheticBenchmarks(): Promise<SyntheticBenchmarkReport
     const origRes = await processDocumentFilter(srcCanvas, { mode: 'original' })
     const origMs = Math.round(performance.now() - tOrig)
 
-    // Sem Sombra
-    const tShadow = performance.now()
-    const shadowRes = await processDocumentFilter(srcCanvas, { mode: 'shadow_removal' })
-    const shadowMs = Math.round(performance.now() - tShadow)
+    // Sem Sombra (testando níveis Suave, Média e Forte)
+    const tShadowLow = performance.now()
+    const shadowResLow = await processDocumentFilter(srcCanvas, {
+      mode: 'shadow_removal',
+      shadowIntensity: 'low',
+    })
+    const shadowLowMs = Math.round(performance.now() - tShadowLow)
+
+    const tShadowMed = performance.now()
+    const shadowResMed = await processDocumentFilter(srcCanvas, {
+      mode: 'shadow_removal',
+      shadowIntensity: 'medium',
+    })
+    const shadowMedMs = Math.round(performance.now() - tShadowMed)
+
+    const tShadowHigh = performance.now()
+    const shadowResHigh = await processDocumentFilter(srcCanvas, {
+      mode: 'shadow_removal',
+      shadowIntensity: 'high',
+    })
+    const shadowHighMs = Math.round(performance.now() - tShadowHigh)
 
     // Melhorar
     const tEnhance = performance.now()
@@ -228,37 +245,57 @@ export async function runSyntheticBenchmarks(): Promise<SyntheticBenchmarkReport
 
     // Analisar luminância na área da sombra antes e depois
     const ctxOrig = origRes.canvas.getContext('2d')!
-    const ctxShadow = shadowRes.canvas.getContext('2d')!
+    const ctxShadowLow = shadowResLow.canvas.getContext('2d')!
+    const ctxShadowMed = shadowResMed.canvas.getContext('2d')!
+    const ctxShadowHigh = shadowResHigh.canvas.getContext('2d')!
     const ctxEnhance = enhanceRes.canvas.getContext('2d')!
 
     // Ponto onde a sombra incidia fortemente (x=500, y=700)
     const pxOrig = ctxOrig.getImageData(500, 700, 1, 1).data
-    const pxShadow = ctxShadow.getImageData(500, 700, 1, 1).data
+    const pxShadowLow = ctxShadowLow.getImageData(500, 700, 1, 1).data
+    const pxShadowMed = ctxShadowMed.getImageData(500, 700, 1, 1).data
+    const pxShadowHigh = ctxShadowHigh.getImageData(500, 700, 1, 1).data
     const pxEnhance = ctxEnhance.getImageData(500, 700, 1, 1).data
 
     const lumOrig = Math.round(0.299 * pxOrig[0] + 0.587 * pxOrig[1] + 0.114 * pxOrig[2])
-    const lumShadow = Math.round(0.299 * pxShadow[0] + 0.587 * pxShadow[1] + 0.114 * pxShadow[2])
+    const lumShadowLow = Math.round(
+      0.299 * pxShadowLow[0] + 0.587 * pxShadowLow[1] + 0.114 * pxShadowLow[2],
+    )
+    const lumShadowMed = Math.round(
+      0.299 * pxShadowMed[0] + 0.587 * pxShadowMed[1] + 0.114 * pxShadowMed[2],
+    )
+    const lumShadowHigh = Math.round(
+      0.299 * pxShadowHigh[0] + 0.587 * pxShadowHigh[1] + 0.114 * pxShadowHigh[2],
+    )
     const lumEnhance = Math.round(
       0.299 * pxEnhance[0] + 0.587 * pxEnhance[1] + 0.114 * pxEnhance[2],
     )
 
-    // Validação: a sombra foi atenuada (luminância do papel escuro aumentou significativamente)
-    const passed = lumShadow > lumOrig && lumEnhance >= lumShadow && shadowMs < 3000
+    // Validação: a sombra foi atenuada e a progressão Suave < Média <= Forte é verificada
+    const passed =
+      lumShadowMed > lumOrig &&
+      lumShadowHigh >= lumShadowMed &&
+      lumShadowMed >= lumShadowLow &&
+      shadowMedMs < 3000
 
     results.push({
       scenarioId: 1,
-      scenarioName: 'Documento sobre mesa escura com sombra de celular (3 modos)',
+      scenarioName: 'Documento sobre mesa escura com sombra de celular (3 modos e 3 intensidades)',
       success: passed,
       durationMs: Math.round(performance.now() - t0),
       metrics: {
         tempoOriginalMs: origMs,
-        tempoSemSombraMs: shadowMs,
+        tempoSemSombraSuaveMs: shadowLowMs,
+        tempoSemSombraMediaMs: shadowMedMs,
+        tempoSemSombraForteMs: shadowHighMs,
         tempoMelhorarMs: enhanceMs,
         luminanciaSombraOriginal: lumOrig,
-        luminanciaSemSombra: lumShadow,
+        luminanciaSemSombraSuave: lumShadowLow,
+        luminanciaSemSombraMedia: lumShadowMed,
+        luminanciaSemSombraForte: lumShadowHigh,
         luminanciaMelhorar: lumEnhance,
       },
-      details: `Modo Sem Sombra clareou região de sombra de lum=${lumOrig} para lum=${lumShadow} em ${shadowMs}ms; Modo Melhorar atingiu lum=${lumEnhance} em ${enhanceMs}ms.`,
+      details: `Modo Sem Sombra clareou região de sombra de lum=${lumOrig} para Suave=${lumShadowLow}, Média=${lumShadowMed}, Forte=${lumShadowHigh} em ${shadowMedMs}ms; Modo Melhorar atingiu lum=${lumEnhance} em ${enhanceMs}ms.`,
     })
   }
 
@@ -419,8 +456,8 @@ export async function runSyntheticBenchmarks(): Promise<SyntheticBenchmarkReport
     const img1Canvas = createSyntheticDocumentWithShadow(600, 800)
     const buf1 = await canvasToArrayBuffer(img1Canvas)
 
-    // Imagem 2: Tratada com "Sem Sombra"
-    const img2Shadow = applyShadowRemovalFilter(img1Canvas)
+    // Imagem 2: Tratada com "Sem Sombra" (Média)
+    const img2Shadow = applyShadowRemovalFilter(img1Canvas, 'medium')
     const buf2 = await canvasToArrayBuffer(img2Shadow)
 
     // Imagem 3: Tratada com "Melhorar"

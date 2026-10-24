@@ -8,6 +8,7 @@
 
 import {
   type DocumentFilterMode,
+  type ShadowRemovalIntensity,
   applyShadowRemovalFilter,
   applyEnhanceFilter,
 } from './document-filters'
@@ -16,6 +17,7 @@ export interface FilterWorkerInMessage {
   type: 'filter'
   id: string
   mode: DocumentFilterMode
+  shadowIntensity?: ShadowRemovalIntensity
   imageData: ImageData
 }
 
@@ -34,7 +36,7 @@ self.onmessage = (e: MessageEvent<FilterWorkerInMessage>) => {
   const t0 = performance.now()
 
   try {
-    const { id, mode, imageData } = msg
+    const { id, mode, shadowIntensity, imageData } = msg
 
     if (mode === 'original') {
       const durationMs = Math.round(performance.now() - t0)
@@ -63,7 +65,7 @@ self.onmessage = (e: MessageEvent<FilterWorkerInMessage>) => {
 
         let filteredCanvas: HTMLCanvasElement
         if (mode === 'shadow_removal') {
-          filteredCanvas = applyShadowRemovalFilter(canvasShim)
+          filteredCanvas = applyShadowRemovalFilter(canvasShim, shadowIntensity)
         } else if (mode === 'enhance') {
           filteredCanvas = applyEnhanceFilter(canvasShim)
         } else {

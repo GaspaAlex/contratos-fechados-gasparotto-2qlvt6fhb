@@ -16,9 +16,15 @@
  */
 
 export type DocumentFilterMode = 'original' | 'shadow_removal' | 'enhance'
+export type ShadowRemovalIntensity = 'low' | 'medium' | 'high'
 
 export interface FilterOptions {
   mode: DocumentFilterMode
+  /**
+   * Intensidade para o modo 'shadow_removal'.
+   * Padrão: 'medium'.
+   */
+  shadowIntensity?: ShadowRemovalIntensity
   /**
    * Resolução máxima para a prévia rápida (ex.: 1200px na maior dimensão).
    * Se omitido ou <= 0, processa na resolução nativa.
@@ -139,23 +145,35 @@ function fastBoxBlurChannel(
  * dilatação suave de máximos locais (papel claro) e blur gaussiano/box blur aproximado.
  * Retorna os canais de iluminação R, G, B em resolução original.
  */
-function estimateIlluminationBackground(
+/**
+ * Estimação de fundo de iluminação aprimorada (Multiscale Illumination Background):
+ * 1. Filtra pixels de tinta escura e azulada para evitar contaminação do fundo por anotações;
+ * 2. Amostragem em grade com múltiplos percentis altos;
+ * 3. Suavização em múltiplas escalas (raio amplo para sombras globais e raio médio para transições de borda de sombra);
+ * 4. Neutralização controlada da dominante azulada do próprio campo de iluminação;
+ * 5. Interpolação bilinear suave com piso dinâmico (permite compensar sombras fortes de até 15-20 sem saturação artificial).
+ */
+export function estimateIlluminationBackground(
   sourcePixels: Uint8ClampedArray,
   width: number,
   height: number,
+  options?: {
+    neutralizeCoolCast?: number // 0.0 a 1.0 (grau de neutralização da dominante azulada do campo)
+  },
 ): { bgR: Uint8ClampedArray; bgG: Uint8ClampedArray; bgB: Uint8ClampedArray } {
-  // Redução de resolução da grade para estimativa rápida de fundo
-  // Um grid de ~160px a 240px captura gradientes de luz e sombras de celulares
-  // sem ser afetado por linhas finas de texto ou assinaturas.
-  const downScale = Math.max(1, Math.round(Math.max(width, height) / 180))
-  const lowW = Math.max(10, Math.round(width / downScale))
-  const lowH = Math.max(10, Math.round(height / downScale))
+  const coolCastFactor = options?.neutralizeCoolCast ?? 0.85
+
+  // Grade de baixa resolução para capturar campo espacial suave
+  // Alvo em torno de 120-160px na maior dimensão
+  const downScale = Math.max(1, Math.round(Math.max(width, height) / 140))
+  const lowW = Math.max(8, Math.round(width / downScale))
+  const lowH = Math.max(8, Math.round(height / downScale))
 
   const lowR = new Uint8ClampedArray(lowW * lowH)
   const lowG = new Uint8ClampedArray(lowW * lowH)
   const lowB = new Uint8ClampedArray(lowW * lowH)
 
-  // Amostragem com filtro de máximo de bloco (para priorizar o papel claro e ignorar o texto escuro)
+  // Amostragem de cada bloco
   for (let ly = 0; ly < lowH; ly++) {
     const origYStart = Math.min(height - 1, Math.floor(ly * downScale))
     const origYEnd = Math.min(height, Math.floor((ly + 1) * downScale))
@@ -164,38 +182,112 @@ function estimateIlluminationBackground(
       const origXStart = Math.min(width - 1, Math.floor(lx * downScale))
       const origXEnd = Math.min(width, Math.floor((lx + 1) * downScale))
 
-      let maxR = 0
-      let maxG = 0
-      let maxB = 0
+      const step = Math.max(1, Math.floor(downScale / 4))
+      let bestLum = -1
+      let bestR = 0
+      let bestG = 0
+      let bestB = 0
 
-      // Bloco de amostragem
-      for (let y = origYStart; y < origYEnd; y += Math.max(1, Math.floor(downScale / 4))) {
-        for (let x = origXStart; x < origXEnd; x += Math.max(1, Math.floor(downScale / 4))) {
-          const idx = (y * width + x) * 4
-          if (sourcePixels[idx] > maxR) maxR = sourcePixels[idx]
-          if (sourcePixels[idx + 1] > maxG) maxG = sourcePixels[idx + 1]
-          if (sourcePixels[idx + 2] > maxB) maxB = sourcePixels[idx + 2]
+      // Percorre os pixels da célula procurando o pixel mais representativo do PAPEL local
+      for (let y = origYStart; y < origYEnd; y += step) {
+        const rowOffset = y * width * 4
+        for (let x = origXStart; x < origXEnd; x += step) {
+          const idx = rowOffset + x * 4
+          const r = sourcePixels[idx]
+          const g = sourcePixels[idx + 1]
+          const b = sourcePixels[idx + 2]
+
+          // Luminância perceptual Rec.601
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b
+
+          // Critério de descarte de traços e tintas:
+          // Se for tinta azul saturada ou traço muito escuro, não queremos como estimativa do papel.
+          // Tinta azul típica tem b > r + 30 e lum < 180
+          const isBlueStroke = b > r + 30 && b > g + 15 && lum < 180
+
+          if (!isBlueStroke) {
+            if (lum > bestLum) {
+              bestLum = lum
+              bestR = r
+              bestG = g
+              bestB = b
+            }
+          }
         }
       }
 
+      // Se todo o bloco era tinta escura ou sombra total
+      if (bestLum < 0) {
+        // Fallback: pega o pixel central
+        const midY = Math.min(height - 1, Math.floor((origYStart + origYEnd) / 2))
+        const midX = Math.min(width - 1, Math.floor((origXStart + origXEnd) / 2))
+        const midIdx = (midY * width + midX) * 4
+        bestR = sourcePixels[midIdx]
+        bestG = sourcePixels[midIdx + 1]
+        bestB = sourcePixels[midIdx + 2]
+      }
+
       const lowIdx = ly * lowW + lx
-      lowR[lowIdx] = Math.max(30, maxR)
-      lowG[lowIdx] = Math.max(30, maxG)
-      lowB[lowIdx] = Math.max(30, maxB)
+      // Piso seguro de 12 para permitir recuperar sombras fortes de celular
+      lowR[lowIdx] = Math.max(12, bestR)
+      lowG[lowIdx] = Math.max(12, bestG)
+      lowB[lowIdx] = Math.max(12, bestB)
     }
   }
 
-  // Suavização do mapa reduzido (2 passadas de box blur com raio proporcional)
+  // Suavização em múltiplas escalas (multiscale blur):
+  // Escala ampla (campo global de iluminação ~ 14% do tamanho da grade)
+  const blurWide = Math.max(4, Math.round(Math.min(lowW, lowH) * 0.14))
+  const wideR = new Uint8ClampedArray(lowW * lowH)
+  const wideG = new Uint8ClampedArray(lowW * lowH)
+  const wideB = new Uint8ClampedArray(lowW * lowH)
+  fastBoxBlurChannel(lowR, wideR, lowW, lowH, blurWide, 0, 1)
+  fastBoxBlurChannel(lowG, wideG, lowW, lowH, blurWide, 0, 1)
+  fastBoxBlurChannel(lowB, wideB, lowW, lowH, blurWide, 0, 1)
+
+  // Escala média (captura transições de penumbra de sombra sem criar degraus ~ 7% do tamanho)
+  const blurMid = Math.max(2, Math.round(Math.min(lowW, lowH) * 0.07))
+  const midR = new Uint8ClampedArray(lowW * lowH)
+  const midG = new Uint8ClampedArray(lowW * lowH)
+  const midB = new Uint8ClampedArray(lowW * lowH)
+  fastBoxBlurChannel(lowR, midR, lowW, lowH, blurMid, 0, 1)
+  fastBoxBlurChannel(lowG, midG, lowW, lowH, blurMid, 0, 1)
+  fastBoxBlurChannel(lowB, midB, lowW, lowH, blurMid, 0, 1)
+
+  // Combinação ponderada (65% amplo + 35% médio) + Neutralização da Dominante Azulada no campo
   const blurredLowR = new Uint8ClampedArray(lowW * lowH)
   const blurredLowG = new Uint8ClampedArray(lowW * lowH)
   const blurredLowB = new Uint8ClampedArray(lowW * lowH)
 
-  const blurRadiusLow = Math.max(3, Math.round(Math.min(lowW, lowH) * 0.12))
-  fastBoxBlurChannel(lowR, blurredLowR, lowW, lowH, blurRadiusLow, 0, 1)
-  fastBoxBlurChannel(lowG, blurredLowG, lowW, lowH, blurRadiusLow, 0, 1)
-  fastBoxBlurChannel(lowB, blurredLowB, lowW, lowH, blurRadiusLow, 0, 1)
+  const totalLow = lowW * lowH
+  for (let i = 0; i < totalLow; i++) {
+    let r = wideR[i] * 0.65 + midR[i] * 0.35
+    let g = wideG[i] * 0.65 + midG[i] * 0.35
+    let b = wideB[i] * 0.65 + midB[i] * 0.35
 
-  // Interpolação bilinear de volta à resolução total
+    // Neutralização da dominante azulada na iluminação de fundo:
+    // Em sombras sob luz natural/céu ou flash desigual, a iluminação incidente é azulada (B > R e B > G).
+    // Quando dividimos pelo campo de iluminação, se o campo mantiver exatamente essa proporção de canal
+    // ou se o equilibramos levemente com a média neutra, o papel resultante fica branco neutro e limpo!
+    // Se neutralizarmos o fundo em direção à cor real do papel alvo, a correção remove o tom azulado do papel.
+    if (coolCastFactor > 0) {
+      const avgTone = (r + g + b) / 3
+      // Nas áreas mais escuras (sombras), o azul costuma sobressair mais.
+      // Reforçamos o valor estimado de B para que na divisão (I / Bg) o excesso de azul da sombra seja atenuado:
+      const excessBlue = Math.max(0, b - (r + g) * 0.5)
+      // Ajuste proporcional ao coolCastFactor
+      b = b + excessBlue * (0.35 * coolCastFactor)
+      // Equalização sutil de luminância do campo
+      r = r * (1 - coolCastFactor * 0.15) + avgTone * (coolCastFactor * 0.15)
+      g = g * (1 - coolCastFactor * 0.15) + avgTone * (coolCastFactor * 0.15)
+    }
+
+    blurredLowR[i] = Math.min(255, Math.max(12, Math.round(r)))
+    blurredLowG[i] = Math.min(255, Math.max(12, Math.round(g)))
+    blurredLowB[i] = Math.min(255, Math.max(12, Math.round(b)))
+  }
+
+  // Interpolação bilinear suave de volta à resolução total
   const bgR = new Uint8ClampedArray(width * height)
   const bgG = new Uint8ClampedArray(width * height)
   const bgB = new Uint8ClampedArray(width * height)
@@ -257,13 +349,15 @@ function estimateIlluminationBackground(
 
 /**
  * Modo B: SEM SOMBRA
- * - Estima o mapa de iluminação de fundo (celular, lâmpada inclinada, sombras pontuais).
- * - Corrige os canais RGB proporcionalmente via divisão local:
- *   pixel_corr = (pixel / fundo) * targetWhite
- * - Garante que cores (tinta azul, carimbos, fotos) sejam preservadas com seu tom original,
- *   evitando saturação e brancos estourados artificiais.
+ * - Estima o mapa de iluminação multiescala (papel iluminado vs sombra do celular).
+ * - Corrige iluminação local via divisão proporcional parametrizada pela intensidade (Suave, Média, Forte).
+ * - Corrige dominante fria/azulada das áreas sombreadas sem dessaturar traços, assinaturas ou fotos.
+ * - Evita halos, ruído excessivo ou faixas artificiais nas transições de penumbra.
  */
-export function applyShadowRemovalFilter(sourceCanvas: HTMLCanvasElement): HTMLCanvasElement {
+export function applyShadowRemovalFilter(
+  sourceCanvas: HTMLCanvasElement,
+  intensity: ShadowRemovalIntensity = 'medium',
+): HTMLCanvasElement {
   const width = sourceCanvas.width
   const height = sourceCanvas.height
 
@@ -277,11 +371,47 @@ export function applyShadowRemovalFilter(sourceCanvas: HTMLCanvasElement): HTMLC
   const imgData = ctx.getImageData(0, 0, width, height)
   const data = imgData.data
 
-  // Estimar fundo
-  const { bgR, bgG, bgB } = estimateIlluminationBackground(data, width, height)
+  // Configuração de força baseada na intensidade
+  // 'low': ganho mais brando (similar ao comportamento anterior conservador)
+  // 'medium': padrão aprimorado (remoção nítida de sombras de celular e dominante fria)
+  // 'high': ganho vigoroso para sombras escuras e cantos profundos sem estourar texto
+  const config = {
+    low: {
+      targetWhite: 232,
+      minBgFloor: 28,
+      blendFactor: 0.75,
+      neutralizeCoolCast: 0.5,
+      kneeCompress: 242,
+      compressSlope: 0.35,
+    },
+    medium: {
+      targetWhite: 238,
+      minBgFloor: 16,
+      blendFactor: 0.92,
+      neutralizeCoolCast: 0.85,
+      kneeCompress: 246,
+      compressSlope: 0.45,
+    },
+    high: {
+      targetWhite: 242,
+      minBgFloor: 12,
+      blendFactor: 1.0,
+      neutralizeCoolCast: 0.95,
+      kneeCompress: 248,
+      compressSlope: 0.55,
+    },
+  }[intensity]
 
-  // Alvo de branco suave para o papel (232-238, evitando 255 puro que causaria "recorte digital")
-  const targetWhite = 232
+  // Estimar fundo de iluminação multiescala
+  const { bgR, bgG, bgB } = estimateIlluminationBackground(data, width, height, {
+    neutralizeCoolCast: config.neutralizeCoolCast,
+  })
+
+  const targetWhite = config.targetWhite
+  const minFloor = config.minBgFloor
+  const blend = config.blendFactor
+  const knee = config.kneeCompress
+  const slope = config.compressSlope
 
   const len = width * height
   for (let i = 0; i < len; i++) {
@@ -291,25 +421,30 @@ export function applyShadowRemovalFilter(sourceCanvas: HTMLCanvasElement): HTMLC
     const g = data[pxIdx + 1]
     const b = data[pxIdx + 2]
 
-    // Fundo local com piso seguro
-    const bR = Math.max(35, bgR[i])
-    const bG = Math.max(35, bgG[i])
-    const bB = Math.max(35, bgB[i])
+    // Piso dinâmico seguro para evitar divisão por quase zero
+    const bR = Math.max(minFloor, bgR[i])
+    const bG = Math.max(minFloor, bgG[i])
+    const bB = Math.max(minFloor, bgB[i])
 
-    // Ganho local baseado no canal
-    let newR = (r / bR) * targetWhite
-    let newG = (g / bG) * targetWhite
-    let newB = (b / bB) * targetWhite
+    // Correção teórica de iluminação por canal
+    const corrR = (r / bR) * targetWhite
+    const corrG = (g / bG) * targetWhite
+    const corrB = (b / bB) * targetWhite
 
-    // Compressão suave de altas luzes (evita clipping rígido em 255)
-    if (newR > 240) newR = 240 + (newR - 240) * 0.4
-    if (newG > 240) newG = 240 + (newG - 240) * 0.4
-    if (newB > 240) newB = 240 + (newB - 240) * 0.4
+    // Interpolação entre original e corrigido com base no blendFactor de intensidade
+    let newR = r * (1 - blend) + corrR * blend
+    let newG = g * (1 - blend) + corrG * blend
+    let newB = b * (1 - blend) + corrB * blend
+
+    // Compressão suave de altas luzes no joelho definido (impede clipping rígido em 255)
+    if (newR > knee) newR = knee + (newR - knee) * slope
+    if (newG > knee) newG = knee + (newG - knee) * slope
+    if (newB > knee) newB = knee + (newB - knee) * slope
 
     data[pxIdx] = Math.min(255, Math.max(0, Math.round(newR)))
     data[pxIdx + 1] = Math.min(255, Math.max(0, Math.round(newG)))
     data[pxIdx + 2] = Math.min(255, Math.max(0, Math.round(newB)))
-    // Alpha permanece inalterado (data[pxIdx + 3])
+    // data[pxIdx + 3] (alpha) preservado intacto
   }
 
   ctx.putImageData(imgData, 0, 0)
@@ -452,7 +587,7 @@ export async function processDocumentFilter(
   let resultCanvas: HTMLCanvasElement
 
   if (mode === 'shadow_removal') {
-    resultCanvas = applyShadowRemovalFilter(workingCanvas)
+    resultCanvas = applyShadowRemovalFilter(workingCanvas, options.shadowIntensity)
   } else if (mode === 'enhance') {
     resultCanvas = applyEnhanceFilter(workingCanvas)
   } else {

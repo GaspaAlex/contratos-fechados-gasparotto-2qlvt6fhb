@@ -70,6 +70,7 @@ import {
 import { scanWorkerClient } from '@/lib/pdf-tools/scanner/opencv-worker-client'
 import {
   type DocumentFilterMode,
+  type ShadowRemovalIntensity,
   processDocumentFilter,
 } from '@/lib/pdf-tools/scanner/document-filters'
 import { documentFiltersClient } from '@/lib/pdf-tools/scanner/document-filters-client'
@@ -82,6 +83,7 @@ export interface ImageEditorOutput {
   size: number
   type: 'image/jpeg' | 'image/png'
   filterMode?: DocumentFilterMode
+  shadowIntensity?: ShadowRemovalIntensity
 }
 
 interface ImageEditorModalProps {
@@ -162,6 +164,7 @@ export function ImageEditorModal({
 
   // Tratamentos Documentais (Bloco 2)
   const [selectedFilter, setSelectedFilter] = useState<DocumentFilterMode>('original')
+  const [shadowIntensity, setShadowIntensity] = useState<ShadowRemovalIntensity>('medium')
   const [isProcessingFilter, setIsProcessingFilter] = useState<boolean>(false)
   const [filterDurationMs, setFilterDurationMs] = useState<number | null>(null)
   const [filteredPreviewCanvas, setFilteredPreviewCanvas] = useState<HTMLCanvasElement | null>(null)
@@ -300,6 +303,7 @@ export function ImageEditorModal({
         setIsPreviewWarp(false)
         setPreviewWarpCanvas(null)
         setSelectedFilter('original')
+        setShadowIntensity('medium')
         setFilteredPreviewCanvas(null)
         setFilterDurationMs(null)
         setIsComparing(false)
@@ -349,6 +353,7 @@ export function ImageEditorModal({
       setIsPreviewWarp(false)
       setPreviewWarpCanvas(null)
       setSelectedFilter('original')
+      setShadowIntensity('medium')
       setFilteredPreviewCanvas(null)
       setFilterDurationMs(null)
       setIsComparing(false)
@@ -596,7 +601,11 @@ export function ImageEditorModal({
   }
 
   // Atualizar prévia do filtro documental na resolução da visualização
-  const updateFilterPreview = async (baseCanvas: HTMLCanvasElement, mode: DocumentFilterMode) => {
+  const updateFilterPreview = async (
+    baseCanvas: HTMLCanvasElement,
+    mode: DocumentFilterMode,
+    intensity: ShadowRemovalIntensity = shadowIntensity,
+  ) => {
     if (mode === 'original') {
       setFilteredPreviewCanvas(null)
       setFilterDurationMs(null)
@@ -609,17 +618,29 @@ export function ImageEditorModal({
       // Processa a prévia com limite de dimensão (1200px) para ser instantâneo (sub-segundo)
       const res = await processDocumentFilter(baseCanvas, {
         mode,
+        shadowIntensity: intensity,
         maxPreviewDimension: 1200,
       })
       setFilteredPreviewCanvas(res.canvas)
       const ms = Math.round(performance.now() - t0)
       setFilterDurationMs(ms)
-      console.log(`[ImageEditor] Filtro "${mode}" prévia: ${ms}ms (${res.width}x${res.height})`)
+      console.log(
+        `[ImageEditor] Filtro "${mode}" (intensidade: ${intensity}) prévia: ${ms}ms (${res.width}x${res.height})`,
+      )
     } catch (err) {
       console.error('Erro ao processar prévia do filtro:', err)
       setDetectionMessage('Não foi possível gerar a prévia do filtro documental.')
     } finally {
       setIsProcessingFilter(false)
+    }
+  }
+
+  // Alterar intensidade da remoção de sombra
+  const handleSelectIntensity = async (intensity: ShadowRemovalIntensity) => {
+    setShadowIntensity(intensity)
+
+    if (selectedFilter === 'shadow_removal' && previewWarpCanvas) {
+      await updateFilterPreview(previewWarpCanvas, 'shadow_removal', intensity)
     }
   }
 
@@ -636,7 +657,7 @@ export function ImageEditorModal({
           setPreviewWarpCanvas(baseWarp)
           setIsPreviewWarp(true)
           if (mode !== 'original') {
-            await updateFilterPreview(baseWarp, mode)
+            await updateFilterPreview(baseWarp, mode, shadowIntensity)
           } else {
             setFilteredPreviewCanvas(null)
           }
@@ -652,7 +673,7 @@ export function ImageEditorModal({
         setFilteredPreviewCanvas(null)
         setFilterDurationMs(null)
       } else {
-        await updateFilterPreview(previewWarpCanvas, mode)
+        await updateFilterPreview(previewWarpCanvas, mode, shadowIntensity)
       }
     }
   }
@@ -683,11 +704,13 @@ export function ImageEditorModal({
         const filterResult = await documentFiltersClient.applyFilter(
           rectifiedCanvas,
           selectedFilter,
+          undefined,
+          shadowIntensity,
         )
         finalCanvas = filterResult.canvas
         const filterElapsedMs = Math.round(performance.now() - tFiltStart)
         console.log(
-          `[ImageEditor] Tratamento "${selectedFilter}" aplicado na imagem final: ${filterElapsedMs}ms (${finalCanvas.width}x${finalCanvas.height})`,
+          `[ImageEditor] Tratamento "${selectedFilter}" (intensidade: ${shadowIntensity}) aplicado na imagem final: ${filterElapsedMs}ms (${finalCanvas.width}x${finalCanvas.height})`,
         )
       }
 
@@ -724,6 +747,7 @@ export function ImageEditorModal({
         size: blob.size,
         type: imageType,
         filterMode: selectedFilter,
+        shadowIntensity: selectedFilter === 'shadow_removal' ? shadowIntensity : undefined,
       })
       onClose()
     } catch (err) {
@@ -1128,7 +1152,17 @@ export function ImageEditorModal({
                 }`}
               >
                 {selectedFilter === 'original' && 'Padrão: sem alterações'}
-                {selectedFilter === 'shadow_removal' && 'Iluminação uniforme'}
+                {selectedFilter === 'shadow_removal' && (
+                  <>
+                    Sem sombra (
+                    {shadowIntensity === 'low'
+                      ? 'Suave'
+                      : shadowIntensity === 'medium'
+                        ? 'Média'
+                        : 'Forte'}
+                    )
+                  </>
+                )}
                 {selectedFilter === 'enhance' && 'Alto contraste documental'}
               </Badge>
 
@@ -1143,6 +1177,42 @@ export function ImageEditorModal({
                 </span>
               )}
             </div>
+
+            {/* Sub-controle de Intensidade da Remoção de Sombra */}
+            {selectedFilter === 'shadow_removal' && (
+              <div className="flex items-center gap-1.5 pl-1 sm:pl-2 border-l border-[#E4E7EB] dark:border-border">
+                <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground whitespace-nowrap">
+                  Intensidade:
+                </span>
+                <div className="inline-flex rounded-md border border-[#E4E7EB] dark:border-border p-0.5 bg-white dark:bg-background shadow-xs">
+                  {(
+                    [
+                      { id: 'low', label: 'Suave' },
+                      { id: 'medium', label: 'Média (Padrão)' },
+                      { id: 'high', label: 'Forte' },
+                    ] as const
+                  ).map((lvl) => {
+                    const isCur = shadowIntensity === lvl.id
+                    return (
+                      <button
+                        key={lvl.id}
+                        type="button"
+                        onClick={() => handleSelectIntensity(lvl.id)}
+                        disabled={isDetecting || isWarping || isProcessingFilter}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                          isCur
+                            ? 'bg-[#C9922A] text-white font-bold shadow-2xs'
+                            : 'text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground hover:bg-[#F5F6F8]'
+                        }`}
+                        title={`Ajustar intensidade da remoção de sombra para ${lvl.label}`}
+                      >
+                        {lvl.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Comparador Antes / Depois (habilitado quando em prévia com filtro ativo) */}
@@ -1403,7 +1473,11 @@ export function ImageEditorModal({
                       Antes (Original)
                     </div>
                     <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded bg-[#C9922A]/90 text-white text-[10px] font-mono font-bold backdrop-blur-xs">
-                      Depois ({selectedFilter === 'shadow_removal' ? 'Sem sombra' : 'Melhorar'})
+                      Depois (
+                      {selectedFilter === 'shadow_removal'
+                        ? `Sem sombra (${shadowIntensity === 'low' ? 'Suave' : shadowIntensity === 'medium' ? 'Média' : 'Forte'})`
+                        : 'Melhorar'}
+                      )
                     </div>
                   </div>
                 ) : (
@@ -1475,7 +1549,7 @@ export function ImageEditorModal({
                   {selectedFilter === 'original' &&
                     'Perspectiva corrigida e fundo removido (modo Original: cores e iluminação preservadas)'}
                   {selectedFilter === 'shadow_removal' &&
-                    'Tratamento Sem sombra: iluminação de fundo neutralizada, cores e assinaturas preservadas'}
+                    `Tratamento Sem sombra (${shadowIntensity === 'low' ? 'Suave' : shadowIntensity === 'medium' ? 'Média' : 'Forte'}): iluminação de fundo neutralizada, cores e assinaturas preservadas`}{' '}
                   {selectedFilter === 'enhance' &&
                     'Tratamento Melhorar: fundo uniforme e legibilidade otimizada para textos'}
                 </span>
