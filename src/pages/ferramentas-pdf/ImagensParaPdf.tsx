@@ -4,8 +4,7 @@ import {
   ArrowLeft,
   FileImage,
   Upload,
-  ArrowUp,
-  ArrowDown,
+  Camera,
   Trash2,
   Download,
   AlertTriangle,
@@ -17,8 +16,6 @@ import {
   Ban,
   MoveLeft,
   MoveRight,
-  Maximize2,
-  FileText,
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -37,6 +34,7 @@ import {
   type ImageToPdfProgressUpdate,
 } from '@/lib/pdf-tools/image-to-pdf'
 import { ImageEditorModal, type ImageEditorOutput } from '@/components/pdf-tools/ImageEditorModal'
+import { CameraScannerModal, type CapturedPhoto } from '@/components/pdf-tools/CameraScannerModal'
 import { Crop } from 'lucide-react'
 
 interface SelectedImageItem {
@@ -83,6 +81,9 @@ export default function ImagensParaPdf() {
 
   // Modal de Edição Inteligente de Imagem (CamScanner Bloco 1)
   const [editingImageItem, setEditingImageItem] = useState<SelectedImageItem | null>(null)
+
+  // Modal de Digitalização Contínua com Câmera (Bloco 3.1)
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false)
 
   // Resultado
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
@@ -254,6 +255,30 @@ export default function ImagensParaPdf() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  // Receber fotos capturadas pela câmera e incorporar à lista existente
+  const handleCameraPhotosCaptured = (capturedPhotos: CapturedPhoto[]) => {
+    if (capturedPhotos.length === 0) return
+
+    const newItems: SelectedImageItem[] = capturedPhotos.map((photo) => ({
+      id: photo.id,
+      file: photo.file,
+      name: photo.name,
+      size: photo.size,
+      buffer: photo.buffer,
+      originalBuffer: photo.originalBuffer,
+      originalSize: photo.originalSize,
+      type: photo.type,
+      previewUrl: photo.previewUrl,
+      width: photo.width,
+      height: photo.height,
+      validationStatus: 'valid',
+      isEdited: false,
+    }))
+
+    setImages((prev) => [...prev, ...newItems])
+    setErrorMessage(null)
   }
 
   // Ordenação: mover para a esquerda / cima
@@ -712,13 +737,32 @@ export default function ImagensParaPdf() {
               individualmente e escolher o formato de página antes de gerar o PDF.
             </p>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="h-8 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white rounded-md shadow-sm transition-colors"
+                disabled={isConverting || isValidatingFiles}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsCameraScannerOpen(true)
+                }}
+              >
+                <Camera className="w-3.5 h-3.5 mr-1.5" />
+                Usar câmera
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="h-8 px-4 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                 disabled={isConverting || isValidatingFiles}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  fileInputRef.current?.click()
+                }}
               >
                 {isValidatingFiles ? (
                   <>
@@ -726,7 +770,10 @@ export default function ImagensParaPdf() {
                     Lendo imagens...
                   </>
                 ) : (
-                  <>Selecionar Imagens</>
+                  <>
+                    <Upload className="w-3.5 h-3.5 mr-1.5" />
+                    Selecionar da galeria / PC
+                  </>
                 )}
               </Button>
             </div>
@@ -829,12 +876,23 @@ export default function ImagensParaPdf() {
                     type="button"
                     variant="outline"
                     size="sm"
+                    onClick={() => setIsCameraScannerOpen(true)}
+                    disabled={isConverting}
+                    className="h-8 px-3 text-xs font-semibold border-[#C9922A]/40 text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
+                  >
+                    <Camera className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
+                    Usar câmera
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isConverting}
                     className="h-8 px-3 text-xs font-semibold border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] dark:hover:bg-muted/40 rounded-md transition-colors"
                   >
                     <Upload className="w-3.5 h-3.5 mr-1.5" />
-                    Adicionar mais
+                    Adicionar arquivos
                   </Button>
                   <Button
                     type="button"
@@ -1113,6 +1171,14 @@ export default function ImagensParaPdf() {
           nuvem, garantindo sigilo absoluto conforme as diretrizes institucionais.
         </p>
       </div>
+
+      {/* Modal de Digitalização Contínua com Câmera (Bloco 3.1) */}
+      <CameraScannerModal
+        isOpen={isCameraScannerOpen}
+        onClose={() => setIsCameraScannerOpen(false)}
+        onComplete={handleCameraPhotosCaptured}
+        initialCount={images.length}
+      />
 
       {/* Modal de Edição Inteligente (CamScanner Bloco 1) */}
       {editingImageItem && (
