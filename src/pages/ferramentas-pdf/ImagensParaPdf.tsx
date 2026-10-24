@@ -37,6 +37,8 @@ import { ImageEditorModal, type ImageEditorOutput } from '@/components/pdf-tools
 import { CameraScannerModal, type CapturedPhoto } from '@/components/pdf-tools/CameraScannerModal'
 import { Crop } from 'lucide-react'
 
+import type { AutoProcessStatus } from '@/lib/pdf-tools/scanner/auto-frame-queue'
+
 interface SelectedImageItem {
   id: string
   file: File
@@ -52,6 +54,9 @@ interface SelectedImageItem {
   validationStatus: 'valid' | 'invalid'
   errorMessage?: string
   isEdited?: boolean
+  autoFrameStatus?: AutoProcessStatus
+  autoFrameConfidence?: number
+  source?: 'upload' | 'camera'
   filterMode?: string
   shadowIntensity?: string
 }
@@ -130,6 +135,15 @@ export default function ImagensParaPdf() {
     return images.filter((item) => item.validationStatus === 'valid').length
   }, [images])
 
+  // Contadores para páginas enquadradas e que precisam de revisão manual
+  const autoFramedCount = useMemo(() => {
+    return images.filter((item) => item.autoFrameStatus === 'framed').length
+  }, [images])
+
+  const needsReviewCount = useMemo(() => {
+    return images.filter((item) => item.autoFrameStatus === 'needs_review').length
+  }, [images])
+
   // Processar adição de novos arquivos
   const handleFilesAdded = useCallback(async (newFileList: FileList | File[]) => {
     setErrorMessage(null)
@@ -204,6 +218,7 @@ export default function ImagensParaPdf() {
           height,
           validationStatus: 'valid',
           isEdited: false,
+          source: 'upload',
         })
       } catch (err) {
         newItems.push({
@@ -274,7 +289,10 @@ export default function ImagensParaPdf() {
       width: photo.width,
       height: photo.height,
       validationStatus: 'valid',
-      isEdited: false,
+      isEdited: photo.isEdited || photo.autoFrameStatus === 'framed',
+      autoFrameStatus: photo.autoFrameStatus,
+      autoFrameConfidence: photo.autoFrameConfidence,
+      source: 'camera',
     }))
 
     setImages((prev) => [...prev, ...newItems])
@@ -391,6 +409,8 @@ export default function ImagensParaPdf() {
             height: output.height,
             size: output.size,
             isEdited: true,
+            // Uma vez ajustado manualmente no editor, o status passa a ser considerado revisado
+            autoFrameStatus: 'framed',
             filterMode: output.filterMode,
             shadowIntensity: output.shadowIntensity,
           }
@@ -419,6 +439,8 @@ export default function ImagensParaPdf() {
             previewUrl: newPreviewUrl,
             size: it.originalSize,
             isEdited: false,
+            // Ao reverter para a fotografia original capturada, marca como original preservado
+            autoFrameStatus: it.source === 'camera' ? 'needs_review' : undefined,
           }
         }
         return it
@@ -866,6 +888,16 @@ export default function ImagensParaPdf() {
                     <strong className="text-[#252B34] dark:text-foreground font-semibold tabular-nums">
                       {formatBytes(totalSizeBytes)}
                     </strong>
+                    {autoFramedCount > 0 && (
+                      <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">
+                        • {autoFramedCount} enquadrada{autoFramedCount === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    {needsReviewCount > 0 && (
+                      <span className="ml-2 text-amber-600 dark:text-amber-400 font-medium">
+                        • {needsReviewCount} para revisar
+                      </span>
+                    )}
                     {' • '}
                     Arraste os cards ou use as setas para definir a ordem das páginas no PDF.
                   </p>
@@ -943,7 +975,24 @@ export default function ImagensParaPdf() {
                           <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground uppercase tracking-wider">
                             Pág. {idx + 1}
                           </span>
-                          {item.isEdited && (
+
+                          {/* Status de Enquadramento da Câmera ou Edição Manual */}
+                          {item.autoFrameStatus === 'framed' ? (
+                            <span
+                              className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30"
+                              title="Enquadramento automático aplicado com sucesso"
+                            >
+                              Enquadrada
+                            </span>
+                          ) : item.autoFrameStatus === 'needs_review' ? (
+                            <span
+                              className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1"
+                              title="Bordas incertas: foto original mantida intacta para ajuste manual"
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              Revisar enquadramento
+                            </span>
+                          ) : item.isEdited ? (
                             <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-[#C9922A]/15 text-[#C9922A] border border-[#C9922A]/30">
                               {item.filterMode === 'shadow_removal'
                                 ? `Sem sombra (${item.shadowIntensity === 'low' ? 'Suave' : item.shadowIntensity === 'high' ? 'Forte' : 'Média'})`
@@ -951,7 +1000,11 @@ export default function ImagensParaPdf() {
                                   ? 'Melhorada'
                                   : 'Editada'}
                             </span>
-                          )}
+                          ) : item.source === 'camera' ? (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30">
+                              Câmera
+                            </span>
+                          ) : null}
                         </div>
                         <div className="flex items-center gap-0.5">
                           <Button
@@ -1034,16 +1087,24 @@ export default function ImagensParaPdf() {
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="h-7 px-2 text-[11px] font-semibold border-[#E4E7EB] dark:border-border text-[#252B34] dark:text-foreground hover:bg-[#FAF8F2] hover:text-[#C9922A] hover:border-[#C9922A]/40 rounded flex-1 shadow-2xs"
+                              className={`h-7 px-2 text-[11px] font-semibold rounded flex-1 shadow-2xs ${
+                                item.autoFrameStatus === 'needs_review'
+                                  ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200 hover:bg-amber-100 hover:text-amber-950'
+                                  : 'border-[#E4E7EB] dark:border-border text-[#252B34] dark:text-foreground hover:bg-[#FAF8F2] hover:text-[#C9922A] hover:border-[#C9922A]/40'
+                              }`}
                               disabled={isInvalid || isConverting}
                               onClick={() => handleOpenEditor(item)}
                               title="Editar limites, bordas e rotação (estilo CamScanner)"
                             >
-                              <Crop className="w-3 h-3 mr-1 text-[#C9922A]" />
-                              Editar imagem
+                              <Crop
+                                className={`w-3 h-3 mr-1 ${item.autoFrameStatus === 'needs_review' ? 'text-amber-600' : 'text-[#C9922A]'}`}
+                              />
+                              {item.autoFrameStatus === 'needs_review'
+                                ? 'Ajustar cantos'
+                                : 'Editar imagem'}
                             </Button>
 
-                            {item.isEdited && (
+                            {(item.isEdited || item.autoFrameStatus === 'framed') && (
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -1051,9 +1112,9 @@ export default function ImagensParaPdf() {
                                 className="h-7 px-1.5 text-[10px] text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2] rounded"
                                 disabled={isConverting}
                                 onClick={(e) => handleRestoreItemOriginal(item.id, e)}
-                                title="Desfazer edição e restaurar original"
+                                title="Desfazer enquadramento e restaurar fotografia original capturada"
                               >
-                                Reverter
+                                Reverter original
                               </Button>
                             )}
                           </div>
