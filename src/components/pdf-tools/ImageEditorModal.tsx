@@ -949,40 +949,49 @@ export function ImageEditorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isWarping && onClose()}>
-      <DialogContent className="max-w-5xl w-[95vw] h-[92vh] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-[#F5F6F8] dark:bg-card border-[#E4E7EB] dark:border-border rounded-xl shadow-2xl">
-        {/* Cabeçalho */}
-        <DialogHeader className="px-5 py-3 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex-row items-center justify-between space-y-0 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
-              <Crop className="w-4 h-4 text-[#C9922A]" />
+      <DialogContent
+        className={cn(
+          'p-0 gap-0 overflow-hidden bg-[#F5F6F8] dark:bg-card border-[#E4E7EB] dark:border-border shadow-2xl flex flex-col',
+          // Mobile: ocupa toda a tela útil sem ultrapassar o viewport visível
+          'fixed inset-0 w-full h-[100dvh] max-h-[100dvh] max-w-none rounded-none top-0 left-0 translate-x-0 translate-y-0',
+          // Desktop: modal centralizado elegante com cantos arredondados
+          'sm:fixed sm:inset-auto sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]',
+          'sm:w-[95vw] sm:max-w-5xl sm:h-[92vh] sm:max-h-[92vh] sm:h-[92dvh] sm:max-h-[92dvh] sm:rounded-xl',
+        )}
+      >
+        {/* Cabeçalho Fixo */}
+        <DialogHeader className="px-3 sm:px-5 py-2 sm:py-3 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex-row items-center justify-between space-y-0 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-2">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-[#FAF8F2] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border flex items-center justify-center text-[#C9922A] shrink-0">
+              <Crop className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C9922A]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <DialogTitle className="text-sm sm:text-base font-bold text-[#252B34] dark:text-foreground">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <DialogTitle className="text-xs sm:text-base font-bold text-[#252B34] dark:text-foreground truncate">
                   Editar e Enquadrar Imagem
                 </DialogTitle>
                 <Badge
                   variant="outline"
-                  className="text-[10px] uppercase font-mono px-1.5 py-0 border-[#E4E7EB] text-[#78818E]"
+                  className="hidden xs:inline-flex text-[9px] sm:text-[10px] uppercase font-mono px-1 sm:px-1.5 py-0 border-[#E4E7EB] text-[#78818E]"
                 >
                   CamScanner Bloco 2
                 </Badge>
                 {!isConfident && !isDetecting && (
                   <Badge
                     variant="outline"
-                    className="text-[10px] bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/30 dark:text-amber-400"
+                    className="text-[9px] sm:text-[10px] bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/30 dark:text-amber-400 py-0"
                   >
-                    Ajuste Manual Recomendado
+                    Ajuste Manual
                   </Badge>
                 )}
               </div>
-              <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground truncate max-w-md">
+              <DialogDescription className="text-[10px] sm:text-xs text-[#78818E] dark:text-muted-foreground truncate max-w-[200px] sm:max-w-md">
                 {imageName} ({naturalWidth}×{naturalHeight}px)
               </DialogDescription>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               type="button"
               variant="ghost"
@@ -999,14 +1008,14 @@ export function ImageEditorModal({
 
         {/* Alerta de aviso ou incerteza da detecção */}
         {detectionMessage && (
-          <div className="px-5 py-2 bg-amber-50/90 dark:bg-amber-950/30 border-b border-amber-200/80 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-300 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="px-3 sm:px-5 py-1.5 sm:py-2 bg-amber-50/90 dark:bg-amber-950/30 border-b border-amber-200/80 dark:border-amber-900/40 text-[11px] sm:text-xs text-amber-900 dark:text-amber-300 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2 min-w-0 pr-2">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-              <span>{detectionMessage}</span>
+              <span className="truncate sm:whitespace-normal">{detectionMessage}</span>
             </div>
             <button
               onClick={() => setDetectionMessage(null)}
-              className="text-amber-800 hover:text-amber-950 text-[11px] underline ml-2"
+              className="text-amber-800 hover:text-amber-950 text-[10px] sm:text-[11px] underline ml-2 shrink-0 font-medium"
             >
               Dispensar
             </button>
@@ -1014,60 +1023,60 @@ export function ImageEditorModal({
         )}
 
         {/* Barra de Ferramentas Superior: Rotação, Detecção e Modo de Visualização */}
-        <div className="px-5 py-2 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="px-3 sm:px-5 py-1.5 sm:py-2 bg-white dark:bg-card border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 shrink-0">
           {/* Controles de Rotação e Detecção */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+              className="h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
               onClick={() => rotateCanvas(-90)}
               disabled={isDetecting || isWarping || isPreviewWarp}
               title="Girar 90° à esquerda (anti-horário)"
             >
-              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-              Girar 90° Esq.
+              <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
+              <span className="hidden xs:inline">Girar </span>Esq.
             </Button>
 
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+              className="h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
               onClick={() => rotateCanvas(90)}
               disabled={isDetecting || isWarping || isPreviewWarp}
               title="Girar 90° à direita (horário)"
             >
-              <RotateCw className="w-3.5 h-3.5 mr-1.5" />
-              Girar 90° Dir.
+              <RotateCw className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
+              <span className="hidden xs:inline">Girar </span>Dir.
             </Button>
 
-            <div className="h-4 w-px bg-[#E4E7EB] mx-1 hidden sm:block" />
+            <div className="h-4 w-px bg-[#E4E7EB] mx-0.5 sm:mx-1 hidden xs:block" />
 
             {isDetecting ? (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 px-2.5 text-xs text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-50"
+                className="h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-50"
                 onClick={handleSkipDetection}
                 title="Pular análise e ajustar cantos manualmente"
               >
-                Pular detecção
+                Pular
               </Button>
             ) : (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 px-2.5 text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
+                className="h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs text-[#252B34] dark:text-foreground border-[#E4E7EB] hover:bg-[#FAF8F2] hover:text-[#C9922A]"
                 onClick={() => currentCanvas && runDetection(currentCanvas)}
                 disabled={isWarping || isPreviewWarp}
                 title="Detectar novamente as bordas do documento"
               >
-                <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#C9922A]" />
-                Detectar novamente
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5 text-[#C9922A]" />
+                <span className="hidden sm:inline">Detectar </span>Novamente
               </Button>
             )}
 
@@ -1075,23 +1084,23 @@ export function ImageEditorModal({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 px-2.5 text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2]"
+              className="h-7 sm:h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs text-[#78818E] hover:text-[#C9922A] hover:bg-[#FAF8F2]"
               onClick={handleRestoreOriginal}
               disabled={isDetecting || isWarping}
               title="Desfaz recortes, rotações e distorções desta sessão"
             >
-              <Undo2 className="w-3.5 h-3.5 mr-1.5" />
-              Restaurar original
+              <Undo2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
+              <span className="hidden sm:inline">Restaurar </span>Original
             </Button>
           </div>
 
           {/* Alternar Prévia do Recorte */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 ml-auto sm:ml-0">
             <Button
               type="button"
               variant={isPreviewWarp ? 'secondary' : 'outline'}
               size="sm"
-              className={`h-8 px-3 text-xs font-semibold ${
+              className={`h-7 sm:h-8 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold ${
                 isPreviewWarp
                   ? 'bg-[#C9922A]/15 text-[#C9922A] border-[#C9922A]'
                   : 'border-[#E4E7EB] text-[#252B34] dark:text-foreground hover:bg-[#FAF8F2] hover:text-[#C9922A]'
@@ -1100,22 +1109,22 @@ export function ImageEditorModal({
               disabled={isDetecting || isWarping}
             >
               {isWarping ? (
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5 animate-spin" />
               ) : (
-                <Eye className="w-3.5 h-3.5 mr-1.5" />
+                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
               )}
-              {isPreviewWarp ? 'Voltar para Ajuste dos Cantos' : 'Visualizar recorte'}
+              {isPreviewWarp ? 'Ajustar Cantos' : 'Ver recorte'}
             </Button>
           </div>
         </div>
 
         {/* Barra de Tratamento Documental (CamScanner Bloco 2) */}
-        <div className="px-5 py-2.5 bg-[#FAF8F2]/90 dark:bg-card/80 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-3 sm:px-5 py-1.5 sm:py-2.5 bg-[#FAF8F2]/90 dark:bg-card/80 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 shrink-0">
           {/* Seletor dos 3 Modos de Filtro */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-[#252B34] dark:text-foreground whitespace-nowrap flex items-center gap-1.5">
-              <SunMedium className="w-3.5 h-3.5 text-[#C9922A]" />
-              Modo de tratamento:
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="text-[11px] sm:text-xs font-bold text-[#252B34] dark:text-foreground whitespace-nowrap flex items-center gap-1">
+              <SunMedium className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C9922A]" />
+              Filtro:
             </span>
 
             <div className="inline-flex rounded-lg border border-[#E4E7EB] dark:border-border p-0.5 bg-white dark:bg-background shadow-xs">
@@ -1128,67 +1137,32 @@ export function ImageEditorModal({
                     type="button"
                     onClick={() => handleSelectFilter(mode.id)}
                     disabled={isDetecting || isWarping}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                    className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all ${
                       isSelected
                         ? 'bg-[#252B34] dark:bg-primary text-white shadow-xs font-semibold'
                         : 'text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground hover:bg-[#F5F6F8]'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#C9922A]' : ''}`} />
+                    <Icon
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isSelected ? 'text-[#C9922A]' : ''}`}
+                    />
                     <span>{mode.label}</span>
                   </button>
                 )
               })}
             </div>
 
-            {/* Indicador do Tratamento Ativo e Tempo Medido */}
-            <div className="flex items-center gap-1.5">
-              <Badge
-                variant="outline"
-                className={`text-[10px] font-mono px-2 py-0.5 ${
-                  selectedFilter === 'original'
-                    ? 'border-[#E4E7EB] text-[#78818E] bg-white'
-                    : 'border-[#C9922A]/40 text-[#C9922A] bg-[#FAF8F2] font-semibold'
-                }`}
-              >
-                {selectedFilter === 'original' && 'Padrão: sem alterações'}
-                {selectedFilter === 'shadow_removal' && (
-                  <>
-                    Sem sombra (
-                    {shadowIntensity === 'low'
-                      ? 'Suave'
-                      : shadowIntensity === 'medium'
-                        ? 'Média'
-                        : 'Forte'}
-                    )
-                  </>
-                )}
-                {selectedFilter === 'enhance' && 'Alto contraste documental'}
-              </Badge>
-
-              {filterDurationMs !== null && (
-                <span className="text-[10px] text-[#78818E] font-mono">({filterDurationMs}ms)</span>
-              )}
-
-              {isProcessingFilter && (
-                <span className="text-[10px] text-[#C9922A] flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Processando...
-                </span>
-              )}
-            </div>
-
             {/* Sub-controle de Intensidade da Remoção de Sombra */}
             {selectedFilter === 'shadow_removal' && (
-              <div className="flex items-center gap-1.5 pl-1 sm:pl-2 border-l border-[#E4E7EB] dark:border-border">
-                <span className="text-[11px] font-medium text-[#78818E] dark:text-muted-foreground whitespace-nowrap">
+              <div className="flex items-center gap-1 sm:gap-1.5 pl-1 sm:pl-2 border-l border-[#E4E7EB] dark:border-border">
+                <span className="text-[10px] sm:text-[11px] font-medium text-[#78818E] dark:text-muted-foreground whitespace-nowrap hidden sm:inline">
                   Intensidade:
                 </span>
                 <div className="inline-flex rounded-md border border-[#E4E7EB] dark:border-border p-0.5 bg-white dark:bg-background shadow-xs">
                   {(
                     [
                       { id: 'low', label: 'Suave' },
-                      { id: 'medium', label: 'Média (Padrão)' },
+                      { id: 'medium', label: 'Média' },
                       { id: 'high', label: 'Forte' },
                     ] as const
                   ).map((lvl) => {
@@ -1199,7 +1173,7 @@ export function ImageEditorModal({
                         type="button"
                         onClick={() => handleSelectIntensity(lvl.id)}
                         disabled={isDetecting || isWarping || isProcessingFilter}
-                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                        className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
                           isCur
                             ? 'bg-[#C9922A] text-white font-bold shadow-2xs'
                             : 'text-[#78818E] hover:text-[#252B34] dark:hover:text-foreground hover:bg-[#F5F6F8]'
@@ -1213,16 +1187,23 @@ export function ImageEditorModal({
                 </div>
               </div>
             )}
+
+            {isProcessingFilter && (
+              <span className="text-[10px] text-[#C9922A] flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Processando...
+              </span>
+            )}
           </div>
 
           {/* Comparador Antes / Depois (habilitado quando em prévia com filtro ativo) */}
           {isPreviewWarp && selectedFilter !== 'original' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Button
                 type="button"
                 variant={isComparing ? 'secondary' : 'outline'}
                 size="sm"
-                className={`h-7 px-2.5 text-xs font-semibold ${
+                className={`h-6 sm:h-7 px-2 sm:px-2.5 text-[10px] sm:text-xs font-semibold ${
                   isComparing
                     ? 'bg-[#C9922A]/20 text-[#C9922A] border-[#C9922A]'
                     : 'border-[#E4E7EB] text-[#252B34] dark:text-foreground hover:bg-white'
@@ -1230,15 +1211,15 @@ export function ImageEditorModal({
                 onClick={() => setIsComparing((prev) => !prev)}
               >
                 <Split className="w-3 h-3 mr-1" />
-                {isComparing ? 'Ocultar comparação' : 'Comparar Antes/Depois'}
+                {isComparing ? 'Ocultar' : 'Comparar'}
               </Button>
 
               {isComparing && (
-                <div className="inline-flex rounded-md border border-[#E4E7EB] p-0.5 bg-white text-[11px]">
+                <div className="inline-flex rounded-md border border-[#E4E7EB] p-0.5 bg-white text-[10px]">
                   <button
                     type="button"
                     onClick={() => setCompareStyle('wipe')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                    className={`px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium ${
                       compareStyle === 'wipe'
                         ? 'bg-[#252B34] text-white font-bold'
                         : 'text-[#78818E]'
@@ -1249,7 +1230,7 @@ export function ImageEditorModal({
                   <button
                     type="button"
                     onClick={() => setCompareStyle('sideBySide')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                    className={`px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium ${
                       compareStyle === 'sideBySide'
                         ? 'bg-[#252B34] text-white font-bold'
                         : 'text-[#78818E]'
@@ -1264,13 +1245,13 @@ export function ImageEditorModal({
         </div>
 
         {/* Barra de Correção Fina de Inclinação ("Endireitar") */}
-        <div className="px-5 py-1.5 bg-[#FAF8F2]/40 dark:bg-card/60 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 flex-1 min-w-[280px] max-w-lg">
-            <span className="text-xs font-semibold text-[#252B34] dark:text-foreground whitespace-nowrap">
+        <div className="px-3 sm:px-5 py-1 sm:py-1.5 bg-[#FAF8F2]/40 dark:bg-card/60 border-b border-[#E4E7EB] dark:border-border flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-[200px] max-w-lg">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#252B34] dark:text-foreground whitespace-nowrap">
               Endireitar:
             </span>
-            <div className="flex-1 flex items-center gap-2">
-              <span className="text-[10px] text-[#78818E] font-mono">-15°</span>
+            <div className="flex-1 flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[9px] sm:text-[10px] text-[#78818E] font-mono">-15°</span>
               <Slider
                 value={[fineTiltAngle]}
                 min={-15}
@@ -1288,12 +1269,12 @@ export function ImageEditorModal({
                 disabled={isDetecting || isWarping}
                 className="flex-1 py-1"
               />
-              <span className="text-[10px] text-[#78818E] font-mono">+15°</span>
+              <span className="text-[9px] sm:text-[10px] text-[#78818E] font-mono">+15°</span>
             </div>
-            <div className="min-w-[48px] text-center">
+            <div className="min-w-[42px] sm:min-w-[48px] text-center">
               <Badge
                 variant="outline"
-                className={`text-[11px] font-mono px-1.5 py-0.5 ${
+                className={`text-[10px] sm:text-[11px] font-mono px-1 sm:px-1.5 py-0.5 ${
                   fineTiltAngle !== 0
                     ? 'bg-[#C9922A]/15 text-[#C9922A] border-[#C9922A]/40 font-bold'
                     : 'text-[#78818E] border-[#E4E7EB]'
@@ -1306,13 +1287,13 @@ export function ImageEditorModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {fineTiltAngle !== 0 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-[#78818E] hover:text-[#252B34]"
+                className="h-6 sm:h-7 px-1.5 sm:px-2 text-[10px] sm:text-xs text-[#78818E] hover:text-[#252B34]"
                 onClick={() => {
                   setFineTiltAngle(0)
                   if (isPreviewWarp) {
@@ -1322,7 +1303,7 @@ export function ImageEditorModal({
                   }
                 }}
               >
-                Zerar inclinação
+                Zerar
               </Button>
             )}
 
@@ -1331,7 +1312,7 @@ export function ImageEditorModal({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 px-2.5 text-xs text-[#C9922A] border-[#C9922A]/40 bg-[#FAF8F2] hover:bg-[#C9922A]/10 font-medium"
+                className="h-6 sm:h-7 px-2 sm:px-2.5 text-[10px] sm:text-xs text-[#C9922A] border-[#C9922A]/40 bg-[#FAF8F2] hover:bg-[#C9922A]/10 font-medium"
                 onClick={() => {
                   setFineTiltAngle(suggestedTilt)
                   if (isPreviewWarp) {
@@ -1343,18 +1324,18 @@ export function ImageEditorModal({
                 title="Aplica correção automática baseada na inclinação das bordas detectadas"
               >
                 <Sparkles className="w-3 h-3 mr-1 text-[#C9922A]" />
-                Auto: {suggestedTilt > 0 ? `+${suggestedTilt}°` : `${suggestedTilt}°`}
+                Auto {suggestedTilt > 0 ? `+${suggestedTilt}°` : `${suggestedTilt}°`}
               </Button>
             )}
           </div>
         </div>
 
-        {/* Área Central de Visualização / Manipulação do Documento */}
+        {/* Área Central de Visualização / Manipulação do Documento (Flex-1 Rolável em Telas Pequenas) */}
         <div
           ref={containerRef}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          className="relative flex-1 bg-[#1E232A] flex items-center justify-center p-3 sm:p-5 overflow-hidden select-none touch-none min-h-[360px]"
+          className="relative flex-1 bg-[#1E232A] flex items-center justify-center p-2 sm:p-5 overflow-y-auto overflow-x-hidden select-none touch-none min-h-[220px]"
         >
           {/* Indicador de carregamento inicial da imagem */}
           {isLoadingImage && (
@@ -1664,9 +1645,9 @@ export function ImageEditorModal({
           )}
         </div>
 
-        {/* Rodapé com Ações */}
-        <div className="px-5 py-3 bg-white dark:bg-card border-t border-[#E4E7EB] dark:border-border flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-[#78818E] dark:text-muted-foreground">
+        {/* Rodapé Fixo com Ações (Sempre visível no viewport, respeitando safe-area-inset-bottom do iPhone) */}
+        <div className="px-3 sm:px-5 py-2 sm:py-3 safe-bottom-editor bg-white dark:bg-card border-t border-[#E4E7EB] dark:border-border flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-20">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-[#78818E] dark:text-muted-foreground">
             <HelpCircle className="w-3.5 h-3.5 text-[#C9922A] shrink-0" />
             <span>
               {isPreviewWarp
@@ -1682,7 +1663,7 @@ export function ImageEditorModal({
               size="sm"
               onClick={onClose}
               disabled={isWarping}
-              className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#252B34]"
+              className="flex-1 sm:flex-initial h-9 sm:h-9 px-3 sm:px-4 text-xs border-[#E4E7EB] dark:border-border text-[#78818E] hover:text-[#252B34]"
             >
               Cancelar
             </Button>
@@ -1692,12 +1673,12 @@ export function ImageEditorModal({
               size="sm"
               onClick={handleApply}
               disabled={isDetecting || isWarping || !corners}
-              className="h-9 px-5 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
+              className="flex-1 sm:flex-initial h-9 sm:h-9 px-4 sm:px-5 text-xs font-semibold bg-[#C9922A] hover:bg-[#b58324] text-white shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A]"
             >
               {isWarping ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                  Processando enquadramento...
+                  Processando...
                 </>
               ) : (
                 <>
