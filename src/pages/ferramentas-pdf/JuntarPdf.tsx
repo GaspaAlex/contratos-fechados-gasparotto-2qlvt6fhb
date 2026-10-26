@@ -23,8 +23,24 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
 import { executePdfMerge, type MergeExecutionHandle } from '@/lib/pdf-tools/merge-client'
-import { validateSinglePdf } from '@/lib/pdf-tools/pdf-merger'
+import {
+  mergeHybridPdfsSequentially,
+  type HybridMergeProgressUpdate,
+} from '@/lib/pdf-tools/hybrid-merger'
+import {
+  validatePdfForMerge,
+  type ExtendedPdfValidationResult,
+} from '@/lib/pdf-tools/derivative-copy-validator'
 import type { MergeProgressUpdate } from '@/lib/pdf-tools/pdf-validator'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 
 interface SelectedFileItem {
   id: string
@@ -34,8 +50,12 @@ interface SelectedFileItem {
   buffer: ArrayBuffer
   pageCount?: number
   validationStatus: 'pending' | 'valid' | 'invalid'
+  mode: 'standard' | 'derivative'
+  canUseDerivativeCopy?: boolean
+  isEncrypted?: boolean
   hasSignature?: boolean
   errorMessage?: string
+  permissions?: ExtendedPdfValidationResult['permissions']
 }
 
 function formatBytes(bytes: number, decimals = 2): string {
@@ -61,6 +81,12 @@ export default function JuntarPdf() {
   const [mergedHasSignedDocs, setMergedHasSignedDocs] = useState<boolean>(false)
   const [signatureConfirmed, setSignatureConfirmed] = useState<boolean>(false)
 
+  // Estados para a modalidade complementar "Gerar cópia derivada e unir"
+  const [derivativeModalOpen, setDerivativeModalOpen] = useState(false)
+  const [derivativeConfirmed, setDerivativeConfirmed] = useState(false)
+  const [hybridProgress, setHybridProgress] = useState<HybridMergeProgressUpdate | null>(null)
+  const isHybridCancelledRef = useRef<boolean>(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mergeHandleRef = useRef<MergeExecutionHandle | null>(null)
 
@@ -80,6 +106,8 @@ export default function JuntarPdf() {
   const totalSizeBytes = items.reduce((acc, curr) => acc + curr.size, 0)
   const hasInvalidItem = items.some((item) => item.validationStatus === 'invalid')
   const hasSignedDocuments = items.some((item) => item.hasSignature)
+  const requiresDerivativeCopy = items.some((item) => item.mode === 'derivative')
+  const derivativeItemsCount = items.filter((item) => item.mode === 'derivative').length
 
   // Adicionar arquivos à lista existente preservando ordem
   const handleFilesAdded = async (newFileList: FileList | File[]) => {
@@ -99,8 +127,8 @@ export default function JuntarPdf() {
         const buffer = await file.arrayBuffer()
         const id = `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
 
-        // Validar preventivamente cabeçalho, criptografia e assinatura
-        const validation = await validateSinglePdf(file.name, buffer)
+        // Validação inteligente e aprofundada: testa pdf-lib e elegibilidade para cópia derivada no PDF.js
+        const validation = await validatePdfForMerge(file.name, buffer)
 
         newItems.push({
           id,
@@ -111,7 +139,11 @@ export default function JuntarPdf() {
           pageCount: validation.pageCount,
           hasSignature: Boolean(validation.hasSignature),
           validationStatus: validation.valid ? 'valid' : 'invalid',
+          mode: validation.mode,
+          canUseDerivativeCopy: validation.canUseDerivativeCopy,
+          isEncrypted: validation.isEncrypted,
           errorMessage: validation.error,
+          permissions: validation.permissions,
         })
       } catch (err) {
         newItems.push({
@@ -121,6 +153,7 @@ export default function JuntarPdf() {
           size: file.size,
           buffer: new ArrayBuffer(0),
           validationStatus: 'invalid',
+          mode: 'standard',
           errorMessage: `Não foi possível ler os bytes do arquivo: ${err instanceof Error ? err.message : 'Erro desconhecido'}`,
         })
       }
@@ -224,8 +257,8 @@ export default function JuntarPdf() {
     setMergedSizeBytes(0)
   }
 
-  // Executar a união
-  const handleMerge = async () => {
+  // Executar a união direta (para quando NÃO há arquivos que exigem cópia derivada)
+  const handleMergeStandard = async () => {
     if (items.length < 2) {
       setErrorMessage('Selecione pelo menos 2 arquivos PDF para unir.')
       return
@@ -307,14 +340,102 @@ export default function JuntarPdf() {
     }
   }
 
+  // Executar a união na modalidade "Gerar cópia derivada e unir"
+  const handleExecuteDerivativeMerge = async () => {
+    setDerivativeModalOpen(false)
+    setErrorMessage(null)
+    setErrorDetails(null)
+    setIsMerging(true)
+    isHybridCancelledRef.current = false
+    setHybridProgress({
+      phase: 'validating',
+      currentFileIndex: 0,
+      totalFiles: items.length,
+      currentFileName: items[0].name,
+      percent: 0,
+    })
+
+    if (mergedBlobUrl) {
+      URL.revokeObjectURL(mergedBlobUrl)
+      setMergedBlobUrl(null)
+    }
+
+    const payload = items.map((it) => ({
+      name: it.name,
+      buffer: it.buffer,
+      mode: it.mode,
+    }))
+
+    const containsSigned = hasSignedDocuments || items.some((it) => it.mode === 'derivative')
+
+    try {
+      const result = await mergeHybridPdfsSequentially({
+        files: payload,
+        allowSignedDocuments: true,
+        dpi: 200,
+        jpegQuality: 0.92,
+        onProgress: (p) => {
+          setHybridProgress(p)
+          setProgress({
+            phase:
+              p.phase === 'saving' ? 'saving' : p.phase === 'validating' ? 'validating' : 'merging',
+            currentFileIndex: p.currentFileIndex,
+            totalFiles: p.totalFiles,
+            currentFileName: p.currentPage
+              ? `${p.currentFileName} (pág ${p.currentPage}/${p.totalPagesForFile})`
+              : p.currentFileName,
+          })
+        },
+        checkCancelled: () => isHybridCancelledRef.current,
+      })
+
+      setIsMerging(false)
+      setHybridProgress(null)
+      setProgress(null)
+
+      if (result.success && result.mergedBuffer) {
+        const blob = new Blob([result.mergedBuffer], { type: 'application/pdf' })
+        const url = URL.createObjectURL(blob)
+        setMergedBlobUrl(url)
+        setMergedPageCount(result.pageCount || 0)
+        setMergedSizeBytes(blob.size)
+        setMergedHasSignedDocs(containsSigned)
+      } else {
+        setErrorMessage(result.error || 'Ocorreu um erro ao processar a cópia derivada e unir.')
+        if (result.failingFile) {
+          setErrorDetails(`Arquivo: ${result.failingFile}`)
+        }
+      }
+    } catch (err) {
+      setIsMerging(false)
+      setHybridProgress(null)
+      setProgress(null)
+      setErrorMessage(
+        `Erro durante a geração da cópia derivada: ${err instanceof Error ? err.message : String(err)}`,
+      )
+    }
+  }
+
+  // Ponto de entrada do botão de ação principal
+  const handleMergeAction = () => {
+    if (requiresDerivativeCopy) {
+      // Abre o diálogo de aviso e confirmação expressa da cópia derivada
+      setDerivativeModalOpen(true)
+    } else {
+      handleMergeStandard()
+    }
+  }
+
   // Cancelar processamento
   const handleCancelMerge = () => {
+    isHybridCancelledRef.current = true
     if (mergeHandleRef.current) {
       mergeHandleRef.current.cancel()
       mergeHandleRef.current = null
     }
     setIsMerging(false)
     setProgress(null)
+    setHybridProgress(null)
     setErrorMessage('Operação cancelada pelo usuário. Nenhum arquivo foi gerado.')
   }
 
@@ -597,6 +718,12 @@ export default function JuntarPdf() {
                               <span className="text-[11px] text-[#78818E] dark:text-muted-foreground tabular-nums">
                                 {formatBytes(item.size)}
                               </span>
+                              {item.mode === 'derivative' && (
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium inline-flex items-center gap-1 border border-blue-500/30">
+                                  <Info className="w-3 h-3 shrink-0" />
+                                  Cópia derivada necessária
+                                </span>
+                              )}
                               {hasSig && (
                                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#C77E1E]/10 text-[#C77E1E] font-medium inline-flex items-center gap-1 border border-[#C77E1E]/30">
                                   <AlertTriangle className="w-3 h-3 shrink-0" />
@@ -615,13 +742,26 @@ export default function JuntarPdf() {
                               </div>
                             )}
 
+                            {/* Aviso informativo sobre necessidade de cópia derivada */}
+                            {item.mode === 'derivative' && !isInvalid && (
+                              <div className="mt-1 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-1 font-medium">
+                                <Info className="w-3.5 h-3.5 shrink-0" />
+                                <span>
+                                  Documento oficial com criptografia interna. Abertura permitida sem
+                                  senha de usuário; processamento via renderização de alta
+                                  fidelidade (cópia derivada).
+                                </span>
+                              </div>
+                            )}
+
                             {/* Aviso informativo em tom âmbar sobre indício de assinatura */}
                             {hasSig && (
                               <div className="mt-1 text-xs text-[#C77E1E] flex items-center gap-1 font-medium">
                                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                                 <span>
-                                  Documento com indício de assinatura digital. Poderá ser unido como
-                                  cópia derivada após confirmação.
+                                  Documento com indício de assinatura digital. A validade
+                                  criptográfica da assinatura não será transferida para o PDF
+                                  resultante.
                                 </span>
                               </div>
                             )}
@@ -762,29 +902,145 @@ export default function JuntarPdf() {
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
               {hasSignedDocuments &&
                 !signatureConfirmed &&
+                !requiresDerivativeCopy &&
                 !hasInvalidItem &&
                 items.length >= 2 && (
                   <p className="text-xs text-[#C77E1E] font-medium text-right order-2 sm:order-1">
                     Confirme a ciência acima para habilitar a união.
                   </p>
                 )}
-              <Button
-                type="button"
-                size="lg"
-                onClick={handleMerge}
-                disabled={
-                  items.length < 2 ||
-                  hasInvalidItem ||
-                  isValidatingFiles ||
-                  (hasSignedDocuments && !signatureConfirmed)
-                }
-                className="w-full sm:w-auto h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A] order-1 sm:order-2"
-              >
-                <Files className="w-4 h-4 mr-2" />
-                Juntar {items.length} {items.length === 1 ? 'PDF' : 'PDFs'}
-              </Button>
+              {requiresDerivativeCopy ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleMergeAction}
+                  disabled={items.length < 2 || hasInvalidItem || isValidatingFiles}
+                  className="w-full sm:w-auto h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A] order-1 sm:order-2"
+                >
+                  <Files className="w-4 h-4 mr-2" />
+                  Gerar cópia derivada e unir
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleMergeAction}
+                  disabled={
+                    items.length < 2 ||
+                    hasInvalidItem ||
+                    isValidatingFiles ||
+                    (hasSignedDocuments && !signatureConfirmed)
+                  }
+                  className="w-full sm:w-auto h-9 px-6 bg-[#C9922A] hover:bg-[#b58324] text-white text-xs font-semibold rounded-md shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-[#C9922A] order-1 sm:order-2"
+                >
+                  <Files className="w-4 h-4 mr-2" />
+                  Juntar {items.length} {items.length === 1 ? 'PDF' : 'PDFs'}
+                </Button>
+              )}
             </div>
           )}
+
+          {/* Diálogo de Aviso e Confirmação Expressa para Cópia Derivada */}
+          <Dialog open={derivativeModalOpen} onOpenChange={setDerivativeModalOpen}>
+            <DialogContent className="max-w-lg rounded-xl">
+              <DialogHeader>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge
+                    variant="outline"
+                    className="border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-950/30"
+                  >
+                    Modalidade Complementar
+                  </Badge>
+                </div>
+                <DialogTitle className="text-lg font-bold text-[#252B34] dark:text-foreground">
+                  Gerar cópia derivada e unir
+                </DialogTitle>
+                <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground pt-1">
+                  Detectamos {derivativeItemsCount} documento(s) com proteção ou criptografia
+                  interna (abertura sem senha de usuário). Para viabilizar a união com os demais
+                  arquivos, será criada uma reprodução visual de alta fidelidade das páginas.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 py-2 text-xs sm:text-sm text-[#252B34] dark:text-foreground">
+                <div className="rounded-lg border border-[#E4E7EB] dark:border-border bg-[#F5F6F8]/60 dark:bg-muted/20 p-3.5 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-[#C9922A]">•</span>
+                    <span>
+                      <strong>Arquivos originais intactos:</strong> seus documentos de origem não
+                      sofrem nenhuma alteração.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-[#C9922A]">•</span>
+                    <span>
+                      <strong>Reprodução visual fiel:</strong> as páginas protegidas serão
+                      renderizadas em alta resolução (~200 DPI), preservando proporções, orientação,
+                      carimbos e QR Codes.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-[#C9922A]">•</span>
+                    <span>
+                      <strong>Camada de texto:</strong> nas páginas renderizadas como cópia
+                      derivada, o texto poderá deixar de ser selecionável ou pesquisável.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-[#C9922A]">•</span>
+                    <span>
+                      <strong>Assinaturas digitais:</strong> assinaturas digitais originais não são
+                      transferidas com validade criptográfica para o novo documento.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-[#C9922A]">•</span>
+                    <span>
+                      <strong>Autorização legal:</strong> certifique-se de que possui autorização
+                      legal ou processual para produzir cópias derivadas para juntada no processo.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <label
+                    htmlFor="derivative-confirm-checkbox"
+                    className="flex items-start gap-2.5 cursor-pointer select-none"
+                  >
+                    <Checkbox
+                      id="derivative-confirm-checkbox"
+                      checked={derivativeConfirmed}
+                      onCheckedChange={(c) => setDerivativeConfirmed(c === true)}
+                      className="mt-0.5 border-[#C9922A] data-[state=checked]:bg-[#C9922A]"
+                    />
+                    <span className="text-xs text-[#252B34] dark:text-foreground leading-snug">
+                      Declaro ciência das condições acima, confirmo a autorização e desejo{' '}
+                      <strong>gerar cópia derivada e unir</strong>.
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDerivativeModalOpen(false)}
+                  className="h-8 text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleExecuteDerivativeMerge}
+                  disabled={!derivativeConfirmed}
+                  className="h-8 text-xs bg-[#C9922A] hover:bg-[#b58324] text-white"
+                >
+                  Confirmar e Gerar PDF
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
 
