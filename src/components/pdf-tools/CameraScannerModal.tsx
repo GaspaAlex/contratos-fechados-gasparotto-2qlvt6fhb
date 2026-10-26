@@ -267,6 +267,17 @@ export function CameraScannerModal({
       setCapturedPhotos((prev) =>
         prev.map((photo) => {
           if (photo.id === result.id) {
+            // Se o auto-frame produziu uma nova prévia retificada e diferente da original,
+            // revogar com segurança a prévia intermediária original para evitar vazamento
+            if (
+              result.previewUrl &&
+              photo.previewUrl &&
+              photo.previewUrl.startsWith('blob:') &&
+              result.previewUrl !== photo.previewUrl
+            ) {
+              URL.revokeObjectURL(photo.previewUrl)
+            }
+
             return {
               ...photo,
               buffer: result.buffer,
@@ -432,13 +443,17 @@ export function CameraScannerModal({
   // Refazer última captura
   const handleRedoLast = () => {
     if (capturedPhotos.length === 0) return
-    setCapturedPhotos((prev) => {
-      const last = prev[prev.length - 1]
-      if (last?.previewUrl) {
+    const last = capturedPhotos[capturedPhotos.length - 1]
+    if (last) {
+      const res = autoFrameQueue.getResult(last.id)
+      if (res && res.previewUrl && res.previewUrl !== last.previewUrl) {
+        URL.revokeObjectURL(res.previewUrl)
+      }
+      if (last.previewUrl) {
         URL.revokeObjectURL(last.previewUrl)
       }
-      return prev.slice(0, prev.length - 1)
-    })
+    }
+    setCapturedPhotos((prev) => prev.slice(0, prev.length - 1))
   }
 
   // Processar arquivos do fallback nativo (input capture="environment")
@@ -515,26 +530,35 @@ export function CameraScannerModal({
     }
   }
 
-  // Concluir sessão de digitalização de forma controlada
+  // Concluir sessão de digitalização de forma controlada, pura e idempotente
+  const isCompletingRef = useRef(false)
+  const [completeErrorMessage, setCompleteErrorMessage] = useState<string | null>(null)
+
   const handleComplete = async () => {
-    // Parar câmera imediatamente para liberar hardware
+    // Guard idempotente contra duplo clique ou invocações paralelas
+    if (isCompletingRef.current) return
+    if (capturedPhotos.length === 0) return
+
+    isCompletingRef.current = true
+    setIsFinishing(true)
+    setCompleteErrorMessage(null)
+
+    // Parar câmera imediatamente para liberar hardware e diminuir pressão de memória
     stopStream()
 
-    // Se houver fotos ainda sendo processadas na fila, aguardar de forma controlada
-    if (queueState.pendingCount > 0) {
-      setIsFinishing(true)
-      try {
-        await autoFrameQueue.waitForCompletion()
-      } catch (err) {
-        console.warn('[CameraScanner] Erro ao aguardar término da fila:', err)
-      } finally {
-        setIsFinishing(false)
+    try {
+      // 1. Verificar estado REAL da fila diretamente na fonte (não em closure defasada)
+      if (autoFrameQueue.hasPendingOperations()) {
+        try {
+          await autoFrameQueue.waitForCompletion(15000)
+        } catch (waitErr) {
+          console.warn('[CameraScanner] Aviso ao aguardar fila de auto-frame:', waitErr)
+        }
       }
-    }
 
-    // Mesclar resultados mais recentes da fila se houver atualizações assíncronas
-    setCapturedPhotos((current) => {
-      const merged = current.map((p) => {
+      // 2. Snapshot determinístico das fotos capturadas a partir da lista atual
+      // Ler resultsMap na fonte para cada foto capturada
+      const finalPhotos: CapturedPhoto[] = capturedPhotos.map((p) => {
         const res = autoFrameQueue.getResult(p.id)
         if (res) {
           return {
@@ -550,15 +574,28 @@ export function CameraScannerModal({
             autoFrameCorners: res.corners,
           }
         }
+        // Se ainda não houve resultado ou se falhou, preserva foto original
         return p
       })
 
-      onComplete(merged)
-      return []
-    })
+      // 3. Chamar onComplete FORA de qualquer updater do React, garantindo pureza
+      onComplete(finalPhotos)
 
-    autoFrameQueue.resetSession()
-    onClose()
+      // 4. Resetar sessão e limpar estado local APENAS após entrega bem-sucedida ao pai
+      autoFrameQueue.resetSession()
+      setCapturedPhotos([])
+      setIsFinishing(false)
+      isCompletingRef.current = false
+      onClose()
+    } catch (err) {
+      console.error('[CameraScanner] Falha ao concluir sessão de digitalização:', err)
+      setIsFinishing(false)
+      isCompletingRef.current = false
+      // NUNCA descartar fotografias capturadas em falha recuperável
+      setCompleteErrorMessage(
+        'Não foi possível concluir a digitalização neste momento. Suas fotografias continuam preservadas. Tente novamente tocar em Concluir.',
+      )
+    }
   }
 
   // Solicitar cancelamento
@@ -662,6 +699,23 @@ export function CameraScannerModal({
           </Button>
         </div>
       </div>
+
+      {/* Mensagem de erro recuperável na conclusão (sem fallback global) */}
+      {completeErrorMessage && (
+        <div className="relative z-30 px-3 py-2 bg-red-950/90 border-b border-red-500/40 text-red-200 text-xs flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{completeErrorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCompleteErrorMessage(null)}
+            className="text-white/60 hover:text-white text-xs underline shrink-0 font-medium ml-2"
+          >
+            Dispensar
+          </button>
+        </div>
+      )}
 
       {/* BARRA DISCRETA DE STATUS DA FILA (Aparece se houver fotos capturadas na sessão) */}
       {capturedPhotos.length > 0 && (

@@ -291,6 +291,10 @@ class AutoFrameQueueService {
         const warpedBuffer = await warpedBlob.arrayBuffer()
         const newPreviewUrl = URL.createObjectURL(warpedBlob)
 
+        // Registrar dimensões reais do canvas retificado ANTES de liberar memória
+        const resultWidth = warpedCanvas.width
+        const resultHeight = warpedCanvas.height
+
         // Limpar canvas
         warpedCanvas.width = 1
         warpedCanvas.height = 1
@@ -303,8 +307,8 @@ class AutoFrameQueueService {
           corners: detection.corners,
           buffer: warpedBuffer,
           previewUrl: newPreviewUrl,
-          width: warpedCanvas.width,
-          height: warpedCanvas.height,
+          width: resultWidth,
+          height: resultHeight,
           size: warpedBlob.size,
           durationMs: detection.durationMs,
         }
@@ -429,19 +433,37 @@ class AutoFrameQueueService {
   }
 
   /**
-   * Aguarda a conclusão de todos os itens atualmente pendentes na fila
+   * Verifica se ainda há qualquer operação pendente na fila (seja na fila de espera ou em processamento)
    */
-  public async waitForCompletion(): Promise<void> {
-    if (!this.isProcessing && this.queue.length === 0) {
+  public hasPendingOperations(): boolean {
+    return this.isProcessing || this.queue.length > 0 || this.activeItem !== null
+  }
+
+  /**
+   * Retorna a contagem real de operações pendentes diretamente da fila
+   */
+  public getPendingCount(): number {
+    return this.queue.length + (this.activeItem ? 1 : 0)
+  }
+
+  /**
+   * Aguarda a conclusão de todos os itens atualmente pendentes na fila com timeout de segurança
+   */
+  public async waitForCompletion(timeoutMs = 15000): Promise<void> {
+    if (!this.hasPendingOperations()) {
       return
     }
 
+    const tStart = performance.now()
     return new Promise<void>((resolve) => {
       const check = () => {
-        if (!this.isProcessing && this.queue.length === 0) {
+        if (!this.hasPendingOperations()) {
+          resolve()
+        } else if (performance.now() - tStart > timeoutMs) {
+          console.warn(`[AutoFrameQueue] waitForCompletion atingiu timeout de ${timeoutMs}ms`)
           resolve()
         } else {
-          setTimeout(check, 80)
+          setTimeout(check, 60)
         }
       }
       check()

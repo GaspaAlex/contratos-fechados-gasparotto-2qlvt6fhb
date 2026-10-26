@@ -55,6 +55,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
   type DocumentCorners,
   type Point2D,
@@ -952,8 +953,8 @@ export function ImageEditorModal({
       <DialogContent
         className={cn(
           'p-0 gap-0 overflow-hidden bg-[#F5F6F8] dark:bg-card border-[#E4E7EB] dark:border-border shadow-2xl flex flex-col',
-          // Mobile: ocupa toda a tela útil sem ultrapassar o viewport visível
-          'fixed inset-0 w-full h-[100dvh] max-h-[100dvh] max-w-none rounded-none top-0 left-0 translate-x-0 translate-y-0',
+          // Mobile: ocupa toda a tela útil sem ultrapassar o viewport visível, com fallbacks de viewport svh/dvh
+          'fixed inset-0 w-full h-[100vh] h-[100svh] h-[100dvh] max-h-[100vh] max-h-[100svh] max-h-[100dvh] max-w-none rounded-none top-0 left-0 translate-x-0 translate-y-0',
           // Desktop: modal centralizado elegante com cantos arredondados
           'sm:fixed sm:inset-auto sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]',
           'sm:w-[95vw] sm:max-w-5xl sm:h-[92vh] sm:max-h-[92vh] sm:h-[92dvh] sm:max-h-[92dvh] sm:rounded-xl',

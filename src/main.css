@@ -91,6 +91,16 @@
   .safe-bottom-editor {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   }
+  .h-dvh-safe {
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
+  }
+  .max-h-dvh-safe {
+    max-height: 100vh;
+    max-height: 100svh;
+    max-height: 100dvh;
+  }
 }
 
 @layer base {
