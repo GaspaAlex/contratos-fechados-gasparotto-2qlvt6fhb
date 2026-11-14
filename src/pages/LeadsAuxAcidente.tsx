@@ -18,20 +18,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, FilterX, Pencil, Plus, Search, Trash2, Phone } from 'lucide-react'
-import { deleteLeadAux, getLeadsAux } from '@/services/leadsAuxAcidente'
-import type {
-  LeadAuxAcidente,
-  OrigemLead,
-  Responsivo,
-  StatusFunil,
-} from '@/services/leadsAuxAcidente'
 import {
+  deleteLeadAux,
+  getLeadsAux,
   ORIGEM_LABELS,
   STATUS_FUNIL_LABELS,
   MOTIVO_DESQUALIFICACAO_OPTIONS,
   formatPhoneMask,
   formatDateBR,
   responsavelId,
+} from '@/services/leadsAuxAcidente'
+import type {
+  LeadAuxAcidente,
+  OrigemLead,
+  Responsivo,
+  StatusFunil,
 } from '@/services/leadsAuxAcidente'
 import { getResponsaveisAtivos } from '@/services/responsaveis'
 import { AuxAcidenteModal } from '@/components/leads/AuxAcidenteModal'
@@ -432,8 +433,7 @@ export default function LeadsAuxAcidente() {
       <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-[#E4E7EB] dark:border-border flex items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-[#252B34] dark:text-foreground">
-            Leads ({filteredLeads.length}
-            {hasActiveFilters && ` de ${leads.length}`})
+            Leads ({filteredLeads.length})
           </h2>
           {loading && (
             <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">

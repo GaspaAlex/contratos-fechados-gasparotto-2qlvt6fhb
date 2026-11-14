@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
+import { AlertTriangle, CalendarIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -12,6 +12,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,9 +40,12 @@ import { cn } from '@/lib/utils'
 import {
   createLeadAuxAcidente,
   updateLeadAuxAcidente,
+  findByTelefoneNormalized,
   ORIGEM_LABELS,
   STATUS_FUNIL_LABELS,
   MOTIVO_DESQUALIFICACAO_OPTIONS,
+  formatDateBR,
+  formatPhoneMask,
   responsavelId,
 } from '@/services/leadsAuxAcidente'
 import { getResponsaveisAtivos } from '@/services/responsaveis'
@@ -91,6 +104,8 @@ export function AuxAcidenteModal({ open, onOpenChange, onSaved, lead }: AuxAcide
   const isEdit = Boolean(lead)
   const [loading, setLoading] = useState(false)
   const [responsaveis, setResponsaveis] = useState<{ id: string; nome: string }[]>([])
+  const [dupOpen, setDupOpen] = useState(false)
+  const [duplicados, setDuplicados] = useState<LeadAuxAcidente[]>([])
 
   const form = useForm<FormValues>({ defaultValues: emptyValues() })
 
@@ -163,6 +178,15 @@ export function AuxAcidenteModal({ open, onOpenChange, onSaved, lead }: AuxAcide
         await updateLeadAuxAcidente(lead.id!, payload)
         toast.success('Lead atualizado')
       } else {
+        // Impede cadastro duplicado por telefone (comparação por dígitos,
+        // ignorando variações de máscara armazenadas na collection)
+        const duplicadosExistentes = await findByTelefoneNormalized(telefoneLimpo)
+        if (duplicadosExistentes.length > 0) {
+          setLoading(false)
+          setDuplicados(duplicadosExistentes)
+          setDupOpen(true)
+          return
+        }
         await createLeadAuxAcidente(payload)
         toast.success('Lead cadastrado')
       }
@@ -439,6 +463,72 @@ export function AuxAcidenteModal({ open, onOpenChange, onSaved, lead }: AuxAcide
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Alerta de telefone duplicado */}
+      <AlertDialog open={dupOpen} onOpenChange={setDupOpen}>
+        <AlertDialogContent className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card sm:max-w-[460px] p-6">
+          <AlertDialogHeader className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center text-[#C9922A] shrink-0">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] block">
+                  TELEFONE JÁ CADASTRADO
+                </span>
+                <AlertDialogTitle className="text-lg font-bold text-[#252B34] dark:text-foreground">
+                  Não foi possível salvar o lead
+                </AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription className="pt-1 text-sm text-[#78818E] dark:text-muted-foreground leading-relaxed">
+              Este telefone já está cadastrado na Central de Leads. Consulte ou edite o registro
+              existente antes de criar um novo atendimento.
+            </AlertDialogDescription>
+            {duplicados.length > 0 && (
+              <div className="mt-2 rounded-md border border-[#E4E7EB] dark:border-border overflow-hidden">
+                <div className="grid grid-cols-[1fr_80px_1fr] sm:grid-cols-[1fr_90px_110px_1fr] gap-2 px-3 py-2 bg-[#FAF8F2] dark:bg-muted/40 text-[9px] font-bold uppercase tracking-wider text-[#78818E]">
+                  <span>Nome</span>
+                  <span className="hidden sm:block">Telefone</span>
+                  <span>Entrada</span>
+                  <span>Status</span>
+                </div>
+                <div className="max-h-[160px] overflow-y-auto divide-y divide-[#E4E7EB] dark:divide-border">
+                  {duplicados.map((dup) => (
+                    <div
+                      key={dup.id}
+                      className="grid grid-cols-[1fr_80px_1fr] sm:grid-cols-[1fr_90px_110px_1fr] gap-2 px-3 py-2 text-xs text-[#252B34] dark:text-foreground items-center"
+                    >
+                      <span className="truncate">{dup.nome || '—'}</span>
+                      <span className="hidden sm:block whitespace-nowrap text-[11px] text-[#78818E] dark:text-muted-foreground">
+                        {formatPhoneMask(dup.telefone)}
+                      </span>
+                      <span className="whitespace-nowrap">{formatDateBR(dup.data_entrada)}</span>
+                      <span className="truncate text-[11px] text-[#78818E] dark:text-muted-foreground">
+                        {STATUS_FUNIL_LABELS[dup.status_funil] || dup.status_funil}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex gap-2 sm:justify-end">
+            <AlertDialogCancel
+              className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] rounded-md"
+              onClick={() => setDupOpen(false)}
+            >
+              Voltar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b07d22] text-white rounded-md shadow-sm"
+              onClick={() => setDupOpen(false)}
+            >
+              Fechar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }

@@ -141,6 +141,30 @@ export interface LeadAuxPayload {
 export const createLeadAuxAcidente = (data: LeadAuxPayload) =>
   pb.collection('leads_aux_acidente').create<LeadAuxAcidente>(data)
 
+/**
+ * Busca leads com o mesmo telefone, ignorando diferenças de máscara.
+ * O filtro do PocketBase busca por substring sem espaços (cobre "(11) 9" e "119"
+ * independente do espaçamento); o resultado é normalizado por dígitos, cobrindo
+ * também máscaras com hífen/pontos. `excludeId` remove o próprio registro
+ * (usado na edição para não acusar falsa duplicidade).
+ */
+export async function findByTelefoneNormalized(
+  telefone: string,
+  excludeId?: string,
+): Promise<LeadAuxAcidente[]> {
+  const digits = normalizePhoneDigits(telefone)
+  if (!digits) return []
+
+  const filter = pb.filter('telefone ~ {:q}', { q: digits })
+  const result = await pb
+    .collection('leads_aux_acidente')
+    .getList<LeadAuxAcidente>(1, 200, { filter, expand: 'responsavel' })
+
+  return result.items.filter(
+    (item) => item.id !== excludeId && normalizePhoneDigits(item.telefone) === digits,
+  )
+}
+
 export const updateLeadAuxAcidente = (id: string, data: Partial<LeadAuxPayload>) =>
   pb.collection('leads_aux_acidente').update<LeadAuxAcidente>(id, data)
 
