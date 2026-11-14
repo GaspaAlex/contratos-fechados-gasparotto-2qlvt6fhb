@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T18:33:01.210Z",
+  "generatedAt": "2026-11-14T13:00:33.050Z",
   "collections": [
     {
       "name": "users",
@@ -2032,6 +2032,141 @@
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_emails_revisao_contrato_data ON emails_revisao_enviados (contrato_id, revisar_em)"
+      ]
+    },
+    {
+      "name": "leads_aux_acidente",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "data_entrada",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "origem_lead",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["enlead", "campanha"]
+        },
+        {
+          "name": "nome",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsavel",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "responsaveis"
+        },
+        {
+          "name": "responsivo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["sim", "nao"]
+        },
+        {
+          "name": "respondido_em",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_funil",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["qualificando", "qualificado", "desqualificado"]
+        },
+        {
+          "name": "motivo_desqualificacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "sem_qualidade",
+            "aposentado",
+            "contribuinte_carne",
+            "sem_interesse",
+            "recebe_auxilio_doenca",
+            "nao_sofreu_acidente",
+            "servidor_publico",
+            "engano",
+            "possui_advogado",
+            "recebe_auxilio_acidente",
+            "outros"
+          ]
+        },
+        {
+          "name": "motivo_desqualificacao_outro",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "qualificado_em",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "desqualificado_em",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "contratos",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "contratos_fechados"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_leads_aux_acidente_data_entrada ON leads_aux_acidente (data_entrada)",
+        "CREATE INDEX idx_leads_aux_acidente_telefone ON leads_aux_acidente (telefone)",
+        "CREATE INDEX idx_leads_aux_acidente_origem_lead ON leads_aux_acidente (origem_lead)",
+        "CREATE INDEX idx_leads_aux_acidente_status_funil ON leads_aux_acidente (status_funil)"
       ]
     }
   ]
