@@ -49,6 +49,7 @@ import {
   responsavelId,
 } from '@/services/leadsAuxAcidente'
 import { getResponsaveisAtivos } from '@/services/responsaveis'
+import { ContratosRelacionados } from '@/components/leads/ContratosRelacionados'
 import type {
   LeadAuxAcidente,
   LeadAuxPayload,
@@ -462,6 +463,9 @@ export function AuxAcidenteModal({ open, onOpenChange, onSaved, lead }: AuxAcide
             </Button>
           </DialogFooter>
         </form>
+        {/* Contratos relacionados — apenas na edição; a relation é salva por ID,
+            sem alterar status_funil nem contratos_fechados */}
+        {isEdit && lead && <ContratosRelacionados lead={lead} onChanged={onSaved} />}
       </DialogContent>
 
       {/* Alerta de telefone duplicado */}

@@ -5,6 +5,17 @@ export type StatusFunil = 'qualificando' | 'qualificado' | 'desqualificado'
 export type OrigemLead = 'enlead' | 'campanha'
 export type Responsivo = 'sim' | 'nao' | ''
 
+export interface ContratoFechadoResumo {
+  id: string
+  nome: string
+  fone: string
+  beneficio: string
+  dcontrato: string
+  status: string
+  origem: string
+  campanha_origem: string
+}
+
 export interface LeadAuxAcidente extends RecordModel {
   data_entrada: string
   telefone: string
@@ -169,3 +180,87 @@ export const updateLeadAuxAcidente = (id: string, data: Partial<LeadAuxPayload>)
   pb.collection('leads_aux_acidente').update<LeadAuxAcidente>(id, data)
 
 export const deleteLeadAux = (id: string) => pb.collection('leads_aux_acidente').delete(id)
+
+/* ------------------------------------------------------------------ */
+/* Vínculo manual com contratos_fechados                               */
+/* (relation armazenada SOMENTE em leads_aux_acidente.contratos;       */
+/*  contratos_fechados nunca é alterado)                               */
+/* ------------------------------------------------------------------ */
+
+const toResumo = (rec: RecordModel): ContratoFechadoResumo => ({
+  id: rec.id,
+  nome: (rec.nome as string) || '',
+  fone: (rec.fone as string) || '',
+  beneficio: (rec.beneficio as string) || '',
+  dcontrato: (rec.dcontrato as string) || '',
+  status: (rec.status as string) || '',
+  origem: (rec.origem as string) || '',
+  campanha_origem: (rec.campanha_origem as string) || '',
+})
+
+/**
+ * Busca contratos por telefone (comparação por dígitos, ignorando máscara)
+ * e/ou por nome (substring normalizada, sem acento/caixa).
+ * Campos inexistentes nunca são consultados — `fone` e `nome` existem
+ * em contratos_fechados; se um contrato não tiver valor, é ignorado.
+ */
+export async function buscarContratosParaVinculo(params: {
+  telefone?: string
+  nome?: string
+}): Promise<ContratoFechadoResumo[]> {
+  const { telefone = '', nome = '' } = params
+  const telDigits = normalizePhoneDigits(telefone)
+  const nomeNorm = nome.trim()
+
+  const filters: string[] = []
+  if (telDigits) filters.push(pb.filter('fone ~ {:tel}', { tel: telDigits }))
+  if (nomeNorm) filters.push(pb.filter('nome ~ {:nome}', { nome: nomeNorm }))
+  if (!filters.length) return []
+
+  const result = await pb
+    .collection('contratos_fechados')
+    .getList<RecordModel>(1, 100, { filter: filters.join(' || '), sort: '-created' })
+
+  const items = result.items
+
+  // Filtragem final: telefone comparado por dígitos (cobre máscaras variadas)
+  return items
+    .filter((rec) => {
+      if (telDigits && normalizePhoneDigits((rec.fone as string) || '') !== telDigits) {
+        // quando a busca também é por nome, mantém matches de nome
+        return Boolean(nomeNorm)
+      }
+      return true
+    })
+    .map(toResumo)
+}
+
+/** Busca sugestões apenas pelo telefone normalizado do lead. */
+export const buscarContratosPorTelefone = (telefone: string) =>
+  buscarContratosParaVinculo({ telefone })
+
+/** Busca contratos por lista de IDs (para resolver a relation atual). */
+export async function getContratosByIds(ids: string[]): Promise<ContratoFechadoResumo[]> {
+  if (!ids.length) return []
+  const chunks: string[][] = []
+  for (let i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50))
+
+  const all: ContratoFechadoResumo[] = []
+  for (const chunk of chunks) {
+    const result = await pb.collection('contratos_fechados').getList<RecordModel>(1, chunk.length, {
+      filter: chunk.map((id) => `id = '${id.replace(/'/g, "\\'")}'`).join(' || '),
+      sort: '-created',
+    })
+    for (const rec of result.items) all.push(toResumo(rec))
+  }
+  // Preserva a ordem em que os IDs aparecem na relation
+  const byId = new Map(all.map((c) => [c.id, c]))
+  return ids.map((id) => byId.get(id)).filter((c): c is ContratoFechadoResumo => Boolean(c))
+}
+
+/**
+ * Salva a relation `contratos` do lead. Sobrescreve o campo com a lista
+ * completa de IDs informada — vínculo definitivo só após confirmação do usuário.
+ */
+export const setLeadContratos = (leadId: string, contratoIds: string[]) =>
+  pb.collection('leads_aux_acidente').update<LeadAuxAcidente>(leadId, { contratos: contratoIds })

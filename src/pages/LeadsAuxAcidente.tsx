@@ -469,6 +469,9 @@ export default function LeadsAuxAcidente() {
                 <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
                   Motivo
                 </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Contrato
+                </th>
                 <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap text-right">
                   Ações
                 </th>
@@ -477,7 +480,7 @@ export default function LeadsAuxAcidente() {
             <tbody>
               {filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-10 text-center text-[#78818E]">
+                  <td colSpan={10} className="px-3 py-10 text-center text-[#78818E]">
                     {loading ? 'Carregando leads...' : 'Nenhum lead encontrado.'}
                   </td>
                 </tr>
@@ -532,6 +535,25 @@ export default function LeadsAuxAcidente() {
                         title={motivoDisplay(l)}
                       >
                         {motivoDisplay(l)}
+                      </td>
+                      {/* Indicador simples de vínculo — detalhes ficam na edição */}
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        {(() => {
+                          const qtd = Array.isArray(l.contratos) ? l.contratos.length : 0
+                          if (!qtd) {
+                            return (
+                              <span className="text-[#78818E] dark:text-muted-foreground">—</span>
+                            )
+                          }
+                          return (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-semibold rounded bg-[#C9922A]/10 text-[#C9922A] border-[#C9922A]/30"
+                            >
+                              {qtd} {qtd === 1 ? 'contrato' : 'contratos'}
+                            </Badge>
+                          )
+                        })()}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-right">
                         <div className="inline-flex items-center gap-1">
