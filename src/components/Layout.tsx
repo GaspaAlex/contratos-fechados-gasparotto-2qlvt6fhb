@@ -14,6 +14,7 @@ import {
   KeyRound,
   UserCog,
   Files,
+  HandHeart,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react'
@@ -86,6 +87,7 @@ export default function Layout() {
         items: [
           { name: 'Leads Campanha', path: '/leads', icon: LineChart },
           { name: 'Registro de Leads', path: '/leads-registro', icon: ClipboardList },
+          { name: 'Central Auxílio-Acidente', path: '/leads-auxilio-acidente', icon: HandHeart },
         ],
       },
       {

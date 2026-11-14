@@ -33,9 +33,16 @@ import {
   ORIGEM_LABELS,
   STATUS_FUNIL_LABELS,
   MOTIVO_DESQUALIFICACAO_OPTIONS,
+  responsavelId,
 } from '@/services/leadsAuxAcidente'
 import { getResponsaveisAtivos } from '@/services/responsaveis'
-import type { LeadAuxAcidente } from '@/services/leadsAuxAcidente'
+import type {
+  LeadAuxAcidente,
+  LeadAuxPayload,
+  OrigemLead,
+  Responsivo,
+  StatusFunil,
+} from '@/services/leadsAuxAcidente'
 
 interface AuxAcidenteModalProps {
   open: boolean
@@ -110,7 +117,7 @@ export function AuxAcidenteModal({ open, onOpenChange, onSaved, lead }: AuxAcide
         telefone: lead.telefone || '',
         origem_lead: lead.origem_lead || 'enlead',
         nome: lead.nome || '',
-        responsavel: lead.responsavel || '',
+        responsavel: responsavelId(lead),
         responsivo: lead.responsivo || '',
         status_funil: lead.status_funil || 'qualificando',
         motivo_desqualificacao: lead.motivo_desqualificacao || '',
@@ -129,15 +136,20 @@ export function AuxAcidenteModal({ open, onOpenChange, onSaved, lead }: AuxAcide
       const dataStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
       const telefoneLimpo = values.telefone.replace(/\D/g, '')
+      if (!telefoneLimpo) {
+        toast.error('O telefone é obrigatório.')
+        setLoading(false)
+        return
+      }
 
-      const payload: Record<string, unknown> = {
+      const payload: LeadAuxPayload = {
         data_entrada: dataStr,
         telefone: telefoneLimpo,
-        origem_lead: values.origem_lead,
+        origem_lead: (values.origem_lead || 'enlead') as OrigemLead,
         nome: values.nome.trim(),
         responsavel: values.responsavel || '',
-        responsivo: values.responsivo || '',
-        status_funil: values.status_funil,
+        responsivo: (values.responsivo.trim() || '') as Responsivo,
+        status_funil: (values.status_funil || 'qualificando') as StatusFunil,
         motivo_desqualificacao:
           values.status_funil === 'desqualificado' ? values.motivo_desqualificacao : '',
         motivo_desqualificacao_outro:

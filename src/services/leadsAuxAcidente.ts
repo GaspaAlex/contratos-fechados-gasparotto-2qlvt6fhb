@@ -1,11 +1,11 @@
 import pb from '@/lib/pocketbase/client'
+import type { RecordModel } from 'pocketbase'
 
 export type StatusFunil = 'qualificando' | 'qualificado' | 'desqualificado'
 export type OrigemLead = 'enlead' | 'campanha'
 export type Responsivo = 'sim' | 'nao' | ''
 
-export interface LeadAuxAcidente {
-  id: string
+export interface LeadAuxAcidente extends RecordModel {
   data_entrada: string
   telefone: string
   origem_lead: OrigemLead

@@ -1,0 +1,624 @@
+import { useState, useEffect, useMemo } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { AlertTriangle, FilterX, Pencil, Plus, Search, Trash2, Phone } from 'lucide-react'
+import { deleteLeadAux, getLeadsAux } from '@/services/leadsAuxAcidente'
+import type {
+  LeadAuxAcidente,
+  OrigemLead,
+  Responsivo,
+  StatusFunil,
+} from '@/services/leadsAuxAcidente'
+import {
+  ORIGEM_LABELS,
+  STATUS_FUNIL_LABELS,
+  MOTIVO_DESQUALIFICACAO_OPTIONS,
+  formatPhoneMask,
+  formatDateBR,
+  responsavelId,
+} from '@/services/leadsAuxAcidente'
+import { getResponsaveisAtivos } from '@/services/responsaveis'
+import { AuxAcidenteModal } from '@/components/leads/AuxAcidenteModal'
+import { useRealtime } from '@/hooks/use-realtime'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
+import { normalizeSearchText } from '@/lib/utils'
+
+type ResponsaveisMap = Record<string, string>
+
+const STATUS_COLORS: Record<StatusFunil, string> = {
+  qualificando:
+    'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900',
+  qualificado:
+    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900',
+  desqualificado:
+    'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
+}
+
+const RESPONSIVO_LABELS: Record<string, string> = {
+  sim: 'Sim',
+  nao: 'Não',
+}
+
+export default function LeadsAuxAcidente() {
+  const [leads, setLeads] = useState<LeadAuxAcidente[]>([])
+  const [responsaveis, setResponsaveis] = useState<{ id: string; nome: string }[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState<LeadAuxAcidente | null>(null)
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [recordToDelete, setRecordToDelete] = useState<LeadAuxAcidente | null>(null)
+
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  // Filtros combináveis
+  const [buscaTelefone, setBuscaTelefone] = useState('')
+  const [buscaNome, setBuscaNome] = useState('')
+  const [filtroOrigem, setFiltroOrigem] = useState('')
+  const [filtroResponsavel, setFiltroResponsavel] = useState('')
+  const [filtroResponsivo, setFiltroResponsivo] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState('')
+  const [filtroDe, setFiltroDe] = useState('')
+  const [filtroAte, setFiltroAte] = useState('')
+
+  const { toast } = useToast()
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const data = await getLeadsAux()
+      setLeads(Array.isArray(data) ? data : [])
+    } catch (e) {
+      console.error(e)
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível carregar os leads de Auxílio-Acidente.',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useRealtime<LeadAuxAcidente>('leads_aux_acidente', loadData)
+
+  useEffect(() => {
+    getResponsaveisAtivos()
+      .then((res) => setResponsaveis(res.map((r) => ({ id: r.id, nome: r.nome }))))
+      .catch((err) => console.error('Erro ao buscar responsáveis', err))
+  }, [])
+
+  const responsaveisMap: ResponsaveisMap = useMemo(() => {
+    const map: ResponsaveisMap = {}
+    for (const r of responsaveis) map[r.id] = r.nome
+    for (const l of leads) {
+      const id = responsavelId(l)
+      if (id && !map[id]) {
+        const nome = l.expand?.responsavel?.nome
+        if (nome) map[id] = nome
+      }
+    }
+    return map
+  }, [responsaveis, leads])
+
+  const hasActiveFilters =
+    Boolean(buscaTelefone) ||
+    Boolean(buscaNome) ||
+    Boolean(filtroOrigem) ||
+    Boolean(filtroResponsavel) ||
+    Boolean(filtroResponsivo) ||
+    Boolean(filtroStatus) ||
+    Boolean(filtroDe) ||
+    Boolean(filtroAte)
+
+  const clearFilters = () => {
+    setBuscaTelefone('')
+    setBuscaNome('')
+    setFiltroOrigem('')
+    setFiltroResponsavel('')
+    setFiltroResponsivo('')
+    setFiltroStatus('')
+    setFiltroDe('')
+    setFiltroAte('')
+  }
+
+  const filteredLeads = useMemo(() => {
+    const telDigits = buscaTelefone.replace(/\D/g, '')
+    const nomeNorm = normalizeSearchText(buscaNome)
+    const de = filtroDe // 'YYYY-MM-DD'
+    const ate = filtroAte
+
+    return leads.filter((l) => {
+      if (telDigits && !l.telefone.replace(/\D/g, '').includes(telDigits)) return false
+      if (nomeNorm && !normalizeSearchText(l.nome || '').includes(nomeNorm)) return false
+      if (filtroOrigem && l.origem_lead !== filtroOrigem) return false
+      if (filtroResponsavel) {
+        const id = responsavelId(l)
+        if (id !== filtroResponsavel) return false
+      }
+      if (filtroResponsivo && (l.responsivo || '') !== filtroResponsivo) return false
+      if (filtroStatus && l.status_funil !== filtroStatus) return false
+
+      const dataPart = String(l.data_entrada || '')
+        .split(' ')[0]
+        .split('T')[0]
+      if (de && dataPart < de) return false
+      if (ate && dataPart > ate) return false
+      return true
+    })
+  }, [
+    leads,
+    buscaTelefone,
+    buscaNome,
+    filtroOrigem,
+    filtroResponsavel,
+    filtroResponsivo,
+    filtroStatus,
+    filtroDe,
+    filtroAte,
+  ])
+
+  const handleAdd = () => {
+    setSelectedRecord(null)
+    setModalOpen(true)
+  }
+
+  const handleEdit = (row: LeadAuxAcidente) => {
+    setSelectedRecord(row)
+    setModalOpen(true)
+  }
+
+  const handleDeleteRequest = (row: LeadAuxAcidente) => {
+    setRecordToDelete(row)
+    setDeleteModalOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!recordToDelete) return
+    setDeleteLoading(true)
+    try {
+      await deleteLeadAux(recordToDelete.id)
+      toast({ title: 'Sucesso', description: 'Lead removido com sucesso.' })
+      setDeleteModalOpen(false)
+      setRecordToDelete(null)
+      loadData()
+    } catch (err) {
+      console.error(err)
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível remover o lead.',
+      })
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const responsivoDisplay = (r: Responsivo | '' | undefined): string => {
+    if (r === 'sim' || r === 'nao') return RESPONSIVO_LABELS[r]
+    return 'Não avaliado'
+  }
+
+  const motivoDisplay = (l: LeadAuxAcidente): string => {
+    if (!l.motivo_desqualificacao) return '—'
+    const found = MOTIVO_DESQUALIFICACAO_OPTIONS.find((o) => o.value === l.motivo_desqualificacao)
+    if (!found) return l.motivo_desqualificacao
+    if (found.value === 'outros' && l.motivo_desqualificacao_outro) {
+      return `${found.label}: ${l.motivo_desqualificacao_outro}`
+    }
+    return found.label
+  }
+
+  const labelCls =
+    'text-[10px] font-bold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground mb-1 block'
+  const controlCls =
+    'h-9 w-full text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]'
+
+  return (
+    <div className="animate-fade-in-up pb-10 space-y-6">
+      {/* 1. CABEÇALHO CORPORATIVO PADRONIZADO (GRAFITE PREMIUM 2.1) */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <span className="inline-flex w-fit items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+            CAPTAÇÃO DE LEADS
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
+            Central Auxílio-Acidente
+          </h1>
+          <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+            Acompanhamento dos leads e atendimentos de Auxílio-Acidente.
+          </p>
+        </div>
+        <Button
+          onClick={handleAdd}
+          className="w-full sm:w-auto h-9 px-4 text-xs font-semibold bg-[#C9922A] hover:bg-[#b07d22] text-white rounded-md shadow-sm transition-colors"
+        >
+          <Plus className="h-4 w-4 mr-1.5" /> Novo Lead
+        </Button>
+      </div>
+
+      {/* 2. ÁREA DE FILTROS SUPERIORES (padrão Leads Campanha) */}
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-3.5 sm:p-4 shadow-sm">
+        <div className="flex flex-col xl:flex-row gap-3 items-stretch xl:items-end justify-between">
+          <div className="flex flex-wrap items-end gap-2.5">
+            {/* Busca por telefone */}
+            <div className="w-full sm:w-[170px]">
+              <label className={labelCls}>Telefone</label>
+              <div className="relative">
+                <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#78818E]" />
+                <Input
+                  placeholder="Buscar telefone"
+                  value={buscaTelefone}
+                  onChange={(e) => setBuscaTelefone(e.target.value)}
+                  className="h-9 pl-8 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
+                />
+              </div>
+            </div>
+
+            {/* Busca por nome */}
+            <div className="w-full sm:w-[190px]">
+              <label className={labelCls}>Nome</label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#78818E]" />
+                <Input
+                  placeholder="Buscar nome"
+                  value={buscaNome}
+                  onChange={(e) => setBuscaNome(e.target.value)}
+                  className="h-9 pl-8 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
+                />
+              </div>
+            </div>
+
+            {/* Origem */}
+            <div className="w-full sm:w-[130px]">
+              <label className={labelCls}>Origem</label>
+              <Select
+                value={filtroOrigem}
+                onValueChange={(v) => setFiltroOrigem(v === ' ' ? '' : v)}
+              >
+                <SelectTrigger className={controlCls}>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=" " className="text-xs">
+                    Todas as origens
+                  </SelectItem>
+                  {Object.entries(ORIGEM_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value} className="text-xs">
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Responsável */}
+            <div className="w-full sm:w-[160px]">
+              <label className={labelCls}>Responsável</label>
+              <Select
+                value={filtroResponsavel}
+                onValueChange={(v) => setFiltroResponsavel(v === ' ' ? '' : v)}
+              >
+                <SelectTrigger className={controlCls}>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=" " className="text-xs">
+                    Todos os responsáveis
+                  </SelectItem>
+                  {responsaveis.map((r) => (
+                    <SelectItem key={r.id} value={r.id} className="text-xs">
+                      {r.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Responsivo */}
+            <div className="w-full sm:w-[140px]">
+              <label className={labelCls}>Responsivo</label>
+              <Select
+                value={filtroResponsivo}
+                onValueChange={(v) => setFiltroResponsivo(v === ' ' ? '' : v)}
+              >
+                <SelectTrigger className={controlCls}>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=" " className="text-xs">
+                    Todos
+                  </SelectItem>
+                  <SelectItem value="nao-avaliado" className="text-xs">
+                    Não avaliado
+                  </SelectItem>
+                  <SelectItem value="sim" className="text-xs">
+                    Sim
+                  </SelectItem>
+                  <SelectItem value="nao" className="text-xs">
+                    Não
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status */}
+            <div className="w-full sm:w-[140px]">
+              <label className={labelCls}>Status</label>
+              <Select
+                value={filtroStatus}
+                onValueChange={(v) => setFiltroStatus(v === ' ' ? '' : v)}
+              >
+                <SelectTrigger className={controlCls}>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=" " className="text-xs">
+                    Todos os status
+                  </SelectItem>
+                  {Object.entries(STATUS_FUNIL_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value} className="text-xs">
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Período De */}
+            <div className="w-full sm:w-[135px]">
+              <label className={labelCls}>De (data entrada)</label>
+              <Input
+                type="date"
+                value={filtroDe}
+                onChange={(e) => setFiltroDe(e.target.value)}
+                className="h-9 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
+              />
+            </div>
+
+            {/* Período Até */}
+            <div className="w-full sm:w-[135px]">
+              <label className={labelCls}>Até (data entrada)</label>
+              <Input
+                type="date"
+                value={filtroAte}
+                onChange={(e) => setFiltroAte(e.target.value)}
+                className="h-9 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
+              />
+            </div>
+
+            {/* Botão Limpar */}
+            {hasActiveFilters && (
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+                  onClick={clearFilters}
+                  title="Limpar filtros"
+                >
+                  <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. TABELA DE LEADS */}
+      <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#E4E7EB] dark:border-border flex items-center justify-between gap-2">
+          <h2 className="text-sm font-bold text-[#252B34] dark:text-foreground">
+            Leads ({filteredLeads.length}
+            {hasActiveFilters && ` de ${leads.length}`})
+          </h2>
+          {loading && (
+            <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">
+              Carregando...
+            </span>
+          )}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[#E4E7EB] dark:border-border bg-[#FAF8F2] dark:bg-muted/40 text-left">
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Data
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Telefone
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Nome
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Origem
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Responsável
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Responsivo
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Status
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap">
+                  Motivo
+                </th>
+                <th className="px-3 py-2.5 font-bold uppercase tracking-wider text-[10px] text-[#78818E] whitespace-nowrap text-right">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLeads.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-3 py-10 text-center text-[#78818E]">
+                    {loading ? 'Carregando leads...' : 'Nenhum lead encontrado.'}
+                  </td>
+                </tr>
+              ) : (
+                filteredLeads.map((l) => {
+                  const respId = responsavelId(l)
+                  return (
+                    <tr
+                      key={l.id}
+                      className="border-b border-[#E4E7EB] dark:border-border last:border-0 hover:bg-[#FAF8F2] dark:hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
+                        {formatDateBR(l.data_entrada)}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
+                        {formatPhoneMask(l.telefone) || l.telefone || '—'}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
+                        {l.nome ? l.nome : '—'}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[10px] font-semibold rounded',
+                            l.origem_lead === 'enlead'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900'
+                              : 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-900',
+                          )}
+                        >
+                          {ORIGEM_LABELS[l.origem_lead] || l.origem_lead || '—'}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
+                        {(respId && responsaveisMap[respId]) || '—'}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
+                        {responsivoDisplay(l.responsivo)}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <span
+                          className={cn(
+                            'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold',
+                            STATUS_COLORS[l.status_funil] || '',
+                          )}
+                        >
+                          {STATUS_FUNIL_LABELS[l.status_funil] || l.status_funil}
+                        </span>
+                      </td>
+                      <td
+                        className="px-3 py-2.5 max-w-[220px] truncate text-[#78818E] dark:text-muted-foreground"
+                        title={motivoDisplay(l)}
+                      >
+                        {motivoDisplay(l)}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-[#78818E] hover:text-[#C9922A] hover:bg-[#C9922A]/10"
+                            onClick={() => handleEdit(l)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-[#78818E] hover:text-[#B4453C] hover:bg-[#B4453C]/10"
+                            onClick={() => handleDeleteRequest(l)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* MODAL DE CADASTRO/EDIÇÃO */}
+      <AuxAcidenteModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onSaved={loadData}
+        lead={selectedRecord}
+      />
+
+      {/* MODAL DE EXCLUSÃO NO PADRÃO CORPORATIVO ALERTA VERMELHO (Grafite Premium 2.1) */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="rounded-[10px] sm:max-w-[450px] border border-[#E4E7EB] dark:border-border p-6 shadow-lg bg-white dark:bg-card">
+          <DialogHeader className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center text-[#B4453C] shrink-0">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#B4453C] block">
+                  AÇÃO IRREVERSÍVEL
+                </span>
+                <DialogTitle className="text-lg font-bold text-[#252B34] dark:text-foreground">
+                  Excluir Lead
+                </DialogTitle>
+              </div>
+            </div>
+            <DialogDescription className="pt-2 text-sm text-[#78818E] dark:text-muted-foreground leading-relaxed">
+              Deseja realmente remover o lead{' '}
+              <strong className="text-[#252B34] dark:text-foreground">
+                {recordToDelete
+                  ? formatPhoneMask(recordToDelete.telefone) || recordToDelete.telefone
+                  : ''}
+              </strong>
+              ? Esta ação não poderá ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-5 flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-4 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] rounded-md transition-colors"
+              onClick={() => setDeleteModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={deleteLoading}
+              className="h-9 px-4 text-xs font-semibold bg-[#B4453C] text-white hover:bg-[#963730] rounded-md shadow-sm transition-colors"
+              onClick={confirmDelete}
+            >
+              {deleteLoading ? 'Excluindo...' : 'Excluir permanentemente'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
