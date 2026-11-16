@@ -8,6 +8,15 @@
 // INEQUÍVOCA pelo TELEFONE (comparando apenas os DÍGITOS — máscara ignorada)
 // e acrescenta o ID do contrato à relation múltipla `leads_aux_acidente.contratos`.
 //
+// ⚠ ORDEM OBRIGATÓRIA (bug 0.0.1082 corrigido): em TODOS os eventos a lógica
+// de vínculo roda APÓS `e.next()` — ou seja, DEPOIS da persistência do
+// registro. Antes, a validação da relation `contratos` falhava com
+// "Failed to find all relation records with the provided ids" porque o ID do
+// contrato recém-criado ainda não existia no banco. Além disso, o lead é
+// SEMPRE recarregado fresco do banco (findRecordById) antes de salvar —
+// nunca se reutiliza o objeto capturado antes do save, para não sobrescrever
+// edições concorrentes.
+//
 // REGRA CONFIÁVEL PARA RECONHECER AUXÍLIO-ACIDENTE (definida por inspeção dos
 // dados reais — migration 0099 e dados atuais):
 //   EXCLUSIVAMENTE `contratos_fechados.beneficio === "Aux. Acidente"` (valor exato).
@@ -42,6 +51,7 @@
 
 // -------------------------------------------------------------
 // 1) CONTRATO CRIADO → vincular ao lead (se correspondência inequívoca)
+//    PÓS-SAVE: e.next() primeiro (persiste o contrato), vínculo depois.
 // -------------------------------------------------------------
 onRecordCreate((e) => {
   function normalizeDigits(value) {
@@ -63,7 +73,7 @@ onRecordCreate((e) => {
     console.log(parts.join(' | '))
   }
 
-  function tentarVinculoContrato(app, contrato) {
+  function vincularContratoAoLead(app, contrato) {
     try {
       var telDigits = normalizeDigits(contrato.getString('fone'))
       if (!telDigits) {
@@ -91,7 +101,8 @@ onRecordCreate((e) => {
 
       var candidatos = []
       for (var i = 0; i < leads.length; i++) {
-        if (normalizeDigits(leads[i].getString('telefone')) === telDigits) candidatos.push(leads[i])
+        if (normalizeDigits(leads[i].getString('telefone')) === telDigits)
+          candidatos.push(leads[i].id)
       }
 
       if (candidatos.length === 0) {
@@ -102,17 +113,17 @@ onRecordCreate((e) => {
         return
       }
       if (candidatos.length > 1) {
-        var ids = []
-        for (var j = 0; j < candidatos.length; j++) ids.push(candidatos[j].id)
         log('múltiplos candidatos — nenhum vínculo automático', {
           contratoId: contrato.id,
           fone: contrato.getString('fone'),
-          candidatos: ids.join(','),
+          candidatos: candidatos.join(','),
         })
         return
       }
 
-      var lead = candidatos[0]
+      // Recarrega o lead FRESCO do banco — o contrato já está persistido aqui,
+      // então a relation valida normalmente. Nunca reutiliza objeto antigo.
+      var lead = app.findRecordById('leads_aux_acidente', candidatos[0])
       var contratosAtuais = lead.getStringSlice('contratos') || []
       for (var m = 0; m < contratosAtuais.length; m++) {
         if (contratosAtuais[m] === contrato.id) {
@@ -141,20 +152,15 @@ onRecordCreate((e) => {
     }
   }
 
-  tentarVinculoContrato(e.app, e.record)
   e.next()
+  vincularContratoAoLead(e.app, e.record)
 }, 'contratos_fechados')
 
 // -------------------------------------------------------------
 // 2) CONTRATO EDITADO COM TELEFONE ALTERADO → re-tenta (idempotente,
-//    sem remover vínculos existentes)
+//    sem remover vínculos existentes). PÓS-SAVE também.
 // -------------------------------------------------------------
 onRecordUpdate((e) => {
-  if (e.record.getString('fone') === e.record.original().getString('fone')) {
-    e.next()
-    return
-  }
-
   function normalizeDigits(value) {
     return ('' + (value || '')).replace(/\D/g, '')
   }
@@ -174,7 +180,7 @@ onRecordUpdate((e) => {
     console.log(parts.join(' | '))
   }
 
-  function tentarVinculoContrato(app, contrato) {
+  function vincularContratoAoLead(app, contrato) {
     try {
       var telDigits = normalizeDigits(contrato.getString('fone'))
       if (!telDigits) {
@@ -201,7 +207,8 @@ onRecordUpdate((e) => {
 
       var candidatos = []
       for (var i = 0; i < leads.length; i++) {
-        if (normalizeDigits(leads[i].getString('telefone')) === telDigits) candidatos.push(leads[i])
+        if (normalizeDigits(leads[i].getString('telefone')) === telDigits)
+          candidatos.push(leads[i].id)
       }
 
       if (candidatos.length === 0) {
@@ -212,17 +219,15 @@ onRecordUpdate((e) => {
         return
       }
       if (candidatos.length > 1) {
-        var ids = []
-        for (var j = 0; j < candidatos.length; j++) ids.push(candidatos[j].id)
         log('múltiplos candidatos — nenhum vínculo automático (update)', {
           contratoId: contrato.id,
           fone: contrato.getString('fone'),
-          candidatos: ids.join(','),
+          candidatos: candidatos.join(','),
         })
         return
       }
 
-      var lead = candidatos[0]
+      var lead = app.findRecordById('leads_aux_acidente', candidatos[0])
       var contratosAtuais = lead.getStringSlice('contratos') || []
       for (var m = 0; m < contratosAtuais.length; m++) {
         if (contratosAtuais[m] === contrato.id) {
@@ -252,13 +257,16 @@ onRecordUpdate((e) => {
     }
   }
 
-  tentarVinculoContrato(e.app, e.record)
+  var foneAntes = e.record.original().getString('fone')
   e.next()
+  if (normalizeDigits(e.record.getString('fone')) === normalizeDigits(foneAntes)) return
+  vincularContratoAoLead(e.app, e.record)
 }, 'contratos_fechados')
 
 // -------------------------------------------------------------
 // 3) LEAD CRIADO DEPOIS DO CONTRATO → busca contratos de Aux. Acidente
-//    compatíveis pelo telefone normalizado (bidirecional)
+//    compatíveis pelo telefone normalizado (bidirecional).
+//    PÓS-SAVE: e.next() primeiro (persiste o lead), vínculo depois.
 // -------------------------------------------------------------
 onRecordCreate((e) => {
   function normalizeDigits(value) {
@@ -280,11 +288,10 @@ onRecordCreate((e) => {
     console.log(parts.join(' | '))
   }
 
-  function tentarVinculoLead(app, lead) {
+  function vincularLeadAContratos(app, leadId, telDigits) {
     try {
-      var telDigits = normalizeDigits(lead.getString('telefone'))
       if (!telDigits) {
-        log('skip telefone vazio (lead)', { leadId: lead.id })
+        log('skip telefone vazio (lead)', { leadId: leadId })
         return
       }
 
@@ -299,19 +306,21 @@ onRecordCreate((e) => {
       var candidatos = []
       for (var i = 0; i < contratos.length; i++) {
         if (normalizeDigits(contratos[i].getString('fone')) === telDigits) {
-          candidatos.push(contratos[i])
+          candidatos.push(contratos[i].id)
         }
       }
 
       if (candidatos.length === 0) {
-        log('nenhum contrato de Aux. Acidente correspondente (lead)', { leadId: lead.id })
+        log('nenhum contrato de Aux. Acidente correspondente (lead)', { leadId: leadId })
         return
       }
 
+      // Recarrega o lead FRESCO do banco após a própria persistência.
+      var lead = app.findRecordById('leads_aux_acidente', leadId)
       var contratosAtuais = lead.getStringSlice('contratos') || []
       var adicionados = []
       for (var k = 0; k < candidatos.length; k++) {
-        var cid = candidatos[k].id
+        var cid = candidatos[k]
         if (contratosAtuais.indexOf(cid) === -1) {
           contratosAtuais.push(cid)
           adicionados.push(cid)
@@ -319,7 +328,7 @@ onRecordCreate((e) => {
       }
 
       if (adicionados.length === 0) {
-        log('já vinculado — nada a fazer (lead)', { leadId: lead.id })
+        log('já vinculado — nada a fazer (lead)', { leadId: leadId })
         return
       }
 
@@ -328,31 +337,28 @@ onRecordCreate((e) => {
       lead.set('contratos', contratosAtuais)
       app.save(lead)
       log('vínculo automático criado (lead → contratos)', {
-        leadId: lead.id,
+        leadId: leadId,
         adicionados: adicionados.join(','),
         total: contratosAtuais.length,
       })
     } catch (err) {
       log('ERRO (ignorado): ' + (err && err.message ? err.message : err), {
-        leadId: lead ? lead.id : '',
+        leadId: leadId || '',
       })
     }
   }
 
-  tentarVinculoLead(e.app, e.record)
+  var leadId = e.record.id
+  var telDigits = normalizeDigits(e.record.getString('telefone'))
   e.next()
+  vincularLeadAContratos(e.app, leadId, telDigits)
 }, 'leads_aux_acidente')
 
 // -------------------------------------------------------------
 // 4) LEAD EDITADO COM TELEFONE ALTERADO → re-tenta busca de contratos
-//    (idempotente; nunca remove vínculos existentes)
+//    (idempotente; nunca remove vínculos existentes). PÓS-SAVE também.
 // -------------------------------------------------------------
 onRecordUpdate((e) => {
-  if (e.record.getString('telefone') === e.record.original().getString('telefone')) {
-    e.next()
-    return
-  }
-
   function normalizeDigits(value) {
     return ('' + (value || '')).replace(/\D/g, '')
   }
@@ -372,11 +378,13 @@ onRecordUpdate((e) => {
     console.log(parts.join(' | '))
   }
 
-  function tentarVinculoLead(app, lead) {
+  function vincularLeadAContratos(app, leadId) {
     try {
+      // Recarrega o lead FRESCO do banco após a própria persistência.
+      var lead = app.findRecordById('leads_aux_acidente', leadId)
       var telDigits = normalizeDigits(lead.getString('telefone'))
       if (!telDigits) {
-        log('skip telefone vazio (lead update)', { leadId: lead.id })
+        log('skip telefone vazio (lead update)', { leadId: leadId })
         return
       }
 
@@ -391,19 +399,19 @@ onRecordUpdate((e) => {
       var candidatos = []
       for (var i = 0; i < contratos.length; i++) {
         if (normalizeDigits(contratos[i].getString('fone')) === telDigits) {
-          candidatos.push(contratos[i])
+          candidatos.push(contratos[i].id)
         }
       }
 
       if (candidatos.length === 0) {
-        log('nenhum contrato de Aux. Acidente correspondente (lead update)', { leadId: lead.id })
+        log('nenhum contrato de Aux. Acidente correspondente (lead update)', { leadId: leadId })
         return
       }
 
       var contratosAtuais = lead.getStringSlice('contratos') || []
       var adicionados = []
       for (var k = 0; k < candidatos.length; k++) {
-        var cid = candidatos[k].id
+        var cid = candidatos[k]
         if (contratosAtuais.indexOf(cid) === -1) {
           contratosAtuais.push(cid)
           adicionados.push(cid)
@@ -411,24 +419,27 @@ onRecordUpdate((e) => {
       }
 
       if (adicionados.length === 0) {
-        log('já vinculado — nada a fazer (lead update)', { leadId: lead.id })
+        log('já vinculado — nada a fazer (lead update)', { leadId: leadId })
         return
       }
 
       lead.set('contratos', contratosAtuais)
       app.save(lead)
       log('vínculo automático criado após correção de telefone (lead → contratos)', {
-        leadId: lead.id,
+        leadId: leadId,
         adicionados: adicionados.join(','),
         total: contratosAtuais.length,
       })
     } catch (err) {
       log('ERRO (ignorado): ' + (err && err.message ? err.message : err), {
-        leadId: lead ? lead.id : '',
+        leadId: leadId || '',
       })
     }
   }
 
-  tentarVinculoLead(e.app, e.record)
+  var leadId = e.record.id
+  var telefoneAntes = e.record.original().getString('telefone')
   e.next()
+  if (normalizeDigits(e.record.getString('telefone')) === normalizeDigits(telefoneAntes)) return
+  vincularLeadAContratos(e.app, leadId)
 }, 'leads_aux_acidente')
