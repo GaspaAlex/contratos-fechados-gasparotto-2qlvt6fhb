@@ -24,10 +24,15 @@ import {
   ORIGEM_LABELS,
   STATUS_FUNIL_LABELS,
   MOTIVO_DESQUALIFICACAO_OPTIONS,
+  STATUS_INVALIDANTES,
+  motivoInvalidante,
   formatPhoneMask,
   formatDateBR,
   responsavelId,
+  isContratoValidoAuxAcidente,
 } from '@/services/leadsAuxAcidente'
+import { isArchived } from '@/lib/archivedStatuses'
+import type { ContratoFechadoResumo } from '@/services/leadsAuxAcidente'
 import type {
   LeadAuxAcidente,
   OrigemLead,
@@ -239,6 +244,19 @@ export default function LeadsAuxAcidente() {
       return `${found.label}: ${l.motivo_desqualificacao_outro}`
     }
     return found.label
+  }
+
+  /**
+   * Rótulo do motivo na desqualificação AUTOMÁTICA por status invalidante:
+   * "Litispendência" / "Sem Qualidade" / "Possui Advogado" conforme a causa
+   * (labels curtos de STATUS_INVALIDANTES; fallback para o label do option).
+   */
+  const motivoInvalidanteLabel = (l: LeadAuxAcidente): string => {
+    const found = STATUS_INVALIDANTES.find(
+      (i) => i.motivo_desqualificacao === l.motivo_desqualificacao,
+    )
+    if (found) return found.label
+    return motivoDisplay(l)
   }
 
   const labelCls =
@@ -498,19 +516,60 @@ export default function LeadsAuxAcidente() {
               ) : (
                 filteredLeads.map((l) => {
                   const respId = responsavelId(l)
+
+                  // DESQUALIFICAÇÃO AUTOMÁTICA POR STATUS INVALIDANTE — aparência
+                  // semelhante às linhas arquivadas de Contratos Fechados
+                  // (ContractsTable): acinzentada, texto reduzido e tachado onde é
+                  // coerente. Telefone, status, motivo e ações permanecem legíveis.
+                  const autoInvalidado =
+                    l.status_funil === 'desqualificado' &&
+                    (l.motivo_desqualificacao === 'litispendencia' ||
+                      l.motivo_desqualificacao === 'sem_qualidade' ||
+                      l.motivo_desqualificacao === 'possui_advogado')
+
+                  // Contratos relacionados EXPANDIDOS: válidos vs. inválidos
+                  // (arquivados/invalidantes/órfãos) — a relation é histórico.
+                  const expandContratos: ContratoFechadoResumo[] = Array.isArray(
+                    l.expand?.contratos,
+                  )
+                    ? (l.expand?.contratos as ContratoFechadoResumo[])
+                    : []
+                  const qtdValidos = expandContratos.filter((c) =>
+                    isContratoValidoAuxAcidente(c),
+                  ).length
+                  const contratoInvalido = expandContratos.find(
+                    (c) => !isContratoValidoAuxAcidente(c),
+                  )
+
                   return (
                     <tr
                       key={l.id}
-                      className="border-b border-[#E4E7EB] dark:border-border last:border-0 hover:bg-[#FAF8F2] dark:hover:bg-muted/30 transition-colors"
+                      className={cn(
+                        'border-b border-[#E4E7EB] dark:border-border last:border-0 hover:bg-[#FAF8F2] dark:hover:bg-muted/30 transition-colors',
+                        autoInvalidado &&
+                          'text-[#78818E] opacity-65 hover:bg-[#F5F6F8]/50 dark:hover:bg-muted/20',
+                      )}
                     >
                       <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
-                        {formatDateBR(l.data_entrada)}
+                        <span
+                          className={cn(autoInvalidado && 'text-xs text-[#78818E] line-through')}
+                        >
+                          {formatDateBR(l.data_entrada)}
+                        </span>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
-                        {formatPhoneMask(l.telefone) || l.telefone || '—'}
+                        <span
+                          className={cn(autoInvalidado && 'text-xs text-[#78818E] line-through')}
+                        >
+                          {formatPhoneMask(l.telefone) || l.telefone || '—'}
+                        </span>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
-                        {l.nome ? l.nome : '—'}
+                        <span
+                          className={cn(autoInvalidado && 'text-xs text-[#78818E] line-through')}
+                        >
+                          {l.nome ? l.nome : '—'}
+                        </span>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <Badge
@@ -545,24 +604,43 @@ export default function LeadsAuxAcidente() {
                         className="px-3 py-2.5 max-w-[220px] truncate text-[#78818E] dark:text-muted-foreground"
                         title={motivoDisplay(l)}
                       >
-                        {motivoDisplay(l)}
+                        {autoInvalidado ? motivoInvalidanteLabel(l) : motivoDisplay(l)}
                       </td>
-                      {/* Indicador simples de vínculo — detalhes ficam na edição */}
+                      {/* Coluna Contrato: válidos contam normalmente; quando não há
+                          nenhum contrato válido mas existe histórico inválido
+                          (arquivado/invalidante), mostra indicação DISCRETA do status
+                          real — sem contabilizá-lo como fechamento/contrato válido. */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {(() => {
-                          const qtd = Array.isArray(l.contratos) ? l.contratos.length : 0
-                          if (!qtd) {
+                          if (qtdValidos > 0) {
                             return (
-                              <span className="text-[#78818E] dark:text-muted-foreground">—</span>
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] font-semibold rounded bg-[#C9922A]/10 text-[#C9922A] border-[#C9922A]/30"
+                              >
+                                {qtdValidos} {qtdValidos === 1 ? 'contrato' : 'contratos'}
+                              </Badge>
+                            )
+                          }
+                          if (contratoInvalido) {
+                            const st = (contratoInvalido.status || '').trim()
+                            const invalidante = STATUS_INVALIDANTES.find(
+                              (i) => i.status.toLowerCase() === st.toLowerCase(),
+                            )
+                            return (
+                              <span
+                                className="text-[10px] text-[#78818E] dark:text-muted-foreground opacity-80 italic"
+                                title={
+                                  (invalidante ? invalidante.status : 'Arquivado') +
+                                  ' — histórico (fora dos indicadores)'
+                                }
+                              >
+                                {invalidante ? invalidante.label : 'Arquivado'}
+                              </span>
                             )
                           }
                           return (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] font-semibold rounded bg-[#C9922A]/10 text-[#C9922A] border-[#C9922A]/30"
-                            >
-                              {qtd} {qtd === 1 ? 'contrato' : 'contratos'}
-                            </Badge>
+                            <span className="text-[#78818E] dark:text-muted-foreground">—</span>
                           )
                         })()}
                       </td>

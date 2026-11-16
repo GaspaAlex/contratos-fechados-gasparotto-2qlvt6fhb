@@ -205,6 +205,46 @@ export function isContratoValidoAuxAcidente(
   return contrato.beneficio === 'Aux. Acidente' && !isArchived(contrato.status)
 }
 
+/**
+ * STATUS INVALIDANTES — regra DISTINTA de arquivamento (fonte única: os mesmos
+ * valores de ARCHIVED_STATUSES, em src/lib/archivedStatuses.ts, exceto 'Arquivar').
+ *
+ * Alguns status de contratos_fechados representam fatos que, se conhecidos desde
+ * o início, teriam impedido a qualificação do lead. Nesses casos o PRÓPRIO LEAD é
+ * desqualificado automaticamente (pelo hook server-side
+ * pocketbase/hooks/leads_aux_acidente_invalidacao.js) — mas SOMENTE quando NÃO
+ * existe outro contrato VÁLIDO relacionado ao mesmo lead. 'Arquivar' NÃO é
+ * invalidante (nunca se presume a razão da perda) — segue apenas fora dos
+ * indicadores via isArchived().
+ *
+ * PRIORIDADE DETERMINÍSTICA entre motivos (idêntica à do hook): 1. Litispendência,
+ * 2. Tem Advogado, 3. Sem Qualidade de Segurado — a primeira causa da lista vence.
+ */
+export const STATUS_INVALIDANTES: {
+  status: string
+  motivo_desqualificacao: string
+  /** Rótulo curto exibido na coluna Motivo / indicador da tabela. */
+  label: string
+}[] = [
+  { status: 'Litispendência', motivo_desqualificacao: 'litispendencia', label: 'Litispendência' },
+  { status: 'Tem Advogado', motivo_desqualificacao: 'possui_advogado', label: 'Possui Advogado' },
+  {
+    status: 'Sem Qualidade de Segurado',
+    motivo_desqualificacao: 'sem_qualidade',
+    label: 'Sem Qualidade',
+  },
+]
+
+/** Motivo de desqualificação correspondente ao status invalidante do contrato (ou null). */
+export function motivoInvalidante(status?: string | null): string | null {
+  if (!status) return null
+  const s = status.trim().toLowerCase()
+  for (const i of STATUS_INVALIDANTES) {
+    if (i.status.toLowerCase() === s) return i.motivo_desqualificacao
+  }
+  return null
+}
+
 const toResumo = (rec: RecordModel): ContratoFechadoResumo => ({
   id: rec.id,
   nome: (rec.nome as string) || '',
@@ -289,6 +329,16 @@ export async function getContratosByIds(ids: string[]): Promise<ContratoFechadoR
  * Nunca cria status "Contrato Fechado" — a relation `contratos` é a fonte
  * de verdade da conversão. Campos como telefone, responsável, origem,
  * responsivo e observações nunca são enviados no update.
+ *
+ * ⚠ IMPORTANTE: este cálculo é executado ANTES de a relation ser efetivamente
+ * salva — o estado REAL dos contratos relacionados (válido vs. invalidante) só
+ * é conhecido pelo hook server-side `leads_aux_acidente_invalidacao.js`, que
+ * roda PÓS-SAVE e reavalia/desqualifica o lead conforme a causa real. Aqui a
+ * promoção é apenas PROVISÓRIA: se o contrato vinculado tiver status
+ * invalidante (Litispendência, Sem Qualidade de Segurado, Tem Advogado) e não
+ * houver outro contrato válido, o hook corrige para 'desqualificado'
+ * imediatamente após o save — em realtime na Central (sem F5, a página já
+ * escuta `contratos_fechados`).
  */
 export function computePromocaoFunil(
   statusFunil: string | undefined,
