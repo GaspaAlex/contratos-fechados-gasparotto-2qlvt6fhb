@@ -8,15 +8,19 @@
 // INEQUÍVOCA pelo TELEFONE (comparando apenas os DÍGITOS — máscara ignorada)
 // e acrescenta o ID do contrato à relation múltipla `leads_aux_acidente.contratos`.
 //
-// PROMOÇÃO AUTOMÁTICA PARA QUALIFICADO (0.0.1084): após criar um vínculo com
-// sucesso, olha o valor ATUAL de `status_funil` do lead:
-//   - 'qualificando'  → altera para 'qualificado' e, se `qualificado_em`
+// PROMOÇÃO AUTOMÁTICA PARA QUALIFICADO (regra revisada em 0.0.1086): quando um
+// contrato válido de Auxílio-Acidente é vinculado (automática OU manualmente),
+// a existência do contrato PREVALECE sobre qualquer classificação anterior:
+//   - 'qualificando'   → altera para 'qualificado' e, se `qualificado_em`
 //     estiver vazio, preenche com a data/hora atual.
-//   - 'qualificado'   → NÃO altera nada (não sobrescreve `qualificado_em`).
-//   - 'desqualificado'→ NÃO altera automaticamente; `motivo_desqualificacao`
-//     e `motivo_desqualificacao_outro` permanecem intactos; registra log
-//     técnico para futura revisão manual. Nunca sobrescreve silenciosamente
-//     um lead marcado como desqualificado.
+//   - 'qualificado'    → mantém; NÃO sobrescreve `qualificado_em` existente.
+//   - 'desqualificado' → altera para 'qualificado' (o contrato prevalece sobre
+//     a desqualificação anterior): LIMPA `motivo_desqualificacao` e
+//     `motivo_desqualificacao_outro` e, se `qualificado_em` estiver vazio,
+//     preenche com a data/hora atual.
+// Nunca cria status "Contrato Fechado" — a relation `contratos` continua sendo
+// a fonte de verdade da conversão. Nunca altera telefone, responsável, origem,
+// responsivo, observações ou `desqualificado_em` (histórico permanece).
 // A promoção acontece no MESMO save do vínculo (uma única escrita no lead).
 //
 // ⚠ ORDEM OBRIGATÓRIA (bug 0.0.1082 corrigido): em TODOS os eventos a lógica
@@ -84,27 +88,26 @@ onRecordCreate((e) => {
   }
 
   // Promoção de status após vínculo — retorna true quando o lead mudou.
-  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
-  // sobrescreve `qualificado_em` já preenchido.
+  // O contrato válido PREVALECE sobre a classificação anterior (inclusive
+  // desqualificado). Nunca sobrescreve `qualificado_em` já preenchido.
   function aplicarPromocao(app, lead) {
     var status = (lead.getString('status_funil') || '').trim()
-    if (status === 'desqualificado') {
-      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
-        leadId: lead.id,
-        status_funil: status,
-        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
-        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
-      })
-      return false
-    }
     if (status === 'qualificado') {
       return false // já qualificado — não altera nada (nem `qualificado_em`)
     }
-    if (status !== 'qualificando') {
+    if (status !== 'qualificando' && status !== 'desqualificado') {
       log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
       return false
     }
     lead.set('status_funil', 'qualificado')
+    if (status === 'desqualificado') {
+      lead.set('motivo_desqualificacao', '')
+      lead.set('motivo_desqualificacao_outro', '')
+      log('lead desqualificado promovido para qualificado pelo contrato (contrato prevalece)', {
+        leadId: lead.id,
+        motivo_anterior: lead.original().getString('motivo_desqualificacao'),
+      })
+    }
     var qualificadoEm = lead.getString('qualificado_em')
     if (!qualificadoEm) {
       lead.set('qualificado_em', new Date().toISOString())
@@ -228,27 +231,25 @@ onRecordUpdate((e) => {
   }
 
   // Promoção de status após vínculo — retorna true quando o lead mudou.
-  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
-  // sobrescreve `qualificado_em` já preenchido.
+  // O contrato válido PREVALECE sobre a classificação anterior (inclusive
+  // desqualificado). Nunca sobrescreve `qualificado_em` já preenchido.
   function aplicarPromocao(app, lead) {
     var status = (lead.getString('status_funil') || '').trim()
-    if (status === 'desqualificado') {
-      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
-        leadId: lead.id,
-        status_funil: status,
-        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
-        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
-      })
-      return false
-    }
     if (status === 'qualificado') {
       return false // já qualificado — não altera nada (nem `qualificado_em`)
     }
-    if (status !== 'qualificando') {
+    if (status !== 'qualificando' && status !== 'desqualificado') {
       log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
       return false
     }
     lead.set('status_funil', 'qualificado')
+    if (status === 'desqualificado') {
+      lead.set('motivo_desqualificacao', '')
+      lead.set('motivo_desqualificacao_outro', '')
+      log('lead desqualificado promovido pelo contrato no update (contrato prevalece)', {
+        leadId: lead.id,
+      })
+    }
     var qualificadoEm = lead.getString('qualificado_em')
     if (!qualificadoEm) {
       lead.set('qualificado_em', new Date().toISOString())
@@ -373,27 +374,25 @@ onRecordCreate((e) => {
   }
 
   // Promoção de status após vínculo — retorna true quando o lead mudou.
-  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
-  // sobrescreve `qualificado_em` já preenchido.
+  // O contrato válido PREVALECE sobre a classificação anterior (inclusive
+  // desqualificado). Nunca sobrescreve `qualificado_em` já preenchido.
   function aplicarPromocao(app, lead) {
     var status = (lead.getString('status_funil') || '').trim()
-    if (status === 'desqualificado') {
-      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
-        leadId: lead.id,
-        status_funil: status,
-        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
-        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
-      })
-      return false
-    }
     if (status === 'qualificado') {
       return false // já qualificado — não altera nada (nem `qualificado_em`)
     }
-    if (status !== 'qualificando') {
+    if (status !== 'qualificando' && status !== 'desqualificado') {
       log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
       return false
     }
     lead.set('status_funil', 'qualificado')
+    if (status === 'desqualificado') {
+      lead.set('motivo_desqualificacao', '')
+      lead.set('motivo_desqualificacao_outro', '')
+      log('lead desqualificado promovido pelo contrato na criação (contrato prevalece)', {
+        leadId: lead.id,
+      })
+    }
     var qualificadoEm = lead.getString('qualificado_em')
     if (!qualificadoEm) {
       lead.set('qualificado_em', new Date().toISOString())
@@ -500,27 +499,25 @@ onRecordUpdate((e) => {
   }
 
   // Promoção de status após vínculo — retorna true quando o lead mudou.
-  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
-  // sobrescreve `qualificado_em` já preenchido.
+  // O contrato válido PREVALECE sobre a classificação anterior (inclusive
+  // desqualificado). Nunca sobrescreve `qualificado_em` já preenchido.
   function aplicarPromocao(app, lead) {
     var status = (lead.getString('status_funil') || '').trim()
-    if (status === 'desqualificado') {
-      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
-        leadId: lead.id,
-        status_funil: status,
-        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
-        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
-      })
-      return false
-    }
     if (status === 'qualificado') {
       return false // já qualificado — não altera nada (nem `qualificado_em`)
     }
-    if (status !== 'qualificando') {
+    if (status !== 'qualificando' && status !== 'desqualificado') {
       log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
       return false
     }
     lead.set('status_funil', 'qualificado')
+    if (status === 'desqualificado') {
+      lead.set('motivo_desqualificacao', '')
+      lead.set('motivo_desqualificacao_outro', '')
+      log('lead desqualificado promovido pelo contrato no update do lead (contrato prevalece)', {
+        leadId: lead.id,
+      })
+    }
     var qualificadoEm = lead.getString('qualificado_em')
     if (!qualificadoEm) {
       lead.set('qualificado_em', new Date().toISOString())

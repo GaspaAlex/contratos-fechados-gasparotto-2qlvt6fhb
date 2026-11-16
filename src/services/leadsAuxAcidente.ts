@@ -259,28 +259,46 @@ export async function getContratosByIds(ids: string[]): Promise<ContratoFechadoR
 }
 
 /**
- * Regra de promoção do funil no vínculo manual de contrato (0.0.1085), IDÊNTICA
- * à do hook server-side `leads_aux_acidente_vinculo.js`:
+ * Regra de promoção do funil no vínculo (manual ou automático) de contrato,
+ * IDÊNTICA à do hook server-side `leads_aux_acidente_vinculo.js` (regra
+ * revisada: o contrato válido PREVALECE sobre a desqualificação anterior):
  *  - 'qualificando'   → promove para 'qualificado' e, se `qualificado_em`
  *    estiver vazio, preenche com data/hora atual;
- *  - 'qualificado'    → NÃO altera nada (não sobrescreve `qualificado_em`);
- *  - 'desqualificado' → NÃO promove: nenhum campo do funil é enviado, preservando
- *    `motivo_desqualificacao` e `motivo_desqualificacao_outro`.
- * Nunca sobrescreve silenciosamente um lead desqualificado.
+ *  - 'qualificado'    → mantém (não sobrescreve `qualificado_em`);
+ *  - 'desqualificado' → promove para 'qualificado' e LIMPA
+ *    `motivo_desqualificacao` e `motivo_desqualificacao_outro`;
+ *    `qualificado_em` preenchido se vazio.
+ * Nunca cria status "Contrato Fechado" — a relation `contratos` é a fonte
+ * de verdade da conversão. Campos como telefone, responsável, origem,
+ * responsivo e observações nunca são enviados no update.
  */
 export function computePromocaoFunil(
   statusFunil: string | undefined,
   qualificadoEm?: string,
-): { status_funil?: StatusFunil; qualificado_em?: string } {
+): {
+  status_funil?: StatusFunil
+  qualificado_em?: string
+  motivo_desqualificacao?: string
+  motivo_desqualificacao_outro?: string
+} {
   const status = (statusFunil || '').trim()
-  if (status === 'qualificando') {
-    const payload: { status_funil?: StatusFunil; qualificado_em?: string } = {
+  if (status === 'qualificando' || status === 'desqualificado') {
+    const payload: {
+      status_funil?: StatusFunil
+      qualificado_em?: string
+      motivo_desqualificacao?: string
+      motivo_desqualificacao_outro?: string
+    } = {
       status_funil: 'qualificado',
     }
     if (!qualificadoEm) payload.qualificado_em = new Date().toISOString()
+    if (status === 'desqualificado') {
+      payload.motivo_desqualificacao = ''
+      payload.motivo_desqualificacao_outro = ''
+    }
     return payload
   }
-  // 'qualificado' e 'desqualificado' (e qualquer status inesperado): nada a fazer
+  // 'qualificado' (e qualquer status inesperado): nada a fazer
   return {}
 }
 
