@@ -41,6 +41,7 @@ import type {
 import { getResponsaveisAtivos } from '@/services/responsaveis'
 import { AuxAcidenteModal } from '@/components/leads/AuxAcidenteModal'
 import { AuxAcidenteCards } from '@/components/leads/AuxAcidenteCards'
+import { AuxAcidenteFunil } from '@/components/leads/AuxAcidenteFunil'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -460,7 +461,10 @@ export default function LeadsAuxAcidente() {
       {/* 3. CARDS PRINCIPAIS DO DASHBOARD (mesma lista filtrada da tabela) */}
       <AuxAcidenteCards leads={filteredLeads} loading={loading} />
 
-      {/* 4. TABELA DE LEADS */}
+      {/* 4. FUNIL COMERCIAL (mesma lista filtrada — reage aos mesmos filtros/realtime) */}
+      <AuxAcidenteFunil leads={filteredLeads} loading={loading} />
+
+      {/* 5. TABELA DE LEADS */}
       <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-[#E4E7EB] dark:border-border flex items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-[#252B34] dark:text-foreground">
