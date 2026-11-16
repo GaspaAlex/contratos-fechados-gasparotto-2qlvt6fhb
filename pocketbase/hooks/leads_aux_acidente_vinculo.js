@@ -8,6 +8,17 @@
 // INEQUÍVOCA pelo TELEFONE (comparando apenas os DÍGITOS — máscara ignorada)
 // e acrescenta o ID do contrato à relation múltipla `leads_aux_acidente.contratos`.
 //
+// PROMOÇÃO AUTOMÁTICA PARA QUALIFICADO (0.0.1084): após criar um vínculo com
+// sucesso, olha o valor ATUAL de `status_funil` do lead:
+//   - 'qualificando'  → altera para 'qualificado' e, se `qualificado_em`
+//     estiver vazio, preenche com a data/hora atual.
+//   - 'qualificado'   → NÃO altera nada (não sobrescreve `qualificado_em`).
+//   - 'desqualificado'→ NÃO altera automaticamente; `motivo_desqualificacao`
+//     e `motivo_desqualificacao_outro` permanecem intactos; registra log
+//     técnico para futura revisão manual. Nunca sobrescreve silenciosamente
+//     um lead marcado como desqualificado.
+// A promoção acontece no MESMO save do vínculo (uma única escrita no lead).
+//
 // ⚠ ORDEM OBRIGATÓRIA (bug 0.0.1082 corrigido): em TODOS os eventos a lógica
 // de vínculo roda APÓS `e.next()` — ou seja, DEPOIS da persistência do
 // registro. Antes, a validação da relation `contratos` falhava com
@@ -33,8 +44,7 @@
 //  - Idempotente: se o ID do contrato já está em `contratos`, não adiciona de novo.
 //  - Segundo contrato válido é ADICIONADO à relation existente, nunca substitui.
 //  - NÃO remove vínculos existentes quando o telefone muda depois.
-//  - NÃO altera `status_funil`, motivo ou datas (a relation `contratos` é a
-//    fonte de verdade de conversão).
+//  - Desvincular NUNCA rebaixa `status_funil` nem limpa `qualificado_em`.
 //  - NUNCA impede o salvamento normal (o cadastro do contrato é prioritário):
 //    toda a lógica roda DEPOIS do save e em try/catch — erro aqui nunca propaga.
 //  - NÃO altera `contratos_fechados` (sem campo novo, sem relation inversa).
@@ -71,6 +81,36 @@ onRecordCreate((e) => {
       }
     }
     console.log(parts.join(' | '))
+  }
+
+  // Promoção de status após vínculo — retorna true quando o lead mudou.
+  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
+  // sobrescreve `qualificado_em` já preenchido.
+  function aplicarPromocao(app, lead) {
+    var status = (lead.getString('status_funil') || '').trim()
+    if (status === 'desqualificado') {
+      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
+        leadId: lead.id,
+        status_funil: status,
+        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
+        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
+      })
+      return false
+    }
+    if (status === 'qualificado') {
+      return false // já qualificado — não altera nada (nem `qualificado_em`)
+    }
+    if (status !== 'qualificando') {
+      log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
+      return false
+    }
+    lead.set('status_funil', 'qualificado')
+    var qualificadoEm = lead.getString('qualificado_em')
+    if (!qualificadoEm) {
+      lead.set('qualificado_em', new Date().toISOString())
+      log('qualificado_em preenchido automaticamente', { leadId: lead.id })
+    }
+    return true
   }
 
   function vincularContratoAoLead(app, contrato) {
@@ -132,9 +172,16 @@ onRecordCreate((e) => {
         }
       }
 
+      var promoveu = aplicarPromocao(e.app, lead)
       contratosAtuais.push(contrato.id)
       lead.set('contratos', contratosAtuais)
       app.save(lead)
+      if (promoveu) {
+        log('lead promovido para qualificado no vínculo automático', {
+          leadId: lead.id,
+          contratoId: contrato.id,
+        })
+      }
       log('vínculo automático criado (contrato → lead)', {
         contratoId: contrato.id,
         leadId: lead.id,
@@ -178,6 +225,36 @@ onRecordUpdate((e) => {
       }
     }
     console.log(parts.join(' | '))
+  }
+
+  // Promoção de status após vínculo — retorna true quando o lead mudou.
+  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
+  // sobrescreve `qualificado_em` já preenchido.
+  function aplicarPromocao(app, lead) {
+    var status = (lead.getString('status_funil') || '').trim()
+    if (status === 'desqualificado') {
+      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
+        leadId: lead.id,
+        status_funil: status,
+        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
+        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
+      })
+      return false
+    }
+    if (status === 'qualificado') {
+      return false // já qualificado — não altera nada (nem `qualificado_em`)
+    }
+    if (status !== 'qualificando') {
+      log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
+      return false
+    }
+    lead.set('status_funil', 'qualificado')
+    var qualificadoEm = lead.getString('qualificado_em')
+    if (!qualificadoEm) {
+      lead.set('qualificado_em', new Date().toISOString())
+      log('qualificado_em preenchido automaticamente', { leadId: lead.id })
+    }
+    return true
   }
 
   function vincularContratoAoLead(app, contrato) {
@@ -239,9 +316,16 @@ onRecordUpdate((e) => {
         }
       }
 
+      var promoveu = aplicarPromocao(e.app, lead)
       contratosAtuais.push(contrato.id)
       lead.set('contratos', contratosAtuais)
       app.save(lead)
+      if (promoveu) {
+        log('lead promovido para qualificado no vínculo automático (update)', {
+          leadId: lead.id,
+          contratoId: contrato.id,
+        })
+      }
       log('vínculo automático criado após correção de telefone (contrato → lead)', {
         contratoId: contrato.id,
         leadId: lead.id,
@@ -286,6 +370,36 @@ onRecordCreate((e) => {
       }
     }
     console.log(parts.join(' | '))
+  }
+
+  // Promoção de status após vínculo — retorna true quando o lead mudou.
+  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
+  // sobrescreve `qualificado_em` já preenchido.
+  function aplicarPromocao(app, lead) {
+    var status = (lead.getString('status_funil') || '').trim()
+    if (status === 'desqualificado') {
+      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
+        leadId: lead.id,
+        status_funil: status,
+        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
+        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
+      })
+      return false
+    }
+    if (status === 'qualificado') {
+      return false // já qualificado — não altera nada (nem `qualificado_em`)
+    }
+    if (status !== 'qualificando') {
+      log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
+      return false
+    }
+    lead.set('status_funil', 'qualificado')
+    var qualificadoEm = lead.getString('qualificado_em')
+    if (!qualificadoEm) {
+      lead.set('qualificado_em', new Date().toISOString())
+      log('qualificado_em preenchido automaticamente', { leadId: lead.id })
+    }
+    return true
   }
 
   function vincularLeadAContratos(app, leadId, telDigits) {
@@ -334,8 +448,15 @@ onRecordCreate((e) => {
 
       // Mesmo telefone = mesma pessoa: acumula todos os contratos de Aux.
       // Acidente ainda não vinculados (nunca substitui; idempotente).
+      var promoveu = aplicarPromocao(e.app, lead)
       lead.set('contratos', contratosAtuais)
       app.save(lead)
+      if (promoveu) {
+        log('lead promovido para qualificado no vínculo automático (lead)', {
+          leadId: leadId,
+          adicionados: adicionados.join(','),
+        })
+      }
       log('vínculo automático criado (lead → contratos)', {
         leadId: leadId,
         adicionados: adicionados.join(','),
@@ -376,6 +497,36 @@ onRecordUpdate((e) => {
       }
     }
     console.log(parts.join(' | '))
+  }
+
+  // Promoção de status após vínculo — retorna true quando o lead mudou.
+  // Nunca toca em lead desqualificado (preserva motivo e datas) nem
+  // sobrescreve `qualificado_em` já preenchido.
+  function aplicarPromocao(app, lead) {
+    var status = (lead.getString('status_funil') || '').trim()
+    if (status === 'desqualificado') {
+      log('lead desqualificado com contrato relacionado — revisão manual recomendada', {
+        leadId: lead.id,
+        status_funil: status,
+        motivo_desqualificacao: lead.getString('motivo_desqualificacao'),
+        motivo_desqualificacao_outro: lead.getString('motivo_desqualificacao_outro'),
+      })
+      return false
+    }
+    if (status === 'qualificado') {
+      return false // já qualificado — não altera nada (nem `qualificado_em`)
+    }
+    if (status !== 'qualificando') {
+      log('status_funil inesperado — nenhuma promoção', { leadId: lead.id, status_funil: status })
+      return false
+    }
+    lead.set('status_funil', 'qualificado')
+    var qualificadoEm = lead.getString('qualificado_em')
+    if (!qualificadoEm) {
+      lead.set('qualificado_em', new Date().toISOString())
+      log('qualificado_em preenchido automaticamente', { leadId: lead.id })
+    }
+    return true
   }
 
   function vincularLeadAContratos(app, leadId) {
@@ -423,8 +574,15 @@ onRecordUpdate((e) => {
         return
       }
 
+      var promoveu = aplicarPromocao(e.app, lead)
       lead.set('contratos', contratosAtuais)
       app.save(lead)
+      if (promoveu) {
+        log('lead promovido para qualificado no vínculo automático (lead update)', {
+          leadId: leadId,
+          adicionados: adicionados.join(','),
+        })
+      }
       log('vínculo automático criado após correção de telefone (lead → contratos)', {
         leadId: leadId,
         adicionados: adicionados.join(','),
