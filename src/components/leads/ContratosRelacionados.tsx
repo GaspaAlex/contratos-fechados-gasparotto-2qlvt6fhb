@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link2, Link2Off, Loader2, Phone, Search, UserCheck } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronUp,
+  Link2,
+  Link2Off,
+  Loader2,
+  Phone,
+  Search,
+  UserCheck,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -70,6 +79,9 @@ export function ContratosRelacionados({ lead, onChanged }: ContratosRelacionados
   const [confirmDesvincular, setConfirmDesvincular] = useState<ContratoFechadoResumo | null>(null)
   const [dialogLoading, setDialogLoading] = useState(false)
 
+  // Busca manual recolhida por padrão — abre apenas sob ação do usuário.
+  const [buscaManualAberta, setBuscaManualAberta] = useState(false)
+
   const vinculadosIds = vinculados.map((c) => c.id)
 
   const recarregarVinculados = useCallback(async () => {
@@ -89,6 +101,7 @@ export function ContratosRelacionados({ lead, onChanged }: ContratosRelacionados
     setResultados(null)
     setBuscaTelefone('')
     setBuscaNome('')
+    setBuscaManualAberta(false)
 
     recarregarVinculados()
 
@@ -260,12 +273,13 @@ export function ContratosRelacionados({ lead, onChanged }: ContratosRelacionados
         renderLista(vinculados, 'desvincular')
       ) : (
         <p className="text-xs text-[#78818E] dark:text-muted-foreground">
-          Use a busca abaixo para localizar contratos e vinculá-los manualmente a este lead.
+          Use o botão &quot;Vincular contrato manualmente&quot; para localizar contratos e
+          vinculá-los a este lead.
         </p>
       )}
 
-      {/* Sugestão pelo telefone do lead — apenas sugestão, nunca vínculo automático */}
-      {sugestoesDisponiveis.length > 0 && (
+      {/* Sugestão pelo telefone do lead — apenas sugestão, nunca vínculo automático (dentro da expansão) */}
+      {buscaManualAberta && sugestoesDisponiveis.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5 text-[#C9922A]" />
@@ -278,49 +292,81 @@ export function ContratosRelacionados({ lead, onChanged }: ContratosRelacionados
         </div>
       )}
 
-      {/* Busca manual por telefone e/ou nome */}
+      {/* Busca manual por telefone e/ou nome — recolhida até o usuário abrir */}
       <div className="space-y-2">
-        <span className={labelCls}>Vincular contrato (busca manual)</span>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Input
-            inputMode="tel"
-            placeholder="Telefone do contrato"
-            value={buscaTelefone}
-            onChange={(e) => setBuscaTelefone(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
-            className={cn(controlCls, 'w-full sm:flex-1')}
-          />
-          <Input
-            placeholder="Nome do cliente"
-            value={buscaNome}
-            onChange={(e) => setBuscaNome(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
-            className={cn(controlCls, 'w-full sm:flex-1')}
-          />
+        {!buscaManualAberta ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            disabled={carregando || (!buscaTelefone.trim() && !buscaNome.trim())}
-            onClick={handleBuscar}
-            className="h-9 px-3 text-xs shrink-0 border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded-md"
+            onClick={() => setBuscaManualAberta(true)}
+            className="h-8 px-3 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded-md"
           >
-            {carregando ? (
-              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-            ) : (
-              <Search className="h-3.5 w-3.5 mr-1" />
-            )}
-            Buscar
+            <Link2 className="h-3.5 w-3.5 mr-1.5" />
+            Vincular contrato manualmente
           </Button>
-        </div>
-        {resultados &&
-          (resultados.length > 0 ? (
-            renderLista(resultados, 'vincular')
-          ) : (
-            <p className="text-xs text-[#78818E] dark:text-muted-foreground">
-              Nenhum contrato encontrado com esses critérios.
-            </p>
-          ))}
+        ) : (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className={labelCls}>Vincular contrato (busca manual)</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setBuscaManualAberta(false)
+                  setBuscaTelefone('')
+                  setBuscaNome('')
+                  setResultados(null)
+                }}
+                className="h-7 px-2 text-[11px] text-[#78818E] hover:text-[#C9922A] rounded-md"
+              >
+                <ChevronUp className="h-3.5 w-3.5 mr-1" />
+                Recolher
+              </Button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                inputMode="tel"
+                placeholder="Telefone do contrato"
+                value={buscaTelefone}
+                onChange={(e) => setBuscaTelefone(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+                className={cn(controlCls, 'w-full sm:flex-1')}
+              />
+              <Input
+                placeholder="Nome do cliente"
+                value={buscaNome}
+                onChange={(e) => setBuscaNome(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+                className={cn(controlCls, 'w-full sm:flex-1')}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={carregando || (!buscaTelefone.trim() && !buscaNome.trim())}
+                onClick={handleBuscar}
+                className="h-9 px-3 text-xs shrink-0 border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] rounded-md"
+              >
+                {carregando ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Search className="h-3.5 w-3.5 mr-1" />
+                )}
+                Buscar
+              </Button>
+            </div>
+            {resultados &&
+              (resultados.length > 0 ? (
+                renderLista(resultados, 'vincular')
+              ) : (
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground">
+                  Nenhum contrato encontrado com esses critérios.
+                </p>
+              ))}
+          </>
+        )}
       </div>
 
       {/* Confirmação de vínculo */}

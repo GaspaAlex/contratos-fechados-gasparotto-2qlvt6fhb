@@ -259,8 +259,46 @@ export async function getContratosByIds(ids: string[]): Promise<ContratoFechadoR
 }
 
 /**
- * Salva a relation `contratos` do lead. Sobrescreve o campo com a lista
- * completa de IDs informada — vínculo definitivo só após confirmação do usuário.
+ * Regra de promoção do funil no vínculo manual de contrato (0.0.1085), IDÊNTICA
+ * à do hook server-side `leads_aux_acidente_vinculo.js`:
+ *  - 'qualificando'   → promove para 'qualificado' e, se `qualificado_em`
+ *    estiver vazio, preenche com data/hora atual;
+ *  - 'qualificado'    → NÃO altera nada (não sobrescreve `qualificado_em`);
+ *  - 'desqualificado' → NÃO promove: nenhum campo do funil é enviado, preservando
+ *    `motivo_desqualificacao` e `motivo_desqualificacao_outro`.
+ * Nunca sobrescreve silenciosamente um lead desqualificado.
  */
-export const setLeadContratos = (leadId: string, contratoIds: string[]) =>
-  pb.collection('leads_aux_acidente').update<LeadAuxAcidente>(leadId, { contratos: contratoIds })
+export function computePromocaoFunil(
+  statusFunil: string | undefined,
+  qualificadoEm?: string,
+): { status_funil?: StatusFunil; qualificado_em?: string } {
+  const status = (statusFunil || '').trim()
+  if (status === 'qualificando') {
+    const payload: { status_funil?: StatusFunil; qualificado_em?: string } = {
+      status_funil: 'qualificado',
+    }
+    if (!qualificadoEm) payload.qualificado_em = new Date().toISOString()
+    return payload
+  }
+  // 'qualificado' e 'desqualificado' (e qualquer status inesperado): nada a fazer
+  return {}
+}
+
+/**
+ * Salva a relation `contratos` do lead, aplicando no MESMO update a regra de
+ * promoção do funil (qualificando → qualificado). O lead é recarregado fresco
+ * do banco antes de salvar, para nunca aplicar a regra sobre objeto obsoleto.
+ * Sobrescreve o campo com a lista completa de IDs informada — vínculo
+ * definitivo só após confirmação do usuário.
+ */
+export async function setLeadContratos(
+  leadId: string,
+  contratoIds: string[],
+): Promise<LeadAuxAcidente> {
+  // Recarrega o lead atual do banco — não usa o objeto passado pela UI.
+  const lead = await pb.collection('leads_aux_acidente').getOne<LeadAuxAcidente>(leadId)
+  return pb.collection('leads_aux_acidente').update<LeadAuxAcidente>(leadId, {
+    contratos: contratoIds,
+    ...computePromocaoFunil(lead.status_funil, lead.qualificado_em),
+  })
+}
