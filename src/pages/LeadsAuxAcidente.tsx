@@ -41,6 +41,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { normalizeSearchText } from '@/lib/utils'
+import type { RecordModel } from 'pocketbase'
 
 type ResponsaveisMap = Record<string, string>
 
@@ -106,6 +107,12 @@ export default function LeadsAuxAcidente() {
   }, [])
 
   useRealtime<LeadAuxAcidente>('leads_aux_acidente', loadData)
+  // Contratos Fechados também afetam os cards (contrato válido = Aux. Acidente +
+  // status não arquivado). Mudança de status (ex.: Concluído ↔ Litispendência),
+  // criação e exclusão de contrato recarregam os leads EXPANDIDOS — os cards
+  // (e a tabela) recalculam sem F5, sem polling. IDs órfãos (relation apontando
+  // para contrato excluído) voltam sem registro no expand e não contam.
+  useRealtime<RecordModel>('contratos_fechados', loadData)
 
   useEffect(() => {
     getResponsaveisAtivos()

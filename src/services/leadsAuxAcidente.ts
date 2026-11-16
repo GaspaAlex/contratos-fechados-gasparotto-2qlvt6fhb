@@ -1,5 +1,6 @@
 import pb from '@/lib/pocketbase/client'
 import type { RecordModel } from 'pocketbase'
+import { isArchived } from '@/lib/archivedStatuses'
 
 export type StatusFunil = 'qualificando' | 'qualificado' | 'desqualificado'
 export type OrigemLead = 'enlead' | 'campanha'
@@ -33,6 +34,8 @@ export interface LeadAuxAcidente extends RecordModel {
   contratos?: string[]
   expand?: {
     responsavel?: { id: string; nome: string }
+    /** Contratos reais da relation (getLeadsAux usa expand: 'contratos'). */
+    contratos?: ContratoFechadoResumo[]
   }
   created?: string
   updated?: string
@@ -133,7 +136,7 @@ export function responsavelNome(lead: LeadAuxAcidente): string {
 export const getLeadsAux = () =>
   pb.collection('leads_aux_acidente').getFullList<LeadAuxAcidente>({
     sort: '-data_entrada,-created',
-    expand: 'responsavel',
+    expand: 'responsavel,contratos',
   })
 
 export interface LeadAuxPayload {
@@ -186,6 +189,21 @@ export const deleteLeadAux = (id: string) => pb.collection('leads_aux_acidente')
 /* (relation armazenada SOMENTE em leads_aux_acidente.contratos;       */
 /*  contratos_fechados nunca é alterado)                               */
 /* ------------------------------------------------------------------ */
+
+/**
+ * CONTRATO VÁLIDO (indicadores da Central Auxílio-Acidente):
+ * relation `contratos` do lead + beneficio === 'Aux. Acidente' (valor exato,
+ * mesma regra do hook de vínculo automático) + status NÃO arquivado
+ * (fonte única: isArchived() de src/lib/archivedStatuses.ts).
+ * A relation é HISTÓRICO — contratos inválidos/arquivados/órfãos não são
+ * removidos dela, apenas deixam de contar nos indicadores.
+ */
+export function isContratoValidoAuxAcidente(
+  contrato?: Partial<ContratoFechadoResumo> | null,
+): boolean {
+  if (!contrato) return false
+  return contrato.beneficio === 'Aux. Acidente' && !isArchived(contrato.status)
+}
 
 const toResumo = (rec: RecordModel): ContratoFechadoResumo => ({
   id: rec.id,
