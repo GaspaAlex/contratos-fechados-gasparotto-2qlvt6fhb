@@ -194,15 +194,21 @@ export const deleteLeadAux = (id: string) => pb.collection('leads_aux_acidente')
  * CONTRATO VÁLIDO (indicadores da Central Auxílio-Acidente):
  * relation `contratos` do lead + beneficio === 'Aux. Acidente' (valor exato,
  * mesma regra do hook de vínculo automático) + status NÃO arquivado
- * (fonte única: isArchived() de src/lib/archivedStatuses.ts).
- * A relation é HISTÓRICO — contratos inválidos/arquivados/órfãos não são
- * removidos dela, apenas deixam de contar nos indicadores.
+ * (fonte única: isArchived() de src/lib/archivedStatuses.ts) + status NÃO
+ * invalidante (INVALIDATING_STATUSES — Litispendência, Tem Advogado, Sem
+ * Qualidade de Segurado; mesma regra do hook server-side
+ * leads_aux_acidente_invalidacao.js). A relation é HISTÓRICO — contratos
+ * inválidos/arquivados/invalidantes/órfãos não são removidos dela, apenas
+ * deixam de contar nos indicadores (cards, coluna Contrato da tabela).
  */
 export function isContratoValidoAuxAcidente(
   contrato?: Partial<ContratoFechadoResumo> | null,
 ): boolean {
   if (!contrato) return false
-  return contrato.beneficio === 'Aux. Acidente' && !isArchived(contrato.status)
+  if (contrato.beneficio !== 'Aux. Acidente') return false
+  if (isArchived(contrato.status)) return false
+  if (motivoInvalidante(contrato.status)) return false
+  return true
 }
 
 /**
@@ -220,7 +226,7 @@ export function isContratoValidoAuxAcidente(
  * PRIORIDADE DETERMINÍSTICA entre motivos (idêntica à do hook): 1. Litispendência,
  * 2. Tem Advogado, 3. Sem Qualidade de Segurado — a primeira causa da lista vence.
  */
-export const STATUS_INVALIDANTES: {
+export const INVALIDATING_STATUSES: {
   status: string
   motivo_desqualificacao: string
   /** Rótulo curto exibido na coluna Motivo / indicador da tabela. */
@@ -239,7 +245,7 @@ export const STATUS_INVALIDANTES: {
 export function motivoInvalidante(status?: string | null): string | null {
   if (!status) return null
   const s = status.trim().toLowerCase()
-  for (const i of STATUS_INVALIDANTES) {
+  for (const i of INVALIDATING_STATUSES) {
     if (i.status.toLowerCase() === s) return i.motivo_desqualificacao
   }
   return null

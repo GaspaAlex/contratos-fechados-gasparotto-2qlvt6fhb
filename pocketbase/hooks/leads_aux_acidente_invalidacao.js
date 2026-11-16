@@ -60,7 +60,7 @@ onRecordAfterCreateSuccess((e) => {
   // (confirmados na base viva em 2026-11-16; status é campo texto — comparação
   // exata, sem trim/acentos, espelha os valores gravados pela UI).
   var INVALIDATING_STATUS_TO_MOTIVO = {
-    'Litispendência': 'litispendencia',
+    Litispendência: 'litispendencia',
     'Sem Qualidade de Segurado': 'sem_qualidade',
     'Tem Advogado': 'possui_advogado',
   }
@@ -143,7 +143,10 @@ onRecordAfterCreateSuccess((e) => {
       // qualificado_em; motivo só é limpo se o lead estava desqualificado.
       if (statusAtual === 'qualificado') return false // já qualificado — nada a fazer
       if (statusAtual !== 'qualificando' && statusAtual !== 'desqualificado') {
-        log('status_funil inesperado — nenhuma promoção', { leadId: leadId, status_funil: statusAtual })
+        log('status_funil inesperado — nenhuma promoção', {
+          leadId: leadId,
+          status_funil: statusAtual,
+        })
         return false
       }
       lead.set('status_funil', 'qualificado')
@@ -172,10 +175,14 @@ onRecordAfterCreateSuccess((e) => {
     var PRIORIDADE = { litispendencia: 1, possui_advogado: 2, sem_qualidade: 3 }
     var motivoEscolhido = invalidantes[0]
     for (var j = 1; j < invalidantes.length; j++) {
-      if (PRIORIDADE[invalidantes[j]] < PRIORIDADE[motivoEscolhido]) motivoEscolhido = invalidantes[j]
+      if (PRIORIDADE[invalidantes[j]] < PRIORIDADE[motivoEscolhido])
+        motivoEscolhido = invalidantes[j]
     }
 
-    if (statusAtual === 'desqualificado' && lead.getString('motivo_desqualificacao') === motivoEscolhido) {
+    if (
+      statusAtual === 'desqualificado' &&
+      lead.getString('motivo_desqualificacao') === motivoEscolhido
+    ) {
       return false // já está nesse estado — idempotente, não grava de novo
     }
 
@@ -230,13 +237,198 @@ onRecordAfterCreateSuccess((e) => {
       if (reavaliarLead(app, leads[i].id, contexto)) afetados++
     }
     if (afetados > 0) {
-      log('reavaliação concluída', { contratoId: contrato.id, leads_afetados: afetados, origem: contexto })
+      log('reavaliação concluída', {
+        contratoId: contrato.id,
+        leads_afetados: afetados,
+        origem: contexto,
+      })
     }
   }
 
   try {
     if ((e.record.getString('beneficio') || '') !== BENEFICIO_AUX_ACIDENTE) return
     reavaliarLeadsDoContrato(e.app, e.record, 'create')
+  } catch (err) {
+    log('ERRO (ignorado): ' + (err && err.message ? err.message : err), { contratoId: e.record.id })
+  }
+}, 'contratos_fechados')
+
+// Contrato EXCLUÍDO: a EXCLUSÃO SIMPLES nunca desqualifica sozinha (nem cria
+// motivo, nem restaura status). Mas se, APÓS a exclusão, ainda existir
+// contrato invalidante real e nenhum válido na relation, a regra é aplicada
+// com base no que RESTOU (os IDs órfãos saem sozinhos: findRecordById falha e
+// é ignorado). Arquivado também não desqualifica — nada acontece se só sobrar
+// contrato arquivado ou nada.
+onRecordAfterDeleteSuccess((e) => {
+  e.next()
+
+  var INVALIDATING_STATUS_TO_MOTIVO = {
+    Litispendência: 'litispendencia',
+    'Sem Qualidade de Segurado': 'sem_qualidade',
+    'Tem Advogado': 'possui_advogado',
+  }
+  var BENEFICIO_AUX_ACIDENTE = 'Aux. Acidente'
+
+  function normalizeDigits(value) {
+    return ('' + (value || '')).replace(/\D/g, '')
+  }
+
+  function log(msg, ctx) {
+    var parts = ['[INVALIDACAO_AUX_ACIDENTE] ' + msg]
+    for (var k in ctx) {
+      if (
+        Object.prototype.hasOwnProperty.call(ctx, k) &&
+        ctx[k] !== undefined &&
+        ctx[k] !== null &&
+        ctx[k] !== ''
+      ) {
+        parts.push(k + '=' + ctx[k])
+      }
+    }
+    console.log(parts.join(' | '))
+  }
+
+  function isValido(status, beneficio) {
+    if ((beneficio || '') !== BENEFICIO_AUX_ACIDENTE) return false
+    if (status === 'Arquivar') return false
+    if (INVALIDATING_STATUS_TO_MOTIVO[status] !== undefined) return false
+    return true
+  }
+
+  function reavaliarLead(app, leadId, contexto) {
+    var lead
+    try {
+      lead = app.findRecordById('leads_aux_acidente', leadId)
+    } catch (err) {
+      log('lead não encontrado (excluído?) — nada a fazer', { leadId: leadId })
+      return false
+    }
+
+    var relationIds = lead.getStringSlice('contratos') || []
+
+    var temValido = false
+    var invalidantes = []
+    var statusInvalidantes = []
+    for (var i = 0; i < relationIds.length; i++) {
+      var c
+      try {
+        c = app.findRecordById('contratos_fechados', relationIds[i])
+      } catch (err) {
+        continue // órfão (o excluído) — ignora
+      }
+      var status = c.getString('status') || ''
+      var beneficio = c.getString('beneficio') || ''
+      if (isValido(status, beneficio)) {
+        temValido = true
+        break
+      }
+      if (INVALIDATING_STATUS_TO_MOTIVO[status] !== undefined) {
+        invalidantes.push(INVALIDATING_STATUS_TO_MOTIVO[status])
+        statusInvalidantes.push(status)
+      }
+    }
+
+    var statusAtual = (lead.getString('status_funil') || '').trim()
+
+    if (temValido) {
+      if (statusAtual === 'qualificado') return false
+      if (statusAtual !== 'qualificando' && statusAtual !== 'desqualificado') {
+        log('status_funil inesperado — nenhuma promoção', {
+          leadId: leadId,
+          status_funil: statusAtual,
+        })
+        return false
+      }
+      lead.set('status_funil', 'qualificado')
+      if (statusAtual === 'desqualificado') {
+        lead.set('motivo_desqualificacao', '')
+        lead.set('motivo_desqualificacao_outro', '')
+      }
+      if (!lead.getString('qualificado_em')) {
+        lead.set('qualificado_em', new Date().toISOString())
+      }
+      app.save(lead)
+      log('lead promovido para qualificado (contrato restante é válido)', {
+        leadId: leadId,
+        origem: contexto,
+      })
+      return true
+    }
+
+    if (invalidantes.length === 0) {
+      return false
+    }
+
+    var PRIORIDADE = { litispendencia: 1, possui_advogado: 2, sem_qualidade: 3 }
+    var motivoEscolhido = invalidantes[0]
+    for (var j = 1; j < invalidantes.length; j++) {
+      if (PRIORIDADE[invalidantes[j]] < PRIORIDADE[motivoEscolhido])
+        motivoEscolhido = invalidantes[j]
+    }
+
+    if (
+      statusAtual === 'desqualificado' &&
+      lead.getString('motivo_desqualificacao') === motivoEscolhido
+    ) {
+      return false
+    }
+
+    var antes = statusAtual + '/' + (lead.getString('motivo_desqualificacao') || '')
+    lead.set('status_funil', 'desqualificado')
+    lead.set('motivo_desqualificacao', motivoEscolhido)
+    lead.set('motivo_desqualificacao_outro', '')
+    if (!lead.getString('desqualificado_em')) {
+      lead.set('desqualificado_em', new Date().toISOString())
+    }
+    app.save(lead)
+    log('lead desqualificado por contrato invalidante restante (após exclusão)', {
+      leadId: leadId,
+      motivo: motivoEscolhido,
+      status_invalidantes: statusInvalidantes.join(' | '),
+      antes: antes,
+      origem: contexto,
+    })
+    return true
+  }
+
+  function reavaliarLeadsDoContrato(app, contrato, contexto) {
+    var telDigits = normalizeDigits(contrato.getString('fone'))
+    if (!telDigits) {
+      log('skip telefone vazio (contrato excluído)', { contratoId: contrato.id })
+      return
+    }
+    var leads
+    try {
+      leads = app.findRecordsByFilter(
+        'leads_aux_acidente',
+        "telefone ~ '" + telDigits + "'",
+        'created',
+        0,
+        0,
+      )
+    } catch (err) {
+      log('ERRO ao buscar leads (ignorado): ' + (err && err.message ? err.message : err), {
+        contratoId: contrato.id,
+      })
+      return
+    }
+    var afetados = 0
+    for (var i = 0; i < leads.length; i++) {
+      if (normalizeDigits(leads[i].getString('telefone')) !== telDigits) continue
+      if (reavaliarLead(app, leads[i].id, contexto)) afetados++
+    }
+    if (afetados > 0) {
+      log('reavaliação concluída (exclusão)', {
+        contratoId: contrato.id,
+        leads_afetados: afetados,
+        origem: contexto,
+      })
+    }
+  }
+
+  try {
+    if ((e.record.getString('beneficio') || '') !== BENEFICIO_AUX_ACIDENTE) return
+    reavaliarLeadsDoContrato(e.app, e.record, 'delete')
   } catch (err) {
     log('ERRO (ignorado): ' + (err && err.message ? err.message : err), { contratoId: e.record.id })
   }
@@ -249,7 +441,7 @@ onRecordAfterUpdateSuccess((e) => {
   e.next()
 
   var INVALIDATING_STATUS_TO_MOTIVO = {
-    'Litispendência': 'litispendencia',
+    Litispendência: 'litispendencia',
     'Sem Qualidade de Segurado': 'sem_qualidade',
     'Tem Advogado': 'possui_advogado',
   }
@@ -319,7 +511,10 @@ onRecordAfterUpdateSuccess((e) => {
     if (temValido) {
       if (statusAtual === 'qualificado') return false
       if (statusAtual !== 'qualificando' && statusAtual !== 'desqualificado') {
-        log('status_funil inesperado — nenhuma promoção', { leadId: leadId, status_funil: statusAtual })
+        log('status_funil inesperado — nenhuma promoção', {
+          leadId: leadId,
+          status_funil: statusAtual,
+        })
         return false
       }
       lead.set('status_funil', 'qualificado')
@@ -345,10 +540,14 @@ onRecordAfterUpdateSuccess((e) => {
     var PRIORIDADE = { litispendencia: 1, possui_advogado: 2, sem_qualidade: 3 }
     var motivoEscolhido = invalidantes[0]
     for (var j = 1; j < invalidantes.length; j++) {
-      if (PRIORIDADE[invalidantes[j]] < PRIORIDADE[motivoEscolhido]) motivoEscolhido = invalidantes[j]
+      if (PRIORIDADE[invalidantes[j]] < PRIORIDADE[motivoEscolhido])
+        motivoEscolhido = invalidantes[j]
     }
 
-    if (statusAtual === 'desqualificado' && lead.getString('motivo_desqualificacao') === motivoEscolhido) {
+    if (
+      statusAtual === 'desqualificado' &&
+      lead.getString('motivo_desqualificacao') === motivoEscolhido
+    ) {
       return false
     }
 
@@ -397,7 +596,11 @@ onRecordAfterUpdateSuccess((e) => {
       if (reavaliarLead(app, leads[i].id, contexto)) afetados++
     }
     if (afetados > 0) {
-      log('reavaliação concluída', { contratoId: contrato.id, leads_afetados: afetados, origem: contexto })
+      log('reavaliação concluída', {
+        contratoId: contrato.id,
+        leads_afetados: afetados,
+        origem: contexto,
+      })
     }
   }
 
