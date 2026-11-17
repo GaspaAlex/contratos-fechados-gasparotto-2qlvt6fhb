@@ -17,12 +17,19 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/formatters'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { getReviewStatus, normalizeDateCivil, isProtocoloOverdue } from '@/lib/date-utils'
+import { isArchived } from '@/lib/archivedStatuses'
+import { statusContratoParaExibicao } from '@/services/protocoloValidade'
 import { cn } from '@/lib/utils'
 
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
   // Highlight strictly if status is "Prov. Inicial" and it's overdue
   const overdue = isProtocoloOverdue(item)
   const faltaDocs = item.status === 'R. Docs'
+  // Contrato(s) relacionado(s) arquivado(s): linha acinzentada, aparência
+  // inativa (padrão Contratos Fechados), mantendo o protocolo visível e
+  // editável. NÃO altera protocolo.status.
+  const statusContrato = statusContratoParaExibicao(item)
+  const contratoArquivado = !!statusContrato && isArchived(statusContrato)
 
   const reviewStatus = getReviewStatus(item.revisar_em)
   const reviewCivil = normalizeDateCivil(item.revisar_em)
@@ -74,6 +81,18 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
     item.decisao === 'Improcedente' || !item.valor
       ? '—'
       : `${formatCurrency(item.valor * percentual)} (${Math.round(percentual * 100)}%)`
+
+  if (contratoArquivado) {
+    return (
+      <ProtocoloTableRowArquivado
+        item={item}
+        index={index}
+        statusContrato={statusContrato}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    )
+  }
 
   return (
     <TableRow

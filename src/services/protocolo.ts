@@ -24,11 +24,13 @@ export interface ProtocoloItem {
   parceiro?: string
   observacoes?: string
   revisar_em?: string
+  contratos?: string[]
   created?: string
   updated?: string
   expand?: {
     tipo_acao?: { id: string; nome: string }
     responsavel?: { id: string; nome: string }
+    contratos?: { id: string; status?: string }[]
   }
 }
 
@@ -36,7 +38,7 @@ export type ProtocoloInput = Partial<Omit<ProtocoloItem, 'id' | 'created' | 'upd
 
 export const getProtocolos = () =>
   pb.collection('protocolo').getFullList<ProtocoloItem>({
-    expand: 'tipo_acao,responsavel',
+    expand: 'tipo_acao,responsavel,contratos',
     sort: '+dprotocolo',
   })
 

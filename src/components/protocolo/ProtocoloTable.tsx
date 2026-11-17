@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
+import { isProtocoloValido } from '@/services/protocoloValidade'
 import { formatCurrency } from '@/lib/formatters'
 import { normalizeDateCivil } from '@/lib/date-utils'
 import { ProtocoloTableRow } from './ProtocoloTableRow'
@@ -414,12 +415,16 @@ export function ProtocoloTable({
       },
     ]
 
+    // Mesma definição de protocolo válido do dashboard: exclui protocolos com
+    // todos os contratos relacionados arquivados dos totais do relatório.
+    const dadosValidos = sortedFiltered.filter((item: any) => isProtocoloValido(item))
+
     printReport({
       title: 'Relatório de Protocolos',
       subtitle: 'Advocacia Gasparotto',
       filters: activeFiltersList,
       columns,
-      data: sortedFiltered,
+      data: dadosValidos,
       orientation: 'landscape',
       totalLabel: 'Total de registros',
     })

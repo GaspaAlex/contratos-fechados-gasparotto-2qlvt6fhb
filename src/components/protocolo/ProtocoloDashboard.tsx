@@ -3,6 +3,7 @@ import { DollarSign, TrendingUp, FileCheck2, Calculator, AlertCircle } from 'luc
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/formatters'
 import { monthsArray } from '@/lib/months'
+import { isProtocoloValido } from '@/services/protocoloValidade'
 
 interface Props {
   data: any[]
@@ -29,8 +30,14 @@ export function ProtocoloDashboard({
   monthEnd,
   status,
 }: Props) {
+  // Base de registros: exclui protocolos INVÁLIDOS (todos os contratos
+  // relacionados arquivados). A mudança é só na base — nenhuma fórmula muda.
+  const baseValida = useMemo(() => {
+    return data.filter((d) => isProtocoloValido(d))
+  }, [data])
+
   const filteredData = useMemo(() => {
-    return data.filter((d) => {
+    return baseValida.filter((d) => {
       if (origem !== 'Todos' && d.origem !== origem) return false
       if (parceiro !== 'Todos' && d.parceiro !== parceiro) return false
       if (tipo !== 'Todos' && d.expand?.tipo_acao?.nome !== tipo) return false
@@ -68,7 +75,7 @@ export function ProtocoloDashboard({
       }
       return true
     })
-  }, [data, tipo, responsavel, origem, parceiro, year, month, monthStart, monthEnd])
+  }, [baseValida, tipo, responsavel, origem, parceiro, year, month, monthStart, monthEnd])
 
   const filteredByStatus = useMemo(() => {
     return filteredData.filter((d) => {
@@ -116,6 +123,12 @@ export function ProtocoloDashboard({
   const cProv = filteredData.filter((d) => d.status === 'Prov. Inicial').length
   const cDocs = filteredData.filter((d) => d.status === 'R. Docs').length
   const cCalc = filteredData.filter((d) => d.status === 'Calculado').length
+
+  // Protocolos excluídos da base por contrato(s) arquivado(s) — chip discreto
+  // na Distribuição por Status para não sumirem da leitura gerencial.
+  const arquivadosCount = useMemo(() => {
+    return data.filter((d) => !isProtocoloValido(d)).length
+  }, [data])
 
   const periodoLabel = useMemo(() => {
     if (month !== 'Todos') {
@@ -313,6 +326,15 @@ export function ProtocoloDashboard({
               <span className="text-[#78818E] dark:text-muted-foreground">Falt. Docs:</span>
               <strong className="font-semibold text-[#C77E1E] tabular-nums">{cDocs}</strong>
             </div>
+
+            {arquivadosCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[11px] font-medium border border-[#E4E7EB] dark:border-border bg-[#F5F6F8] dark:bg-muted/40 text-[#78818E] dark:text-muted-foreground"
+                title="Protocolos fora da projeção por terem todos os contratos relacionados arquivados (Litispendência, Sem Qualidade, Tem Advogado, Arquivar)"
+              >
+                Contrato arquivado: <strong className="tabular-nums">{arquivadosCount}</strong>
+              </span>
+            )}
           </div>
         </div>
       </div>

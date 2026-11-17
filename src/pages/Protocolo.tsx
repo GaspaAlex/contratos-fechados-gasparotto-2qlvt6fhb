@@ -41,6 +41,9 @@ export default function Protocolo() {
     loadData()
   }, [])
   useRealtime('protocolo', loadData)
+  // Mudança arquivado ↔ válido e exclusão de contrato atualizam indicadores e
+  // tabela sem F5 (a relação `contratos` depende de contratos_fechados).
+  useRealtime('contratos_fechados', loadData)
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-10">
