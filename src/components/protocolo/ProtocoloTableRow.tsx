@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getReviewStatus, normalizeDateCivil, isProtocoloOverdue } from '@/lib/date-utils'
 import { isArchived } from '@/lib/archivedStatuses'
 import { statusContratoParaExibicao } from '@/services/protocoloValidade'
+import { ProtocoloTableRowArquivado } from '@/components/protocolo/ProtocoloTableRowArquivado'
 import { cn } from '@/lib/utils'
 
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
