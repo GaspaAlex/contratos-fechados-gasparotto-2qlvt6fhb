@@ -43,6 +43,7 @@ import { AuxAcidenteModal } from '@/components/leads/AuxAcidenteModal'
 import { AuxAcidenteCards } from '@/components/leads/AuxAcidenteCards'
 import { AuxAcidenteFunil } from '@/components/leads/AuxAcidenteFunil'
 import { AuxAcidenteComparativoOrigens } from '@/components/leads/AuxAcidenteComparativoOrigens'
+import { AuxAcidenteEvolucaoTempo } from '@/components/leads/AuxAcidenteEvolucaoTempo'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -474,6 +475,10 @@ export default function LeadsAuxAcidente() {
         origemFiltro={filtroOrigem}
         loading={loading}
       />
+
+      {/* 4.2 EVOLUÇÃO POR PERÍODO (Item 20): recolhível, recolhida por padrão —
+          mesmo conjunto filtrado, realtime herdado da página. */}
+      <AuxAcidenteEvolucaoTempo leads={filteredLeads} loading={loading} />
 
       {/* 5. TABELA DE LEADS */}
       <div className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
