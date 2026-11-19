@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Edit2, Trash2, Printer, EyeOff } from 'lucide-react'
+import { Search, Edit2, Trash2, Printer, EyeOff, FilterX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { format, parseISO } from 'date-fns'
@@ -33,8 +33,8 @@ export interface PericiasTableProps {
   onFilteredDataChange?: (items: Pericia[]) => void
   onSearchChange?: (search: string) => void
   onStatusFilterChange?: (status: string) => void
-  // Estado controlado pela página (permite ao botão Limpar do cabeçalho
-  // restaurar busca e status junto com o ano — padrão Central Auxílio-Acidente)
+  // Estado controlado pela página (o cabeçalho só controla o ano; busca e status
+  // formam um grupo próprio, com Limpar independente — padrão Central Auxílio-Acidente)
   search: string
   statusFilter: string
 }
@@ -193,6 +193,22 @@ export function PericiasTable({
             />
             {privacyOn && <EyeOff className="absolute right-2.5 top-2.5 h-4 w-4 text-[#C9922A]" />}
           </div>
+          {/* Botão Limpar do grupo busca+status: aparece somente quando a busca
+              está preenchida ou o status diverge de "Todos". NÃO toca no ano. */}
+          {(Boolean(search) || statusFilter !== 'Todos') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearch('')
+                setStatusFilter('Todos')
+              }}
+              title="Limpar filtros"
+              className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+            >
+              <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+            </Button>
+          )}
           <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val)}>
             <SelectTrigger className="w-full sm:w-[170px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Status" />

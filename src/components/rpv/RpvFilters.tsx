@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
-import { Plus, Search, Printer, EyeOff } from 'lucide-react'
+import { Plus, Search, Printer, EyeOff, FilterX } from 'lucide-react'
 import { STATUS_OPTIONS, MONTHS, YEARS } from './constants'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
@@ -58,6 +58,30 @@ export function RpvFilters({
     if (year !== undefined) rpvFilterStore.setAnoFilter(year)
   }, [year])
 
+  // Botão Limpar (padrão Central Auxílio-Acidente): controla APENAS os filtros
+  // principais (busca, tipo, status, mês e ano). O Filtro Rápido e o recorte de
+  // Parceria são independentes — redefinidos pelas próprias pills — e o Limpar
+  // não os toca. Aparece somente quando um dos cinco está fora do padrão.
+  const hasActiveMainFilters =
+    Boolean(search) ||
+    tipo !== 'Todos' ||
+    status !== 'Todos' ||
+    month !== 'Todos' ||
+    year !== 'Todos'
+
+  const clearMainFilters = () => {
+    setSearch('')
+    setTipo('Todos')
+    setStatus('Todos')
+    setMonth('Todos')
+    setYear('Todos')
+    rpvFilterStore.setSearch('')
+    rpvFilterStore.setTipoFilter('Todos')
+    rpvFilterStore.setStatusFilter('Todos')
+    rpvFilterStore.setMesFilter('Todos')
+    rpvFilterStore.setAnoFilter('Todos')
+  }
+
   const QUICK_FILTERS = ['Todos', 'A Receber', 'Recebido', 'RPV', 'Precatório', 'Por Parceria']
 
   const PARCERIA_OPTIONS = [
@@ -74,6 +98,19 @@ export function RpvFilters({
       {/* Barra de Filtros e Ações — Grafite Premium 2.1 */}
       <div className="flex flex-col xl:flex-row gap-3 items-stretch xl:items-center justify-between rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card p-3.5 sm:p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
+          {/* Limpar filtros principais */}
+          {hasActiveMainFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearMainFilters}
+              title="Limpar filtros"
+              className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+            >
+              <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+            </Button>
+          )}
+
           {/* Busca */}
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#78818E] dark:text-muted-foreground" />

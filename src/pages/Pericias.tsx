@@ -73,17 +73,14 @@ export default function Pericias() {
     setFilteredPericias(items)
   }, [])
 
-  // Botão Limpar (padrão Central Auxílio-Acidente): aparece somente quando algum
-  // filtro PRINCIPAL (busca, status da tabela ou ano) está fora do padrão da aba
-  // (ano padrão = ano corrente). A tabela de Perícias não tem filtros rápidos
-  // em chips; o select de Status da tabela é principal e é restaurado aqui.
+  // Botão Limpar do TOPO (padrão Central Auxílio-Acidente): controla APENAS o
+  // seletor de ano (que alimenta os cards e a lista). Busca e status da lista
+  // de registros têm um segundo Limpar próprio, ao lado desses filtros
+  // (src/pages/pericias/Table.tsx) — os grupos são independentes.
   const defaultYear = new Date().getFullYear()
-  const hasActiveMainFilters =
-    Boolean(tableSearch) || tableStatus !== 'Todos' || year !== defaultYear
+  const hasActiveMainFilters = year !== defaultYear
 
   const clearFilters = () => {
-    setTableSearch('')
-    setTableStatus('Todos')
     setYear(defaultYear)
   }
 
