@@ -16,30 +16,54 @@ export interface AbrirEmProtocoloPrefill {
   dcalculo: string
   valor: number | undefined
   nautos: string
+  origem: string
 }
 
 /**
- * Equivalências confirmadas: nome, fone, dprotocolo (no contrato é a data
- * prevista de agendamento — é essa que vai para o novo registro), prazo e
- * representante. tipo_acao é resolvido depois por nome (beneficio), mesma
- * equivalência do hook existente; sem match, fica vazio.
- * Incertas — ficam em branco: origem, parceiro, responsavel.
- * Nascem em branco por regra do usuário: nautos (Nº do Processo), valor
- * (Valor da Causa) e dcontrato (Data do Contrato — preenchidos em Protocolo
- * na etapa do cálculo).
+ * Equivalências confirmadas: nome, fone, dprotocolo, dcontrato, dcalculo
+ * (datas registradas no contrato; sem a data, fica em branco) e tipo_acao,
+ * resolvido depois por nome (beneficio), mesma equivalência do hook existente;
+ * sem match, fica vazio. status nasce 'Prov. Inicial'.
+ * origem: mapeada de origem/campanha_origem/beneficio do contrato —
+ *  - Particular → Particular
+ *  - Macohin → Macohin (a campanha de origem fica só no contrato)
+ *  - Campanha + "Aux. Acidente META"/"Aux. Acidente Google" → Campanha
+ *    Meta/Google SOMENTE com beneficio Aux. Acidente (campanha_origem não é
+ *    confiável para BPC/LOAS e Aux. Doença)
+ *  - Campanha + "DER Google" → Campanha Google (sem condição de benefício)
+ *  - Campanha + "DER Canal" → em branco (equivalência a Canal YouTube não
+ *    confirmada); combinações desconhecidas → em branco p/ seleção manual.
+ * Incertas — ficam em branco: parceiro, responsavel (escolhido no
+ * agendamento), nautos (Nº do Processo) e valor (Valor da Causa).
  */
 export function buildProtocoloPrefill(c: any): AbrirEmProtocoloPrefill {
+  let origem = ''
+  const campanha = (c.campanha_origem || '').trim()
+  if (c.origem === 'Particular') {
+    origem = 'Particular'
+  } else if (c.origem === 'Macohin') {
+    origem = 'Macohin'
+  } else if (c.origem === 'Campanha' && campanha) {
+    const benefAuxAcidente = (c.beneficio || '') === 'Aux. Acidente'
+    if (campanha === 'Aux. Acidente META' && benefAuxAcidente) origem = 'Campanha Meta'
+    else if (campanha === 'Aux. Acidente Google' && benefAuxAcidente) origem = 'Campanha Google'
+    else if (campanha === 'DER Google') origem = 'Campanha Google'
+    // "DER Canal" e combinações desconhecidas: fica em branco p/ seleção manual
+  }
+
+  const toInputDate = (v: any) => toYMD(v).split('T')[0]
   return {
     contratoId: c.id,
     nome: c.nome || '',
     fone: c.fone || '',
     tipo_acao_nome: c.beneficio || '',
     status: 'Prov. Inicial',
-    dprotocolo: toYMD(c.dprotocolo) || '',
-    dcontrato: '',
-    dcalculo: '',
+    dprotocolo: toInputDate(c.dprotocolo),
+    dcontrato: toInputDate(c.dcontrato),
+    dcalculo: toInputDate(c.dcalculo),
     valor: undefined,
     nautos: '',
+    origem,
   }
 }
 

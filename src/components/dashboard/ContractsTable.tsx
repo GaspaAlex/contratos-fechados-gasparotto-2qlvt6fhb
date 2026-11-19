@@ -239,10 +239,10 @@ export function ContractsTable({
     setIsModalOpen(true)
   }
 
-  // "Abrir em Protocolo": consulta os protocolos pelo ID exato do contrato
-  // (relation `contratos`). 0 → navega para o formulário pré-preenchido;
-  // 1 → abre direto o registro existente; >1 → abre o dialog de escolha,
-  // preservando todos os vínculos atuais.
+  // "Abrir em Protocolo": consulta ANTES de qualquer diálogo — sem janela
+  // "Consultando..." piscando. Pelo resultado: 0 → navega direto para o
+  // formulário pré-preenchido; 1 → abre direto o registro existente;
+  // >1 → abre o dialog de escolha, preservando todos os vínculos atuais.
   const navegarParaProtocolo = (registro: any | null, contrato: any | null) => {
     try {
       if (registro) {
@@ -264,28 +264,22 @@ export function ContractsTable({
       toast.error('Desative o Modo de Privacidade para abrir em Protocolo.')
       return
     }
-    setSelectedContract(c)
-    setIsProtocoloDialogOpen(true)
-    setProtocolosContrato([])
-    setProtocolosLoading(true)
     try {
       const res = await consultarProtocolosDoContrato(c.id)
-      if (res.length === 0) {
-        setIsProtocoloDialogOpen(false)
-        setSelectedContract(null)
-        navegarParaProtocolo(null, c)
-      } else if (res.length === 1) {
-        setIsProtocoloDialogOpen(false)
-        setSelectedContract(null)
+      if (res.length === 1) {
         navegarParaProtocolo(res[0], c)
-      } else {
-        setProtocolosContrato(res)
-        setProtocolosLoading(false)
+        return
       }
-    } catch (e: any) {
-      setIsProtocoloDialogOpen(false)
-      setSelectedContract(null)
+      if (res.length === 0) {
+        navegarParaProtocolo(null, c)
+        return
+      }
+      // Dois ou mais: abre o dialog de escolha (já com o resultado pronto).
+      setSelectedContract(c)
+      setProtocolosContrato(res)
       setProtocolosLoading(false)
+      setIsProtocoloDialogOpen(true)
+    } catch (e: any) {
       toast.error('Erro ao consultar protocolos: ' + (e?.message || 'erro desconhecido'))
     }
   }

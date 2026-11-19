@@ -223,19 +223,28 @@ export function ProtocoloDialog({
         console.error(e)
       }
       if (cancelled) return
+      // Datas já chegam em YMD (AAAA-MM-DD), prontas para os inputs type=date;
+      // ausentes chegam em branco. Responsável nasce em branco (escolha no
+      // agendamento) e origem vem mapeada do contrato (ou em branco p/ manual).
       form.reset({
         nome: prefill.nome || '',
         fone: prefill.fone || '',
         tipo_acao: tipoId,
         responsavel: '',
         status: prefill.status || 'Prov. Inicial',
-        dcontrato: '',
-        dcalculo: '',
-        dprotocolo: prefill.dprotocolo || '',
+        dcontrato: String(prefill.dcontrato || '')
+          .split('T')[0]
+          .split(' ')[0],
+        dcalculo: String(prefill.dcalculo || '')
+          .split('T')[0]
+          .split(' ')[0],
+        dprotocolo: String(prefill.dprotocolo || '')
+          .split('T')[0]
+          .split(' ')[0],
         nautos: '',
         valor: undefined as unknown as number,
         decisao: 'Aguardando',
-        origem: '',
+        origem: prefill.origem || '',
         parceiro: '',
         representante: false,
         representante_nome: '',
