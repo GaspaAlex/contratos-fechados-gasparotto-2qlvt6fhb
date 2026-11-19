@@ -8,11 +8,12 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
-import { Plus, Search, Printer } from 'lucide-react'
+import { Plus, Search, Printer, EyeOff } from 'lucide-react'
 import { STATUS_OPTIONS, MONTHS, YEARS } from './constants'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useRpvFilters, rpvFilterStore } from './store'
+import { PRIVACY_MASK, usePrivacyMode } from '@/lib/privacyMode'
 
 export function RpvFilters({
   search,
@@ -29,6 +30,8 @@ export function RpvFilters({
   onPrint,
 }: any) {
   const { quickFilter, parceriaFilter } = useRpvFilters()
+  const { enabled: privacyOn } = usePrivacyMode()
+  const displaySearch = privacyOn ? PRIVACY_MASK.busca : search
 
   const setQuickFilter = rpvFilterStore.setQuickFilter
   const setParceriaFilter = rpvFilterStore.setParceriaFilter
@@ -75,14 +78,19 @@ export function RpvFilters({
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#78818E] dark:text-muted-foreground" />
             <Input
-              placeholder="Buscar nome ou processo..."
-              value={search}
+              placeholder={privacyOn ? PRIVACY_MASK.busca : 'Buscar nome ou processo...'}
+              value={displaySearch}
               onChange={(e) => {
                 setSearch(e.target.value)
                 rpvFilterStore.setSearch(e.target.value)
               }}
-              className="h-9 pl-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
+              aria-label={privacyOn ? PRIVACY_MASK.busca : undefined}
+              className={cn(
+                'h-9 pl-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card',
+                privacyOn && 'select-none',
+              )}
             />
+            {privacyOn && <EyeOff className="absolute right-2.5 top-2.5 h-4 w-4 text-[#C9922A]" />}
           </div>
 
           {/* Tipo */}

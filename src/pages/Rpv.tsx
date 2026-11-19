@@ -9,6 +9,8 @@ import { RpvPinGuard } from '@/components/rpv/RpvPinGuard'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
 import { useRpvFilters } from '@/components/rpv/store'
 import { MONTHS } from '@/components/rpv/constants'
+import { PRIVACY_MASK, usePrivacyMode } from '@/lib/privacyMode'
+import { toast } from 'sonner'
 
 export default function Rpv() {
   const [data, setData] = useState<any[]>([])
@@ -19,6 +21,7 @@ export default function Rpv() {
   const [year, setYear] = useState('Todos')
 
   const { quickFilter, parceriaFilter } = useRpvFilters()
+  const { enabled: privacyOn } = usePrivacyMode()
   const [currentVisibleData, setCurrentVisibleData] = useState<any[]>([])
 
   const [formOpen, setFormOpen] = useState(false)
@@ -39,6 +42,15 @@ export default function Rpv() {
   useRealtime('rpv_precatorio', () => {
     loadData()
   })
+
+  // Modo de Privacidade ativo: fecha sem salvar qualquer modal já aberto
+  useEffect(() => {
+    if (privacyOn && formOpen) {
+      setFormOpen(false)
+      setEditRecord(null)
+      toast.info('Modo de Privacidade ativado — janela fechada sem salvar.')
+    }
+  }, [privacyOn, formOpen])
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
@@ -98,11 +110,17 @@ export default function Rpv() {
     const recordsToPrint =
       currentVisibleData.length > 0 || filteredData.length === 0 ? currentVisibleData : filteredData
 
+    // Modo de Privacidade: mesmos valores mascarados da tabela
+    const maskNome = (v?: string | null) => (privacyOn ? PRIVACY_MASK.nome : v || '-')
+    const maskCpf = (v?: string | null) => (privacyOn ? PRIVACY_MASK.cpf : v || '')
+    const maskProcesso = (v?: string | null) => (privacyOn ? PRIVACY_MASK.processo : v || '-')
+    const maskSearch = (v: string) => (privacyOn ? PRIVACY_MASK.busca : v.trim())
+
     // Build human-readable filter list
     const activeFiltersList: string[] = []
 
     if (search.trim()) {
-      activeFiltersList.push(`Busca: "${search.trim()}"`)
+      activeFiltersList.push(`Busca: "${maskSearch(search)}"`)
     }
     if (quickFilter && quickFilter !== 'Todos') {
       if (quickFilter === 'Por Parceria' && parceriaFilter !== 'Todos os parceiros') {
@@ -135,9 +153,9 @@ export default function Rpv() {
       {
         header: 'Nome / CPF',
         accessor: (item) => {
-          const nome = item.nome || '-'
+          const nome = maskNome(item.nome)
           const cpf = item.cpf
-            ? `<div style="font-size: 9px; color: #6b7280; margin-top: 1px;">${item.cpf}</div>`
+            ? `<div style="font-size: 9px; color: #6b7280; margin-top: 1px;">${maskCpf(item.cpf)}</div>`
             : ''
           return `<strong>${nome}</strong>${cpf}`
         },
@@ -146,7 +164,7 @@ export default function Rpv() {
       {
         header: 'Nº Processo',
         accessor: (item) =>
-          `<span style="font-family: monospace; font-size: 10px;">${item.numero_processo || '-'}</span>`,
+          `<span style="font-family: monospace; font-size: 10px;">${maskProcesso(item.numero_processo)}</span>`,
         align: 'left',
       },
       {
@@ -263,6 +281,7 @@ export default function Rpv() {
     status,
     month,
     year,
+    privacyOn,
   ])
 
   return (
@@ -274,6 +293,14 @@ export default function Rpv() {
             <span className="inline-flex items-center text-[10px] font-bold tracking-[1.5px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
               GESTÃO FINANCEIRA
             </span>
+            {privacyOn && (
+              <span
+                className="inline-flex items-center text-[10px] font-semibold tracking-wide uppercase text-white bg-[#C9922A] px-2 py-0.5 rounded"
+                title="Modo de Privacidade ativo — protege somente esta aba (RPV/Precatório)."
+              >
+                Modo de Privacidade: dados mascarados
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
             RPV/Precatório
@@ -297,6 +324,10 @@ export default function Rpv() {
           year={year}
           setYear={setYear}
           onAdd={() => {
+            if (privacyOn) {
+              toast.error('Desative o Modo de Privacidade para editar registros.')
+              return
+            }
             setEditRecord(null)
             setFormOpen(true)
           }}
@@ -307,6 +338,10 @@ export default function Rpv() {
           <RpvTable
             data={filteredData}
             onEdit={(r) => {
+              if (privacyOn) {
+                toast.error('Desative o Modo de Privacidade para editar registros.')
+                return
+              }
               setEditRecord(r)
               setFormOpen(true)
             }}

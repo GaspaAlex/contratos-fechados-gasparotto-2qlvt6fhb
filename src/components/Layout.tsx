@@ -17,6 +17,7 @@ import {
   HandHeart,
   ChevronDown,
   ChevronRight,
+  EyeOff,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
@@ -46,6 +47,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { usePrivacyMode } from '@/lib/privacyMode'
 
 const SIDEBAR_PREFS_KEY = 'gasparotto_sidebar_expanded_sections'
 
@@ -53,6 +55,7 @@ export default function Layout() {
   const location = useLocation()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
+  const { enabled: privacyOn, toggle: togglePrivacy } = usePrivacyMode()
   const { user } = useAuth()
   const isGestor = user?.perfil === 'gestor'
   const mainRef = useRef<HTMLElement>(null)
@@ -251,6 +254,10 @@ export default function Layout() {
     navigate('/login')
   }
 
+  // Escopo do 1º build do Modo de Privacidade: apenas a aba RPV/Precatório
+  const privacyProtectedHere = location.pathname === '/rpv' || location.pathname.startsWith('/rpv/')
+  const showUnprotectedNotice = privacyOn && !privacyProtectedHere
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background font-sans">
@@ -424,6 +431,35 @@ export default function Layout() {
             </div>
 
             <div className="flex-1" />
+
+            {/* Modo de Privacidade (escopo atual: RPV/Precatório) */}
+            <div className="flex items-center gap-2 mr-2">
+              {showUnprotectedNotice && (
+                <span
+                  className="hidden md:inline-flex items-center text-[10px] font-medium tracking-wide uppercase text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border px-2 py-1 rounded-full"
+                  title="Nesta aba, os dados dos clientes ainda aparecem normalmente. O Modo de Privacidade protege somente a aba RPV/Precatório."
+                >
+                  Aba sem proteção — dados visíveis
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={togglePrivacy}
+                className={cn(
+                  'h-8 w-8 p-0 rounded-full transition-all inline-flex items-center justify-center border cursor-pointer',
+                  privacyOn
+                    ? 'bg-[#C9922A] text-white border-[#C9922A] shadow-xs hover:bg-[#b58324]'
+                    : 'bg-[#F5F6F8] dark:bg-muted/40 text-[#78818E] border-[#E4E7EB] dark:border-border hover:text-[#252B34] dark:hover:text-foreground',
+                )}
+                title={
+                  privacyOn
+                    ? 'Modo de Privacidade ativo (protege somente RPV/Precatório) — clique para desativar'
+                    : 'Ativar Modo de Privacidade (protege somente RPV/Precatório)'
+                }
+              >
+                <EyeOff className="h-4 w-4" />
+              </button>
+            </div>
 
             {/* Alternador de tema preservado */}
             <div className="flex items-center gap-1 bg-[#F5F6F8] dark:bg-muted/40 p-1 rounded-full border border-[#E4E7EB] dark:border-border">

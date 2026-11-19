@@ -8,15 +8,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Edit2, Trash2, StickyNote } from 'lucide-react'
+import { Edit2, Trash2, StickyNote, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { deleteRpv } from '@/services/rpv'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { cn, removeAccents } from '@/lib/utils'
+import { PRIVACY_MASK, usePrivacyMode } from '@/lib/privacyMode'
+import { PrivacyText } from '@/components/privacy/PrivacyText'
 import { STATUS_COLORS, MONTHS } from './constants'
 import { useRpvFilters } from './store'
-import { removeAccents } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,7 @@ export function RpvTable({
 }) {
   const { quickFilter, parceriaFilter, search, tipoFilter, statusFilter, mesFilter, anoFilter } =
     useRpvFilters()
+  const { enabled: privacyOn } = usePrivacyMode()
 
   const finalFilteredData = useMemo(() => {
     return data.filter((item) => {
@@ -135,6 +137,10 @@ export function RpvTable({
   }, [displayedItems, onFilteredDataChange])
 
   const handleDelete = async (id: string) => {
+    if (privacyOn) {
+      toast.error('Desative o Modo de Privacidade para excluir registros.')
+      return
+    }
     try {
       await deleteRpv(id)
       toast.success('Registro excluído com sucesso')
@@ -260,27 +266,40 @@ export function RpvTable({
                       {/* Nome / CPF */}
                       <TableCell className="py-3">
                         <div className="flex items-center gap-1.5 font-semibold text-xs text-[#252B34] dark:text-foreground">
-                          <span
+                          <PrivacyText
+                            value={item.nome}
+                            mask={PRIVACY_MASK.nome}
                             className="truncate max-w-[260px] sm:max-w-[340px]"
-                            title={item.nome}
-                          >
-                            {item.nome}
-                          </span>
+                            titleWhenVisible
+                          />
                           {item.observacoes && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
                               </TooltipTrigger>
-                              <TooltipContent className="max-w-xs text-xs">
-                                <p className="whitespace-pre-line">{item.observacoes}</p>
+                              <TooltipContent
+                                className="max-w-xs text-xs"
+                                aria-hidden={privacyOn ? 'true' : undefined}
+                              >
+                                {privacyOn ? (
+                                  <p className="flex items-center gap-1.5 text-[#78818E] dark:text-muted-foreground">
+                                    <EyeOff className="h-3 w-3 shrink-0" />
+                                    {PRIVACY_MASK.observacoes}
+                                  </p>
+                                ) : (
+                                  <p className="whitespace-pre-line">{item.observacoes}</p>
+                                )}
                               </TooltipContent>
                             </Tooltip>
                           )}
                         </div>
                         {item.cpf && (
-                          <div className="text-[11px] text-[#78818E] dark:text-muted-foreground font-mono mt-0.5">
-                            {item.cpf}
-                          </div>
+                          <PrivacyText
+                            as="div"
+                            value={item.cpf}
+                            mask={PRIVACY_MASK.cpf}
+                            className="text-[11px] text-[#78818E] dark:text-muted-foreground font-mono mt-0.5"
+                          />
                         )}
                         {item.tipo_parceria && item.tipo_parceria !== 'Sem parceria' && (
                           <div className="mt-1">
@@ -293,10 +312,17 @@ export function RpvTable({
 
                       {/* Nº Processo */}
                       <TableCell className="py-3 font-mono text-xs text-[#252B34] dark:text-foreground">
-                        {item.numero_processo || (
-                          <span className="text-[#78818E] dark:text-muted-foreground font-sans text-xs">
-                            —
-                          </span>
+                        {privacyOn ? (
+                          <PrivacyText
+                            value={item.numero_processo || '—'}
+                            mask={PRIVACY_MASK.processo}
+                          />
+                        ) : (
+                          item.numero_processo || (
+                            <span className="text-[#78818E] dark:text-muted-foreground font-sans text-xs">
+                              —
+                            </span>
+                          )
                         )}
                       </TableCell>
 
@@ -375,6 +401,7 @@ export function RpvTable({
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                disabled={privacyOn}
                                 className="h-7 w-7 text-[#78818E] hover:text-[#B4453C] hover:bg-[#B4453C]/10 rounded-md transition-colors"
                                 title="Excluir registro"
                               >
@@ -394,7 +421,7 @@ export function RpvTable({
                                 <AlertDialogDescription className="text-xs sm:text-sm text-[#78818E] dark:text-muted-foreground pt-1">
                                   Tem certeza que deseja excluir o registro de{' '}
                                   <strong className="text-[#252B34] dark:text-foreground font-semibold">
-                                    {item.nome}
+                                    {privacyOn ? PRIVACY_MASK.nome : item.nome}
                                   </strong>
                                   ?
                                 </AlertDialogDescription>
