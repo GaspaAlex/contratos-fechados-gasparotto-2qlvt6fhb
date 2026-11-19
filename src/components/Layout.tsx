@@ -254,23 +254,31 @@ export default function Layout() {
     navigate('/login')
   }
 
-  // Escopo do Modo de Privacidade (v0.0.1098): todas as telas com dados de
-  // clientes/leads. Pendentes de fato: Gestão de Pessoas (nome de FUNCIONÁRIOS,
-  // não de clientes) e Ferramentas (sem dados de clientes).
-  const CLIENT_DATA_PROTECTED_PATHS = [
+  // Rótulos do Modo de Privacidade no cabeçalho:
+  // - PRIVACY_READY_PATHS: máscara já implementada e commitada (RPV v0.0.1097,
+  //   Protocolo v0.0.1101) → "Dados mascarados".
+  // - PRIVACY_PENDING_PATHS: telas com dados de clientes/leads ainda SEM máscara
+  //   implementada → "Privacidade indisponível nesta tela".
+  // - Demais rotas (Gestão de Pessoas, Ferramentas): sem dados de clientes →
+  //   "Tela sem dados de clientes".
+  const PRIVACY_READY_PATHS = ['/rpv', '/protocolo']
+  const PRIVACY_PENDING_PATHS = [
     '/',
-    '/rpv',
-    '/protocolo',
     '/dashboard',
     '/pericias',
     '/leads',
     '/leads-registro',
     '/leads-auxilio-acidente',
   ]
-  const privacyProtectedHere = CLIENT_DATA_PROTECTED_PATHS.some(
-    (p) => location.pathname === p || location.pathname.startsWith(`${p}/`),
-  )
-  const showUnprotectedNotice = privacyOn && !privacyProtectedHere
+
+  const matchesPath = (paths: string[]) =>
+    paths.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))
+
+  const privacyReadyHere = matchesPath(PRIVACY_READY_PATHS)
+  const privacyPendingHere = matchesPath(PRIVACY_PENDING_PATHS)
+  const showMaskedNotice = privacyOn && privacyReadyHere
+  const showUnavailableNotice = privacyOn && !privacyReadyHere && privacyPendingHere
+  const showNoClientDataNotice = privacyOn && !privacyReadyHere && !privacyPendingHere
 
   return (
     <SidebarProvider>
@@ -448,7 +456,23 @@ export default function Layout() {
 
             {/* Modo de Privacidade (escopo: todas as telas com dados de clientes) */}
             <div className="flex items-center gap-2 mr-2">
-              {showUnprotectedNotice && (
+              {showMaskedNotice && (
+                <span
+                  className="hidden md:inline-flex items-center text-[10px] font-medium tracking-wide uppercase text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border px-2 py-1 rounded-full"
+                  title="Dados de clientes mascarados nesta tela (Modo de Privacidade ativo)."
+                >
+                  Dados mascarados
+                </span>
+              )}
+              {showUnavailableNotice && (
+                <span
+                  className="hidden md:inline-flex items-center text-[10px] font-medium tracking-wide uppercase text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border px-2 py-1 rounded-full"
+                  title="O Modo de Privacidade está ativo, mas a máscara ainda não foi implementada nesta tela — os dados de clientes permanecem visíveis."
+                >
+                  Privacidade indisponível nesta tela
+                </span>
+              )}
+              {showNoClientDataNotice && (
                 <span
                   className="hidden md:inline-flex items-center text-[10px] font-medium tracking-wide uppercase text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border px-2 py-1 rounded-full"
                   title="Esta tela não exibe dados de clientes/leads — o Modo de Privacidade atua sobre as telas de clientes."
