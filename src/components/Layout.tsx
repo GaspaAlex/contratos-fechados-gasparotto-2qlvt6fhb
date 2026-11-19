@@ -254,8 +254,22 @@ export default function Layout() {
     navigate('/login')
   }
 
-  // Escopo do 1º build do Modo de Privacidade: apenas a aba RPV/Precatório
-  const privacyProtectedHere = location.pathname === '/rpv' || location.pathname.startsWith('/rpv/')
+  // Escopo do Modo de Privacidade (v0.0.1098): todas as telas com dados de
+  // clientes/leads. Pendentes de fato: Gestão de Pessoas (nome de FUNCIONÁRIOS,
+  // não de clientes) e Ferramentas (sem dados de clientes).
+  const CLIENT_DATA_PROTECTED_PATHS = [
+    '/',
+    '/rpv',
+    '/protocolo',
+    '/dashboard',
+    '/pericias',
+    '/leads',
+    '/leads-registro',
+    '/leads-auxilio-acidente',
+  ]
+  const privacyProtectedHere = CLIENT_DATA_PROTECTED_PATHS.some(
+    (p) => location.pathname === p || location.pathname.startsWith(`${p}/`),
+  )
   const showUnprotectedNotice = privacyOn && !privacyProtectedHere
 
   return (
@@ -432,14 +446,14 @@ export default function Layout() {
 
             <div className="flex-1" />
 
-            {/* Modo de Privacidade (escopo atual: RPV/Precatório) */}
+            {/* Modo de Privacidade (escopo: todas as telas com dados de clientes) */}
             <div className="flex items-center gap-2 mr-2">
               {showUnprotectedNotice && (
                 <span
                   className="hidden md:inline-flex items-center text-[10px] font-medium tracking-wide uppercase text-[#78818E] dark:text-muted-foreground bg-[#F5F6F8] dark:bg-muted/40 border border-[#E4E7EB] dark:border-border px-2 py-1 rounded-full"
-                  title="Nesta aba, os dados dos clientes ainda aparecem normalmente. O Modo de Privacidade protege somente a aba RPV/Precatório."
+                  title="Esta tela não exibe dados de clientes/leads — o Modo de Privacidade atua sobre as telas de clientes."
                 >
-                  Aba sem proteção — dados visíveis
+                  Tela sem dados de clientes
                 </span>
               )}
               <button
@@ -453,8 +467,8 @@ export default function Layout() {
                 )}
                 title={
                   privacyOn
-                    ? 'Modo de Privacidade ativo (protege somente RPV/Precatório) — clique para desativar'
-                    : 'Ativar Modo de Privacidade (protege somente RPV/Precatório)'
+                    ? 'Modo de Privacidade ativo — dados de clientes mascarados em todas as telas — clique para desativar'
+                    : 'Ativar Modo de Privacidade (mascara dados de clientes em todas as telas)'
                 }
               >
                 <EyeOff className="h-4 w-4" />
