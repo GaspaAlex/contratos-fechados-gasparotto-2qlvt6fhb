@@ -256,19 +256,14 @@ export default function Layout() {
 
   // Rótulos do Modo de Privacidade no cabeçalho:
   // - PRIVACY_READY_PATHS: máscara já implementada e commitada (RPV v0.0.1097,
-  //   Protocolo v0.0.1101, Contratos Fechados v0.0.1103) → "Dados mascarados".
+  //   Protocolo v0.0.1101, Contratos Fechados v0.0.1103, Perícias v0.0.1105) →
+  //   "Dados mascarados".
   // - PRIVACY_PENDING_PATHS: telas com dados de clientes/leads ainda SEM máscara
   //   implementada → "Privacidade indisponível nesta tela".
   // - Demais rotas (Gestão de Pessoas, Ferramentas): sem dados de clientes →
   //   "Tela sem dados de clientes".
-  const PRIVACY_READY_PATHS = ['/rpv', '/protocolo', '/dashboard']
-  const PRIVACY_PENDING_PATHS = [
-    '/',
-    '/pericias',
-    '/leads',
-    '/leads-registro',
-    '/leads-auxilio-acidente',
-  ]
+  const PRIVACY_READY_PATHS = ['/rpv', '/protocolo', '/dashboard', '/pericias']
+  const PRIVACY_PENDING_PATHS = ['/', '/leads', '/leads-registro', '/leads-auxilio-acidente']
 
   const matchesPath = (paths: string[]) =>
     paths.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))

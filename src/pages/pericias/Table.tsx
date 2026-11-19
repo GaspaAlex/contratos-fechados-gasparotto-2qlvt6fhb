@@ -16,11 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Edit2, Trash2, Printer } from 'lucide-react'
+import { Search, Edit2, Trash2, Printer, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { PrivacyText } from '@/components/privacy/PrivacyText'
+import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
+import { cn } from '@/lib/utils'
 
 export interface PericiasTableProps {
   data: Pericia[]
@@ -44,6 +47,11 @@ export function PericiasTable({
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('Todos')
 
+  const { enabled: privacyOn } = usePrivacyMode()
+  // Mesmo padrão de RPV/Protocolo: exibição mascarada, valor interno preservado
+  // para filtrar — nada do que foi digitado aparece na tela com o modo ativo.
+  const displaySearch = privacyOn ? PRIVACY_MASK.busca : search
+
   const filterOptions = useMemo(() => {
     const s = new Set(['Agendado', 'Pendente', 'Cancelado', 'Concluído'])
     data.forEach((d) => s.add(d.status))
@@ -65,9 +73,14 @@ export function PericiasTable({
     onFilteredDataChange?.(filtered)
   }, [filtered, onFilteredDataChange])
 
+  // Modo de Privacidade: máscara em nível de DADOS (nome, nautos, endereco),
+  // cobrindo células e title/tooltips de uma vez — agrupamento, ordenação,
+  // filtros e contagens continuam calculados sobre os dados reais.
+  const displayData = useMemo(() => maskClienteRecords(privacyOn, filtered), [privacyOn, filtered])
+
   const grouped = useMemo(() => {
     const groups: Record<string, Pericia[]> = {}
-    filtered.forEach((d) => {
+    displayData.forEach((d) => {
       const date = parseISO(d.data)
       const key = format(date, 'MMM yyyy', { locale: ptBR }).toUpperCase()
       if (!groups[key]) groups[key] = []
@@ -83,7 +96,7 @@ export function PericiasTable({
         sortedGroups[k] = groups[k]
       })
     return sortedGroups
-  }, [filtered])
+  }, [displayData])
 
   const renderStatus = (status: string) => {
     if (status === 'Agendado')
@@ -163,14 +176,19 @@ export function PericiasTable({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#78818E] dark:text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou nº processo..."
-              className="pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card"
-              value={search}
+              placeholder={privacyOn ? PRIVACY_MASK.busca : 'Buscar por nome ou nº processo...'}
+              className={cn(
+                'pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A] bg-white dark:bg-card',
+                privacyOn && 'select-none',
+              )}
+              value={displaySearch}
+              aria-label={privacyOn ? PRIVACY_MASK.busca : undefined}
               onChange={(e) => {
                 setSearch(e.target.value)
                 onSearchChange?.(e.target.value)
               }}
             />
+            {privacyOn && <EyeOff className="absolute right-2.5 top-2.5 h-4 w-4 text-[#C9922A]" />}
           </div>
           <Select
             value={statusFilter}
@@ -266,10 +284,14 @@ export function PericiasTable({
                     >
                       <TableCell className="align-top py-3.5 px-4">
                         <div className="font-semibold text-sm text-[#252B34] dark:text-foreground">
-                          {item.nome}
+                          <PrivacyText
+                            value={item.nome}
+                            className="truncate max-w-[260px]"
+                            titleWhenVisible
+                          />
                         </div>
                         <div className="mt-1.5 bg-[#4A7FA5]/10 text-[#4A7FA5] dark:text-blue-400 font-mono text-xs px-2 py-1 rounded-md w-fit max-w-full break-all border border-[#4A7FA5]/15 dark:border-blue-500/20">
-                          {item.nautos}
+                          <PrivacyText value={item.nautos} mask={PRIVACY_MASK.processo} />
                         </div>
                       </TableCell>
                       <TableCell className="align-top py-3.5 px-4">
@@ -284,12 +306,18 @@ export function PericiasTable({
                         <div className="text-sm font-medium text-[#252B34] dark:text-foreground">
                           {item.perito || '—'}
                         </div>
-                        <div
+                        <PrivacyText
+                          value={item.endereco}
+                          mask={PRIVACY_MASK.endereco}
                           className="text-xs text-[#78818E] dark:text-muted-foreground mt-1 truncate max-w-[220px]"
-                          title={item.endereco}
-                        >
-                          {item.endereco || '—'}
-                        </div>
+                          as="div"
+                          titleWhenVisible
+                        />
+                        {!item.endereco && (
+                          <div className="text-xs text-[#78818E] dark:text-muted-foreground mt-1">
+                            —
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="align-top py-3.5 px-4">
                         {renderStatus(item.status)}
