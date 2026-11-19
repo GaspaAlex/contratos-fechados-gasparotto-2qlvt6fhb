@@ -73,6 +73,9 @@ export default function Protocolo() {
       setPrefill(entry.prefill)
       setPreselectId(null)
     }
+    // Abre o formulário de Protocolo — sem isto a entrada era consumida e o
+    // usuário apenas navegava para /protocolo sem o dialog aparecer.
+    setOpen(true)
   }, [])
   useRealtime('protocolo', loadData)
   // Mudança arquivado ↔ válido e exclusão de contrato atualizam indicadores e

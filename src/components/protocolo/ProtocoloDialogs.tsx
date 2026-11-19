@@ -206,6 +206,10 @@ export function ProtocoloDialog({
     if (!open || !prefill) return
     let cancelled = false
     ;(async () => {
+      // O effect de preenchimento padrão não roda com prefill — carrega aqui
+      // as listas dos selects (tipos/responsáveis) do dialog.
+      loadTiposAcao()
+      loadResponsaveis()
       let tipoId = ''
       try {
         const tiposRes = await getTiposAcao()
@@ -248,8 +252,12 @@ export function ProtocoloDialog({
     }
   }, [open, prefill, form])
 
+  // Preenche o formulário quando o dialog abre. Este effect NÃO roda quando há
+  // prefill da ação "Abrir em Protocolo" — nesse caso quem preenche é o effect
+  // de prefill acima (contratos=[contratoId] no save, nautos/valor/dcontrato em
+  // branco); preencher aqui também zeraria o prefill (ordem de effects).
   useEffect(() => {
-    if (open && !privacyOn) {
+    if (open && !privacyOn && !prefill) {
       setDuplicateWarning(null)
       loadTiposAcao()
       loadResponsaveis()
