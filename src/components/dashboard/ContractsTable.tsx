@@ -100,12 +100,10 @@ export function ContractsTable({
   contratos = [],
   activeFilter,
   setActiveFilter,
-  onMonthChange,
 }: {
   contratos: any[]
   activeFilter: string
   setActiveFilter: (v: string) => void
-  onMonthChange?: (month: string) => void
 }) {
   const [search, setSearch] = useState('')
   const [tableYear, setTableYear] = useState<number | string>(new Date().getFullYear())
@@ -821,7 +819,6 @@ export function ContractsTable({
               onValueChange={(v) => {
                 setTableMonth(v)
                 setTableWeek('Todas as semanas')
-                onMonthChange?.(v)
               }}
             >
               <SelectTrigger className="w-full sm:w-36 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">

@@ -156,11 +156,13 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Sem onMonthChange: o mês/ano do topo é estado próprio (gridMonth/gridYear)
+          e controla apenas os cards e o Acompanhamento de Fechamentos. Os filtros
+          do Registro de Contratos são independentes. */}
       <ContractsTable
         contratos={contratos}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
-        onMonthChange={setGridMonth}
       />
     </div>
   )
