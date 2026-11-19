@@ -46,6 +46,8 @@ import { AuxAcidenteComparativoOrigens } from '@/components/leads/AuxAcidenteCom
 import { AuxAcidenteEvolucaoTempo } from '@/components/leads/AuxAcidenteEvolucaoTempo'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
+import { usePrivacyMode, PRIVACY_MASK } from '@/lib/privacyMode'
+import { PrivacyText } from '@/components/privacy/PrivacyText'
 import { cn } from '@/lib/utils'
 import { normalizeSearchText } from '@/lib/utils'
 import type { RecordModel } from 'pocketbase'
@@ -93,6 +95,43 @@ export default function LeadsAuxAcidente() {
   const [filtroAte, setFiltroAte] = useState('')
 
   const { toast } = useToast()
+  const { enabled: privacyOn } = usePrivacyMode()
+
+  // Modo de Privacidade (padrão RPV/Perícias/Contratos Fechados): bloqueia a
+  // abertura de modais que exibem dados reais do lead.
+  const bloqueadoPrivacidade = () => {
+    toast({
+      variant: 'destructive',
+      title: 'Indisponível no Modo de Privacidade',
+      description: 'Desative o Modo de Privacidade para abrir o cadastro/edição do lead.',
+    })
+  }
+
+  const handleAdd = () => {
+    if (privacyOn) return bloqueadoPrivacidade()
+    setSelectedRecord(null)
+    setModalOpen(true)
+  }
+
+  const handleEdit = (row: LeadAuxAcidente) => {
+    if (privacyOn) return bloqueadoPrivacidade()
+    setSelectedRecord(row)
+    setModalOpen(true)
+  }
+
+  // Modal aberto quando o modo é ativado: fecha sem salvar, com aviso.
+  useEffect(() => {
+    if (privacyOn && (modalOpen || deleteModalOpen)) {
+      setModalOpen(false)
+      setSelectedRecord(null)
+      setDeleteModalOpen(false)
+      setRecordToDelete(null)
+      toast({
+        title: 'Modo de Privacidade ativado',
+        description: 'Modais abertos foram fechados sem salvar.',
+      })
+    }
+  }, [privacyOn, modalOpen, deleteModalOpen, toast])
 
   const loadData = async () => {
     try {
@@ -200,21 +239,6 @@ export default function LeadsAuxAcidente() {
     filtroAte,
   ])
 
-  const handleAdd = () => {
-    setSelectedRecord(null)
-    setModalOpen(true)
-  }
-
-  const handleEdit = (row: LeadAuxAcidente) => {
-    setSelectedRecord(row)
-    setModalOpen(true)
-  }
-
-  const handleDeleteRequest = (row: LeadAuxAcidente) => {
-    setRecordToDelete(row)
-    setDeleteModalOpen(true)
-  }
-
   const confirmDelete = async () => {
     if (!recordToDelete) return
     setDeleteLoading(true)
@@ -303,7 +327,7 @@ export default function LeadsAuxAcidente() {
                 <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#78818E]" />
                 <Input
                   placeholder="Buscar telefone"
-                  value={buscaTelefone}
+                  value={privacyOn && buscaTelefone ? PRIVACY_MASK.busca : buscaTelefone}
                   onChange={(e) => setBuscaTelefone(e.target.value)}
                   className="h-9 pl-8 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                 />
@@ -317,7 +341,7 @@ export default function LeadsAuxAcidente() {
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#78818E]" />
                 <Input
                   placeholder="Buscar nome"
-                  value={buscaNome}
+                  value={privacyOn && buscaNome ? PRIVACY_MASK.busca : buscaNome}
                   onChange={(e) => setBuscaNome(e.target.value)}
                   className="h-9 pl-8 text-xs bg-white dark:bg-card border-[#E4E7EB] dark:border-border rounded-md focus-visible:ring-[#C9922A]"
                 />
@@ -579,14 +603,27 @@ export default function LeadsAuxAcidente() {
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
                         <span className={cn(autoInvalidado && 'text-xs text-[#78818E]')}>
-                          {formatPhoneMask(l.telefone) || l.telefone || '—'}
+                          {privacyOn ? (
+                            <PrivacyText
+                              value={formatPhoneMask(l.telefone) || l.telefone}
+                              mask={PRIVACY_MASK.telefone}
+                            />
+                          ) : (
+                            formatPhoneMask(l.telefone) || l.telefone || '—'
+                          )}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-[#252B34] dark:text-foreground">
                         <span
                           className={cn(autoInvalidado && 'text-xs text-[#78818E] line-through')}
                         >
-                          {l.nome ? l.nome : '—'}
+                          {privacyOn ? (
+                            <PrivacyText value={l.nome || '—'} />
+                          ) : l.nome ? (
+                            l.nome
+                          ) : (
+                            '—'
+                          )}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
@@ -672,7 +709,7 @@ export default function LeadsAuxAcidente() {
                             size="sm"
                             className="h-7 w-7 p-0 text-[#78818E] hover:text-[#C9922A] hover:bg-[#C9922A]/10"
                             onClick={() => handleEdit(l)}
-                            title="Editar"
+                            title={privacyOn ? 'Indisponível no Modo de Privacidade' : 'Editar'}
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -725,7 +762,9 @@ export default function LeadsAuxAcidente() {
               Deseja realmente remover o lead{' '}
               <strong className="text-[#252B34] dark:text-foreground">
                 {recordToDelete
-                  ? formatPhoneMask(recordToDelete.telefone) || recordToDelete.telefone
+                  ? privacyOn
+                    ? PRIVACY_MASK.telefone
+                    : formatPhoneMask(recordToDelete.telefone) || recordToDelete.telefone
                   : ''}
               </strong>
               ? Esta ação não poderá ser desfeita.
