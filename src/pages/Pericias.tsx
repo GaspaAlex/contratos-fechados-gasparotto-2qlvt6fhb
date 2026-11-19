@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
+import { PRIVACY_MASK, usePrivacyMode } from '@/lib/privacyMode'
+import { toast } from 'sonner'
 
 export default function Pericias() {
   const [data, setData] = useState<Pericia[]>([])
@@ -27,6 +29,18 @@ export default function Pericias() {
   const [formModalOpen, setFormModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Pericia | null>(null)
   const [deletingItem, setDeletingItem] = useState<Pericia | null>(null)
+
+  const { enabled: privacyOn } = usePrivacyMode()
+
+  // Modo de Privacidade ativo: fecha sem salvar qualquer modal já aberto
+  useEffect(() => {
+    if (privacyOn && (formModalOpen || deletingItem)) {
+      setFormModalOpen(false)
+      setEditingItem(null)
+      setDeletingItem(null)
+      toast.info('Modo de Privacidade ativado — janela fechada sem salvar.')
+    }
+  }, [privacyOn, formModalOpen, deletingItem])
 
   const loadData = async () => {
     try {
@@ -111,10 +125,16 @@ export default function Pericias() {
     const recordsToPrint =
       filteredPericias.length > 0 || yearData.length === 0 ? filteredPericias : yearData
 
+    // Modo de Privacidade: mesmos valores mascarados da tabela
+    const maskNome = (v?: string | null) => (privacyOn ? PRIVACY_MASK.nome : v || '-')
+    const maskProcesso = (v?: string | null) => (privacyOn ? PRIVACY_MASK.processo : v || '-')
+    const maskEndereco = (v?: string | null) => (privacyOn ? PRIVACY_MASK.endereco : v || '-')
+    const maskSearch = (v: string) => (privacyOn ? PRIVACY_MASK.busca : v.trim())
+
     const activeFiltersList: string[] = []
     activeFiltersList.push(`Ano: ${year}`)
     if (tableSearch.trim()) {
-      activeFiltersList.push(`Busca: "${tableSearch.trim()}"`)
+      activeFiltersList.push(`Busca: "${maskSearch(tableSearch)}"`)
     }
     if (tableStatus && tableStatus !== 'Todos') {
       activeFiltersList.push(`Status: ${tableStatus}`)
@@ -130,9 +150,9 @@ export default function Pericias() {
       {
         header: 'Cliente / Processo',
         accessor: (item) => {
-          const nome = item.nome || '-'
+          const nome = maskNome(item.nome)
           const autos = item.nautos
-            ? `<div style="font-family: monospace; font-size: 9.5px; color: #1d4ed8; margin-top: 2px;">${item.nautos}</div>`
+            ? `<div style="font-family: monospace; font-size: 9.5px; color: #1d4ed8; margin-top: 2px;">${maskProcesso(item.nautos)}</div>`
             : ''
           return `<strong>${nome}</strong>${autos}`
         },
@@ -157,7 +177,7 @@ export default function Pericias() {
       },
       {
         header: 'Endereço / Local',
-        accessor: (item) => item.endereco || '-',
+        accessor: (item) => maskEndereco(item.endereco),
         align: 'left',
       },
       {
@@ -189,7 +209,7 @@ export default function Pericias() {
       orientation: 'landscape',
       totalLabel: 'Total de perícias',
     })
-  }, [filteredPericias, yearData, year, tableSearch, tableStatus])
+  }, [filteredPericias, yearData, year, tableSearch, tableStatus, privacyOn])
 
   return (
     <div className="animate-fade-in-up space-y-6 pb-10">
@@ -241,6 +261,10 @@ export default function Pericias() {
 
           <Button
             onClick={() => {
+              if (privacyOn) {
+                toast.error('Desative o Modo de Privacidade para editar registros.')
+                return
+              }
               setEditingItem(null)
               setFormModalOpen(true)
             }}
@@ -256,10 +280,20 @@ export default function Pericias() {
       <PericiasTable
         data={yearData}
         onEdit={(p) => {
+          if (privacyOn) {
+            toast.error('Desative o Modo de Privacidade para editar registros.')
+            return
+          }
           setEditingItem(p)
           setFormModalOpen(true)
         }}
-        onDelete={(p) => setDeletingItem(p)}
+        onDelete={(p) => {
+          if (privacyOn) {
+            toast.error('Desative o Modo de Privacidade para editar registros.')
+            return
+          }
+          setDeletingItem(p)
+        }}
         onPrint={handlePrintReport}
         onFilteredDataChange={handleFilteredDataChange}
         onSearchChange={setTableSearch}
