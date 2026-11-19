@@ -23,7 +23,7 @@ import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { PrivacyText } from '@/components/privacy/PrivacyText'
 import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
-import { cn } from '@/lib/utils'
+import { cn, removeAccents } from '@/lib/utils'
 
 export interface PericiasTableProps {
   data: Pericia[]
@@ -65,10 +65,13 @@ export function PericiasTable({
   }, [data])
 
   const filtered = useMemo(() => {
+    // Busca padronizada (padrão Contratos Fechados): termo e valores normalizados
+    // (sem acentos, sem diferenciar maiúsculas), preservando pesquisa parcial.
+    const s = removeAccents(search.toLowerCase())
     return data.filter((d) => {
       const matchSearch =
-        d.nome.toLowerCase().includes(search.toLowerCase()) ||
-        (d.nautos && d.nautos.includes(search))
+        removeAccents((d.nome || '').toLowerCase()).includes(s) ||
+        (!!d.nautos && removeAccents(d.nautos.toLowerCase()).includes(s))
       const matchStatus = statusFilter === 'Todos' || d.status === statusFilter
       return matchSearch && matchStatus
     })

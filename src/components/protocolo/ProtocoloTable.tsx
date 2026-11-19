@@ -44,16 +44,8 @@ import {
   isProtocoloDueForFollowUp,
   isProtocoloOverdue,
 } from '@/lib/date-utils'
-import { cn } from '@/lib/utils'
+import { cn, normalizeText } from '@/lib/utils'
 import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
-
-const normalizeText = (text: string) => {
-  if (!text) return ''
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-}
 
 export function ProtocoloTable({
   data,
