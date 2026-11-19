@@ -50,7 +50,7 @@ import { AbrirEmProtocoloDialog } from './AbrirEmProtocoloDialog'
 import { toYMD, getTiposAcao } from '@/services/contratos'
 import { isArchived } from '@/lib/archivedStatuses'
 import { getReviewStatus, isContractDueForReview, normalizeDateCivil } from '@/lib/date-utils'
-import { buildProtocoloPrefill } from './abrirEmProtocolo'
+import { buildProtocoloPrefill, consultarProtocolosDoContrato } from '@/lib/abrirEmProtocolo'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
 import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
 import { PrivacyText } from '@/components/privacy/PrivacyText'
@@ -122,6 +122,8 @@ export function ContractsTable({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isProtocoloDialogOpen, setIsProtocoloDialogOpen] = useState(false)
   const [selectedContract, setSelectedContract] = useState<any>(null)
+  const [protocolosContrato, setProtocolosContrato] = useState<any[]>([])
+  const [protocolosLoading, setProtocolosLoading] = useState(false)
 
   const { enabled: privacyOn } = usePrivacyMode()
   // Busca exibida mascarada com o modo ativo — o estado interno (search) segue
@@ -237,16 +239,55 @@ export function ContractsTable({
     setIsModalOpen(true)
   }
 
-  // "Abrir em Protocolo": consulta os protocolos pelo ID exato do contrato.
-  // 0 → formulário de criação pré-preenchido; 1 → abre o registro existente;
-  // >1 → lista para escolha. Tudo resolvido dentro de AbrirEmProtocoloDialog.
-  const handleAbrirEmProtocolo = (c: any) => {
+  // "Abrir em Protocolo": consulta os protocolos pelo ID exato do contrato
+  // (relation `contratos`). 0 → navega para o formulário pré-preenchido;
+  // 1 → abre direto o registro existente; >1 → abre o dialog de escolha,
+  // preservando todos os vínculos atuais.
+  const navegarParaProtocolo = (registro: any | null, contrato: any | null) => {
+    try {
+      if (registro) {
+        sessionStorage.setItem('abrir_protocolo_registro', JSON.stringify({ id: registro.id }))
+      } else if (contrato) {
+        sessionStorage.setItem(
+          'abrir_protocolo_prefill',
+          JSON.stringify(buildProtocoloPrefill(contrato)),
+        )
+      }
+    } catch {
+      /* sessionStorage indisponível — segue sem prefill */
+    }
+    navigate('/protocolo')
+  }
+
+  const handleAbrirEmProtocolo = async (c: any) => {
     if (privacyOn) {
       toast.error('Desative o Modo de Privacidade para abrir em Protocolo.')
       return
     }
     setSelectedContract(c)
     setIsProtocoloDialogOpen(true)
+    setProtocolosContrato([])
+    setProtocolosLoading(true)
+    try {
+      const res = await consultarProtocolosDoContrato(c.id)
+      if (res.length === 0) {
+        setIsProtocoloDialogOpen(false)
+        setSelectedContract(null)
+        navegarParaProtocolo(null, c)
+      } else if (res.length === 1) {
+        setIsProtocoloDialogOpen(false)
+        setSelectedContract(null)
+        navegarParaProtocolo(res[0], c)
+      } else {
+        setProtocolosContrato(res)
+        setProtocolosLoading(false)
+      }
+    } catch (e: any) {
+      setIsProtocoloDialogOpen(false)
+      setSelectedContract(null)
+      setProtocolosLoading(false)
+      toast.error('Erro ao consultar protocolos: ' + (e?.message || 'erro desconhecido'))
+    }
   }
 
   const currentWeeks = useMemo(() => {
@@ -1379,30 +1420,17 @@ export function ContractsTable({
       <AbrirEmProtocoloDialog
         contrato={selectedContract}
         open={isProtocoloDialogOpen}
-        onClose={() => {
+        protocolos={protocolosContrato}
+        loading={protocolosLoading}
+        onOpenChange={(o) => {
+          setIsProtocoloDialogOpen(o)
+          if (!o) setSelectedContract(null)
+        }}
+        onAbrir={(protocolo) => {
+          const contrato = selectedContract
           setIsProtocoloDialogOpen(false)
           setSelectedContract(null)
-        }}
-        onResult={() => {}}
-        onNavigate={(protocolo) => {
-          // Navega para a aba Protocolo com o registro pré-selecionado (existente
-          // ou prefill para criação confirmável) via sessionStorage.
-          try {
-            if (protocolo) {
-              sessionStorage.setItem(
-                'abrir_protocolo_registro',
-                JSON.stringify({ id: protocolo.id }),
-              )
-            } else if (selectedContract) {
-              sessionStorage.setItem(
-                'abrir_protocolo_prefill',
-                JSON.stringify(buildProtocoloPrefill(selectedContract)),
-              )
-            }
-          } catch {
-            /* sessionStorage indisponível — segue sem prefill */
-          }
-          navigate('/protocolo')
+          navegarParaProtocolo(protocolo, contrato)
         }}
       />
       <DeleteModal

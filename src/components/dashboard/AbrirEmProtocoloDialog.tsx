@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { consultarProtocolosDoContrato, formatDateBR } from './abrirEmProtocolo'
+import { consultarProtocolosDoContrato, formatDateBR } from '@/lib/abrirEmProtocolo'
 import { useState } from 'react'
 import { toast } from 'sonner'
 

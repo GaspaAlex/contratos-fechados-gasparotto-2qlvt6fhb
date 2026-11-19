@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createProtocolo, updateProtocolo, deleteProtocolo } from '@/services/protocolo'
+
 import {
   getTiposAcao,
   createTipoAcao,
@@ -110,11 +111,25 @@ const formatCurrencyForInput = (num?: number) => {
   return v
 }
 
-export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis, onSaved }: any) {
+export function ProtocoloDialog({
+  open,
+  onOpenChange,
+  item,
+  preselectId,
+  prefill,
+  tipos,
+  responsaveis,
+  onSaved,
+}: any) {
   const { enabled: privacyOn } = usePrivacyMode()
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
   const [tiposAcao, setTiposAcao] = useState<any[]>(tipos || [])
   const [responsaveisList, setResponsaveisList] = useState<any[]>(responsaveis || [])
+  // Registro vindo da ação "Abrir em Protocolo" (existente ou a criar).
+  const [preselectedItem, setPreselectedItem] = useState<any>(null)
+  // Relation `contratos` gravada junto com o registro: vazia no cadastro
+  // manual, com o contrato de origem quando vem da ação "Abrir em Protocolo".
+  const [contratoVinculado, setContratoVinculado] = useState<string[]>([])
 
   const loadTiposAcao = async () => {
     try {
@@ -133,6 +148,29 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
       console.error(e)
     }
   }
+
+  // Resolves o registro existente indicado pela ação "Abrir em Protocolo"
+  // (reabertura para edição) contra a lista já carregada — e reage se ele
+  // chegar depois (realtime/loadData ainda em curso).
+  useEffect(() => {
+    if (!preselectId) {
+      setPreselectedItem(null)
+      return
+    }
+    if (item?.id === preselectId) {
+      setPreselectedItem(item)
+      return
+    }
+    if (open) {
+      pb.collection('protocolo')
+        .getOne(preselectId)
+        .then((r) => setPreselectedItem(r))
+        .catch((e) => {
+          console.error(e)
+          setPreselectedItem(null)
+        })
+    }
+  }, [preselectId, item?.id, open])
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -160,30 +198,86 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
     },
   })
 
+  // Prefill da ação "Abrir em Protocolo" (contrato sem protocolo vinculado):
+  // resolve o tipo de ação por nome (beneficio do contrato, mesma equivalência
+  // do hook de vínculo) e nasce com a relation `contratos=[contratoId]`.
+  // Nada é gravado aqui — só quando o usuário confirma o formulário.
+  useEffect(() => {
+    if (!open || !prefill) return
+    let cancelled = false
+    ;(async () => {
+      let tipoId = ''
+      try {
+        const tiposRes = await getTiposAcao()
+        const match = tiposRes.find(
+          (t: any) =>
+            removeAccents((t.nome || '').toLowerCase()) ===
+            removeAccents((prefill.tipo_acao_nome || '').toLowerCase()),
+        )
+        if (!cancelled && match) tipoId = match.id
+      } catch (e) {
+        console.error(e)
+      }
+      if (cancelled) return
+      form.reset({
+        nome: prefill.nome || '',
+        fone: prefill.fone || '',
+        tipo_acao: tipoId,
+        responsavel: '',
+        status: prefill.status || 'Prov. Inicial',
+        dcontrato: '',
+        dcalculo: '',
+        dprotocolo: prefill.dprotocolo || '',
+        nautos: '',
+        valor: undefined as unknown as number,
+        decisao: 'Aguardando',
+        origem: '',
+        parceiro: '',
+        representante: false,
+        representante_nome: '',
+        representante_cpf: '',
+        representante_vinculo: '',
+        representante_telefone: '',
+        observacoes: '',
+        revisar_em: '',
+      })
+      setContratoVinculado([prefill.contratoId])
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open, prefill, form])
+
   useEffect(() => {
     if (open && !privacyOn) {
       setDuplicateWarning(null)
       loadTiposAcao()
       loadResponsaveis()
-      if (item) {
-        const { prazo: _prazo, ...restItem } = item
+      const registro = item || preselectedItem
+      if (registro) {
+        // Editando registro existente (tabela ou reabertura via "Abrir em
+        // Protocolo" — preselectId). Preserva a relation `contratos` atual.
+        const { prazo: _prazo, ...restItem } = registro
         form.reset({
           ...restItem,
-          valor: item.valor === 0 ? undefined : item.valor,
-          dcontrato: item.dcontrato ? item.dcontrato.substring(0, 10) : '',
-          dcalculo: item.dcalculo ? item.dcalculo.substring(0, 10) : '',
-          dprotocolo: item.dprotocolo ? item.dprotocolo.substring(0, 10) : '',
-          revisar_em: item.revisar_em ? item.revisar_em.substring(0, 10) : '',
-          origem: item.origem || '',
-          parceiro: item.parceiro || '',
-          representante: item.representante || false,
-          representante_nome: item.representante_nome || '',
-          representante_cpf: item.representante_cpf || '',
-          representante_vinculo: item.representante_vinculo || '',
-          representante_telefone: item.representante_telefone || '',
-          observacoes: item.observacoes || '',
+          valor: registro.valor === 0 ? undefined : registro.valor,
+          dcontrato: registro.dcontrato ? registro.dcontrato.substring(0, 10) : '',
+          dcalculo: registro.dcalculo ? registro.dcalculo.substring(0, 10) : '',
+          dprotocolo: registro.dprotocolo ? registro.dprotocolo.substring(0, 10) : '',
+          revisar_em: registro.revisar_em ? registro.revisar_em.substring(0, 10) : '',
+          origem: registro.origem || '',
+          parceiro: registro.parceiro || '',
+          representante: registro.representante || false,
+          representante_nome: registro.representante_nome || '',
+          representante_cpf: registro.representante_cpf || '',
+          representante_vinculo: registro.representante_vinculo || '',
+          representante_telefone: registro.representante_telefone || '',
+          observacoes: registro.observacoes || '',
         })
+        setContratoVinculado(Array.isArray(registro.contratos) ? registro.contratos : [])
       } else {
+        // Sem item e sem prefill: cadastro manual — relation `contratos` vazia
+        // (o hook de anti-duplicidade não afeta cadastros manuais).
         form.reset({
           nome: '',
           fone: '',
@@ -206,9 +300,10 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
           representante_telefone: '',
           observacoes: '',
         })
+        setContratoVinculado([])
       }
     }
-  }, [open, item, form])
+  }, [open, item, preselectedItem, form])
 
   const handleAddTipoAcao = async (nome: string) => {
     try {
@@ -312,6 +407,10 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
 
   const handleSave = async (values: any, forceSave = false) => {
     if (forceSave !== true) {
+      if (privacyOn) {
+        toast.error('Desative o Modo de Privacidade para editar registros.')
+        return
+      }
       try {
         const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
         const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
@@ -333,6 +432,9 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
 
     try {
       const payload = { ...values }
+      // Relation `contratos`: vazia no cadastro manual; com o contrato de
+      // origem quando o registro vem da ação "Abrir em Protocolo" (prefill).
+      payload.contratos = contratoVinculado
       if (payload.dcontrato)
         payload.dcontrato = new Date(payload.dcontrato + 'T12:00:00Z').toISOString()
       else payload.dcontrato = null
@@ -353,18 +455,62 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
         payload.representante_telefone = ''
       }
 
-      if (item) await updateProtocolo(item.id, payload)
+      const registroAtual = item || preselectedItem
+      if (registroAtual) await updateProtocolo(registroAtual.id, payload)
       else await createProtocolo(payload)
 
-      toast.success(item ? 'Protocolo atualizado' : 'Protocolo criado')
+      toast.success(registroAtual ? 'Protocolo atualizado' : 'Protocolo criado')
       onOpenChange(false)
       onSaved()
-    } catch (e) {
+    } catch (e: any) {
+      // Recusa do hook servidor de anti-duplicidade (PROTOCOLO_DUPLICADO):
+      // outro usuário já salvou um protocolo para este contrato. Reconsulta
+      // e abre o registro já existente para edição.
+      const msg = e?.response?.message || e?.message || ''
+      if (String(msg).includes('PROTOCOLO_DUPLICADO')) {
+        const contratoId = contratoVinculado[0]
+        toast.info(
+          'Outro usuário já salvou um protocolo para este contrato — abrindo o registro existente.',
+        )
+        try {
+          const res = await pb.collection('protocolo').getFullList({
+            filter: pb.filter('contratos = {:id}', { id: contratoId }),
+            sort: '-created',
+          })
+          if (res.length > 0) {
+            const reg = res[0]
+            form.reset({
+              ...reg,
+              valor: reg.valor === 0 ? undefined : reg.valor,
+              dcontrato: reg.dcontrato ? reg.dcontrato.substring(0, 10) : '',
+              dcalculo: reg.dcalculo ? reg.dcalculo.substring(0, 10) : '',
+              dprotocolo: reg.dprotocolo ? reg.dprotocolo.substring(0, 10) : '',
+              revisar_em: reg.revisar_em ? reg.revisar_em.substring(0, 10) : '',
+              origem: reg.origem || '',
+              parceiro: reg.parceiro || '',
+              representante: reg.representante || false,
+              representante_nome: reg.representante_nome || '',
+              representante_cpf: reg.representante_cpf || '',
+              representante_vinculo: reg.representante_vinculo || '',
+              representante_telefone: reg.representante_telefone || '',
+              observacoes: reg.observacoes || '',
+            })
+            setPreselectedItem(reg)
+            setContratoVinculado(Array.isArray(reg.contratos) ? reg.contratos : [])
+          }
+        } catch (err) {
+          console.error(err)
+        }
+        return
+      }
       toast.error('Erro ao salvar')
     }
   }
 
   const onSubmit = (values: any) => handleSave(values, false)
+
+  const registroAtual = item || preselectedItem
+  const registroAtualLabel = registroAtual ? `Editar: ${registroAtual.nome}` : 'novo'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -372,11 +518,15 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
         <DialogHeader className="border-b border-[#E4E7EB] dark:border-border pb-3">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
-              {item ? 'EDIÇÃO' : 'NOVO REGISTRO'}
+              {registroAtual ? 'EDIÇÃO' : 'NOVO REGISTRO'}
             </span>
           </div>
           <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
-            {item ? `Editar: ${item.nome}` : 'Adicionar ao Protocolo'}
+            {registroAtual
+              ? `Editar: ${registroAtual.nome}`
+              : prefill
+                ? 'Adicionar ao Protocolo (vínculo com contrato)'
+                : 'Adicionar ao Protocolo'}
           </DialogTitle>
           <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground">
             Preencha e confirme os dados processuais do protocolo.
@@ -820,7 +970,11 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
                   type="submit"
                   className="h-9 text-xs bg-[#C9922A] hover:bg-[#b58324] text-white font-semibold shadow-xs"
                 >
-                  {item ? 'Salvar alterações' : 'Salvar Protocolo'}
+                  {item || preselectedItem
+                    ? 'Salvar alterações'
+                    : prefill
+                      ? 'Confirmar e salvar protocolo'
+                      : 'Salvar Protocolo'}
                 </Button>
               </DialogFooter>
             )}

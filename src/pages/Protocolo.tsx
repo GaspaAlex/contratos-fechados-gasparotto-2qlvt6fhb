@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getProtocolos } from '@/services/protocolo'
+import { loadAbrirEmProtocoloEntry } from '@/lib/abrirEmProtocolo'
 import { getTiposAcao, getResponsaveis } from '@/services/lookups'
 import { useRealtime } from '@/hooks/use-realtime'
 import { usePrivacyMode } from '@/lib/privacyMode'
@@ -16,6 +17,8 @@ export default function Protocolo() {
   const [open, setOpen] = useState(false)
   const [delOpen, setDelOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [preselectId, setPreselectId] = useState<string | null>(null)
+  const [prefill, setPrefill] = useState<any>(null)
 
   // Filters State
   const [search, setSearch] = useState('')
@@ -55,6 +58,21 @@ export default function Protocolo() {
 
   useEffect(() => {
     loadData()
+  }, [])
+
+  // Ação "Abrir em Protocolo" (Contratos Fechados): consome a entrada vinda
+  // via sessionStorage — registro existente para edição ou prefill para
+  // criação confirmável (nada é gravado sem o usuário confirmar o formulário).
+  useEffect(() => {
+    const entry = loadAbrirEmProtocoloEntry()
+    if (!entry) return
+    if (entry.kind === 'registro') {
+      setPreselectId(entry.id)
+      setPrefill(null)
+    } else {
+      setPrefill(entry.prefill)
+      setPreselectId(null)
+    }
   }, [])
   useRealtime('protocolo', loadData)
   // Mudança arquivado ↔ válido e exclusão de contrato atualizam indicadores e
@@ -119,6 +137,8 @@ export default function Protocolo() {
             toast.error('Desative o Modo de Privacidade para editar registros.')
             return
           }
+          setPreselectId(null)
+          setPrefill(null)
           setSelected(null)
           setOpen(true)
         }}
@@ -127,6 +147,8 @@ export default function Protocolo() {
             toast.error('Desative o Modo de Privacidade para editar registros.')
             return
           }
+          setPreselectId(null)
+          setPrefill(null)
           setSelected(item)
           setOpen(true)
         }}
@@ -142,8 +164,17 @@ export default function Protocolo() {
 
       <ProtocoloDialog
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(o) => {
+          setOpen(o)
+          if (!o) {
+            setPreselectId(null)
+            setPrefill(null)
+            setSelected(null)
+          }
+        }}
         item={selected}
+        preselectId={preselectId}
+        prefill={prefill}
         tipos={tipos}
         responsaveis={responsaveis}
         onSaved={loadData}
