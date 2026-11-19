@@ -54,10 +54,19 @@ export function ContractModal({
   isOpen,
   onClose,
   contract,
+  initialProtocoloPrefill,
+  initialProtocolo,
+  onProtocoloSaved,
 }: {
   isOpen: boolean
   onClose: () => void
   contract: any
+  /** Quando definido: em vez de editar o contrato, cria/abre um Protocolo vinculado a ele. */
+  initialProtocoloPrefill?: any
+  /** Registro de Protocolo existente a editar (veio de "Abrir em Protocolo"). */
+  initialProtocolo?: any
+  /** Chamado após salvar o protocolo (novo ou existente). */
+  onProtocoloSaved?: (protocolo: any) => void
 }) {
   const isEdit = !!contract
   const [loading, setLoading] = useState(false)

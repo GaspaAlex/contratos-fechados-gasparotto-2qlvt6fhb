@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +30,7 @@ import {
   Bell,
   ArrowRight,
   EyeOff,
+  FilePlus2,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -44,9 +46,11 @@ import { PartnershipsSummary } from './PartnershipsSummary'
 import { ContractModal } from './ContractModal'
 import { DeleteModal } from './DeleteModal'
 import { RDocsDashboard } from './RDocsDashboard'
+import { AbrirEmProtocoloDialog } from './AbrirEmProtocoloDialog'
 import { toYMD, getTiposAcao } from '@/services/contratos'
 import { isArchived } from '@/lib/archivedStatuses'
 import { getReviewStatus, isContractDueForReview, normalizeDateCivil } from '@/lib/date-utils'
+import { buildProtocoloPrefill } from './abrirEmProtocolo'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
 import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
 import { PrivacyText } from '@/components/privacy/PrivacyText'
@@ -105,6 +109,7 @@ export function ContractsTable({
   activeFilter: string
   setActiveFilter: (v: string) => void
 }) {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [tableYear, setTableYear] = useState<number | string>(new Date().getFullYear())
   const [tableMonth, setTableMonth] = useState<string>('Todos os meses')
@@ -115,6 +120,7 @@ export function ContractsTable({
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isProtocoloDialogOpen, setIsProtocoloDialogOpen] = useState(false)
   const [selectedContract, setSelectedContract] = useState<any>(null)
 
   const { enabled: privacyOn } = usePrivacyMode()
@@ -124,13 +130,14 @@ export function ContractsTable({
 
   // Modo de Privacidade ativo: fecha sem salvar qualquer modal já aberto
   React.useEffect(() => {
-    if (privacyOn && (isModalOpen || isDeleteModalOpen)) {
+    if (privacyOn && (isModalOpen || isDeleteModalOpen || isProtocoloDialogOpen)) {
       setIsModalOpen(false)
       setIsDeleteModalOpen(false)
+      setIsProtocoloDialogOpen(false)
       setSelectedContract(null)
       toast.info('Modo de Privacidade ativado — janela fechada sem salvar.')
     }
-  }, [privacyOn, isModalOpen, isDeleteModalOpen])
+  }, [privacyOn, isModalOpen, isDeleteModalOpen, isProtocoloDialogOpen])
 
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value)
@@ -228,6 +235,18 @@ export function ContractsTable({
     }
     setSelectedContract(null)
     setIsModalOpen(true)
+  }
+
+  // "Abrir em Protocolo": consulta os protocolos pelo ID exato do contrato.
+  // 0 → formulário de criação pré-preenchido; 1 → abre o registro existente;
+  // >1 → lista para escolha. Tudo resolvido dentro de AbrirEmProtocoloDialog.
+  const handleAbrirEmProtocolo = (c: any) => {
+    if (privacyOn) {
+      toast.error('Desative o Modo de Privacidade para abrir em Protocolo.')
+      return
+    }
+    setSelectedContract(c)
+    setIsProtocoloDialogOpen(true)
   }
 
   const currentWeeks = useMemo(() => {
@@ -1312,6 +1331,16 @@ export function ContractsTable({
                                   <Button
                                     variant="ghost"
                                     size="icon"
+                                    className="h-7 w-7 text-[#78818E] hover:text-[#C9922A] hover:bg-[#C9922A]/10 rounded-md transition-colors"
+                                    onClick={() => handleAbrirEmProtocolo(contract)}
+                                    title="Abrir em Protocolo"
+                                    disabled={privacyOn}
+                                  >
+                                    <FilePlus2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
                                     className="h-7 w-7 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded-md transition-colors"
                                     onClick={() => handleEdit(contract)}
                                     title="Editar contrato"
@@ -1346,6 +1375,35 @@ export function ContractsTable({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         contract={selectedContract}
+      />
+      <AbrirEmProtocoloDialog
+        contrato={selectedContract}
+        open={isProtocoloDialogOpen}
+        onClose={() => {
+          setIsProtocoloDialogOpen(false)
+          setSelectedContract(null)
+        }}
+        onResult={() => {}}
+        onNavigate={(protocolo) => {
+          // Navega para a aba Protocolo com o registro pré-selecionado (existente
+          // ou prefill para criação confirmável) via sessionStorage.
+          try {
+            if (protocolo) {
+              sessionStorage.setItem(
+                'abrir_protocolo_registro',
+                JSON.stringify({ id: protocolo.id }),
+              )
+            } else if (selectedContract) {
+              sessionStorage.setItem(
+                'abrir_protocolo_prefill',
+                JSON.stringify(buildProtocoloPrefill(selectedContract)),
+              )
+            }
+          } catch {
+            /* sessionStorage indisponível — segue sem prefill */
+          }
+          navigate('/protocolo')
+        }}
       />
       <DeleteModal
         isOpen={isDeleteModalOpen}
