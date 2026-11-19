@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FilterX } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { getContratos } from '@/services/contratos'
 import { ContractsTable } from '@/components/dashboard/ContractsTable'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -33,6 +35,18 @@ export default function Dashboard() {
   const [gridMonth, setGridMonth] = useState('Todos os meses')
   const [gridYear, setGridYear] = useState<number | string>(new Date().getFullYear())
   const [activeFilter, setActiveFilter] = useState('Todos')
+
+  // Botão Limpar do TOPO (padrão Central Auxílio-Acidente): controla APENAS o
+  // grupo de filtros dos cards (mês e ano). Os filtros da seção Registro de
+  // Contratos (ContractsTable) são independentes — o Limpar da tabela não toca
+  // este grupo e este Limpar não toca os dela.
+  const defaultGridYear = new Date().getFullYear()
+  const hasActiveGridFilters = gridMonth !== 'Todos os meses' || gridYear !== defaultGridYear
+
+  const clearGridFilters = () => {
+    setGridMonth('Todos os meses')
+    setGridYear(defaultGridYear)
+  }
 
   const gridContratos = useMemo(() => {
     let result = contratos
@@ -82,6 +96,17 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-2.5 self-start lg:self-center">
+          {hasActiveGridFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearGridFilters}
+              title="Limpar filtros"
+              className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+            >
+              <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+            </Button>
+          )}
           <Select value={gridMonth} onValueChange={setGridMonth}>
             <SelectTrigger className="w-[170px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Todos os meses" />
