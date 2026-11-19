@@ -262,8 +262,14 @@ export default function Layout() {
   //   implementada → "Privacidade indisponível nesta tela".
   // - Demais rotas (Gestão de Pessoas, Ferramentas): sem dados de clientes →
   //   "Tela sem dados de clientes".
-  const PRIVACY_READY_PATHS = ['/rpv', '/protocolo', '/dashboard', '/pericias']
-  const PRIVACY_PENDING_PATHS = ['/', '/leads', '/leads-registro', '/leads-auxilio-acidente']
+  const PRIVACY_READY_PATHS = [
+    '/rpv',
+    '/protocolo',
+    '/dashboard',
+    '/pericias',
+    '/leads-auxilio-acidente',
+  ]
+  const PRIVACY_PENDING_PATHS = ['/', '/leads', '/leads-registro']
 
   const matchesPath = (paths: string[]) =>
     paths.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))

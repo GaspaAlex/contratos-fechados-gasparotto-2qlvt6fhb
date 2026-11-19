@@ -119,6 +119,15 @@ export default function LeadsAuxAcidente() {
     setModalOpen(true)
   }
 
+  // Solicitação de exclusão: com o Modo de Privacidade ativo o modal de exclusão
+  // é bloqueado (o mesmo guard de handleAdd/handleEdit); fora dele, abre o modal
+  // padrão, que já exibe o telefone mascarado quando privacyOn.
+  const handleDeleteRequest = (row: LeadAuxAcidente) => {
+    if (privacyOn) return bloqueadoPrivacidade()
+    setRecordToDelete(row)
+    setDeleteModalOpen(true)
+  }
+
   // Modal aberto quando o modo é ativado: fecha sem salvar, com aviso.
   useEffect(() => {
     if (privacyOn && (modalOpen || deleteModalOpen)) {
