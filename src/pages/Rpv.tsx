@@ -10,6 +10,7 @@ import { printReport, PrintReportColumn } from '@/lib/print-report'
 import { useRpvFilters } from '@/components/rpv/store'
 import { MONTHS } from '@/components/rpv/constants'
 import { PRIVACY_MASK, usePrivacyMode } from '@/lib/privacyMode'
+import { removeAccents } from '@/lib/utils'
 import { toast } from 'sonner'
 
 export default function Rpv() {
@@ -55,9 +56,11 @@ export default function Rpv() {
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       if (search) {
-        const query = search.toLowerCase().trim()
-        const matchName = item.nome?.toLowerCase().includes(query)
-        const matchProc = item.numero_processo?.toLowerCase().includes(query)
+        // Busca por nome/nº processo: termo e valor normalizados (sem acentos,
+        // caixa ignorada) — mesmo padrão de RpvTable/Perícias, via removeAccents.
+        const query = removeAccents(search.toLowerCase().trim())
+        const matchName = removeAccents((item.nome || '').toLowerCase()).includes(query)
+        const matchProc = removeAccents((item.numero_processo || '').toLowerCase()).includes(query)
         if (!matchName && !matchProc) return false
       }
       if (tipo !== 'Todos' && item.tipo !== tipo) return false
