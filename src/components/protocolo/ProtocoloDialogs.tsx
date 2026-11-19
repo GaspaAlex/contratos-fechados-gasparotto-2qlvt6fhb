@@ -44,6 +44,7 @@ import {
 } from '@/services/contratos'
 import { DynamicSelect } from '@/components/dashboard/DynamicSelect'
 import { toast } from 'sonner'
+import { usePrivacyMode } from '@/lib/privacyMode'
 
 const baseSchema = z.object({
   nome: z.string().min(1, 'Obrigatório'),
@@ -110,6 +111,7 @@ const formatCurrencyForInput = (num?: number) => {
 }
 
 export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis, onSaved }: any) {
+  const { enabled: privacyOn } = usePrivacyMode()
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
   const [tiposAcao, setTiposAcao] = useState<any[]>(tipos || [])
   const [responsaveisList, setResponsaveisList] = useState<any[]>(responsaveis || [])
@@ -159,7 +161,7 @@ export function ProtocoloDialog({ open, onOpenChange, item, tipos, responsaveis,
   })
 
   useEffect(() => {
-    if (open) {
+    if (open && !privacyOn) {
       setDuplicateWarning(null)
       loadTiposAcao()
       loadResponsaveis()

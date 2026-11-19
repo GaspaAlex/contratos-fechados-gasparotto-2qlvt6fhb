@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { getProtocolos } from '@/services/protocolo'
 import { getTiposAcao, getResponsaveis } from '@/services/lookups'
 import { useRealtime } from '@/hooks/use-realtime'
+import { usePrivacyMode } from '@/lib/privacyMode'
+import { toast } from 'sonner'
 import { ProtocoloDashboard } from '@/components/protocolo/ProtocoloDashboard'
 import { ProtocoloTable } from '@/components/protocolo/ProtocoloTable'
 import { ProtocoloDialog, ProtocoloDeleteDialog } from '@/components/protocolo/ProtocoloDialogs'
@@ -26,6 +28,20 @@ export default function Protocolo() {
   const [year, setYear] = useState(new Date().getFullYear().toString())
   const [monthStart, setMonthStart] = useState('Todos')
   const [monthEnd, setMonthEnd] = useState('Todos')
+
+  const { enabled: privacyOn } = usePrivacyMode()
+
+  // Modo de Privacidade ativo: fecha sem salvar qualquer modal já aberto
+  useEffect(() => {
+    if (privacyOn && (open || delOpen)) {
+      setOpen(false)
+      setDelOpen(false)
+      setSelected(null)
+      setItemToDelete(null)
+      toast.info('Modo de Privacidade ativado — janela fechada sem salvar.')
+    }
+  }, [privacyOn, open, delOpen])
+
   const loadData = async () => {
     try {
       const [p, t, r] = await Promise.all([getProtocolos(), getTiposAcao(), getResponsaveis()])
@@ -99,14 +115,26 @@ export default function Protocolo() {
         monthEnd={monthEnd}
         setMonthEnd={setMonthEnd}
         onAdd={() => {
+          if (privacyOn) {
+            toast.error('Desative o Modo de Privacidade para editar registros.')
+            return
+          }
           setSelected(null)
           setOpen(true)
         }}
         onEdit={(item: any) => {
+          if (privacyOn) {
+            toast.error('Desative o Modo de Privacidade para editar registros.')
+            return
+          }
           setSelected(item)
           setOpen(true)
         }}
         onDelete={(item: any) => {
+          if (privacyOn) {
+            toast.error('Desative o Modo de Privacidade para excluir registros.')
+            return
+          }
           setItemToDelete(item)
           setDelOpen(true)
         }}
