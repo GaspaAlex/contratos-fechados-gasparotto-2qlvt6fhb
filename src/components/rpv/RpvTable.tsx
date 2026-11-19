@@ -8,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Edit2, Trash2, StickyNote, EyeOff } from 'lucide-react'
+import { Edit2, Trash2, StickyNote, EyeOff, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { deleteRpv } from '@/services/rpv'
@@ -147,6 +147,17 @@ export function RpvTable({
     } catch (e: any) {
       toast.error('Erro ao excluir: ' + e.message)
     }
+  }
+
+  // Cópia do valor completo (CPF / nº do processo). Com o Modo de Privacidade
+  // ativo a ação fica desabilitada e o handler também bloqueia a cópia.
+  const copyToClipboard = (value: string, label: string) => {
+    if (privacyOn) {
+      toast.error('Desative o Modo de Privacidade para copiar valores.')
+      return
+    }
+    navigator.clipboard.writeText(value)
+    toast.success(label)
   }
 
   const formatCurrency = (val: number) => {
@@ -294,12 +305,29 @@ export function RpvTable({
                           )}
                         </div>
                         {item.cpf && (
-                          <PrivacyText
-                            as="div"
-                            value={item.cpf}
-                            mask={PRIVACY_MASK.cpf}
-                            className="text-[11px] text-[#78818E] dark:text-muted-foreground font-mono mt-0.5"
-                          />
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <PrivacyText
+                              as="span"
+                              value={item.cpf}
+                              mask={PRIVACY_MASK.cpf}
+                              className="text-[11px] text-[#78818E] dark:text-muted-foreground font-mono"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={privacyOn}
+                              className={cn(
+                                'h-5 w-5 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded',
+                                privacyOn && 'opacity-40 cursor-not-allowed',
+                              )}
+                              onClick={() => copyToClipboard(item.cpf, 'CPF copiado!')}
+                              title={
+                                privacyOn ? 'Indisponível no Modo de Privacidade' : 'Copiar CPF'
+                              }
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
                         )}
                         {item.tipo_parceria && item.tipo_parceria !== 'Sem parceria' && (
                           <div className="mt-1">
@@ -312,17 +340,42 @@ export function RpvTable({
 
                       {/* Nº Processo */}
                       <TableCell className="py-3 font-mono text-xs text-[#252B34] dark:text-foreground">
-                        {privacyOn ? (
-                          <PrivacyText
-                            value={item.numero_processo || '—'}
-                            mask={PRIVACY_MASK.processo}
-                          />
+                        {item.numero_processo ? (
+                          <span className="inline-flex items-center gap-1">
+                            {privacyOn ? (
+                              <PrivacyText
+                                value={item.numero_processo}
+                                mask={PRIVACY_MASK.processo}
+                              />
+                            ) : (
+                              item.numero_processo
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={privacyOn}
+                              className={cn(
+                                'h-5 w-5 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded',
+                                privacyOn && 'opacity-40 cursor-not-allowed',
+                              )}
+                              onClick={() =>
+                                copyToClipboard(item.numero_processo, 'Número do processo copiado!')
+                              }
+                              title={
+                                privacyOn
+                                  ? 'Indisponível no Modo de Privacidade'
+                                  : 'Copiar número do processo'
+                              }
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </span>
+                        ) : privacyOn ? (
+                          <PrivacyText value="—" mask={PRIVACY_MASK.processo} />
                         ) : (
-                          item.numero_processo || (
-                            <span className="text-[#78818E] dark:text-muted-foreground font-sans text-xs">
-                              —
-                            </span>
-                          )
+                          <span className="text-[#78818E] dark:text-muted-foreground font-sans text-xs">
+                            —
+                          </span>
                         )}
                       </TableCell>
 
