@@ -27,10 +27,11 @@ import {
   Clock,
   Bell,
   ArrowRight,
+  EyeOff,
 } from 'lucide-react'
 import { cn, removeAccents } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import {
   Select,
   SelectContent,
@@ -46,6 +47,8 @@ import { toYMD, getTiposAcao } from '@/services/contratos'
 import { isArchived } from '@/lib/archivedStatuses'
 import { getReviewStatus, isContractDueForReview, normalizeDateCivil } from '@/lib/date-utils'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
+import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
+import { PrivacyText } from '@/components/privacy/PrivacyText'
 
 const BENEFICIOS_PADRAO = ['Aux. Acidente', 'Aposentadoria', 'BPC/LOAS', 'DER', 'Pensão por Morte']
 
@@ -111,7 +114,25 @@ export function ContractsTable({
   const [tableResponsavel, setTableResponsavel] = useState<string>('Todos os responsáveis')
   const [tableCampanhaOrigem, setTableCampanhaOrigem] = useState<string>('Todas as campanhas')
   const [beneficiosList, setBeneficiosList] = useState<string[]>([])
-  const { toast } = useToast()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [selectedContract, setSelectedContract] = useState<any>(null)
+
+  const { toast: toastShadcn } = useToast()
+  const { enabled: privacyOn } = usePrivacyMode()
+  // Busca exibida mascarada com o modo ativo — o estado interno (search) segue
+  // filtrando pelos valores reais, mesmo padrão RPV/Protocolo.
+  const displaySearch = privacyOn ? PRIVACY_MASK.busca : search
+
+  // Modo de Privacidade ativo: fecha sem salvar qualquer modal já aberto
+  React.useEffect(() => {
+    if (privacyOn && (isModalOpen || isDeleteModalOpen)) {
+      setIsModalOpen(false)
+      setIsDeleteModalOpen(false)
+      setSelectedContract(null)
+      toast.info('Modo de Privacidade ativado — janela fechada sem salvar.')
+    }
+  }, [privacyOn, isModalOpen, isDeleteModalOpen])
 
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value)
@@ -160,21 +181,29 @@ export function ContractsTable({
     return sorted
   }, [contratos])
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [selectedContract, setSelectedContract] = useState<any>(null)
-
   const handleEdit = (c: any) => {
+    if (privacyOn) {
+      toast.error('Desative o Modo de Privacidade para editar registros.')
+      return
+    }
     setSelectedContract(c)
     setIsModalOpen(true)
   }
 
   const handleDelete = (c: any) => {
+    if (privacyOn) {
+      toast.error('Desative o Modo de Privacidade para excluir registros.')
+      return
+    }
     setSelectedContract(c)
     setIsDeleteModalOpen(true)
   }
 
   const handleAdd = () => {
+    if (privacyOn) {
+      toast.error('Desative o Modo de Privacidade para adicionar registros.')
+      return
+    }
     setSelectedContract(null)
     setIsModalOpen(true)
   }
@@ -329,6 +358,14 @@ export function ContractsTable({
     tableCampanhaOrigem,
   ])
 
+  // Modo de Privacidade: mesmos registros com identificadores mascarados em
+  // nível de dados (nome, fone, observações, representante) — cobre tabela,
+  // tooltips e relatório de uma vez; filtros e contagens permanecem reais.
+  const maskedRecords = useMemo(
+    () => maskClienteRecords(privacyOn, filtered),
+    [privacyOn, filtered],
+  )
+
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, any[]>()
     filtered.forEach((c) => {
@@ -437,7 +474,7 @@ export function ContractsTable({
     const activeFiltersList: string[] = []
 
     if (search.trim()) {
-      activeFiltersList.push(`Busca: "${search.trim()}"`)
+      activeFiltersList.push(`Busca: "${privacyOn ? PRIVACY_MASK.busca : search.trim()}"`)
     }
     if (tableBeneficio !== 'Todos os benefícios') {
       activeFiltersList.push(`Benefício: ${tableBeneficio}`)
@@ -567,7 +604,7 @@ export function ContractsTable({
       subtitle: 'ADVOCACIA GASPAROTTO',
       filters: activeFiltersList,
       columns,
-      data: filtered,
+      data: privacyOn ? maskedRecords : filtered,
       orientation: 'landscape',
       totalLabel: 'Total de registros',
     })
@@ -673,11 +710,18 @@ export function ContractsTable({
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#78818E]" />
               <Input
-                placeholder="Buscar cliente, benefício, resp..."
-                className="pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus-visible:ring-[#C9922A]"
-                value={search}
+                placeholder={privacyOn ? PRIVACY_MASK.busca : 'Buscar cliente, benefício, resp...'}
+                aria-label={privacyOn ? PRIVACY_MASK.busca : undefined}
+                className={cn(
+                  'pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus-visible:ring-[#C9922A]',
+                  privacyOn && 'select-none',
+                )}
+                value={displaySearch}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              {privacyOn && (
+                <EyeOff className="absolute right-2.5 top-2.5 h-4 w-4 text-[#C9922A]" />
+              )}
             </div>
 
             {/* Select Benefício */}
@@ -1003,18 +1047,32 @@ export function ContractsTable({
                                   />
                                 )}
                                 <div className="flex items-center gap-1.5">
-                                  <span className="truncate max-w-[200px]" title={contract.nome}>
-                                    {contract.nome}
-                                  </span>
+                                  <PrivacyText
+                                    as="span"
+                                    value={contract.nome}
+                                    mask={PRIVACY_MASK.nome}
+                                    className="truncate max-w-[200px]"
+                                    titleWhenVisible
+                                  />
                                   {contract.observacoes && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <StickyNote className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
                                       </TooltipTrigger>
-                                      <TooltipContent className="max-w-xs md:max-w-sm">
-                                        <p className="whitespace-pre-line text-xs">
-                                          {contract.observacoes}
-                                        </p>
+                                      <TooltipContent
+                                        className="max-w-xs md:max-w-sm"
+                                        aria-hidden={privacyOn ? 'true' : undefined}
+                                      >
+                                        {privacyOn ? (
+                                          <p className="flex items-center gap-1.5 whitespace-pre-line text-xs text-[#78818E] dark:text-muted-foreground">
+                                            <EyeOff className="h-3 w-3 shrink-0" />
+                                            {PRIVACY_MASK.observacoes}
+                                          </p>
+                                        ) : (
+                                          <p className="whitespace-pre-line text-xs">
+                                            {contract.observacoes}
+                                          </p>
+                                        )}
                                       </TooltipContent>
                                     </Tooltip>
                                   )}
@@ -1048,10 +1106,12 @@ export function ContractsTable({
                                       <TooltipTrigger asChild>
                                         <UserCheck className="h-3.5 w-3.5 text-[#C9922A] cursor-help shrink-0" />
                                       </TooltipTrigger>
-                                      <TooltipContent>
+                                      <TooltipContent aria-hidden={privacyOn ? 'true' : undefined}>
                                         <p className="text-xs">
                                           Representante:{' '}
-                                          {contract.representante_nome || 'Não informado'}
+                                          {privacyOn
+                                            ? PRIVACY_MASK.nome
+                                            : contract.representante_nome || 'Não informado'}
                                         </p>
                                       </TooltipContent>
                                     </Tooltip>
@@ -1059,9 +1119,17 @@ export function ContractsTable({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded"
+                                    disabled={privacyOn}
+                                    className={cn(
+                                      'h-6 w-6 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded',
+                                      privacyOn && 'opacity-40 cursor-not-allowed',
+                                    )}
                                     onClick={() => copyToClipboard(contract.nome, 'Nome copiado!')}
-                                    title="Copiar nome"
+                                    title={
+                                      privacyOn
+                                        ? 'Indisponível no Modo de Privacidade'
+                                        : 'Copiar nome'
+                                    }
                                   >
                                     <Copy className="h-3 w-3" />
                                   </Button>
@@ -1070,15 +1138,26 @@ export function ContractsTable({
                               <TableCell className="text-[#78818E] dark:text-muted-foreground whitespace-nowrap text-xs tabular-nums">
                                 {contract.fone ? (
                                   <span className="inline-flex items-center gap-1">
-                                    {contract.fone}
+                                    <PrivacyText
+                                      value={contract.fone}
+                                      mask={PRIVACY_MASK.telefone}
+                                    />
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-6 w-6 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded"
+                                      disabled={privacyOn}
+                                      className={cn(
+                                        'h-6 w-6 shrink-0 text-[#78818E] hover:text-[#252B34] hover:bg-[#F5F6F8] dark:hover:bg-muted/50 rounded',
+                                        privacyOn && 'opacity-40 cursor-not-allowed',
+                                      )}
                                       onClick={() =>
                                         copyToClipboard(contract.fone, 'Telefone copiado!')
                                       }
-                                      title="Copiar telefone"
+                                      title={
+                                        privacyOn
+                                          ? 'Indisponível no Modo de Privacidade'
+                                          : 'Copiar telefone'
+                                      }
                                     >
                                       <Copy className="h-3 w-3" />
                                     </Button>
