@@ -7,7 +7,7 @@ import { PericiasTable } from './pericias/Table'
 import { FormModal } from './pericias/FormModal'
 import { DeleteModal } from './pericias/DeleteModal'
 import { Button } from '@/components/ui/button'
-import { Plus, Printer } from 'lucide-react'
+import { Plus, Printer, FilterX } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Select,
@@ -72,6 +72,20 @@ export default function Pericias() {
   const handleFilteredDataChange = useCallback((items: Pericia[]) => {
     setFilteredPericias(items)
   }, [])
+
+  // Botão Limpar (padrão Central Auxílio-Acidente): aparece somente quando algum
+  // filtro PRINCIPAL (busca, status da tabela ou ano) está fora do padrão da aba
+  // (ano padrão = ano corrente). A tabela de Perícias não tem filtros rápidos
+  // em chips; o select de Status da tabela é principal e é restaurado aqui.
+  const defaultYear = new Date().getFullYear()
+  const hasActiveMainFilters =
+    Boolean(tableSearch) || tableStatus !== 'Todos' || year !== defaultYear
+
+  const clearFilters = () => {
+    setTableSearch('')
+    setTableStatus('Todos')
+    setYear(defaultYear)
+  }
 
   const formatDateBR = (val?: string) => {
     if (!val) return '-'
@@ -230,6 +244,17 @@ export default function Pericias() {
         </div>
 
         <div className="flex items-center gap-2.5 self-start lg:self-center">
+          {hasActiveMainFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              title="Limpar filtros"
+              className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+            >
+              <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+            </Button>
+          )}
           <Select value={year.toString()} onValueChange={(val) => setYear(Number(val))}>
             <SelectTrigger className="w-[125px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Ano" />
@@ -298,6 +323,8 @@ export default function Pericias() {
         onFilteredDataChange={handleFilteredDataChange}
         onSearchChange={setTableSearch}
         onStatusFilterChange={setTableStatus}
+        search={tableSearch}
+        statusFilter={tableStatus}
       />
 
       <FormModal open={formModalOpen} onOpenChange={setFormModalOpen} item={editingItem} />

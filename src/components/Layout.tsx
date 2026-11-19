@@ -276,9 +276,16 @@ export default function Layout() {
 
   const privacyReadyHere = matchesPath(PRIVACY_READY_PATHS)
   const privacyPendingHere = matchesPath(PRIVACY_PENDING_PATHS)
-  const showMaskedNotice = privacyOn && privacyReadyHere
-  const showUnavailableNotice = privacyOn && !privacyReadyHere && privacyPendingHere
-  const showNoClientDataNotice = privacyOn && !privacyReadyHere && !privacyPendingHere
+  // Visão Geral (/) é roteiro de leitura sem dados próprios de clientes: o
+  // CONTROLE fica oculto apenas nessa rota, mas o ESTADO é preservado — ativado
+  // numa aba protegida, o mascaramento continua ativo ao voltar (store +
+  // localStorage). Em /dashboard (Contratos Fechados) o controle segue visível.
+  const isOverviewPath = location.pathname === '/'
+  const showMaskedNotice = privacyOn && privacyReadyHere && !isOverviewPath
+  const showUnavailableNotice =
+    privacyOn && !privacyReadyHere && privacyPendingHere && !isOverviewPath
+  const showNoClientDataNotice =
+    privacyOn && !privacyReadyHere && !privacyPendingHere && !isOverviewPath
 
   return (
     <SidebarProvider>
@@ -480,23 +487,25 @@ export default function Layout() {
                   Tela sem dados de clientes
                 </span>
               )}
-              <button
-                type="button"
-                onClick={togglePrivacy}
-                className={cn(
-                  'h-8 w-8 p-0 rounded-full transition-all inline-flex items-center justify-center border cursor-pointer',
-                  privacyOn
-                    ? 'bg-[#C9922A] text-white border-[#C9922A] shadow-xs hover:bg-[#b58324]'
-                    : 'bg-[#F5F6F8] dark:bg-muted/40 text-[#78818E] border-[#E4E7EB] dark:border-border hover:text-[#252B34] dark:hover:text-foreground',
-                )}
-                title={
-                  privacyOn
-                    ? 'Modo de Privacidade ativo — dados de clientes mascarados em todas as telas — clique para desativar'
-                    : 'Ativar Modo de Privacidade (mascara dados de clientes em todas as telas)'
-                }
-              >
-                <EyeOff className="h-4 w-4" />
-              </button>
+              {!isOverviewPath && (
+                <button
+                  type="button"
+                  onClick={togglePrivacy}
+                  className={cn(
+                    'h-8 w-8 p-0 rounded-full transition-all inline-flex items-center justify-center border cursor-pointer',
+                    privacyOn
+                      ? 'bg-[#C9922A] text-white border-[#C9922A] shadow-xs hover:bg-[#b58324]'
+                      : 'bg-[#F5F6F8] dark:bg-muted/40 text-[#78818E] border-[#E4E7EB] dark:border-border hover:text-[#252B34] dark:hover:text-foreground',
+                  )}
+                  title={
+                    privacyOn
+                      ? 'Modo de Privacidade ativo — dados de clientes mascarados em todas as telas — clique para desativar'
+                      : 'Ativar Modo de Privacidade (mascara dados de clientes em todas as telas)'
+                  }
+                >
+                  <EyeOff className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {/* Alternador de tema preservado */}

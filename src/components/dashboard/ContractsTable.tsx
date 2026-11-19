@@ -19,6 +19,7 @@ import {
   Search,
   Plus,
   AlertTriangle,
+  FilterX,
   UserCheck,
   Printer,
   Copy,
@@ -136,6 +137,30 @@ export function ContractsTable({
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value)
     toast.success(label)
+  }
+
+  // Botão Limpar (padrão Central Auxílio-Acidente): aparece somente quando algum
+  // filtro PRINCIPAL (busca, benefício, responsável, campanha, mês, semana ou ano)
+  // está fora do padrão da aba. As pills de status (activeFilter) são filtros
+  // rápidos — redefinidas pelo próprio pill "Todos" — e o Limpar não as toca.
+  const defaultYear = new Date().getFullYear()
+  const hasActiveMainFilters =
+    Boolean(search) ||
+    tableBeneficio !== 'Todos os benefícios' ||
+    tableResponsavel !== 'Todos os responsáveis' ||
+    tableCampanhaOrigem !== 'Todas as campanhas' ||
+    tableMonth !== 'Todos os meses' ||
+    tableWeek !== 'Todas as semanas' ||
+    tableYear !== defaultYear
+
+  const clearFilters = () => {
+    setSearch('')
+    setTableBeneficio('Todos os benefícios')
+    setTableResponsavel('Todos os responsáveis')
+    setTableCampanhaOrigem('Todas as campanhas')
+    setTableMonth('Todos os meses')
+    setTableWeek('Todas as semanas')
+    setTableYear(defaultYear)
   }
 
   const responsaveisList = useMemo(() => {
@@ -861,6 +886,17 @@ export function ContractsTable({
 
           {/* Botões de Ação */}
           <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+            {hasActiveMainFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                title="Limpar filtros"
+                className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+              >
+                <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+              </Button>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

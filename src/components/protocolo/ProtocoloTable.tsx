@@ -12,6 +12,7 @@ import {
   Search,
   Plus,
   Bell,
+  FilterX,
   ArrowRight,
   Printer,
   AlertTriangle,
@@ -85,6 +86,30 @@ export function ProtocoloTable({
   // valores exibidos (linhas, tooltips e impressão) mascarados.
   const { enabled: privacyOn } = usePrivacyMode()
   const displaySearch = privacyOn ? PRIVACY_MASK.busca : search
+
+  // Botão Limpar (padrão Central Auxílio-Acidente): aparece somente quando algum
+  // filtro PRINCIPAL (busca, benefício, responsável, mês, ano ou período) está
+  // fora do padrão da aba. Os filtros rápidos (pills de Status/Origem/Parceiro)
+  // NÃO são tocados — o "Todos" deles continua sendo o próprio pill.
+  const defaultYear = new Date().getFullYear().toString()
+  const hasActiveMainFilters =
+    Boolean(search) ||
+    tipo !== 'Todos' ||
+    responsavel !== 'Todos' ||
+    month !== 'Todos' ||
+    year !== defaultYear ||
+    monthStart !== 'Todos' ||
+    monthEnd !== 'Todos'
+
+  const clearFilters = () => {
+    setSearch('')
+    setTipo('Todos')
+    setResponsavel('Todos')
+    setMonth('Todos')
+    setYear(defaultYear)
+    setMonthStart('Todos')
+    setMonthEnd('Todos')
+  }
 
   const availableYears = useMemo(() => {
     const years = new Set(
@@ -722,6 +747,17 @@ export function ProtocoloTable({
 
           {/* Botões de Ação */}
           <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+            {hasActiveMainFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                title="Limpar filtros"
+                className="h-9 px-3 text-xs border-[#E4E7EB] dark:border-border hover:bg-[#FAF8F2] dark:hover:bg-muted/40 text-[#78818E] hover:text-[#C9922A] transition-colors"
+              >
+                <FilterX className="h-3.5 w-3.5 mr-1" /> Limpar
+              </Button>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

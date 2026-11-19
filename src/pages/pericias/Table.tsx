@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, Fragment } from 'react'
+import { useMemo, useEffect, Fragment } from 'react'
 import { Pericia } from '@/services/pericias'
 import {
   Table,
@@ -33,6 +33,10 @@ export interface PericiasTableProps {
   onFilteredDataChange?: (items: Pericia[]) => void
   onSearchChange?: (search: string) => void
   onStatusFilterChange?: (status: string) => void
+  // Estado controlado pela página (permite ao botão Limpar do cabeçalho
+  // restaurar busca e status junto com o ano — padrão Central Auxílio-Acidente)
+  search: string
+  statusFilter: string
 }
 
 export function PericiasTable({
@@ -43,9 +47,11 @@ export function PericiasTable({
   onFilteredDataChange,
   onSearchChange,
   onStatusFilterChange,
+  search,
+  statusFilter,
 }: PericiasTableProps) {
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('Todos')
+  const setSearch = (v: string) => onSearchChange?.(v)
+  const setStatusFilter = (v: string) => onStatusFilterChange?.(v)
 
   const { enabled: privacyOn } = usePrivacyMode()
   // Mesmo padrão de RPV/Protocolo: exibição mascarada, valor interno preservado
@@ -183,20 +189,11 @@ export function PericiasTable({
               )}
               value={displaySearch}
               aria-label={privacyOn ? PRIVACY_MASK.busca : undefined}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                onSearchChange?.(e.target.value)
-              }}
+              onChange={(e) => setSearch(e.target.value)}
             />
             {privacyOn && <EyeOff className="absolute right-2.5 top-2.5 h-4 w-4 text-[#C9922A]" />}
           </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(val) => {
-              setStatusFilter(val)
-              onStatusFilterChange?.(val)
-            }}
-          >
+          <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val)}>
             <SelectTrigger className="w-full sm:w-[170px] h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus:ring-[#C9922A]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
