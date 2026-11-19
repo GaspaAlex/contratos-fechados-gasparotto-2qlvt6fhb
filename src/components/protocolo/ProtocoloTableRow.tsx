@@ -20,6 +20,8 @@ import { getReviewStatus, normalizeDateCivil, isProtocoloOverdue } from '@/lib/d
 import { isArchived } from '@/lib/archivedStatuses'
 import { statusContratoParaExibicao } from '@/services/protocoloValidade'
 import { ProtocoloTableRowArquivado } from '@/components/protocolo/ProtocoloTableRowArquivado'
+import { PrivacyText } from '@/components/privacy/PrivacyText'
+import { PRIVACY_MASK } from '@/lib/privacyMode'
 import { cn } from '@/lib/utils'
 
 export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
@@ -131,9 +133,11 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       {/* Nome + Tooltips */}
       <TableCell className="font-semibold text-xs whitespace-nowrap text-[#252B34] dark:text-foreground">
         <div className="flex items-center gap-2">
-          <span className="truncate max-w-[220px]" title={item.nome}>
-            {item.nome}
-          </span>
+          <PrivacyText
+            value={item.nome}
+            className="truncate max-w-[220px] font-semibold"
+            titleWhenVisible
+          />
           {item.observacoes && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -270,9 +274,11 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
       {/* Nº Autos */}
       <TableCell className="whitespace-nowrap text-xs">
         {item.nautos ? (
-          <span className="font-mono text-[11px] bg-[#F5F6F8] dark:bg-muted/50 text-[#252B34] dark:text-foreground px-2 py-0.5 rounded border border-[#E4E7EB] dark:border-border">
-            {item.nautos}
-          </span>
+          <PrivacyText
+            value={item.nautos}
+            mask={PRIVACY_MASK.processo}
+            className="font-mono text-[11px] bg-[#F5F6F8] dark:bg-muted/50 text-[#252B34] dark:text-foreground px-2 py-0.5 rounded border border-[#E4E7EB] dark:border-border"
+          />
         ) : (
           <span className="text-xs text-[#A0A7B5]">—</span>
         )}

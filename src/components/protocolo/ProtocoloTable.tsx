@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  EyeOff,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
@@ -43,6 +44,7 @@ import {
   isProtocoloOverdue,
 } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
+import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
 
 const normalizeText = (text: string) => {
   if (!text) return ''
@@ -79,6 +81,11 @@ export function ProtocoloTable({
   onEdit,
   onDelete,
 }: any) {
+  // Modo de Privacidade (padrão RPV validado): estado interno real preservado,
+  // valores exibidos (linhas, tooltips e impressão) mascarados.
+  const { enabled: privacyOn } = usePrivacyMode()
+  const displaySearch = privacyOn ? PRIVACY_MASK.busca : search
+
   const availableYears = useMemo(() => {
     const years = new Set(
       data.map((d: any) => {
@@ -182,6 +189,13 @@ export function ProtocoloTable({
     })
   }, [filtered])
 
+  // Modo de Privacidade: mesmos valores mascarados da tabela nas linhas,
+  // tooltips e no relatório impresso — filtros e contagens seguem dos dados reais.
+  const displayData = useMemo(
+    () => maskClienteRecords(privacyOn, sortedFiltered),
+    [privacyOn, sortedFiltered],
+  )
+
   // Analytics - Decisions
   const procedentes = filtered.filter((d: any) => d.decisao === 'Procedente').length
   const improcedentes = filtered.filter((d: any) => d.decisao === 'Improcedente').length
@@ -192,14 +206,14 @@ export function ProtocoloTable({
   // Grouping
   const grouped = useMemo(() => {
     const groups: Record<string, any[]> = {}
-    sortedFiltered.forEach((d: any) => {
+    displayData.forEach((d: any) => {
       const recDate = d.dprotocolo || d.dcalculo
       const m = recDate ? recDate.substring(0, 7) : '0000-00'
       if (!groups[m]) groups[m] = []
       groups[m].push(d)
     })
     return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
-  }, [sortedFiltered])
+  }, [displayData])
 
   const headerClass =
     'text-[10px] uppercase tracking-wider text-[#78818E] dark:text-muted-foreground font-semibold whitespace-nowrap'
@@ -232,7 +246,8 @@ export function ProtocoloTable({
     const activeFiltersList: string[] = []
 
     if (search.trim()) {
-      activeFiltersList.push(`Busca: "${search.trim()}"`)
+      // Modo de Privacidade: o texto da busca não vaza para o relatório
+      activeFiltersList.push(`Busca: "${privacyOn ? PRIVACY_MASK.busca : search.trim()}"`)
     }
     if (tipo !== 'Todos') {
       activeFiltersList.push(`Benefício: ${tipo}`)
@@ -424,7 +439,8 @@ export function ProtocoloTable({
       subtitle: 'Advocacia Gasparotto',
       filters: activeFiltersList,
       columns,
-      data: dadosValidos,
+      // Modo de Privacidade: mesma máscara da tabela no PDF/relatório impresso
+      data: maskClienteRecords(privacyOn, dadosValidos),
       orientation: 'landscape',
       totalLabel: 'Total de registros',
     })
@@ -621,11 +637,18 @@ export function ProtocoloTable({
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#78818E]" />
               <Input
-                placeholder="Buscar cliente, resp. ou autos..."
-                className="pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus-visible:ring-[#C9922A]"
-                value={search}
+                placeholder={privacyOn ? PRIVACY_MASK.busca : 'Buscar cliente, resp. ou autos...'}
+                value={displaySearch}
                 onChange={(e) => setSearch(e.target.value)}
+                aria-label={privacyOn ? PRIVACY_MASK.busca : undefined}
+                className={cn(
+                  'pl-9 h-9 text-xs border-[#E4E7EB] dark:border-border bg-white dark:bg-card rounded-md focus-visible:ring-[#C9922A]',
+                  privacyOn && 'select-none',
+                )}
               />
+              {privacyOn && (
+                <EyeOff className="absolute right-2.5 top-2.5 h-4 w-4 text-[#C9922A]" />
+              )}
             </div>
 
             {/* Select Benefício */}

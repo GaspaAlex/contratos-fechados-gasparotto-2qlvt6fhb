@@ -4,6 +4,8 @@ import { Edit, Trash, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/formatters'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { PrivacyText } from '@/components/privacy/PrivacyText'
+import { PRIVACY_MASK } from '@/lib/privacyMode'
 import { cn } from '@/lib/utils'
 
 /**
@@ -28,9 +30,11 @@ export function ProtocoloTableRowArquivado({ item, index, statusContrato, onEdit
       {/* Nome tachado + indicação discreta do status do contrato */}
       <TableCell className="font-semibold text-xs whitespace-nowrap">
         <div className="flex items-center gap-2">
-          <span className={cn('truncate max-w-[200px] line-through', muted)} title={item.nome}>
-            {item.nome}
-          </span>
+          <PrivacyText
+            value={item.nome}
+            className={cn('truncate max-w-[200px] line-through font-semibold', muted)}
+            titleWhenVisible
+          />
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-[#78818E]/10 text-[#78818E] dark:text-muted-foreground border border-[#78818E]/20 cursor-help shrink-0">
@@ -94,7 +98,17 @@ export function ProtocoloTableRowArquivado({ item, index, statusContrato, onEdit
       </TableCell>
 
       {/* Nº Autos */}
-      <TableCell className={cn('whitespace-nowrap text-xs', muted)}>{item.nautos || '—'}</TableCell>
+      <TableCell className={cn('whitespace-nowrap text-xs', muted)}>
+        {item.nautos ? (
+          <PrivacyText
+            value={item.nautos}
+            mask={PRIVACY_MASK.processo}
+            className={cn('font-mono text-[11px]', muted)}
+          />
+        ) : (
+          '—'
+        )}
+      </TableCell>
 
       {/* Valor */}
       <TableCell className={cn('text-right whitespace-nowrap text-xs tabular-nums', muted)}>
