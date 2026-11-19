@@ -283,7 +283,7 @@ export default function Rpv() {
           </p>
         </div>
 
-        <RpvDashboard data={data} month={month} year={year} />
+        <RpvDashboard data={filteredData} month={month} year={year} />
 
         <RpvFilters
           search={search}
