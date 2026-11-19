@@ -118,7 +118,6 @@ export function ContractsTable({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedContract, setSelectedContract] = useState<any>(null)
 
-  const { toast: toastShadcn } = useToast()
   const { enabled: privacyOn } = usePrivacyMode()
   // Busca exibida mascarada com o modo ativo — o estado interno (search) segue
   // filtrando pelos valores reais, mesmo padrão RPV/Protocolo.
@@ -136,7 +135,7 @@ export function ContractsTable({
 
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value)
-    toast({ description: label })
+    toast.success(label)
   }
 
   const responsaveisList = useMemo(() => {
