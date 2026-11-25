@@ -32,6 +32,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createProtocolo, updateProtocolo, deleteProtocolo } from '@/services/protocolo'
+import { TIPOS_CONTINUIDADE } from '@/components/protocolo/continuidade'
+import { GitBranch } from 'lucide-react'
 
 import {
   getTiposAcao,
@@ -68,6 +70,8 @@ const baseSchema = z.object({
   representante_telefone: z.string().optional(),
   observacoes: z.string().optional(),
   revisar_em: z.string().optional(),
+  tipo_continuidade: z.string().optional(),
+  justificativa_reabertura: z.string().optional(),
 })
 
 const schema = baseSchema.refine(
@@ -120,7 +124,11 @@ export function ProtocoloDialog({
   tipos,
   responsaveis,
   onSaved,
-  mesmoCasoOrigem,
+  // Fluxo "Novo protocolo do mesmo caso" (v0.0.1124): a página passa o modo e
+  // o protocolo original — o formulário herda o cadastro e a relation
+  // `contratos`, e grava caso_origem/protocolo_anterior/tipo/justificativa.
+  modoMesmoCaso,
+  mesmoCasoOriginal,
 }: any) {
   const { enabled: privacyOn } = usePrivacyMode()
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
@@ -131,11 +139,6 @@ export function ProtocoloDialog({
   // Relation `contratos` gravada junto com o registro: vazia no cadastro
   // manual, com o contrato de origem quando vem da ação "Abrir em Protocolo".
   const [contratoVinculado, setContratoVinculado] = useState<string[]>([])
-  // Fluxo "Novo protocolo do mesmo caso": protocolo original que originou o
-  // prefill — seu id vai em caso_origem e o formulário herda os dados
-  // cadastrais pertinentes (nunca nautos/decisão/valores/observações).
-  const [modoMesmoCaso, setModoMesmoCaso] = useState(false)
-  const [mesmoCasoOriginal, setMesmoCasoOriginal] = useState<any>(null)
 
   const loadTiposAcao = async () => {
     try {
@@ -201,8 +204,51 @@ export function ProtocoloDialog({
       representante_telefone: '',
       observacoes: '',
       revisar_em: '',
+      tipo_continuidade: '',
+      justificativa_reabertura: '',
     },
   })
+
+  // Fluxo "Novo protocolo do mesmo caso" (v0.0.1124): herda do protocolo
+  // original SOMENTE os dados cadastrais pertinentes e o vínculo com o
+  // contrato (relation `contratos`). NÃO copia: nautos (nº do processo),
+  // decisão, valor, observações, datas (dcontrato/dcalculo/dprotocolo/
+  // revisar_em) nem representante. Status inicia "Prov. Inicial".
+  useEffect(() => {
+    if (!open || !modoMesmoCaso || !mesmoCasoOriginal || prefill) return
+    setDuplicateWarning(null)
+    loadTiposAcao()
+    loadResponsaveis()
+    form.reset({
+      nome: mesmoCasoOriginal.nome || '',
+      fone: mesmoCasoOriginal.fone || '',
+      tipo_acao: mesmoCasoOriginal.tipo_acao || '',
+      responsavel: mesmoCasoOriginal.responsavel || '',
+      // Status inicial do novo protocolo do mesmo caso.
+      status: 'Prov. Inicial',
+      dcontrato: '',
+      dcalculo: '',
+      dprotocolo: '',
+      revisar_em: '',
+      nautos: '',
+      valor: undefined as unknown as number,
+      decisao: 'Aguardando',
+      origem: mesmoCasoOriginal.origem || '',
+      parceiro: mesmoCasoOriginal.parceiro || '',
+      representante: false,
+      representante_nome: '',
+      representante_cpf: '',
+      representante_vinculo: '',
+      representante_telefone: '',
+      observacoes: '',
+      tipo_continuidade: '',
+      justificativa_reabertura: '',
+    })
+    // Vínculo com o contrato original herdado (relation `contratos`).
+    setContratoVinculado(
+      Array.isArray(mesmoCasoOriginal.contratos) ? mesmoCasoOriginal.contratos : [],
+    )
+  }, [open, modoMesmoCaso, mesmoCasoOriginal, prefill, form])
 
   // Prefill da ação "Abrir em Protocolo" (contrato sem protocolo vinculado):
   // resolve o tipo de ação por nome (beneficio do contrato, mesma equivalência
@@ -326,7 +372,7 @@ export function ProtocoloDialog({
         setContratoVinculado([])
       }
     }
-  }, [open, item, preselectedItem, form])
+  }, [open, item, preselectedItem, form, modoMesmoCaso, mesmoCasoOriginal])
 
   const handleAddTipoAcao = async (nome: string) => {
     try {
@@ -446,7 +492,13 @@ export function ProtocoloDialog({
           toast.error('A justificativa deve ter no máximo 2000 caracteres.')
           return
         }
+        const tipo = String(values.tipo_continuidade || '').trim()
+        if (!tipo) {
+          toast.error('Informe o tipo de continuidade do novo protocolo.')
+          return
+        }
       }
+      if (modoMesmoCaso) return
       try {
         const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
         const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
@@ -489,6 +541,22 @@ export function ProtocoloDialog({
         payload.representante_cpf = ''
         payload.representante_vinculo = ''
         payload.representante_telefone = ''
+      }
+
+      // Fluxo "Novo protocolo do mesmo caso" (v0.0.1124): grava o vínculo de
+      // continuidade — caso_origem (raiz da cadeia), protocolo_anterior
+      // (registro imediatamente anterior) e a classificação/justificativa.
+      // No cadastro convencional os campos vão vazios (nunca herdam sujeira).
+      if (modoMesmoCaso && mesmoCasoOriginal) {
+        payload.caso_origem = mesmoCasoOriginal.id
+        payload.protocolo_anterior = mesmoCasoOriginal.id
+        payload.tipo_continuidade = String(values.tipo_continuidade || '')
+        payload.justificativa_reabertura = String(values.justificativa_reabertura || '')
+      } else {
+        payload.caso_origem = null
+        payload.protocolo_anterior = null
+        payload.tipo_continuidade = ''
+        payload.justificativa_reabertura = ''
       }
 
       const registroAtual = item || preselectedItem
@@ -553,23 +621,99 @@ export function ProtocoloDialog({
       <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] rounded-[10px] border border-[#E4E7EB] dark:border-border p-6">
         <DialogHeader className="border-b border-[#E4E7EB] dark:border-border pb-3">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
-              {registroAtual ? 'EDIÇÃO' : 'NOVO REGISTRO'}
-            </span>
+            {modoMesmoCaso && mesmoCasoOriginal ? (
+              <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#4A7FA5] bg-[#4A7FA5]/10 px-2 py-0.5 rounded">
+                NOVO PROTOCOLO DO MESMO CASO
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[10px] font-bold tracking-[1.2px] uppercase text-[#C9922A] bg-[#C9922A]/10 px-2 py-0.5 rounded">
+                {registroAtual ? 'EDIÇÃO' : 'NOVO REGISTRO'}
+              </span>
+            )}
           </div>
           <DialogTitle className="text-xl font-bold tracking-tight text-[#252B34] dark:text-foreground">
             {registroAtual
               ? `Editar: ${registroAtual.nome}`
-              : prefill
-                ? 'Adicionar ao Protocolo (vínculo com contrato)'
-                : 'Adicionar ao Protocolo'}
+              : modoMesmoCaso && mesmoCasoOriginal
+                ? `Novo protocolo do mesmo caso: ${mesmoCasoOriginal.nome}`
+                : prefill
+                  ? 'Adicionar ao Protocolo (vínculo com contrato)'
+                  : 'Adicionar ao Protocolo'}
           </DialogTitle>
           <DialogDescription className="text-xs text-[#78818E] dark:text-muted-foreground">
-            Preencha e confirme os dados processuais do protocolo.
+            {modoMesmoCaso && mesmoCasoOriginal
+              ? `Continuação do protocolo${mesmoCasoOriginal.nautos ? ` nº ${mesmoCasoOriginal.nautos}` : ''} — cadastro herdado; informe o processo, a continuidade e as novas datas.`
+              : 'Preencha e confirme os dados processuais do protocolo.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {modoMesmoCaso && mesmoCasoOriginal && (
+              <div className="rounded-lg border border-[#4A7FA5]/25 bg-[#4A7FA5]/5 p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <GitBranch className="h-4 w-4 text-[#4A7FA5]" />
+                  <h4 className="text-sm font-semibold text-[#4A7FA5] dark:text-sky-400">
+                    Continuação do mesmo caso
+                  </h4>
+                </div>
+                <p className="text-xs text-[#78818E] dark:text-muted-foreground">
+                  Vínculo com o protocolo original
+                  {mesmoCasoOriginal.nautos ? ` (nº ${mesmoCasoOriginal.nautos})` : ''} — o cadastro
+                  e o contrato foram herdados. Nº do processo, decisão, valor e datas iniciam em
+                  branco.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="tipo_continuidade"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Tipo de continuidade <span className="text-[#B4453C]">*</span>
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo de continuidade..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {TIPOS_CONTINUIDADE.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="justificativa_reabertura"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Justificativa <span className="text-[#B4453C]">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            rows={2}
+                            placeholder="Explique por que este caso precisa de um novo protocolo..."
+                            className="focus-visible:ring-[#C9922A]"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -1008,9 +1152,11 @@ export function ProtocoloDialog({
                 >
                   {item || preselectedItem
                     ? 'Salvar alterações'
-                    : prefill
-                      ? 'Confirmar e salvar protocolo'
-                      : 'Salvar Protocolo'}
+                    : modoMesmoCaso && mesmoCasoOriginal
+                      ? 'Salvar continuação'
+                      : prefill
+                        ? 'Confirmar e salvar protocolo'
+                        : 'Salvar Protocolo'}
                 </Button>
               </DialogFooter>
             )}
