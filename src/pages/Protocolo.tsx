@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { getProtocolos } from '@/services/protocolo'
+import { getContratos } from '@/services/contratos'
+import type { ContratoComissoesInput } from '@/lib/comissoes'
 import { loadAbrirEmProtocoloEntry } from '@/lib/abrirEmProtocolo'
 import { getTiposAcao, getResponsaveis } from '@/services/lookups'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -11,6 +13,7 @@ import { ProtocoloDialog, ProtocoloDeleteDialog } from '@/components/protocolo/P
 
 export default function Protocolo() {
   const [data, setData] = useState<any[]>([])
+  const [contratosFechados, setContratosFechados] = useState<ContratoComissoesInput[]>([])
   const [tipos, setTipos] = useState<any[]>([])
   const [responsaveis, setResponsaveis] = useState<any[]>([])
   const [selected, setSelected] = useState(null)
@@ -34,6 +37,14 @@ export default function Protocolo() {
 
   const { enabled: privacyOn } = usePrivacyMode()
 
+  // Tipos de ação indexados por id — usado pela deduplicação fone+tipo do
+  // card Comissões (Build 1).
+  const tiposPorId = useMemo(() => {
+    const m = new Map<string, { id: string; nome: string }>()
+    for (const t of tipos) m.set(t.id, { id: t.id, nome: t.nome })
+    return m
+  }, [tipos])
+
   // Modo de Privacidade ativo: fecha sem salvar qualquer modal já aberto
   useEffect(() => {
     if (privacyOn && (open || delOpen)) {
@@ -56,8 +67,21 @@ export default function Protocolo() {
     }
   }
 
+  // Card Comissões (Build 1): carrega contratos_fechados SOMENTE PARA LEITURA,
+  // para deduplicação por vínculo contrato (relation + fone+tipo). Nada é
+  // gravado; realtime já cobre atualização (useRealtime abaixo).
+  const loadContratos = async () => {
+    try {
+      const c = await getContratos()
+      setContratosFechados(c as unknown as ContratoComissoesInput[])
+    } catch (e) {
+      console.error('Failed to load contratos_fechados for comissoes', e)
+    }
+  }
+
   useEffect(() => {
     loadData()
+    loadContratos()
   }, [])
 
   // Ação "Abrir em Protocolo" (Contratos Fechados): consome a entrada vinda
@@ -110,6 +134,8 @@ export default function Protocolo() {
         monthStart={monthStart}
         monthEnd={monthEnd}
         status={status}
+        contratosFechados={contratosFechados}
+        tiposAcaoPorId={tiposPorId}
       />
 
       <ProtocoloTable

@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { DollarSign, TrendingUp, FileCheck2, Calculator, AlertCircle } from 'lucide-react'
+import { ComissoesCard } from '@/components/protocolo/ComissoesCard'
+import type { ContratoComissoesInput, ProtocoloComissoesInput } from '@/lib/comissoes'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/formatters'
 import { monthsArray } from '@/lib/months'
@@ -16,6 +18,8 @@ interface Props {
   monthStart: string
   monthEnd: string
   status: string
+  contratosFechados?: ContratoComissoesInput[]
+  tiposAcaoPorId?: Map<string, { id: string; nome: string }>
 }
 
 export function ProtocoloDashboard({
@@ -29,6 +33,8 @@ export function ProtocoloDashboard({
   monthStart,
   monthEnd,
   status,
+  contratosFechados = [],
+  tiposAcaoPorId,
 }: Props) {
   // Base de registros: exclui protocolos INVÁLIDOS (todos os contratos
   // relacionados arquivados). A mudança é só na base — nenhuma fórmula muda.
@@ -149,7 +155,7 @@ export function ProtocoloDashboard({
   return (
     <div className="space-y-4">
       {/* Grid de Cards Superiores — Linguagem Grafite Premium 2.1 */}
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {/* CARD 1 — PROJEÇÃO DE HONORÁRIOS (Card de Destaque Executivo Grafite #22262E) */}
         <Card className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm flex flex-col justify-between">
           <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
@@ -268,6 +274,13 @@ export function ProtocoloDashboard({
             </div>
           </CardContent>
         </Card>
+
+        {/* CARD 5 — COMISSÕES (APURAÇÃO PRELIMINAR — Build 1) */}
+        <ComissoesCard
+          protocolos={data as ProtocoloComissoesInput[]}
+          contratos={contratosFechados}
+          tiposAcaoPorId={tiposAcaoPorId}
+        />
       </div>
 
       {/* Faixa Sóbria de Contadores por Status do Filtro Atual */}
