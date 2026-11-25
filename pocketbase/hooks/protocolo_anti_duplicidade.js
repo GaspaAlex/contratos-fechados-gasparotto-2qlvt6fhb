@@ -14,12 +14,28 @@
 // - O cliente reconhece o marcador PROTOCOLO_DUPLICADO na mensagem de erro,
 //   reconsulta por `contratos ?= '<id>'` e abre o registro já salvo.
 //
+// EXCEÇÃO ÚNICA — "Novo protocolo do mesmo caso" (reabertura/reajuizamento):
+// quando o novo registro carrega `caso_origem` apontando para um protocolo
+// existente, o bloqueio por contrato é SUSPENSO. A validação completa do fluxo
+// (origem existente, justificativa obrigatória, cadeia até a raiz, contratos
+// compartilhados com a raiz) é feita NO BACKEND por
+// protocolo_novo_mesmo_caso.js — uma marcação arbitrária do frontend sem esses
+// requisitos continua sendo recusada lá. Sem `caso_origem`, o bloqueio atual
+// permanece integral: cadastro normal duplicado por engano continua bloqueado.
+//
 // O hook existente protocolo_vinculo_contrato.js (direção Protocolo→Contrato)
 // permanece intacto.
 
 onRecordCreate((e) => {
   const contratoIds = e.record.getStringSlice('contratos')
   if (contratoIds.length === 0) {
+    return e.next()
+  }
+
+  // Exceção controlada: fluxo "Novo protocolo do mesmo caso" (validado em
+  // protocolo_novo_mesmo_caso.js — a checagem completa acontece lá).
+  const casoOrigem = ('' + (e.record.getString('caso_origem') || '')).trim()
+  if (casoOrigem !== '') {
     return e.next()
   }
 

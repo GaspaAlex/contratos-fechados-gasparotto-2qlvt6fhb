@@ -25,12 +25,28 @@ export interface ProtocoloItem {
   observacoes?: string
   revisar_em?: string
   contratos?: string[]
+  /** Novo protocolo do mesmo caso: raiz da cadeia (vazio em registros normais). */
+  caso_origem?: string
+  /** Justificativa obrigatória do fluxo "Novo protocolo do mesmo caso". */
+  justificativa_reabertura?: string
+  /** Auditoria: registro imediatamente anterior da cadeia. */
+  protocolo_anterior?: string
+  /** Auditoria (só na raiz, preenchido pelo hook): continuacoes da cadeia. */
+  caso_continuacoes?: string[]
   created?: string
   updated?: string
   expand?: {
     tipo_acao?: { id: string; nome: string }
     responsavel?: { id: string; nome: string }
     contratos?: { id: string; status?: string }[]
+    caso_origem?: {
+      id: string
+      nome: string
+      dcalculo?: string
+      dprotocolo?: string
+      status?: string
+      justificativa_reabertura?: string
+    } | null
   }
 }
 
@@ -38,7 +54,7 @@ export type ProtocoloInput = Partial<Omit<ProtocoloItem, 'id' | 'created' | 'upd
 
 export const getProtocolos = () =>
   pb.collection('protocolo').getFullList<ProtocoloItem>({
-    expand: 'tipo_acao,responsavel,contratos',
+    expand: 'tipo_acao,responsavel,contratos,caso_origem',
     sort: '+dprotocolo',
   })
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-25T11:25:04.219Z",
+  "generatedAt": "2026-11-25T12:49:49.263Z",
   "collections": [
     {
       "name": "users",
@@ -501,6 +501,26 @@
           "required": false,
           "system": false,
           "collectionRef": "contratos_fechados"
+        },
+        {
+          "name": "caso_origem",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "protocolo"
+        },
+        {
+          "name": "justificativa_reabertura",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "protocolo_anterior",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "protocolo"
         }
       ],
       "indexes": [
