@@ -18,6 +18,7 @@ export default function Protocolo() {
   const [responsaveis, setResponsaveis] = useState<any[]>([])
   const [selected, setSelected] = useState(null)
   const [open, setOpen] = useState(false)
+  const [mesmoCasoOriginal, setMesmoCasoOriginal] = useState<any>(null)
   const [delOpen, setDelOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
   const [preselectId, setPreselectId] = useState<string | null>(null)
@@ -169,6 +170,7 @@ export default function Protocolo() {
           setPreselectId(null)
           setPrefill(null)
           setSelected(null)
+          setMesmoCasoOriginal(null)
           setOpen(true)
         }}
         onEdit={(item: any) => {
@@ -179,6 +181,18 @@ export default function Protocolo() {
           setPreselectId(null)
           setPrefill(null)
           setSelected(item)
+          setMesmoCasoOriginal(null)
+          setOpen(true)
+        }}
+        onNovoMesmoCaso={(item: any) => {
+          if (privacyOn) {
+            toast.error('Desative o Modo de Privacidade para editar registros.')
+            return
+          }
+          setPreselectId(null)
+          setPrefill(null)
+          setSelected(null)
+          setMesmoCasoOriginal(item)
           setOpen(true)
         }}
         onDelete={(item: any) => {
@@ -199,11 +213,14 @@ export default function Protocolo() {
             setPreselectId(null)
             setPrefill(null)
             setSelected(null)
+            setMesmoCasoOriginal(null)
           }
         }}
         item={selected}
         preselectId={preselectId}
         prefill={prefill}
+        modoMesmoCaso={!!mesmoCasoOriginal && !selected}
+        mesmoCasoOriginal={mesmoCasoOriginal}
         tipos={tipos}
         responsaveis={responsaveis}
         onSaved={loadData}
