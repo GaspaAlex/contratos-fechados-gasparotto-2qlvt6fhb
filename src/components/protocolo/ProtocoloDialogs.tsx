@@ -120,6 +120,7 @@ export function ProtocoloDialog({
   tipos,
   responsaveis,
   onSaved,
+  mesmoCasoOrigem,
 }: any) {
   const { enabled: privacyOn } = usePrivacyMode()
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
@@ -130,6 +131,11 @@ export function ProtocoloDialog({
   // Relation `contratos` gravada junto com o registro: vazia no cadastro
   // manual, com o contrato de origem quando vem da ação "Abrir em Protocolo".
   const [contratoVinculado, setContratoVinculado] = useState<string[]>([])
+  // Fluxo "Novo protocolo do mesmo caso": protocolo original que originou o
+  // prefill — seu id vai em caso_origem e o formulário herda os dados
+  // cadastrais pertinentes (nunca nautos/decisão/valores/observações).
+  const [modoMesmoCaso, setModoMesmoCaso] = useState(false)
+  const [mesmoCasoOriginal, setMesmoCasoOriginal] = useState<any>(null)
 
   const loadTiposAcao = async () => {
     try {
@@ -427,6 +433,19 @@ export function ProtocoloDialog({
       if (privacyOn) {
         toast.error('Desative o Modo de Privacidade para editar registros.')
         return
+      }
+      // Fluxo "Novo protocolo do mesmo caso": justificativa OBRIGATÓRIA
+      // (espelha a validação do hook servidor PROTOCOLO_MESMO_CASO_JUSTIFICATIVA).
+      if (modoMesmoCaso) {
+        const just = String(values.justificativa_reabertura || '').trim()
+        if (!just) {
+          toast.error('Informe a justificativa para o novo protocolo do mesmo caso.')
+          return
+        }
+        if (just.length > 2000) {
+          toast.error('A justificativa deve ter no máximo 2000 caracteres.')
+          return
+        }
       }
       try {
         const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
