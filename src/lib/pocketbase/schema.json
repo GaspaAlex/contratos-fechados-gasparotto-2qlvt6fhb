@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-25T12:55:26.952Z",
+  "generatedAt": "2026-11-25T17:09:40.332Z",
   "collections": [
     {
       "name": "users",
@@ -521,6 +521,17 @@
           "required": false,
           "system": false,
           "collectionRef": "protocolo"
+        },
+        {
+          "name": "tipo_continuidade",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Administrativo → Judicial",
+            "Novo ajuizamento",
+            "Outra continuidade justificada"
+          ]
         }
       ],
       "indexes": [

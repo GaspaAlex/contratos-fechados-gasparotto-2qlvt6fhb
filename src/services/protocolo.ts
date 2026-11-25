@@ -29,6 +29,8 @@ export interface ProtocoloItem {
   caso_origem?: string
   /** Justificativa obrigatória do fluxo "Novo protocolo do mesmo caso". */
   justificativa_reabertura?: string
+  /** Classificação obrigatória do fluxo de continuação (opcional no schema, sem backfill). */
+  tipo_continuidade?: string
   /** Auditoria: registro imediatamente anterior da cadeia. */
   protocolo_anterior?: string
   /** Auditoria (só na raiz, preenchido pelo hook): continuacoes da cadeia. */

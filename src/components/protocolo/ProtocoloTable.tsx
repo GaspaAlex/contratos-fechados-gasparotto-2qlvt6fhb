@@ -73,6 +73,7 @@ export function ProtocoloTable({
   onAdd,
   onEdit,
   onDelete,
+  onNovoMesmoCaso,
 }: any) {
   // Modo de Privacidade (padrão RPV validado): estado interno real preservado,
   // valores exibidos (linhas, tooltips e impressão) mascarados.
@@ -943,6 +944,7 @@ export function ProtocoloTable({
                         index={idx + 1}
                         onEdit={() => onEdit(item)}
                         onDelete={() => onDelete(item)}
+                        onNovoMesmoCaso={() => onNovoMesmoCaso(item)}
                       />
                     ))}
                   </React.Fragment>

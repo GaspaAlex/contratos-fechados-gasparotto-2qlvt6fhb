@@ -21,10 +21,12 @@ import { isArchived } from '@/lib/archivedStatuses'
 import { statusContratoParaExibicao } from '@/services/protocoloValidade'
 import { ProtocoloTableRowArquivado } from '@/components/protocolo/ProtocoloTableRowArquivado'
 import { PrivacyText } from '@/components/privacy/PrivacyText'
+import { GitBranch } from 'lucide-react'
 import { PRIVACY_MASK } from '@/lib/privacyMode'
 import { cn } from '@/lib/utils'
+import { isContinuacao } from './continuidade'
 
-export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
+export function ProtocoloTableRow({ item, index, onEdit, onDelete, onNovoMesmoCaso }: any) {
   // Highlight strictly if status is "Prov. Inicial" and it's overdue
   const overdue = isProtocoloOverdue(item)
   const faltaDocs = item.status === 'R. Docs'
@@ -167,6 +169,27 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
                   Revisar em: {formatReviewDate(reviewCivil)}
                   {reviewStatus === 'past' && ' (Atrasada)'}
                   {reviewStatus === 'today' && ' (Hoje)'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {(isContinuacao(item) || item.expand?.caso_origem) && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center rounded-full bg-[#4A7FA5]/10 border border-[#4A7FA5]/25 px-1.5 py-0.5 text-[9px] font-semibold text-[#4A7FA5] dark:text-sky-400 cursor-help whitespace-nowrap shrink-0">
+                  Continuação do caso
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs md:max-w-sm">
+                <p className="text-xs whitespace-pre-line break-words">
+                  Continuação do caso
+                  {item.expand?.caso_origem?.nautos
+                    ? ` • Protocolo original nº ${item.expand.caso_origem.nautos}`
+                    : ''}
+                  {item.tipo_continuidade ? ` • ${item.tipo_continuidade}` : ''}
+                  {item.justificativa_reabertura
+                    ? ` • Justificativa: ${item.justificativa_reabertura}`
+                    : ''}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -325,6 +348,17 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete }: any) {
           >
             <Edit className="h-3.5 w-3.5" />
           </Button>
+          {onNovoMesmoCaso && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-[#78818E] hover:text-[#4A7FA5] hover:bg-[#4A7FA5]/10 rounded-md transition-colors"
+              onClick={onNovoMesmoCaso}
+              title="Novo protocolo do mesmo caso"
+            >
+              <GitBranch className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

@@ -59,6 +59,22 @@ onRecordCreate((e) => {
     )
   }
 
+  // (b2) classificação da continuidade obrigatória (migration 0106).
+  var TIPOS_CONTINUIDADE = [
+    'Administrativo → Judicial',
+    'Novo ajuizamento',
+    'Outra continuidade justificada',
+  ]
+  var tipoContinuidade = ('' + (e.record.getString('tipo_continuidade') || '')).trim()
+  if (!tipoContinuidade) {
+    throw new BadRequestError(
+      'PROTOCOLO_MESMO_CASO_TIPO: A classificação da continuidade é obrigatória para novo protocolo do mesmo caso.',
+    )
+  }
+  if (TIPOS_CONTINUIDADE.indexOf(tipoContinuidade) === -1) {
+    throw new BadRequestError('PROTOCOLO_MESMO_CASO_TIPO: Classificação de continuidade inválida.')
+  }
+
   // (a) protocolo original deve existir e não pode ser o próprio novo registro.
   var origem
   try {
@@ -144,9 +160,19 @@ onRecordCreate((e) => {
   }
 
   // Lock conservador: grava o id do novo protocolo na RAIZ (auditoria) ainda
-  // dentro da transação. Em corrida, a 2ª gravação concorrente falha aqui.
+  // dentro da transação. CONCATENA ao histórico existente (sem duplicar ids) —
+  // a 2ª, 3ª e demais continuações preservam toda a cadeia.
   var raizAtualizada = $app.findRecordById('protocolo', raizId)
-  raizAtualizada.set('caso_continuacoes', [novoId])
+  var continuacoes = []
+  try {
+    continuacoes = raizAtualizada.getStringSlice('caso_continuacoes') || []
+  } catch (errLista) {
+    continuacoes = []
+  }
+  if (continuacoes.indexOf(novoId) === -1) {
+    continuacoes.push(novoId)
+  }
+  raizAtualizada.set('caso_continuacoes', continuacoes)
   $app.save(raizAtualizada)
 
   log('novo protocolo do mesmo caso validado', {
