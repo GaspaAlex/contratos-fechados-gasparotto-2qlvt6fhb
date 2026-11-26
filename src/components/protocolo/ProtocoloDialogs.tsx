@@ -226,7 +226,10 @@ export function ProtocoloDialog({
       responsavel: mesmoCasoOriginal.responsavel || '',
       // Status inicial do novo protocolo do mesmo caso.
       status: 'Prov. Inicial',
-      dcontrato: '',
+      // Data do Contrato herdada do original (mesmo contrato); demais datas vazias.
+      dcontrato: mesmoCasoOriginal.dcontrato
+        ? String(mesmoCasoOriginal.dcontrato).substring(0, 10)
+        : '',
       dcalculo: '',
       dprotocolo: '',
       revisar_em: '',

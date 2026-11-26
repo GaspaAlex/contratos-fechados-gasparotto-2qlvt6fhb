@@ -22,6 +22,7 @@ import { formatDateBR } from '@/services/leadsAuxAcidente'
 import {
   apurarComissoes,
   COLABORADOR_CONDICIONADO_META,
+  ROTULO_CONTINUACAO_SEM_COMISSAO,
   TOTAL_BASICO_POR_CASO,
   TOTAL_POTENCIAL_POR_CASO,
   type ApuracaoComissoes,
@@ -55,7 +56,11 @@ const SITUACAO_META: Record<string, { label: string; dot: string; text: string }
     dot: 'bg-[#8A56AC]',
     text: 'text-[#8A56AC]',
   },
-  duplicado: { label: 'Duplicado (2ª+ liberação)', dot: 'bg-[#9EA7B6]', text: 'text-[#9EA7B6]' },
+  duplicado: {
+    label: ROTULO_CONTINUACAO_SEM_COMISSAO,
+    dot: 'bg-[#9EA7B6]',
+    text: 'text-[#9EA7B6]',
+  },
   invalido: { label: 'Fora (contrato arquivado)', dot: 'bg-[#9EA7B6]', text: 'text-[#9EA7B6]' },
 }
 
@@ -318,10 +323,7 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
             {apuracao.casosDuplicados.length > 0 && (
               <section>
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
-                  Excluídos por duplicidade ({apuracao.casosDuplicados.length})
-                  <span className="ml-1 text-[10px] font-normal normal-case">
-                    (2ª+ liberação do mesmo contrato)
-                  </span>
+                  {ROTULO_CONTINUACAO_SEM_COMISSAO} ({apuracao.casosDuplicados.length})
                 </h3>
                 <ListaCasos casos={apuracao.casosDuplicados} />
               </section>
@@ -332,10 +334,10 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
               <span>
                 Apuração preliminar de leitura — nenhum dado é gravado ou alterado. Valores por
                 colaborador: Bia R$ 20, Nayara R$ 20, Kaique R$ 10, Nataly R$ 20 potencial
-                (condicionado à meta mensal, não incluído no total estimado). Duplicidade: contratos
-                inequivocamente vinculados contam apenas a 1ª liberação por Data do Cálculo
-                (desempate por created); correspondências por telefone+tipo ambíguas não são
-                fundidas.
+                (condicionado à meta mensal, não incluído no total estimado). Cada caso (contrato
+                relacionado ou cadeia de continuação) conta uma única vez, pela 1ª liberação
+                elegível por Data do Cálculo; movimentações posteriores ficam sem nova comissão.
+                Correspondências por telefone+tipo ambíguas não são fundidas.
               </span>
             </p>
           </div>

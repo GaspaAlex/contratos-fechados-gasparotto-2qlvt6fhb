@@ -9,30 +9,31 @@
  * Competência: exclusivamente protocolo.dcalculo ("2026-11-24 12:00:00.000Z")
  * — NUNCA dprotocolo, dcontrato ou created.
  *
- * Elegibilidade (por caso, na competência selecionada):
- *  - dcalculo preenchida e dentro do mês/ano + isProtocoloValido()
- *    (contratos relacionados arquivados excluem — fonte única
- *    src/lib/archivedStatuses.ts);
- *  - status "R. Docs" = SUSPENSO: fora dos valores elegíveis, exibido como
- *    "Faltando Documentos"; ao sair, volta a integrar a competência ORIGINAL
- *    da dcalculo (a apuração nunca usa a data de reclassificação);
+ * Elegibilidade (por protocolo):
+ *  - dcalculo preenchida + isProtocoloValido() (contratos relacionados
+ *    arquivados excluem — fonte única src/lib/archivedStatuses.ts);
+ *  - status "R. Docs" = SUSPENSO: não gera comissão e NÃO conta como comissão
+ *    reconhecida; ao sair, volta a disputar a primeira liberação do caso;
+ *  - responsável "IA" fica em conferência e NÃO integra os elegíveis;
  *  - NÃO exclui decisao === 'Improcedente' (comissão é pelo trabalho de
- *    liberação, não pelo resultado);
- *  - NÃO exige protocolo efetivado — "Prov. Inicial" gera comissão se apto.
+ *    liberação, não pelo resultado).
  *
- * Responsáveis:
- *  - quantidade de casos é CONJUNTA (não individualizada por responsável);
- *  - EXCEÇÃO provisória: responsável "IA" (relation → responsaveis,
- *    registro '253awakhq5x1tyl') fica em "Conferência necessária" e NÃO
- *    integra os elegíveis. Nenhum campo responsavel é alterado aqui.
+ * Caso (cada caso gera comissão UMA única vez):
+ *  - Os protocolos são agrupados em CASOS sobre TODOS os protocolos carregados
+ *    (antes do recorte por competência), por vínculo inequívoco:
+ *    (a) relation protocolo.contratos (mesmo contrato_fechado);
+ *    (b) cadeia de continuidade: caso_origem (raiz), protocolo_anterior e
+ *        caso_continuacoes;
+ *  - Nome e telefone NUNCA unem casos: contratos distintos do mesmo cliente
+ *    são casos independentes;
+ *  - A comissão do caso é da PRIMEIRA liberação elegível (menor dcalculo;
+ *    empate → menor created; depois id). Todas as demais movimentações do caso
+ *    são "Continuação do mesmo caso — sem nova comissão", inclusive em outras
+ *    competências. A competência é a da dcalculo dessa primeira liberação.
  *
- * Duplicidade ("cada caso gera comissão uma única vez"):
- *  - Dedup por relation protocolo.contratos: para o MESMO contrato, apenas a
- *    PRIMEIRA liberação conta (menor dcalculo; empate → menor created);
- *  - Correspondência POSSÍVEL por telefone normalizado + tipo de ação (sem
- *    vínculo formal) NÃO funde automaticamente quando ambígua (mesmo fone+tipo
- *    apontando para 2+ contratos ou 2+ protocolos): vai para conferência;
- *  - Nome do cliente NUNCA é chave de deduplicação.
+ * Sem vínculo formal (relation vazia e sem cadeia), a correspondência por
+ * telefone normalizado + tipo de ação NÃO funde: mesmo fone+tipo apontando para
+ * 2+ contratos ou 2+ protocolos aptos vai para conferência.
  *
  * Valores por caso elegível: Bia 20 | Nayara 20 | Kaique 10 | Nataly 20
  * POTENCIAL (condicionado à meta mensal — meta NÃO implementada nesta versão;
@@ -40,12 +41,15 @@
  */
 import { isProtocoloValido, type ContratoFechadoMini } from '@/services/protocoloValidade'
 import { ARCHIVED_STATUSES } from '@/lib/archivedStatuses'
-import { normalizePhoneDigits } from '@/services/leadsAuxAcidente'
+import { formatDateBR, normalizePhoneDigits } from '@/services/leadsAuxAcidente'
 import { normalizeText } from '@/lib/utils'
 
 /** Responsável "IA": registros com esse responsável ficam fora dos elegíveis. */
 export const RESPONSAVEL_IA_ID = '253awakhq5x1tyl'
 export const RESPONSAVEL_IA_NOME = 'IA'
+
+/** Rótulo de movimentação posterior de caso já contabilizado. */
+export const ROTULO_CONTINUACAO_SEM_COMISSAO = 'Continuação do mesmo caso — sem nova comissão'
 
 /** Valor BÁSICO por caso, por colaborador (nome normalizado). */
 export const VALOR_BASICO_POR_COLABORADOR: Record<string, number> = {
@@ -84,6 +88,9 @@ export interface ProtocoloComissoesInput {
   contratos?: string[] | null
   responsavel?: string
   created?: string
+  caso_origem?: string | null
+  protocolo_anterior?: string | null
+  caso_continuacoes?: string[] | null
   expand?: {
     responsavel?: { id: string; nome: string } | null
     tipo_acao?: { id: string; nome: string } | null
@@ -104,7 +111,7 @@ export type SituacaoComissao =
   | 'suspenso' // R. Docs — Faltando Documentos
   | 'ia' // responsável IA — conferência necessária
   | 'ambiguo' // possível duplicidade fone+tipo — não funde
-  | 'duplicado' // 2ª+ liberação do mesmo contrato (relation)
+  | 'duplicado' // movimentação posterior de caso já contabilizado
   | 'invalido' // isProtocoloValido = false (contratos arquivados)
 
 export interface CasoComissoes {
@@ -158,12 +165,66 @@ function responsavelDoRegistro(p: ProtocoloComissoesInput): { id: string; nome: 
   return { id: '', nome: '' }
 }
 
+function tipoNomeDoRegistro(
+  p: ProtocoloComissoesInput,
+  tiposAcaoPorId?: Map<string, { id: string; nome: string }>,
+): string {
+  const tipoId = p.expand?.tipo_acao?.id || p.tipo_acao || ''
+  return p.expand?.tipo_acao?.nome || tiposAcaoPorId?.get(tipoId)?.nome || ''
+}
+
 function chaveFoneTipo(fone: string, tipoNome: string): string {
   const tel = normalizePhoneDigits(fone || '')
   const benef = normalizeText(tipoNome || '')
   if (!tel || !benef) return ''
   return `${tel}|${benef}`
 }
+
+/** Ordem de desempate da liberação comissionada: dcalculo → created → id. */
+function chaveOrdem(p: ProtocoloComissoesInput): string {
+  return `${String(p.dcalculo || '')}|${String(p.created || '')}|${p.id}`
+}
+
+/**
+ * Protocolo apto a gerar comissão (liberação elegível), independentemente da
+ * competência: dcalculo válida, contratos não arquivados, fora de IA e R. Docs.
+ */
+function elegivelParaComissao(
+  p: ProtocoloComissoesInput,
+  contratosPorId: Map<string, ContratoComissoesInput>,
+): boolean {
+  if (!competenciaDaDcalculo(p.dcalculo)) return false
+  if (!isProtocoloValido(p, contratosPorId)) return false
+  if (responsavelDoRegistro(p).id === RESPONSAVEL_IA_ID) return false
+  if (p.status === STATUS_SUSPENSO) return false
+  return true
+}
+
+/** União-busca mínima para agrupar nós (protocolos e contratos) em casos. */
+function criarGruposDeCaso() {
+  const pai = new Map<string, string>()
+  const find = (x: string): string => {
+    if (!pai.has(x)) pai.set(x, x)
+    let raiz = x
+    while (pai.get(raiz) !== raiz) raiz = pai.get(raiz) as string
+    let atual = x
+    while (atual !== raiz) {
+      const prox = pai.get(atual) as string
+      pai.set(atual, raiz)
+      atual = prox
+    }
+    return raiz
+  }
+  const unir = (a: string, b: string) => {
+    const ra = find(a)
+    const rb = find(b)
+    if (ra !== rb) pai.set(ra, rb)
+  }
+  return { find, unir }
+}
+
+const noProtocolo = (id: string) => `protocolo:${id}`
+const noContrato = (id: string) => `contrato:${id}`
 
 /**
  * Apura a comissão PRELIMINAR de UMA competência (mes 1-12, ano).
@@ -191,6 +252,36 @@ export function apurarComissoes(
     else contratosPorFoneTipo.set(key, [c])
   }
 
+  // Agrupamento de CASOS — GLOBAL, sobre todos os protocolos (antes do recorte
+  // por competência). Vínculos: contrato relacionado e cadeia de continuidade.
+  const grupos = criarGruposDeCaso()
+  for (const p of protocolos) {
+    grupos.find(noProtocolo(p.id))
+    for (const cid of (p.contratos || []).filter(Boolean)) {
+      grupos.unir(noProtocolo(p.id), noContrato(String(cid)))
+    }
+    if (p.caso_origem) grupos.unir(noProtocolo(p.id), noProtocolo(String(p.caso_origem)))
+    if (p.protocolo_anterior) {
+      grupos.unir(noProtocolo(p.id), noProtocolo(String(p.protocolo_anterior)))
+    }
+    if (Array.isArray(p.caso_continuacoes)) {
+      for (const id of p.caso_continuacoes) {
+        if (id) grupos.unir(noProtocolo(p.id), noProtocolo(String(id)))
+      }
+    }
+  }
+  const grupoDe = (p: ProtocoloComissoesInput) => grupos.find(noProtocolo(p.id))
+
+  // Liberação comissionada de cada caso: a 1ª elegível (entre TODAS as
+  // competências), independentemente de qual competência está sendo apurada.
+  const comissionadoPorCaso = new Map<string, ProtocoloComissoesInput>()
+  for (const p of protocolos) {
+    if (!elegivelParaComissao(p, contratosPorId)) continue
+    const raiz = grupoDe(p)
+    const atual = comissionadoPorCaso.get(raiz)
+    if (!atual || chaveOrdem(p) < chaveOrdem(atual)) comissionadoPorCaso.set(raiz, p)
+  }
+
   const naCompetencia: ProtocoloComissoesInput[] = []
   for (const p of protocolos) {
     const comp = competenciaDaDcalculo(p.dcalculo)
@@ -199,15 +290,13 @@ export function apurarComissoes(
   }
 
   // Índice fone+tipo → protocolos APTOS da competência (dedup só entre aptos;
-  // R. Docs/IA/inválidos não participam da contagem nem da ambiguidade).
+  // R. Docs/IA/inválidos não participam da ambiguidade).
   const protocolosPorFoneTipo = new Map<string, ProtocoloComissoesInput[]>()
   for (const p of naCompetencia) {
     if (!isProtocoloValido(p, contratosPorId)) continue
     if (responsavelDoRegistro(p).id === RESPONSAVEL_IA_ID) continue
     if (p.status === STATUS_SUSPENSO) continue
-    const tipoId = p.expand?.tipo_acao?.id || p.tipo_acao || ''
-    const tipoNome = p.expand?.tipo_acao?.nome || tiposAcaoPorId?.get(tipoId)?.nome || ''
-    const key = chaveFoneTipo(p.fone || '', tipoNome)
+    const key = chaveFoneTipo(p.fone || '', tipoNomeDoRegistro(p, tiposAcaoPorId))
     if (!key) continue
     const arr = protocolosPorFoneTipo.get(key)
     if (arr) arr.push(p)
@@ -215,7 +304,7 @@ export function apurarComissoes(
   }
 
   const casos: CasoComissoes[] = []
-  const aptosTemp: { caso: CasoComissoes; protocolo: ProtocoloComissoesInput }[] = []
+  const protocoloPorCaso = new Map<string, ProtocoloComissoesInput>()
 
   // Passagem 1 — classifica cada protocolo da competência.
   for (const p of naCompetencia) {
@@ -253,73 +342,59 @@ export function apurarComissoes(
         ...base,
         situacao: 'suspenso',
         observacao:
-          'Suspenso por Faltando Documentos — ao sair de R. Docs, volta a integrar a competência original da dcalculo',
+          'Suspenso por Faltando Documentos — não conta como comissão reconhecida; ao sair de R. Docs, disputa a primeira liberação do caso',
       })
       continue
     }
 
-    // Contrato de referência para dedup: o 1º contrato resolvível não arquivado
-    // (mesma leitura de isProtocoloValido); fallback: o 1º resolvível.
+    // Contrato de referência para exibição: o 1º contrato resolvível não arquivado
+    // (fallback: o 1º resolvível).
     const idsRel = (p.contratos || []).filter(Boolean)
-    let contratoDedup: { id: string; nome: string } | null = null
+    let contratoRef: { id: string; nome: string } | null = null
     if (idsRel.length > 0) {
       const resolviveis = idsRel
         .map((id) => contratosPorId.get(id))
         .filter((c): c is ContratoComissoesInput => !!c)
       const validos = resolviveis.filter((c) => !STATUS_ARQUIVADO_SET.has(c.status || ''))
       const ref = (validos.length > 0 ? validos : resolviveis)[0]
-      if (ref) contratoDedup = { id: ref.id, nome: ref.nome || ref.id }
+      if (ref) contratoRef = { id: ref.id, nome: ref.nome || ref.id }
     }
 
-    casos.push({
+    const comissionado = comissionadoPorCaso.get(grupoDe(p))
+    if (comissionado && comissionado.id !== p.id) {
+      casos.push({
+        ...base,
+        contratoId: contratoRef?.id ?? null,
+        contratoNome: contratoRef?.nome ?? null,
+        situacao: 'duplicado',
+        observacao: `${ROTULO_CONTINUACAO_SEM_COMISSAO} — comissão já contabilizada na liberação de ${
+          comissionado.dcalculo ? formatDateBR(comissionado.dcalculo) : '—'
+        } (${comissionado.nome || comissionado.id})`,
+      })
+      continue
+    }
+
+    const caso: CasoComissoes = {
       ...base,
-      contratoId: contratoDedup?.id ?? null,
-      contratoNome: contratoDedup?.nome ?? null,
-      situacao: 'elegivel', // provisório — passagem 2 decide dedup/ambiguidade
-      observacao: contratoDedup
-        ? `Vínculo inequívoco por relation: ${contratoDedup.nome}`
+      contratoId: contratoRef?.id ?? null,
+      contratoNome: contratoRef?.nome ?? null,
+      situacao: 'elegivel', // provisório — passagem 2 avalia ambiguidade
+      observacao: contratoRef
+        ? `Vínculo inequívoco por relation: ${contratoRef.nome} — 1ª liberação do caso`
         : 'Sem vínculo formal a contrato (relation vazia) — correspondência avaliada por telefone+tipo',
-    })
-    aptosTemp.push({ caso: casos[casos.length - 1], protocolo: p })
-  }
-
-  // Passagem 2a — dedup por relation: 1ª liberação por contrato (menor
-  // dcalculo; empate → menor created).
-  const ordemDoCaso = new Map<string, string>()
-  for (const { caso, protocolo } of aptosTemp) {
-    if (!caso.contratoId) continue
-    ordemDoCaso.set(
-      caso.id,
-      `${String(protocolo.dcalculo || '')}|${String(protocolo.created || '')}`,
-    )
-  }
-  const primeiraPorContrato = new Map<string, { caso: CasoComissoes; quando: string }>()
-  for (const { caso } of aptosTemp) {
-    if (!caso.contratoId) continue
-    const quando = ordemDoCaso.get(caso.id) || ''
-    const atual = primeiraPorContrato.get(caso.contratoId)
-    if (!atual || quando < atual.quando) {
-      if (atual) {
-        atual.caso.situacao = 'duplicado'
-        atual.caso.observacao = `Duplicidade: 2ª+ liberação do contrato ${atual.caso.contratoNome} — comissão já gerada na 1ª liberação (desempate por dcalculo, created)`
-      }
-      primeiraPorContrato.set(caso.contratoId, { caso, quando })
-      caso.situacao = 'elegivel'
-      caso.observacao = `Vínculo inequívoco: ${caso.contratoNome} — 1ª liberação (dcalculo mais antiga)`
-    } else {
-      caso.situacao = 'duplicado'
-      caso.observacao = `Duplicidade: 2ª+ liberação do contrato ${caso.contratoNome} — comissão já gerada na 1ª liberação (desempate por dcalculo, created)`
     }
+    casos.push(caso)
+    protocoloPorCaso.set(caso.id, p)
   }
 
-  // Passagem 2b — ambiguidade fone+tipo SEM vínculo formal: NÃO funde.
-  for (const { caso, protocolo } of aptosTemp) {
+  // Passagem 2 — ambiguidade fone+tipo SEM vínculo formal: NÃO funde.
+  for (const caso of casos) {
     if (caso.situacao !== 'elegivel') continue
+    const protocolo = protocoloPorCaso.get(caso.id)
+    if (!protocolo) continue
     if ((protocolo.contratos || []).filter(Boolean).length > 0) continue
 
-    const tipoId = protocolo.expand?.tipo_acao?.id || protocolo.tipo_acao || ''
-    const tipoNome = protocolo.expand?.tipo_acao?.nome || tiposAcaoPorId?.get(tipoId)?.nome || ''
-    const key = chaveFoneTipo(protocolo.fone || '', tipoNome)
+    const key = chaveFoneTipo(protocolo.fone || '', tipoNomeDoRegistro(protocolo, tiposAcaoPorId))
     if (!key) continue
 
     const contratosChave = contratosPorFoneTipo.get(key) || []
