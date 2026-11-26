@@ -215,5 +215,75 @@ export function runCenariosIndicadores(): Cenario[] {
     )
   }
 
+  // ===== BUILD C — decisão "Extinto sem resolução do mérito" =====
+
+  // C1) Vigente extinta → fora da projeção, sem recuperar a anterior.
+  {
+    const ext = ativo('p1', {
+      status: 'Calculado',
+      valor: 80000,
+      decisao: 'Extinto sem resolução do mérito',
+      caso_continuacoes: ['p2'],
+    })
+    const novo = ativo('p2', {
+      status: 'Prov. Inicial',
+      valor: 120000,
+      caso_origem: 'p1',
+      protocolo_anterior: 'p1',
+    })
+    const r = calcularIndicadoresFinanceiros([ext, novo])
+    registrar(
+      'C1',
+      r.acoesNaProjecao === 1 && r.projHonorarios === 36000 && r.ticketMedio === 36000,
+      `extinta (Calculado) + novo ajuizamento ativo: a vigente é a nova — 1 ação, R$ 36.000, ticket 36.000 — obtido: ${r.acoesNaProjecao} ação(ões), R$ ${r.projHonorarios}, ticket ${r.ticketMedio}`,
+    )
+  }
+
+  // C2) Vigente extinta e nada depois dela → nada na projeção; a anterior
+  //     Procedente NÃO volta (decisão da vigente encerra a oportunidade).
+  {
+    const ant = ativo('p1', {
+      status: 'Calculado',
+      valor: 50000,
+      decisao: 'Procedente',
+      caso_continuacoes: ['p2'],
+    })
+    const vig = ativo('p2', {
+      status: 'Calculado',
+      valor: 90000,
+      decisao: 'Extinto sem resolução do mérito',
+      caso_origem: 'p1',
+      protocolo_anterior: 'p1',
+    })
+    const r = calcularIndicadoresFinanceiros([ant, vig])
+    registrar(
+      'C2',
+      r.acoesNaProjecao === 0 && r.projHonorarios === 0 && r.ticketMedio === 0,
+      `anterior Procedente + vigente extinta: 0 ação, R$ 0 (sem recuperar a anterior) — obtido: ${r.acoesNaProjecao} ação(ões), R$ ${r.projHonorarios}, ticket ${r.ticketMedio}`,
+    )
+  }
+
+  // C3) Vigente extinta conta como decisão desfavorável (mesmo bucket de
+  //     Improcedente nos indicadores) e não como suspenso/sem valor.
+  {
+    const r = calcularIndicadoresFinanceiros([
+      ativo('p1', {
+        status: 'Calculado',
+        valor: 90000,
+        decisao: 'Extinto sem resolução do mérito',
+      }),
+    ])
+    registrar(
+      'C3',
+      r.casosDecisaoDesfavoravel === 1 &&
+        r.casosSuspensos === 0 &&
+        r.casosSemValor === 0 &&
+        r.acoesNaProjecao === 0 &&
+        r.projHonorarios === 0 &&
+        r.ticketMedio === 0,
+      `vigente extinta: decisão desfavorável=1, suspenso=0, sem valor=0, 0 ação, R$ 0 — obtido: desfavorável=${r.casosDecisaoDesfavoravel}, suspenso=${r.casosSuspensos}, sem valor=${r.casosSemValor}`,
+    )
+  }
+
   return resultados
 }

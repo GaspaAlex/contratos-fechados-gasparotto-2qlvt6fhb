@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { PrivacyText } from '@/components/privacy/PrivacyText'
 import { PRIVACY_MASK } from '@/lib/privacyMode'
 import { cn } from '@/lib/utils'
+import { isDecisaoSemProjecao } from '@/lib/decisoes'
 
 /**
  * Linha de protocolo com contrato(s) relacionado(s) ARQUIVADO(S).
@@ -117,7 +118,7 @@ export function ProtocoloTableRowArquivado({ item, index, statusContrato, onEdit
 
       {/* Honorários */}
       <TableCell className={cn('text-right whitespace-nowrap text-xs tabular-nums', muted)}>
-        {item.decisao === 'Improcedente' || !item.valor ? (
+        {isDecisaoSemProjecao(item.decisao) || !item.valor ? (
           '—'
         ) : (
           <span className="line-through">
@@ -128,7 +129,7 @@ export function ProtocoloTableRowArquivado({ item, index, statusContrato, onEdit
 
       {/* Decisão */}
       <TableCell className={cn('whitespace-nowrap text-xs', muted)}>
-        {item.decisao === 'Procedente' || item.decisao === 'Improcedente' ? (
+        {item.decisao && item.decisao !== 'Aguardando' ? (
           <span className="line-through">{item.decisao}</span>
         ) : (
           '—'

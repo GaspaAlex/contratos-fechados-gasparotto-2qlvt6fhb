@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-26T09:11:48.825Z",
+  "executadoEm": "2026-11-26T10:38:10.893Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -138,6 +138,24 @@
       "cenario": "P",
       "ok": true,
       "detalhe": "parceiro na vigente: 15% (R$ 15.000) — obtido: R$ 15000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "C1",
+      "ok": true,
+      "detalhe": "extinta (Calculado) + novo ajuizamento ativo: a vigente é a nova — 1 ação, R$ 36.000, ticket 36.000 — obtido: 1 ação(ões), R$ 36000, ticket 36000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "C2",
+      "ok": true,
+      "detalhe": "anterior Procedente + vigente extinta: 0 ação, R$ 0 (sem recuperar a anterior) — obtido: 0 ação(ões), R$ 0, ticket 0"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "C3",
+      "ok": true,
+      "detalhe": "vigente extinta: decisão desfavorável=1, suspenso=0, sem valor=0, 0 ação, R$ 0 — obtido: desfavorável=1, suspenso=0, sem valor=0"
     }
   ]
 }

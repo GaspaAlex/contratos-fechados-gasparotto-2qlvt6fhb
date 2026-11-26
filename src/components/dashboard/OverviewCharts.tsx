@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { isDecisaoSemProjecao } from '@/lib/decisoes'
 import type { DashboardProtocolo } from '@/hooks/use-dashboard-data'
 
 interface Props {
@@ -74,7 +75,7 @@ export function OverviewCharts({ protocolos }: Props) {
         p.status === 'Protocolado' ||
         p.status === 'Protocolado Judicial' ||
         p.status === 'Requerimento Adm.'
-      if (isProtocolado && p.decisao !== 'Improcedente' && p.dprotocolo) {
+      if (isProtocolado && !isDecisaoSemProjecao(p.decisao) && p.dprotocolo) {
         const y = parseInt(p.dprotocolo.substring(0, 4), 10)
         const m = parseInt(p.dprotocolo.substring(5, 7), 10) - 1
         if (filteredYear === 'all' || y === filteredYear) {
@@ -107,7 +108,7 @@ export function OverviewCharts({ protocolos }: Props) {
         p.status === 'Protocolado' ||
         p.status === 'Protocolado Judicial' ||
         p.status === 'Requerimento Adm.'
-      if (isProtocolado && p.decisao !== 'Improcedente' && p.dprotocolo) {
+      if (isProtocolado && !isDecisaoSemProjecao(p.decisao) && p.dprotocolo) {
         const y = parseInt(p.dprotocolo.substring(0, 4), 10)
         const m = parseInt(p.dprotocolo.substring(5, 7), 10) - 1
         if (m >= 0 && m < 12) {

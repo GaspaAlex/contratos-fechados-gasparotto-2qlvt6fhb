@@ -331,6 +331,10 @@ export function ProtocoloTableRow({ item, index, onEdit, onDelete, onNovoMesmoCa
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#B4453C]/10 text-[#B4453C] border border-[#B4453C]/25">
             Improcedente
           </span>
+        ) : item.decisao === 'Extinto sem resolução do mérito' ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#78818E]/10 text-[#78818E] border border-[#78818E]/25 dark:text-muted-foreground">
+            Extinto sem resolução do mérito
+          </span>
         ) : (
           <span className="text-xs text-[#A0A7B5]">—</span>
         )}

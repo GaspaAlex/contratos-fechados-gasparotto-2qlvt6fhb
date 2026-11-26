@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { isDecisaoSemProjecao } from '@/lib/decisoes'
 import type { DashboardProtocolo, DashboardContrato } from '@/hooks/use-dashboard-data'
 
 interface Props {
@@ -44,9 +45,9 @@ export function OverviewStats({ protocolos, contratos }: Props) {
   const [yearCard3, setYearCard3] = useState(currentYear)
   const [yearCard4, setYearCard4] = useState(currentYear)
 
-  // Card 1 & 2 Logic (Preservada integralmente)
+  // Card 1 & 2 Logic (Preservada integralmente; extinta s/ mérito também sai)
   const validProtocolos = protocolos.filter(
-    (p) => p.status !== 'R. Docs' && p.decisao !== 'Improcedente',
+    (p) => p.status !== 'R. Docs' && !isDecisaoSemProjecao(p.decisao),
   )
   const totalHonorarios = validProtocolos.reduce((acc, p) => acc + (p.valor || 0) * 0.3, 0)
   const totalAcoes = validProtocolos.length
@@ -80,7 +81,7 @@ export function OverviewStats({ protocolos, contratos }: Props) {
     const isStatusMatch = ['Protocolado Judicial', 'Requerimento Adm.', 'Prov. Inicial'].includes(
       p.status,
     )
-    const isDecisaoMatch = p.decisao !== 'Improcedente'
+    const isDecisaoMatch = !isDecisaoSemProjecao(p.decisao)
     return isYearMatch && isMonthMatch && isStatusMatch && isDecisaoMatch
   })
 

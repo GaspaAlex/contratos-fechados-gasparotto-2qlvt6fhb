@@ -461,6 +461,9 @@ export function ProtocoloModal({ isOpen, onClose, protocolo, onSave }: any) {
                   <SelectItem value="Aguardando">Aguardando</SelectItem>
                   <SelectItem value="Procedente">Procedente</SelectItem>
                   <SelectItem value="Improcedente">Improcedente</SelectItem>
+                  <SelectItem value="Extinto sem resolução do mérito">
+                    Extinto sem resolução do mérito
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

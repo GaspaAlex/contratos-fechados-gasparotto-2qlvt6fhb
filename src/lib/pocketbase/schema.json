@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T08:56:37.066Z",
+  "generatedAt": "2026-11-26T10:35:46.629Z",
   "collections": [
     {
       "name": "users",
@@ -407,7 +407,12 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["Aguardando", "Procedente", "Improcedente"]
+          "selectValues": [
+            "Aguardando",
+            "Procedente",
+            "Improcedente",
+            "Extinto sem resolução do mérito"
+          ]
         },
         {
           "name": "created",

@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   XCircle,
   EyeOff,
+  Ban,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { printReport, PrintReportColumn } from '@/lib/print-report'
@@ -46,6 +47,7 @@ import {
 } from '@/lib/date-utils'
 import { cn, normalizeText } from '@/lib/utils'
 import { PRIVACY_MASK, maskClienteRecords, usePrivacyMode } from '@/lib/privacyMode'
+import { isDecisaoSemProjecao } from '@/lib/decisoes'
 
 export function ProtocoloTable({
   data,
@@ -217,9 +219,13 @@ export function ProtocoloTable({
   // Analytics - Decisions
   const procedentes = filtered.filter((d: any) => d.decisao === 'Procedente').length
   const improcedentes = filtered.filter((d: any) => d.decisao === 'Improcedente').length
-  const totalDecisoes = procedentes + improcedentes
+  const extintos = filtered.filter(
+    (d: any) => d.decisao === 'Extinto sem resolução do mérito',
+  ).length
+  const totalDecisoes = procedentes + improcedentes + extintos
   const percProc = totalDecisoes ? Math.round((procedentes / totalDecisoes) * 100) : 0
   const percImp = totalDecisoes ? Math.round((improcedentes / totalDecisoes) * 100) : 0
+  const percExt = totalDecisoes ? Math.round((extintos / totalDecisoes) * 100) : 0
 
   // Grouping
   const grouped = useMemo(() => {
@@ -400,7 +406,7 @@ export function ProtocoloTable({
       {
         header: 'Honorários',
         accessor: (item) => {
-          if (item.decisao === 'Improcedente' || !item.valor) return '-'
+          if (isDecisaoSemProjecao(item.decisao) || !item.valor) return '-'
           const percentual = item.parceiro ? 0.15 : 0.3
           return `<strong style="color: #C9922A;">${formatCurrency(item.valor * percentual)}</strong>`
         },
@@ -415,6 +421,9 @@ export function ProtocoloTable({
           }
           if (item.decisao === 'Improcedente') {
             return '<span class="badge badge-red">Improcedente</span>'
+          }
+          if (item.decisao === 'Extinto sem resolução do mérito') {
+            return '<span class="badge badge-gray">Extinto sem resolução do mérito</span>'
           }
           return item.decisao
         },
@@ -614,6 +623,11 @@ export function ProtocoloTable({
                   style={{ width: `${percImp}%` }}
                   title={`Improcedentes: ${percImp}%`}
                 />
+                <div
+                  className="h-full bg-[#78818E] transition-all duration-500"
+                  style={{ width: `${percExt}%` }}
+                  title={`Extintos sem resolução do mérito: ${percExt}%`}
+                />
               </div>
 
               <div className="flex flex-wrap items-center gap-6 text-xs">
@@ -635,6 +649,16 @@ export function ProtocoloTable({
                     {improcedentes} Improcedentes
                   </span>
                   <span className="text-[#B4453C] font-semibold tabular-nums">({percImp}%)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-md bg-[#78818E]/10 text-[#78818E] flex items-center justify-center">
+                    <Ban className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[#252B34] dark:text-foreground font-semibold tabular-nums">
+                    {extintos} Extintos sem resolução do mérito
+                  </span>
+                  <span className="text-[#78818E] font-semibold tabular-nums">({percExt}%)</span>
                 </div>
               </div>
             </div>
@@ -915,7 +939,7 @@ export function ProtocoloTable({
                       'Requerimento Adm.',
                       'Prov. Inicial',
                       'Calculado',
-                    ].includes(i.status) && i.decisao !== 'Improcedente',
+                    ].includes(i.status) && !isDecisaoSemProjecao(i.decisao),
                 ).length
                 const label =
                   monthStr !== '0000-00'

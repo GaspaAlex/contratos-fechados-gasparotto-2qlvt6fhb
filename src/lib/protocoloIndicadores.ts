@@ -34,9 +34,10 @@
  * o caso conta como ação ativa com contribuição financeira zero.
  *
  * DECISÕES QUE EXCLUDEM DA PROJEÇÃO — lista central DECISOES_SEM_PROJECAO.
- * Hoje contém apenas 'Improcedente' (única opção desfavorável existente no
- * banco — NÃO criar opções novas nem executar migration). Uma futura opção
- * (ex.: "Extinto sem resolução do mérito") basta ser acrescentada AQUI.
+ * Contém 'Improcedente' e 'Extinto sem resolução do mérito' (opção 0107 do
+ * campo decisao, acrescentada por migration aditiva). Vigente com qualquer
+ * uma delas fica sem oportunidade financeira ativa, sem recuperar a
+ * movimentação anterior do caso.
  *
  * Observação: este módulo é propositalmente DEPENDÊNCIA-LIVRE de banco/infra
  * (só módulos puros) para poder ser executado de verdade em QA/build
@@ -103,10 +104,13 @@ const STATUS_ATIVOS_SET = new Set<string>(STATUS_ATIVOS_PROJECAO)
 
 /**
  * Lista CENTRAL de decisões que excluem a movimentação da projeção financeira.
- * 'Improcedente' existe no banco. Uma futura opção (ex.: 'Extinto sem
- * resolução do mérito') entra AQUI, sem migration e sem tocar o campo decisao.
+ * 'Improcedente' e 'Extinto sem resolução do mérito' (opção 0107 do campo
+ * decisao) são encerramentos sem oportunidade financeira ativa — enquanto a
+ * vigente do caso tiver uma delas, NÃO se recupera movimentação anterior.
+ * Um novo ajuizamento ativo do mesmo caso volta a ser a vigente e a projetar.
+ * Preserva integralmente a regra atual de 'Improcedente'.
  */
-export const DECISOES_SEM_PROJECAO = ['Improcedente'] as const
+export const DECISOES_SEM_PROJECAO = ['Improcedente', 'Extinto sem resolução do mérito'] as const
 
 const DECISOES_SEM_PROJECAO_SET = new Set<string>(DECISOES_SEM_PROJECAO)
 
@@ -141,7 +145,7 @@ export interface IndicadoresFinanceiros {
   ticketMedio: number
   /** Casos ativos na contagem cuja vigente ainda não tem valor da causa. */
   casosSemValor: number
-  /** Vigentes excluídas por decisão desfavorável (Improcedente). */
+  /** Vigentes excluídas por decisão desfavorável (Improcedente / Extinto s/ mérito). */
   casosDecisaoDesfavoravel: number
   /** Vigentes suspensas em R. Docs (Faltando Documentos). */
   casosSuspensos: number
@@ -288,7 +292,8 @@ export function movimentacaoVigente(
 /**
  * A movimentação vigente é OPORTUNIDADE FINANCEIRA ATIVA quando:
  *  - status ativo da projeção (não históricos: julgado, arquivado etc.);
- *  - sem decisão desfavorável (DECISOES_SEM_PROJECAO — hoje 'Improcedente');
+ *  - sem decisão desfavorável (DECISOES_SEM_PROJECAO — 'Improcedente' ou
+ *    'Extinto sem resolução do mérito');
  *  - não suspensa em R. Docs (Faltando Documentos — suspensão, não encerramento);
  *  - válida pelas regras atuais de validade/arquivamento de contratos
  *    (isProtocoloValido — fonte única src/lib/archivedStatuses.ts).
