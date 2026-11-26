@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-26T11:19:49.301Z",
+  "executadoEm": "2026-11-26T12:01:44.514Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -114,6 +114,66 @@
       "cenario": "D-H consistência mensal × acumulada",
       "ok": true,
       "detalhe": "somaMensal=150 acumulado=150 casos=3"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-A meta 50 com 52 ativos e 25 casos → Nataly R$ 500, total R$ 1.750",
+      "ok": true,
+      "detalhe": "ativos=52 situação=atingida Nataly=R$ 500 básico=R$ 1.250 total=R$ 1.750"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-B meta 50 com 43 ativos → Nataly R$ 0, total R$ 1.250",
+      "ok": true,
+      "detalhe": "ativos=43 situação=nao atingida Nataly incluída=R$ 0 total=R$ 1.250"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-C meta não definida → Nataly fora do total",
+      "ok": true,
+      "detalhe": "situação=nao definida Nataly incluída=R$ 0 total=R$ 1.250"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-D contratos arquivados não contam na meta",
+      "ok": true,
+      "detalhe": "ativos=1 (3 no mês, 2 arquivados) situação=nao atingida"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-E R. Docs conta na meta comercial mas sem comissão",
+      "ok": true,
+      "detalhe": "meta: ativos=2 situação=atingida; comissão: elegíveis=0 suspensos=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-F dcontrato novembro conta na meta de novembro",
+      "ok": true,
+      "detalhe": "nov ativos=1 (atingida) · dez ativos=0 (nao atingida)"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-G dcalculo novembro → comissão em novembro",
+      "ok": true,
+      "detalhe": "nov elegíveis=1 · dez elegíveis=0 (dup=1) · básico nov=R$ 50"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-H metas independentes nov=50 / dez=60",
+      "ok": true,
+      "detalhe": "nov ativos=50 (atingida) · dez ativos=59 (nao atingida)"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-I mesmo cliente, contratos distintos → contagem individual",
+      "ok": true,
+      "detalhe": "ativos=2 situação=atingida total=R$ 140"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E-J nenhum caso elegível → total R$ 0",
+      "ok": true,
+      "detalhe": "meta atingida com 60 ativos, porém total=R$ 0"
     },
     {
       "suite": "INDICADORES",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T11:09:14.900Z",
+  "generatedAt": "2026-11-26T12:00:42.056Z",
   "collections": [
     {
       "name": "users",
@@ -2212,6 +2212,52 @@
         "CREATE INDEX idx_leads_aux_acidente_origem_lead ON leads_aux_acidente (origem_lead)",
         "CREATE INDEX idx_leads_aux_acidente_status_funil ON leads_aux_acidente (status_funil)"
       ]
+    },
+    {
+      "name": "comissoes_metas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
+        "update": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
+        "delete": "@request.auth.id != '' && @request.auth.perfil = 'gestor'"
+      },
+      "fields": [
+        {
+          "name": "mes",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ano",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "meta",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_comissoes_metas_mes_ano ON comissoes_metas (mes, ano)"]
     }
   ]
 }

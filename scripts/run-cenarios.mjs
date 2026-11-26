@@ -30,6 +30,7 @@ const FILES = [
   'src/lib/formatters.ts',
   'src/services/protocoloValidade.ts',
   'src/lib/comissoes.ts',
+  'src/lib/comissaoMeta.ts',
   'src/lib/comissoes.cenarios.ts',
   'src/lib/protocoloIndicadores.ts',
   'src/lib/protocoloIndicadores.cenarios.ts',

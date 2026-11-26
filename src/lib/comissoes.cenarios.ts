@@ -9,10 +9,12 @@ import {
   apurarComissoes,
   acumuladoComissoes,
   ROTULO_CONTINUACAO_SEM_COMISSAO,
+  STATUS_SUSPENSO,
   TOTAL_BASICO_POR_CASO,
   type ContratoComissoesInput,
   type ProtocoloComissoesInput,
 } from '@/lib/comissoes'
+import { calcularMetaComissoes } from '@/lib/comissaoMeta'
 
 /** ok: true/false = resultado executado; null = verificação manual (não exercitável em lógica pura). */
 export interface ResultadoCenario {
@@ -420,6 +422,271 @@ export function runCenariosComissoes(): ResultadoCenario[] {
           dez.quantidadeElegivel === 1 &&
           fev27.quantidadeElegivel === 1,
         `somaMensal=${somaMensal} acumulado=${hAcum.totalBasico} casos=${hAcum.casosElegiveis}`,
+      ),
+    )
+  }
+
+  // ===== BUILD E1 — META MENSAL DE COMISSÕES (cenários A–J) =====
+
+  /** Contrato de meta com dcontrato e status (mesma forma do RDocsDashboard). */
+  const contratoMeta = (
+    id: string,
+    dcontrato: string,
+    status = 'Concluído',
+    extra: Partial<{ status: string; nome: string }> = {},
+  ) => ({ id, dcontrato, status, nome: extra.nome || `Contrato ${id}` })
+
+  const cmeta = (cenario: string, cond: boolean, detalhe: string): ResultadoCenario => ({
+    cenario,
+    ok: cond,
+    detalhe,
+  })
+
+  const fmtBRL = (v: number) =>
+    v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })
+
+  // A — meta 50, contratos ativos 52, 25 casos elegíveis → meta atingida:
+  //     Nataly 25×20 = R$ 500 integra o total; total = 25×50 + 500 = R$ 1.750.
+  {
+    const contratos = []
+    for (let i = 0; i < 52; i++) contratos.push(contratoMeta(`ma${i}`, '2026-11-05 12:00:00.000Z'))
+    const r = calcularMetaComissoes({ contratos, mes: 11, ano: 2026, meta: 50, casosElegiveis: 25 })
+    out.push(
+      cmeta(
+        'E-A meta 50 com 52 ativos e 25 casos → Nataly R$ 500, total R$ 1.750',
+        r.contratosAtivos === 52 &&
+          r.situacaoMeta === 'atingida' &&
+          r.natalyIncluida === 500 &&
+          r.natalyPotencial === 500 &&
+          r.totalBasico === 1250 &&
+          r.totalCompetencia === 1750,
+        `ativos=${r.contratosAtivos} situação=${r.situacaoMeta} Nataly=${fmtBRL(r.natalyIncluida)} básico=${fmtBRL(r.totalBasico)} total=${fmtBRL(r.totalCompetencia)}`,
+      ),
+    )
+  }
+
+  // B — meta 50, 43 contratos ativos, 25 casos → não atingida: Nataly R$ 0,
+  //     total = apenas o básico R$ 1.250.
+  {
+    const contratos = []
+    for (let i = 0; i < 43; i++) contratos.push(contratoMeta(`mb${i}`, '2026-11-05 12:00:00.000Z'))
+    const r = calcularMetaComissoes({ contratos, mes: 11, ano: 2026, meta: 50, casosElegiveis: 25 })
+    out.push(
+      cmeta(
+        'E-B meta 50 com 43 ativos → Nataly R$ 0, total R$ 1.250',
+        r.contratosAtivos === 43 &&
+          r.situacaoMeta === 'nao atingida' &&
+          r.natalyIncluida === 0 &&
+          r.totalBasico === 1250 &&
+          r.totalCompetencia === 1250 &&
+          r.natalyPotencial === 500,
+        `ativos=${r.contratosAtivos} situação=${r.situacaoMeta} Nataly incluída=${fmtBRL(r.natalyIncluida)} total=${fmtBRL(r.totalCompetencia)}`,
+      ),
+    )
+  }
+
+  // C — meta não definida → situação "não definida", Nataly NÃO integra o
+  //     total, total = básico. NÃO se presume meta atingida.
+  {
+    const r = calcularMetaComissoes({
+      contratos: [contratoMeta('mc1', '2026-11-05 12:00:00.000Z')],
+      mes: 11,
+      ano: 2026,
+      meta: null,
+      casosElegiveis: 25,
+    })
+    out.push(
+      cmeta(
+        'E-C meta não definida → Nataly fora do total',
+        r.situacaoMeta === 'nao definida' &&
+          r.metaConfigurada === null &&
+          r.natalyIncluida === 0 &&
+          r.totalCompetencia === 1250,
+        `situação=${r.situacaoMeta} Nataly incluída=${fmtBRL(r.natalyIncluida)} total=${fmtBRL(r.totalCompetencia)}`,
+      ),
+    )
+  }
+
+  // D — contrato arquivado não entra na contagem da meta.
+  {
+    const r = calcularMetaComissoes({
+      contratos: [
+        contratoMeta('md1', '2026-11-05 12:00:00.000Z', 'Arquivar'),
+        contratoMeta('md2', '2026-11-08 12:00:00.000Z', 'Litispendência'),
+        contratoMeta('md3', '2026-11-10 12:00:00.000Z', 'Concluído'),
+      ],
+      mes: 11,
+      ano: 2026,
+      meta: 2,
+      casosElegiveis: 1,
+    })
+    out.push(
+      cmeta(
+        'E-D contratos arquivados não contam na meta',
+        r.contratosAtivos === 1 && r.situacaoMeta === 'nao atingida',
+        `ativos=${r.contratosAtivos} (3 no mês, 2 arquivados) situação=${r.situacaoMeta}`,
+      ),
+    )
+  }
+
+  // E — contrato ativo com protocolo em R. Docs conta na META comercial, mas
+  //     o caso fica suspenso (sem comissão) enquanto estiver em R. Docs.
+  {
+    const contratos = [
+      contratoMeta('me1', '2026-11-05 12:00:00.000Z'),
+      contratoMeta('me2', '2026-11-08 12:00:00.000Z'),
+    ]
+    const r = calcularMetaComissoes({
+      contratos,
+      mes: 11,
+      ano: 2026,
+      meta: 2,
+      casosElegiveis: 0, // caso suspenso em R. Docs — apurarComissoes exclui
+    })
+    const apSusp = ap(
+      [prot('me1p', '2026-11-10 12:00:00.000Z', { status: STATUS_SUSPENSO })],
+      contratos as ContratoComissoesInput[],
+      11,
+      2026,
+    )
+    out.push(
+      cmeta(
+        'E-E R. Docs conta na meta comercial mas sem comissão',
+        r.contratosAtivos === 2 &&
+          r.situacaoMeta === 'atingida' &&
+          apSusp.quantidadeElegivel === 0 &&
+          apSusp.casosSuspensos.length === 1,
+        `meta: ativos=${r.contratosAtivos} situação=${r.situacaoMeta}; comissão: elegíveis=${apSusp.quantidadeElegivel} suspensos=${apSusp.casosSuspensos.length}`,
+      ),
+    )
+  }
+
+  // F — contrato fechado em novembro com protocolo agendado para dezembro
+  //     conta na meta de NOVEMBRO (competência da meta = dcontrato).
+  {
+    const contratos = [contratoMeta('mf1', '2026-11-20 12:00:00.000Z')]
+    const nov = calcularMetaComissoes({
+      contratos,
+      mes: 11,
+      ano: 2026,
+      meta: 1,
+      casosElegiveis: 1,
+    })
+    const dez = calcularMetaComissoes({
+      contratos,
+      mes: 12,
+      ano: 2026,
+      meta: 1,
+      casosElegiveis: 0,
+    })
+    out.push(
+      cmeta(
+        'E-F dcontrato novembro conta na meta de novembro',
+        nov.contratosAtivos === 1 &&
+          nov.situacaoMeta === 'atingida' &&
+          dez.contratosAtivos === 0 &&
+          dez.situacaoMeta === 'nao atingida',
+        `nov ativos=${nov.contratosAtivos} (${nov.situacaoMeta}) · dez ativos=${dez.contratosAtivos} (${dez.situacaoMeta})`,
+      ),
+    )
+  }
+
+  // G — caso calculado em novembro com protocolo agendado para dezembro →
+  //     comissão pertence a NOVEMBRO (competência exclusiva da dcalculo).
+  {
+    // Caso com dcalculo em nov; a "movimentação" de dezembro é continuação
+    // (mesma cadeia) — a comissão única do caso fica em novembro.
+    const pG = [
+      prot('eg1', '2026-11-10 12:00:00.000Z', { contratos: ['egc1'] }),
+      prot('eg2', '2026-12-05 12:00:00.000Z', { caso_origem: 'eg1', contratos: ['egc1'] }),
+    ]
+    const cGC = contrato('egc1')
+    const nov = ap(pG, [cGC], 11, 2026)
+    const dez = ap(pG, [cGC], 12, 2026)
+    const rNov = calcularMetaComissoes({
+      contratos: [contratoMeta('egc1', '2026-11-05 12:00:00.000Z')],
+      mes: 11,
+      ano: 2026,
+      meta: 1,
+      casosElegiveis: nov.quantidadeElegivel,
+    })
+    out.push(
+      cmeta(
+        'E-G dcalculo novembro → comissão em novembro',
+        nov.quantidadeElegivel === 1 &&
+          dez.quantidadeElegivel === 0 &&
+          dez.casosDuplicados.length === 1 &&
+          rNov.totalBasico === 50,
+        `nov elegíveis=${nov.quantidadeElegivel} · dez elegíveis=${dez.quantidadeElegivel} (dup=${dez.casosDuplicados.length}) · básico nov=${fmtBRL(rNov.totalBasico)}`,
+      ),
+    )
+  }
+
+  // H — metas independentes por competência: novembro 50 e dezembro 60.
+  {
+    const contrNov = []
+    const contrDez = []
+    for (let i = 0; i < 50; i++) contrNov.push(contratoMeta(`mh-n${i}`, '2026-11-05 12:00:00.000Z'))
+    for (let i = 0; i < 59; i++) contrDez.push(contratoMeta(`mh-d${i}`, '2026-12-05 12:00:00.000Z'))
+    const nov = calcularMetaComissoes({
+      contratos: contrNov,
+      mes: 11,
+      ano: 2026,
+      meta: 50,
+      casosElegiveis: 10,
+    })
+    const dez = calcularMetaComissoes({
+      contratos: contrDez,
+      mes: 12,
+      ano: 2026,
+      meta: 60,
+      casosElegiveis: 10,
+    })
+    out.push(
+      cmeta(
+        'E-H metas independentes nov=50 / dez=60',
+        nov.situacaoMeta === 'atingida' && dez.situacaoMeta === 'nao atingida',
+        `nov ativos=${nov.contratosAtivos} (${nov.situacaoMeta}) · dez ativos=${dez.contratosAtivos} (${dez.situacaoMeta})`,
+      ),
+    )
+  }
+
+  // I — mesmo cliente com contratos distintos e ativos → contabiliza
+  //     individualmente na meta (2 ativos, não 1).
+  {
+    const r = calcularMetaComissoes({
+      contratos: [
+        contratoMeta('mi1', '2026-11-05 12:00:00.000Z', 'Concluído', { nome: 'Cliente X' }),
+        contratoMeta('mi2', '2026-11-09 12:00:00.000Z', 'Concluído', { nome: 'Cliente X' }),
+      ],
+      mes: 11,
+      ano: 2026,
+      meta: 2,
+      casosElegiveis: 2,
+    })
+    out.push(
+      cmeta(
+        'E-I mesmo cliente, contratos distintos → contagem individual',
+        r.contratosAtivos === 2 && r.situacaoMeta === 'atingida' && r.totalCompetencia === 140,
+        `ativos=${r.contratosAtivos} situação=${r.situacaoMeta} total=${fmtBRL(r.totalCompetencia)}`,
+      ),
+    )
+  }
+
+  // J — nenhum caso elegível → total R$ 0 independentemente da meta.
+  {
+    const contratos = []
+    for (let i = 0; i < 60; i++) contratos.push(contratoMeta(`mj${i}`, '2026-11-05 12:00:00.000Z'))
+    const r = calcularMetaComissoes({ contratos, mes: 11, ano: 2026, meta: 50, casosElegiveis: 0 })
+    out.push(
+      cmeta(
+        'E-J nenhum caso elegível → total R$ 0',
+        r.contratosAtivos === 60 &&
+          r.situacaoMeta === 'atingida' &&
+          r.totalBasico === 0 &&
+          r.natalyIncluida === 0 &&
+          r.totalCompetencia === 0,
+        `meta atingida com ${r.contratosAtivos} ativos, porém total=${fmtBRL(r.totalCompetencia)}`,
       ),
     )
   }
