@@ -32,6 +32,8 @@ const FILES = [
   'src/lib/comissoes.ts',
   'src/lib/comissaoMeta.ts',
   'src/lib/comissoes.cenarios.ts',
+  'src/lib/comissoesColaboradores.ts',
+  'src/lib/comissoesColaboradores.cenarios.ts',
   'src/lib/protocoloIndicadores.ts',
   'src/lib/protocoloIndicadores.cenarios.ts',
 ]
@@ -104,12 +106,14 @@ import { writeFileSync } from 'node:fs'
 const RESULT_PATH = ${JSON.stringify(RESULT_PATH)}
 import { runCenariosComissoes } from './${OUT_NAME('src/lib/comissoes.cenarios.ts')}'
 import { runCenariosIndicadores } from './${OUT_NAME('src/lib/protocoloIndicadores.cenarios.ts')}'
+import { runCenariosColaboradores } from './${OUT_NAME('src/lib/comissoesColaboradores.cenarios.ts')}'
 
 const falhas = []
 const resultados = []
 for (const [suite, run] of [
   ['COMISSOES', runCenariosComissoes],
   ['INDICADORES', runCenariosIndicadores],
+  ['COMISSOES_F', runCenariosColaboradores],
 ]) {
   for (const r of run()) {
     resultados.push({ suite, ...r })

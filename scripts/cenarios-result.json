@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-26T12:01:44.514Z",
+  "executadoEm": "2026-11-26T12:43:40.831Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -264,6 +264,114 @@
       "cenario": "C3",
       "ok": true,
       "detalhe": "vigente extinta: decisão desfavorável=1, suspenso=0, sem valor=0, 0 ação, R$ 0 — obtido: desfavorável=1, suspenso=0, sem valor=0"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-A Novo colaborador com vigência futura não paga em competências anteriores",
+      "ok": true,
+      "detalhe": "2026-12: 0 linha(s); 2027-01: 20/caso"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-B R$20→R$25: nov/dez continuam R$20 e jan usa R$25 (sem recálculo retroativo)",
+      "ok": true,
+      "detalhe": "nov: 20 (60 confirmado); dez: 20 (60 confirmado); jan: 25 (75 confirmado)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-C Desativação não apaga comissões históricas (regra vigente permanece paga)",
+      "ok": true,
+      "detalhe": "nov/2026 com ativo=false hoje: 20 (60 confirmado)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-D Reativação em competência posterior volta a pagar pela nova regra",
+      "ok": true,
+      "detalhe": "fev/2027: 20 (60 confirmado)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-E Modalidade fixa integra o total mesmo com meta não atingida",
+      "ok": true,
+      "detalhe": "meta não atingida, total confirmado: 60"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-F Condicionada à meta ATINGIDA integra o total confirmado",
+      "ok": true,
+      "detalhe": "total confirmado: 60"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-G Condicionada à meta NÃO atingida não integra o confirmado (fica potencial)",
+      "ok": true,
+      "detalhe": "confirmado: 0; potencial: 60"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-H Condicionada com meta NÃO DEFINIDA não integra o confirmado",
+      "ok": true,
+      "detalhe": "confirmado: 0; potencial: 60"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-I Regras consecutivas sem sobreposição resolvem cada competência",
+      "ok": true,
+      "detalhe": "nov: 20; mar: 25; abr: 30"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-J Regras sobrepostas do mesmo colaborador são RECUSADAS (sem sobreposição é aceita)",
+      "ok": true,
+      "detalhe": "início dentro: recusada; período englobando: recusada; sequencial: aceita; futura sobre ABERTA: recusada"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-K Vigência sem data final permanece em vigor em qualquer competência futura",
+      "ok": true,
+      "detalhe": "jun/2027: 20 (60 confirmado); jan/2028: 20 (60 confirmado)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-L Competência anterior ao início da participação não paga",
+      "ok": true,
+      "detalhe": "dez/2026 com regra iniciando 2027-01: 0 linha(s)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-M Distribuição independente do campo Responsável (só casos elegíveis × valor)",
+      "ok": true,
+      "detalhe": "4 casos → 80 (sem uso de responsável)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-N Inativo HOJE mantém comissão válida em competência histórica com regra vigente",
+      "ok": true,
+      "detalhe": "dez/2026 (hoje mar/2027, inativo): 20 (60 confirmado)"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-O Competência anterior a 2026-11 está fora do novo controle",
+      "ok": true,
+      "detalhe": "out/2026: 0 linha(s); validação: Competência anterior a nov/2026 está fora do novo controle de comissões por colaborador."
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-P Comissão única por caso preservada (2 casos × 2 colaboradores, sem duplicar caso)",
+      "ok": true,
+      "detalhe": "2 casos → Bia 40 + Nayara 40 = 80"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-R1 resolverRegrasVigentes: empate resolvido pela regra de MAIOR início vigente",
+      "ok": true,
+      "detalhe": "jan/2027 → r2; dez/2026 → r1"
+    },
+    {
+      "suite": "COMISSOES_F",
+      "cenario": "F-R2 Helpers de competência: anterior/seguinte corretos na virada do ano",
+      "ok": true,
+      "detalhe": "2027-01←2026-12→2027-01 ok"
     }
   ]
 }

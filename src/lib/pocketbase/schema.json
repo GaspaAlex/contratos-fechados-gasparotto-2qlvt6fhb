@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T12:00:42.056Z",
+  "generatedAt": "2026-11-26T12:38:00.184Z",
   "collections": [
     {
       "name": "users",
@@ -2258,6 +2258,89 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_comissoes_metas_mes_ano ON comissoes_metas (mes, ano)"]
+    },
+    {
+      "name": "comissoes_colaboradores",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
+        "update": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
+        "delete": "@request.auth.id != '' && @request.auth.perfil = 'gestor'"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ordem",
+          "type": "number",
+          "required": false,
+          "system": false
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_comissoes_colaboradores_nome ON comissoes_colaboradores (nome)"
+      ]
+    },
+    {
+      "name": "comissoes_regras",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
+        "update": "@request.auth.id != '' && @request.auth.perfil = 'gestor'",
+        "delete": "@request.auth.id != '' && @request.auth.perfil = 'gestor'"
+      },
+      "fields": [
+        {
+          "name": "colaborador",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "comissoes_colaboradores"
+        },
+        {
+          "name": "modalidade",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["fixa", "condicionada_meta"]
+        },
+        {
+          "name": "valor",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "vigencia_inicio",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "vigencia_fim",
+          "type": "text",
+          "required": false,
+          "system": false
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_comissoes_regras_colaborador_inicio ON comissoes_regras (colaborador, vigencia_inicio)",
+        "CREATE INDEX idx_comissoes_regras_colaborador ON comissoes_regras (colaborador)"
+      ]
     }
   ]
 }
