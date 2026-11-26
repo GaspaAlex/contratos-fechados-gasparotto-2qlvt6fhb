@@ -1,13 +1,24 @@
 /**
- * DIALOG DE DETALHAMENTO DO CARD DE COMISSÕES (Build F2-B)
- * =========================================================
- * Apuração preliminar por competência: resumo, comissões por colaborador
- * (dinâmicas ou fallback antigo), listas de casos e a área de gestão (F2-A).
- * "Acumulado histórico — apuração preliminar" foi REMOVIDO (F2-B): a leitura
- * é exclusivamente da competência selecionada; dados históricos permanecem
- * no banco e nas vigências.
+ * DIALOG DE DETALHAMENTO DO CARD DE COMISSÕES (Build G — visual simplificado)
+ * ===========================================================================
+ * Resumo da competência (meta como QUANTIDADE de contratos, nunca R$),
+ * relação de casos simplificada (cliente + Data do Cálculo), seção recolhida
+ * "Conferência técnica" (duplicidades, continuações, conferência — nada é
+ * apagado, apenas recolhido) e a área administrativa do gestor (F2-A)
+ * recolhida atrás de um botão discreto "Gerenciar comissões".
+ *
+ * Cálculos intactos: os valores vêm de apuracaoCard.ts / comissoes.ts —
+ * este componente é exclusivamente presentacional.
  */
-import { CheckCircle2, HelpCircle, Info, XCircle } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle2, HelpCircle, Settings2, XCircle } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { Button } from '@/components/ui/button'
 import { GestaoComissoesArea } from '@/components/protocolo/gestao/GestaoComissoesArea'
 import {
   Dialog,
@@ -19,80 +30,31 @@ import {
 import { formatCurrency } from '@/lib/formatters'
 import { formatDateBR } from '@/services/leadsAuxAcidente'
 import type { ApuracaoCardComissoes } from '@/lib/apuracaoCard'
-import {
-  apurarComissoes,
-  ROTULO_CONTINUACAO_SEM_COMISSAO,
-  type CasoComissoes,
-} from '@/lib/comissoes'
+import { ROTULO_CONTINUACAO_SEM_COMISSAO, type CasoComissoes } from '@/lib/comissoes'
 
-const SITUACAO_CASO: Record<string, { label: string; dot: string; text: string }> = {
-  elegivel: { label: 'Elegível', dot: 'bg-[#3E8E5A]', text: 'text-[#3E8E5A]' },
-  suspenso: {
-    label: 'Suspenso (Faltando Documentos)',
-    dot: 'bg-[#C77E1E]',
-    text: 'text-[#C77E1E]',
-  },
-  ia: {
-    label: 'Responsável IA — conferência necessária',
-    dot: 'bg-[#4A7FA5]',
-    text: 'text-[#4A7FA5]',
-  },
-  ambiguo: {
-    label: 'Possível duplicidade — conferência',
-    dot: 'bg-[#8A56AC]',
-    text: 'text-[#8A56AC]',
-  },
-  duplicado: {
-    label: ROTULO_CONTINUACAO_SEM_COMISSAO,
-    dot: 'bg-[#9EA7B6]',
-    text: 'text-[#9EA7B6]',
-  },
-  invalido: { label: 'Fora (contrato arquivado)', dot: 'bg-[#9EA7B6]', text: 'text-[#9EA7B6]' },
-}
-
-/** Rótulo da situação de um caso na lista do detalhamento. */
-function rotuloSituacao(situacao: string): { label: string; dot: string; text: string } {
-  return SITUACAO_CASO[situacao] || SITUACAO_CASO.elegivel
-}
-
-/** Lista de casos compacta (nome · dcalculo · situação). */
-function ListaCasos({ casos }: { casos: CasoComissoes[] }) {
+/** Linha simples de caso: nome do cliente + Data do Cálculo (+ indicação de suspensos). */
+function ListaCasos({ casos, suspensa }: { casos: CasoComissoes[]; suspensa?: boolean }) {
   if (casos.length === 0) {
     return <p className="text-xs text-[#78818E] dark:text-muted-foreground">Nenhum caso.</p>
   }
   return (
-    <ul className="space-y-1.5">
-      {casos.map((c) => {
-        const meta = rotuloSituacao(c.situacao)
-        return (
-          <li
-            key={c.id}
-            className="rounded-md border border-[#E4E7EB] dark:border-border px-2.5 py-2"
-          >
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="text-xs font-semibold text-[#252B34] dark:text-foreground">
-                {c.nome}
-              </span>
-              <span className="text-[11px] text-[#78818E] dark:text-muted-foreground">
-                Data do Cálculo: {c.dcalculo ? formatDateBR(c.dcalculo) : '—'}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1 text-[11px] font-medium ${meta.text}`}
-              >
-                <span className={`inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-                {meta.label}
-              </span>
-            </div>
-            <p className="mt-0.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
-              {c.observacao}
-              {c.contratoNome ? ` · Contrato: ${c.contratoNome}` : ''}
-            </p>
-            <p className="text-[11px] text-[#78818E] dark:text-muted-foreground">
-              Status: {c.status} · Responsável: {c.responsavelNome || '—'}
-            </p>
-          </li>
-        )
-      })}
+    <ul className="divide-y divide-[#E4E7EB] dark:divide-border rounded-md border border-[#E4E7EB] dark:border-border">
+      {casos.map((c) => (
+        <li
+          key={c.id}
+          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 px-2.5 py-1.5"
+        >
+          <span className="text-xs font-medium text-[#252B34] dark:text-foreground">{c.nome}</span>
+          <span className="text-[11px] text-[#78818E] dark:text-muted-foreground tabular-nums">
+            {c.dcalculo ? formatDateBR(c.dcalculo) : '—'}
+          </span>
+          {suspensa && (
+            <span className="w-full text-[11px] font-medium text-[#C77E1E] sm:w-auto">
+              Faltando Documentos
+            </span>
+          )}
+        </li>
+      ))}
     </ul>
   )
 }
@@ -109,6 +71,41 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
         {value}
       </p>
     </div>
+  )
+}
+
+/** Situação da meta como TEXTO (quantidade de contratos, nunca R$).
+ */
+function SituacaoMetaResumo({ card }: { card: ApuracaoCardComissoes }) {
+  const situacaoMeta = card.meta?.situacaoMeta ?? 'nao definida'
+  const situacao =
+    situacaoMeta === 'atingida'
+      ? 'Meta atingida'
+      : situacaoMeta === 'nao atingida'
+        ? 'Meta não atingida'
+        : 'Meta não definida'
+  const cor =
+    situacaoMeta === 'atingida'
+      ? 'text-[#3E8E5A]'
+      : situacaoMeta === 'nao atingida'
+        ? 'text-[#E5484D]'
+        : 'text-[#78818E] dark:text-muted-foreground'
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${cor}`}>
+      {situacaoMeta === 'atingida' ? (
+        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+      ) : situacaoMeta === 'nao atingida' ? (
+        <XCircle className="h-3.5 w-3.5" aria-hidden />
+      ) : (
+        <HelpCircle className="h-3.5 w-3.5" aria-hidden />
+      )}
+      <span>
+        Situação: {situacao}
+        {situacaoMeta === 'atingida' && card.meta
+          ? ` — Realizados: ${card.meta.contratosAtivos} de ${card.meta.metaConfigurada} contratos`
+          : ''}
+      </span>
+    </span>
   )
 }
 
@@ -136,59 +133,65 @@ export function ComissoesDetalheDialog({
   isGestor,
   onMetaSalva,
 }: Props) {
-  const apuracao: ReturnType<typeof apurarComissoes> = card.apuracao
+  const apuracao = card.apuracao
   const modoDinamico = card.modo === 'dinamico'
-  const suspensosCount = apuracao.casosSuspensos.length
+  const [gestaoAberta, setGestaoAberta] = useState(false)
+
+  // "Total potencial" só quando difere do total confirmado (senão repete).
+  const totalPotencial = modoDinamico ? card.totalPotencial : apuracao.totalPotencial
+  const mostraPotencial = modoDinamico && card.totalPotencial > card.totalCompetencia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85dvh] overflow-y-auto rounded-[10px]">
         <DialogHeader>
-          <DialogTitle className="text-base">Comissões — {apuracao.competencia}</DialogTitle>
+          <DialogTitle className="text-base">COMISSÕES — {apuracao.competencia}</DialogTitle>
           <DialogDescription className="text-xs">
-            <span className="font-semibold text-[#C9922A]">Apuração preliminar</span> — não é
-            comissão aprovada para pagamento. Competência exclusivamente pela Data do Cálculo
-            (dcalculo).
+            Resumo da competência — apuração preliminar, nenhum dado é gravado ou alterado.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Resumo */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* RESUMO DA COMPETÊNCIA */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <MiniStat label="Casos elegíveis" value={String(apuracao.quantidadeElegivel)} />
-            <MiniStat label="Total da competência" value={formatCurrency(card.totalCompetencia)} />
             <MiniStat
-              label="Total potencial"
-              value={formatCurrency(modoDinamico ? card.totalPotencial : apuracao.totalPotencial)}
+              label="Casos suspensos"
+              value={String(apuracao.casosSuspensos.length)}
+              accent="text-[#C77E1E]"
+            />
+            {/* Meta é QUANTIDADE de contratos — nunca valor em R$. */}
+            <MiniStat
+              label="Meta de contratos"
+              value={card.meta?.metaConfigurada != null ? String(card.meta.metaConfigurada) : '—'}
             />
             <MiniStat
-              label="Suspensos (R. Docs)"
-              value={String(suspensosCount)}
-              accent="text-[#C77E1E]"
+              label="Contratos ativos fechados"
+              value={String(card.meta?.contratosAtivos ?? 0)}
+              accent={card.meta?.situacaoMeta === 'atingida' ? 'text-[#3E8E5A]' : undefined}
+            />
+            <MiniStat
+              label="Total da competência"
+              value={formatCurrency(card.totalCompetencia)}
+              accent="text-[#C9922A]"
             />
           </div>
 
-          {/* Comissões da competência (dinâmicas ou fallback) */}
+          <SituacaoMetaResumo card={card} />
+
+          {/* COMISSÕES POR COLABORADOR */}
           <section>
             <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
-              {modoDinamico
-                ? `Comissões por colaborador — ${apuracao.competencia}`
-                : 'Comissões por colaborador — distribuição fixa antiga'}
+              Valor por colaborador
             </h3>
             <div className="rounded-md border border-[#E4E7EB] dark:border-border divide-y divide-[#E4E7EB] dark:divide-border">
               {modoDinamico &&
                 card.linhas.map((linha) => (
                   <div
                     key={linha.colaboradorId}
-                    className="px-2.5 py-1.5 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5"
+                    className="px-2.5 py-1.5 text-xs flex items-center justify-between gap-2"
                   >
-                    <span className="text-[#252B34] dark:text-foreground">
-                      {linha.nome}
-                      <span className="ml-1 text-[10px] text-[#78818E]">
-                        {formatCurrency(linha.valorUnitario)}/caso
-                        {linha.modalidade === 'condicionada_meta' && ' · condicionada à meta'}
-                      </span>
-                    </span>
+                    <span className="text-[#252B34] dark:text-foreground">{linha.nome}</span>
                     <span
                       className={`tabular-nums font-medium ${
                         linha.integraTotal ? 'text-[#3E8E5A]' : 'text-[#E5484D]'
@@ -210,12 +213,7 @@ export function ComissoesDetalheDialog({
                     key={colab.nome}
                     className="flex items-center justify-between px-2.5 py-1.5 text-xs"
                   >
-                    <span className="text-[#252B34] dark:text-foreground">
-                      {colab.nome}
-                      {colab.condicionadoMeta && (
-                        <span className="text-[10px] text-[#C77E1E]"> (Condicionado à meta)</span>
-                      )}
-                    </span>
+                    <span className="text-[#252B34] dark:text-foreground">{colab.nome}</span>
                     <span className="tabular-nums text-[#252B34] dark:text-foreground">
                       {formatCurrency(colab.valorBasico)}
                     </span>
@@ -230,30 +228,14 @@ export function ComissoesDetalheDialog({
                 </span>
               </div>
             </div>
-            {modoDinamico && card.meta && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
-                {card.meta.situacaoMeta === 'atingida' ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#3E8E5A]" aria-hidden />
-                ) : card.meta.situacaoMeta === 'nao atingida' ? (
-                  <XCircle className="h-3.5 w-3.5 shrink-0 text-[#E5484D]" aria-hidden />
-                ) : (
-                  <HelpCircle className="h-3.5 w-3.5 shrink-0 text-[#E4A44C]" aria-hidden />
-                )}
-                <span>
-                  Meta{' '}
-                  {card.meta.metaConfigurada === null
-                    ? 'não definida'
-                    : formatCurrency(card.meta.metaConfigurada)}{' '}
-                  · {card.meta.contratosAtivos} contrato(s) ativo(s) com Data do Contrato em{' '}
-                  {apuracao.competencia}
-                  {card.meta.situacaoMeta === 'atingida' ? ' — meta atingida' : ''}
-                  {card.meta.situacaoMeta === 'nao atingida' ? ' — meta não atingida' : ''}
-                </span>
+            {mostraPotencial && (
+              <p className="mt-1.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
+                Potencial se a meta for cumprida: {formatCurrency(totalPotencial)}
               </p>
             )}
           </section>
 
-          {/* Seções de casos */}
+          {/* RELAÇÃO DE CASOS — simplificada */}
           <section>
             <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
               Casos elegíveis ({apuracao.casosElegiveis.length})
@@ -263,54 +245,87 @@ export function ComissoesDetalheDialog({
 
           <section>
             <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
-              Suspensos — Faltando Documentos ({apuracao.casosSuspensos.length})
+              Casos suspensos ({apuracao.casosSuspensos.length})
             </h3>
-            <ListaCasos casos={apuracao.casosSuspensos} />
+            <ListaCasos casos={apuracao.casosSuspensos} suspensa />
           </section>
 
-          <section>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
-              Conferência necessária — Responsável IA ({apuracao.casosIA.length})
-            </h3>
-            <ListaCasos casos={apuracao.casosIA} />
-          </section>
+          {/* CONFERÊNCIA TÉCNICA — recolhida por padrão */}
+          <Accordion
+            type="single"
+            collapsible
+            className="rounded-md border border-[#E4E7EB] dark:border-border px-3"
+          >
+            <AccordionItem value="conferencia" className="border-0">
+              <AccordionTrigger className="py-2 text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground hover:no-underline">
+                Conferência técnica
+              </AccordionTrigger>
+              <AccordionContent className="pb-3">
+                <div className="space-y-3">
+                  {apuracao.casosIA.length === 0 &&
+                  apuracao.casosAmbiguos.length === 0 &&
+                  apuracao.casosDuplicados.length === 0 ? (
+                    <p className="text-xs text-[#78818E] dark:text-muted-foreground">
+                      Nenhum caso em conferência técnica nesta competência.
+                    </p>
+                  ) : (
+                    <>
+                      {apuracao.casosIA.length > 0 && (
+                        <div>
+                          <h4 className="text-[11px] font-semibold text-[#4A7FA5] mb-1">
+                            Em conferência — Responsável IA ({apuracao.casosIA.length})
+                          </h4>
+                          <ListaCasos casos={apuracao.casosIA} />
+                        </div>
+                      )}
+                      {apuracao.casosAmbiguos.length > 0 && (
+                        <div>
+                          <h4 className="text-[11px] font-semibold text-[#8A56AC] mb-1">
+                            Possíveis duplicidades ({apuracao.casosAmbiguos.length})
+                          </h4>
+                          <ListaCasos casos={apuracao.casosAmbiguos} />
+                        </div>
+                      )}
+                      {apuracao.casosDuplicados.length > 0 && (
+                        <div>
+                          <h4 className="text-[11px] font-semibold text-[#78818E] dark:text-muted-foreground mb-1">
+                            {ROTULO_CONTINUACAO_SEM_COMISSAO} ({apuracao.casosDuplicados.length})
+                          </h4>
+                          <ListaCasos casos={apuracao.casosDuplicados} />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
-          <section>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
-              Possíveis duplicidades — sem fusão ({apuracao.casosAmbiguos.length})
-            </h3>
-            <ListaCasos casos={apuracao.casosAmbiguos} />
-          </section>
-
-          {apuracao.casosDuplicados.length > 0 && (
-            <section>
-              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
-                {ROTULO_CONTINUACAO_SEM_COMISSAO} ({apuracao.casosDuplicados.length})
-              </h3>
-              <ListaCasos casos={apuracao.casosDuplicados} />
-            </section>
-          )}
-
-          <p className="flex items-start gap-1.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
-            <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            <span>
-              Apuração preliminar de leitura — nenhum dado é gravado ou alterado.{' '}
-              {modoDinamico
-                ? 'Valores individuais vêm das regras vigentes cadastradas para esta competência (vigência por AAAA-MM); comissões condicionadas à meta só entram no total quando a meta está atingida.'
-                : 'Valores pela distribuição fixa antiga (Bia R$ 20, Nayara R$ 20, Kaique R$ 10, Nataly R$ 20 potencial condicionado à meta).'}{' '}
-              Cada caso (contrato relacionado ou cadeia de continuação) conta uma única vez, pela 1ª
-              liberação elegível por Data do Cálculo; movimentações posteriores ficam sem nova
-              comissão. Correspondências por telefone+tipo ambíguas não são fundidas.
-            </span>
-          </p>
-
+          {/* ÁREA ADMINISTRATIVA — recolhida atrás de botão discreto (só gestor) */}
           {isGestor && (
-            <GestaoComissoesArea
-              mes={mes}
-              ano={ano}
-              competenciaAtual={competencia}
-              onMetaSalvaNoRosto={onMetaSalva}
-            />
+            <div className="border-t border-[#E4E7EB] dark:border-border pt-3">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-7 gap-1.5 px-2 text-[11px] text-[#C9922A] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+                onClick={() => setGestaoAberta((v) => !v)}
+                aria-expanded={gestaoAberta}
+              >
+                <Settings2 className="h-3.5 w-3.5" aria-hidden />
+                Gerenciar comissões
+              </Button>
+              {gestaoAberta && (
+                <div className="mt-2">
+                  <GestaoComissoesArea
+                    mes={mes}
+                    ano={ano}
+                    competenciaAtual={competencia}
+                    onMetaSalvaNoRosto={onMetaSalva}
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
       </DialogContent>

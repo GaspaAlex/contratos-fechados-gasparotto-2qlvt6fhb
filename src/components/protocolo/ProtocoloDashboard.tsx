@@ -144,11 +144,14 @@ export function ProtocoloDashboard({
 
   return (
     <div className="space-y-4">
-      {/* Grid de Cards Superiores — Linguagem Grafite Premium 2.1 */}
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+      {/* Grid de Cards Superiores — Linguagem Grafite Premium 2.1.
+          items-start (Build G): cada card fica com sua PRÓPRIA altura — o card
+          de Comissões (mais alto) não estica os quatro anteriores, que voltam a
+          ter o valor principal bem posicionado, sem grandes espaços vazios. */}
+      <div className="grid gap-3.5 grid-cols-1 items-start sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {/* CARD 1 — PROJEÇÃO DE HONORÁRIOS (Card de Destaque Executivo Grafite #22262E) */}
-        <Card className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm flex flex-col justify-between">
-          <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+        <Card className="relative overflow-hidden rounded-[10px] border border-[#2E3440] bg-[#22262E] text-white shadow-sm flex flex-col">
+          <CardContent className="p-4 sm:p-5 flex flex-col h-full">
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-[11px] font-semibold tracking-wider uppercase text-[#9EA7B6]">
@@ -158,7 +161,7 @@ export function ProtocoloDashboard({
                   <DollarSign className="h-4 w-4" />
                 </div>
               </div>
-              <p className="text-[11px] text-[#7C8596] mb-3 truncate" title={periodoLabel}>
+              <p className="text-[11px] text-[#7C8596] mb-1.5 truncate" title={periodoLabel}>
                 {periodoLabel}
               </p>
             </div>
@@ -170,7 +173,7 @@ export function ProtocoloDashboard({
               >
                 {formatCurrency(projHonorariosTicketMedio)}
               </div>
-              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#A5ADB9]">
+              <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[#A5ADB9]">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#3E8E5A]" />
                 <span>30% escritório (15% parceiro)</span>
               </div>
@@ -179,8 +182,8 @@ export function ProtocoloDashboard({
         </Card>
 
         {/* CARD 2 — TOTAL DE AÇÕES CONSIDERADAS */}
-        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
-          <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col">
+          <CardContent className="p-4 sm:p-5 flex flex-col h-full">
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
@@ -190,7 +193,7 @@ export function ProtocoloDashboard({
                   <FileCheck2 className="h-4 w-4" />
                 </div>
               </div>
-              <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3 truncate">
+              <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-1.5 truncate">
                 Oportunidades ativas (1 por caso)
               </p>
             </div>
@@ -199,7 +202,7 @@ export function ProtocoloDashboard({
               <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#252B34] dark:text-foreground tabular-nums">
                 {totalAcoes}
               </div>
-              <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
+              <p className="mt-0.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
                 Pela movimentação vigente de cada caso
               </p>
             </div>
@@ -207,8 +210,8 @@ export function ProtocoloDashboard({
         </Card>
 
         {/* CARD 3 — TICKET MÉDIO POR AÇÃO */}
-        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
-          <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col">
+          <CardContent className="p-4 sm:p-5 flex flex-col h-full">
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
@@ -218,7 +221,7 @@ export function ProtocoloDashboard({
                   <TrendingUp className="h-4 w-4" />
                 </div>
               </div>
-              <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3 truncate">
+              <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-1.5 truncate">
                 Projeção ÷ oportunidades ativas
               </p>
             </div>
@@ -230,7 +233,7 @@ export function ProtocoloDashboard({
               >
                 {ticketMedio !== null ? formatCurrency(ticketMedio) : '—'}
               </div>
-              <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
+              <p className="mt-0.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
                 {totalAcoes > 0
                   ? `${totalAcoes} oportunidade(s) ativa(s)`
                   : 'Sem oportunidades ativas'}
@@ -240,8 +243,8 @@ export function ProtocoloDashboard({
         </Card>
 
         {/* CARD 4 — PENDÊNCIAS & DOCUMENTOS */}
-        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col justify-between">
-          <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+        <Card className="rounded-[10px] border border-[#E4E7EB] dark:border-border bg-white dark:bg-card shadow-sm flex flex-col">
+          <CardContent className="p-4 sm:p-5 flex flex-col h-full">
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-[11px] font-semibold tracking-wider uppercase text-[#78818E] dark:text-muted-foreground">
@@ -251,7 +254,7 @@ export function ProtocoloDashboard({
                   <AlertCircle className="h-4 w-4" />
                 </div>
               </div>
-              <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3 truncate">
+              <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-1.5 truncate">
                 Casos com pendência documental
               </p>
             </div>
@@ -260,7 +263,7 @@ export function ProtocoloDashboard({
               <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#C77E1E] tabular-nums">
                 {cDocs}
               </div>
-              <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
+              <p className="mt-0.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
                 Aguardando envio pelo cliente
               </p>
             </div>
