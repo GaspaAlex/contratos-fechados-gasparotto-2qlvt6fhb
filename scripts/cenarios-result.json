@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-26T10:38:10.893Z",
+  "executadoEm": "2026-11-26T11:19:49.301Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -66,6 +66,54 @@
       "cenario": "J indicadores financeiros inalterados",
       "ok": null,
       "detalhe": "verificação manual — este build não altera projeção/ticket/distribuição"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-A 100 casos independentes → distribuição fixa",
+      "ok": true,
+      "detalhe": "mensal=100 acum=100 basico=5000 bia=2000 nayara=2000 kaique=1000 nataly=2000"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-B continuação em outro mês → comissão única no acumulado",
+      "ok": true,
+      "detalhe": "acum=1 basico=50 dezElegiveis=0"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-C continuação em outro ano → comissão única no acumulado",
+      "ok": true,
+      "detalhe": "acum=1 basico=50 2027Elegiveis=0"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-D R. Docs sem liberação elegível não contabiliza",
+      "ok": true,
+      "detalhe": "mensal=0 acum=0 basico=0"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-E dois contratos independentes → duas comissões",
+      "ok": true,
+      "detalhe": "mensal=2 acum=2"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-F responsável não interfere nos valores",
+      "ok": true,
+      "detalhe": "acum invariante=true bia=20 nayara=20 kaique=10 nataly=20"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-G Nataly potencial fora do total básico",
+      "ok": true,
+      "detalhe": "basico=50 nataly=20 potencial=70"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D-H consistência mensal × acumulada",
+      "ok": true,
+      "detalhe": "somaMensal=150 acumulado=150 casos=3"
     },
     {
       "suite": "INDICADORES",

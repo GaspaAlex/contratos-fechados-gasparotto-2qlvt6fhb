@@ -21,10 +21,11 @@ import { monthsArray } from '@/lib/months'
 import { formatDateBR } from '@/services/leadsAuxAcidente'
 import {
   apurarComissoes,
-  COLABORADOR_CONDICIONADO_META,
+  acumuladoComissoes,
   ROTULO_CONTINUACAO_SEM_COMISSAO,
   TOTAL_BASICO_POR_CASO,
   TOTAL_POTENCIAL_POR_CASO,
+  type AcumuladoComissoes,
   type ApuracaoComissoes,
   type CasoComissoes,
   type ContratoComissoesInput,
@@ -130,6 +131,12 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
     [protocolos, contratos, mes, ano, tiposAcaoPorId],
   )
 
+  // Acumulado histórico — independe do mês/ano selecionado.
+  const acumulado: AcumuladoComissoes = useMemo(
+    () => acumuladoComissoes(protocolos, contratos),
+    [protocolos, contratos],
+  )
+
   const suspensosCount = apuracao.casosSuspensos.length
   const conferenciaCount = apuracao.casosIA.length + apuracao.casosAmbiguos.length
 
@@ -195,6 +202,9 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
             >
               {formatCurrency(apuracao.totalBasico)}
             </div>
+            <p className="mt-1 text-[11px] text-[#A5ADB9] tabular-nums">
+              Acumulado apurado: {formatCurrency(acumulado.totalBasico)}
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[#A5ADB9]">
               <span className="tabular-nums">
                 {apuracao.quantidadeElegivel} caso(s) elegível(is)
@@ -289,6 +299,57 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
                   </span>
                 </div>
               </div>
+            </section>
+
+            {/* ACUMULADO HISTÓRICO — apuração preliminar (todas as competências) */}
+            <section>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#78818E] dark:text-muted-foreground mb-1.5">
+                Acumulado histórico — apuração preliminar
+              </h3>
+              <div className="rounded-md border border-[#E4E7EB] dark:border-border divide-y divide-[#E4E7EB] dark:divide-border">
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-xs bg-[#F5F6F8] dark:bg-muted/40">
+                  <span className="font-semibold text-[#252B34] dark:text-foreground">
+                    Total básico acumulado ({acumulado.casosElegiveis} caso(s) elegível(is))
+                  </span>
+                  <span className="tabular-nums font-semibold text-[#252B34] dark:text-foreground">
+                    {formatCurrency(acumulado.totalBasico)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-xs">
+                  <span className="text-[#252B34] dark:text-foreground">Bia acumulado</span>
+                  <span className="tabular-nums text-[#252B34] dark:text-foreground">
+                    {formatCurrency(acumulado.bia)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-xs">
+                  <span className="text-[#252B34] dark:text-foreground">Nayara acumulado</span>
+                  <span className="tabular-nums text-[#252B34] dark:text-foreground">
+                    {formatCurrency(acumulado.nayara)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-xs">
+                  <span className="text-[#252B34] dark:text-foreground">Kaique acumulado</span>
+                  <span className="tabular-nums text-[#252B34] dark:text-foreground">
+                    {formatCurrency(acumulado.kaique)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-xs">
+                  <span className="text-[#252B34] dark:text-foreground">
+                    Nataly acumulado — potencial{' '}
+                    <span className="text-[10px] text-[#C77E1E]">(Condicionado à meta)</span>
+                  </span>
+                  <span className="tabular-nums text-[#252B34] dark:text-foreground">
+                    {formatCurrency(acumulado.natalyPotencial)}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-1.5 flex items-start gap-1.5 text-[11px] text-[#78818E] dark:text-muted-foreground">
+                <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>
+                  Os valores são apurados dinamicamente e não representam necessariamente comissões
+                  pagas ou pendentes de pagamento.
+                </span>
+              </p>
             </section>
 
             {/* Seções de casos */}

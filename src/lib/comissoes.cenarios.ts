@@ -7,7 +7,9 @@
  */
 import {
   apurarComissoes,
+  acumuladoComissoes,
   ROTULO_CONTINUACAO_SEM_COMISSAO,
+  TOTAL_BASICO_POR_CASO,
   type ContratoComissoesInput,
   type ProtocoloComissoesInput,
 } from '@/lib/comissoes'
@@ -228,6 +230,199 @@ export function runCenariosComissoes(): ResultadoCenario[] {
     ok: null,
     detalhe: 'verificação manual — este build não altera projeção/ticket/distribuição',
   })
+
+  // ===== BUILD D — ACUMULADO HISTÓRICO E DISTRIBUIÇÃO FIXA (cenários A–H) =====
+
+  const somaDistribuicao = (n: number) => ({
+    bia: n * 20,
+    nayara: n * 20,
+    kaique: n * 10,
+    nataly: n * 20,
+    basico: n * 50,
+    potencial: n * 70,
+  })
+
+  // D-A — 100 casos independentes elegíveis → distribuição fixa completa.
+  {
+    const protos: ProtocoloComissoesInput[] = []
+    const contr: ContratoComissoesInput[] = []
+    for (let i = 0; i < 100; i++) {
+      contr.push(contrato(`dc${i}`, 'Ativo', `(00) 9${String(1000 + i).slice(-4)}-0001`))
+      protos.push(prot(`dp${i}`, '2026-11-10 12:00:00.000Z', { contratos: [`dc${i}`] }))
+    }
+    const exp = somaDistribuicao(100)
+    const aMensal = ap(protos, contr, 11, 2026)
+    const aAcum = acumuladoComissoes(protos, contr)
+    out.push(
+      check(
+        'D-A 100 casos independentes → distribuição fixa',
+        aMensal.quantidadeElegivel === 100 &&
+          aMensal.totalBasico === exp.basico &&
+          aMensal.totalPotencial === exp.potencial &&
+          aMensal.colaboradores.find((c) => c.nome === 'Bia')?.valorBasico === exp.bia &&
+          aMensal.colaboradores.find((c) => c.nome === 'Nayara')?.valorBasico === exp.nayara &&
+          aMensal.colaboradores.find((c) => c.nome === 'Kaique')?.valorBasico === exp.kaique &&
+          aMensal.colaboradores.find((c) => c.nome === 'Nataly')?.valorPotencial === exp.nataly &&
+          aAcum.casosElegiveis === 100 &&
+          aAcum.totalBasico === exp.basico &&
+          aAcum.bia === exp.bia &&
+          aAcum.nayara === exp.nayara &&
+          aAcum.kaique === exp.kaique &&
+          aAcum.natalyPotencial === exp.nataly,
+        `mensal=${aMensal.quantidadeElegivel} acum=${aAcum.casosElegiveis} basico=${aAcum.totalBasico} bia=${aAcum.bia} nayara=${aAcum.nayara} kaique=${aAcum.kaique} nataly=${aAcum.natalyPotencial}`,
+      ),
+    )
+  }
+
+  // D-B — mesma caso com continuação em outro mês → comissão única no acumulado.
+  {
+    const pB = [
+      prot('db1', '2026-11-10 12:00:00.000Z'),
+      prot('db2', '2026-12-05 12:00:00.000Z', { caso_origem: 'db1' }),
+    ]
+    const bMensalDez = ap(pB, [c1], 12, 2026)
+    const bAcum = acumuladoComissoes(pB, [c1])
+    out.push(
+      check(
+        'D-B continuação em outro mês → comissão única no acumulado',
+        bAcum.casosElegiveis === 1 &&
+          bAcum.totalBasico === 50 &&
+          bMensalDez.quantidadeElegivel === 0 &&
+          bMensalDez.casosDuplicados.length === 1,
+        `acum=${bAcum.casosElegiveis} basico=${bAcum.totalBasico} dezElegiveis=${bMensalDez.quantidadeElegivel}`,
+      ),
+    )
+  }
+
+  // D-C — mesma caso com continuação em outro ano → comissão única no acumulado.
+  {
+    const pC = [
+      prot('dc1p', '2026-11-10 12:00:00.000Z'),
+      prot('dc2p', '2027-02-03 12:00:00.000Z', { caso_origem: 'dc1p' }),
+    ]
+    const cMensal2027 = ap(pC, [c1], 2, 2027)
+    const cAcum = acumuladoComissoes(pC, [c1])
+    out.push(
+      check(
+        'D-C continuação em outro ano → comissão única no acumulado',
+        cAcum.casosElegiveis === 1 &&
+          cAcum.totalBasico === 50 &&
+          cMensal2027.quantidadeElegivel === 0 &&
+          cMensal2027.casosDuplicados.length === 1,
+        `acum=${cAcum.casosElegiveis} basico=${cAcum.totalBasico} 2027Elegiveis=${cMensal2027.quantidadeElegivel}`,
+      ),
+    )
+  }
+
+  // D-D — caso em R. Docs sem liberação elegível → não contabilizado no acumulado.
+  {
+    const pD = [prot('dd1', '2026-11-10 12:00:00.000Z', { status: 'R. Docs' })]
+    const dMensal = ap(pD, [c1], 11, 2026)
+    const dAcum = acumuladoComissoes(pD, [c1])
+    out.push(
+      check(
+        'D-D R. Docs sem liberação elegível não contabiliza',
+        dMensal.quantidadeElegivel === 0 &&
+          dMensal.casosSuspensos.length === 1 &&
+          dAcum.casosElegiveis === 0 &&
+          dAcum.totalBasico === 0,
+        `mensal=${dMensal.quantidadeElegivel} acum=${dAcum.casosElegiveis} basico=${dAcum.totalBasico}`,
+      ),
+    )
+  }
+
+  // D-E — mesmo cliente com dois contratos independentes → duas comissões.
+  {
+    const e1 = contrato('de1', 'Ativo', '(00) 90000-1111')
+    const e2 = contrato('de2', 'Ativo', '(00) 90000-1111')
+    const pE = [
+      prot('de1p', '2026-11-10 12:00:00.000Z', { contratos: ['de1'], fone: '(00) 90000-1111' }),
+      prot('de2p', '2026-11-12 12:00:00.000Z', { contratos: ['de2'], fone: '(00) 90000-1111' }),
+    ]
+    const eMensal = ap(pE, [e1, e2], 11, 2026)
+    const eAcum = acumuladoComissoes(pE, [e1, e2])
+    out.push(
+      check(
+        'D-E dois contratos independentes → duas comissões',
+        eMensal.quantidadeElegivel === 2 &&
+          eMensal.totalBasico === 100 &&
+          eAcum.casosElegiveis === 2 &&
+          eAcum.totalBasico === 100,
+        `mensal=${eMensal.quantidadeElegivel} acum=${eAcum.casosElegiveis}`,
+      ),
+    )
+  }
+
+  // D-F — alterar o Responsável do protocolo não muda nenhum valor individual.
+  {
+    const pF1 = [prot('df1', '2026-11-10 12:00:00.000Z', { responsavel: 'resp-um' })]
+    const pF2 = [prot('df1', '2026-11-10 12:00:00.000Z', { responsavel: 'resp-outro' })]
+    const f1 = acumuladoComissoes(pF1, [c1])
+    const f2 = acumuladoComissoes(pF2, [c1])
+    const fMensal1 = ap(pF1, [c1], 11, 2026)
+    const fMensal2 = ap(pF2, [c1], 11, 2026)
+    const igual =
+      JSON.stringify(f1) === JSON.stringify(f2) &&
+      JSON.stringify(fMensal1) === JSON.stringify(fMensal2)
+    out.push(
+      check(
+        'D-F responsável não interfere nos valores',
+        igual &&
+          f1.bia === 20 &&
+          f1.nayara === 20 &&
+          f1.kaique === 10 &&
+          f1.natalyPotencial === 20 &&
+          f1.totalBasico === 50,
+        `acum invariante=${igual} bia=${f1.bia} nayara=${f1.nayara} kaique=${f1.kaique} nataly=${f1.natalyPotencial}`,
+      ),
+    )
+  }
+
+  // D-G — meta da Nataly não implementada: potencial separado do total básico.
+  {
+    const gAcum = acumuladoComissoes([prot('dg1', '2026-11-10 12:00:00.000Z')], [c1])
+    out.push(
+      check(
+        'D-G Nataly potencial fora do total básico',
+        gAcum.natalyPotencial === 20 &&
+          gAcum.totalBasico === 50 &&
+          gAcum.totalBasico + gAcum.natalyPotencial === gAcum.totalPotencial,
+        `basico=${gAcum.totalBasico} nataly=${gAcum.natalyPotencial} potencial=${gAcum.totalPotencial}`,
+      ),
+    )
+  }
+
+  // D-H — consistência entre apuração mensal e acumulada (soma das competências únicas).
+  {
+    // Caso 1: liberação em nov/2026 com continuação em dez/2026 (comissão só em nov).
+    // Caso 2: liberação em dez/2026. Caso 3: liberação em fev/2027.
+    const pH = [
+      prot('dh1', '2026-11-10 12:00:00.000Z'),
+      prot('dh2', '2026-12-05 12:00:00.000Z', { caso_origem: 'dh1', contratos: ['c1'] }),
+      prot('dh3', '2026-12-20 12:00:00.000Z', { contratos: ['dhc2'] }),
+      prot('dh4', '2027-02-15 12:00:00.000Z', { contratos: ['dhc3'] }),
+    ]
+    const cH2 = contrato('dhc2', 'Ativo', '(00) 90000-2222')
+    const cH3 = contrato('dhc3', 'Ativo', '(00) 90000-3333')
+    const contrH = [c1, cH2, cH3]
+    const nov = ap(pH, contrH, 11, 2026)
+    const dez = ap(pH, contrH, 12, 2026)
+    const fev27 = ap(pH, contrH, 2, 2027)
+    const somaMensal = nov.totalBasico + dez.totalBasico + fev27.totalBasico
+    const hAcum = acumuladoComissoes(pH, contrH)
+    out.push(
+      check(
+        'D-H consistência mensal × acumulada',
+        hAcum.casosElegiveis === 3 &&
+          hAcum.totalBasico === 150 &&
+          somaMensal === hAcum.totalBasico &&
+          nov.quantidadeElegivel === 1 &&
+          dez.quantidadeElegivel === 1 &&
+          fev27.quantidadeElegivel === 1,
+        `somaMensal=${somaMensal} acumulado=${hAcum.totalBasico} casos=${hAcum.casosElegiveis}`,
+      ),
+    )
+  }
 
   return out
 }

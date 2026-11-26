@@ -35,9 +35,11 @@
  * telefone normalizado + tipo de ação NÃO funde: mesmo fone+tipo apontando para
  * 2+ contratos ou 2+ protocolos aptos vai para conferência.
  *
- * Valores por caso elegível: Bia 20 | Nayara 20 | Kaique 10 | Nataly 20
- * POTENCIAL (condicionado à meta mensal — meta NÃO implementada nesta versão;
- * fora do total estimado). Total básico R$ 50,00/caso; potencial R$ 70,00/caso.
+ * DISTRIBUIÇÃO FIXA APROVADA (Build D): cada caso elegível gera automaticamente
+ * Bia R$ 20 | Nayara R$ 20 | Kaique R$ 10 | Nataly R$ 20 POTENCIAL (condicionada
+ * à meta mensal — meta NÃO implementada; fora do total básico). O campo
+ * Responsável NÃO interfere no cálculo nem na distribuição. Total básico
+ * R$ 50,00/caso; potencial R$ 70,00/caso.
  */
 import { isProtocoloValido, type ContratoFechadoMini } from '@/services/protocoloValidade'
 import { ARCHIVED_STATUSES } from '@/lib/archivedStatuses'
@@ -51,20 +53,20 @@ export const RESPONSAVEL_IA_NOME = 'IA'
 /** Rótulo de movimentação posterior de caso já contabilizado. */
 export const ROTULO_CONTINUACAO_SEM_COMISSAO = 'Continuação do mesmo caso — sem nova comissão'
 
-/** Valor BÁSICO por caso, por colaborador (nome normalizado). */
+/** Valor BÁSICO por caso, por colaborador (nome EXIBIDO; distribuição fixa). */
 export const VALOR_BASICO_POR_COLABORADOR: Record<string, number> = {
-  bia: 20,
-  nayara: 20,
-  kaique: 10,
-  nataly: 20,
+  Bia: 20,
+  Nayara: 20,
+  Kaique: 10,
+  Nataly: 20,
 }
 
 /** Valor POTENCIAL por caso (inclui a parte condicionada à meta da Nataly). */
 export const VALOR_POTENCIAL_POR_COLABORADOR: Record<string, number> = {
-  bia: 20,
-  nayara: 20,
-  kaique: 10,
-  nataly: 20,
+  Bia: 20,
+  Nayara: 20,
+  Kaique: 10,
+  Nataly: 20,
 }
 
 /** Colaborador cujo valor é condicionado à meta mensal (não implementada). */
@@ -144,7 +146,23 @@ export interface ApuracaoComissoes {
   quantidadeElegivel: number
   totalBasico: number
   totalPotencial: number
+  /** Distribuição FIXA dos casos elegíveis da competência (independe do Responsável). */
   colaboradores: ColaboradorComissoes[]
+}
+
+/** Acumulado histórico de comissões (todas as competências, casos únicos). */
+export interface AcumuladoComissoes {
+  /** Quantidade acumulada de casos elegíveis (cada caso conta UMA vez). */
+  casosElegiveis: number
+  /** Total básico acumulado (NÃO inclui a parte potencial da Nataly). */
+  totalBasico: number
+  /** Total potencial acumulado (inclui a parte condicionada à meta da Nataly). */
+  totalPotencial: number
+  bia: number
+  nayara: number
+  kaique: number
+  /** Parte da Nataly — potencial, condicionada à meta; fora do total básico. */
+  natalyPotencial: number
 }
 
 /** "2026-11-24 12:00:00.000Z" → { ano: 2026, mes: 11 } (competência da dcalculo). */
@@ -227,6 +245,33 @@ const noProtocolo = (id: string) => `protocolo:${id}`
 const noContrato = (id: string) => `contrato:${id}`
 
 /**
+ * Agrupamento GLOBAL de casos sobre TODOS os protocolos carregados (antes do
+ * recorte por competência), por vínculo inequívoco: relation de contrato +
+ * cadeia de continuidade (caso_origem, protocolo_anterior, caso_continuacoes).
+ * Nome e telefone NUNCA unem casos. Reutilizado pela apuração mensal e pelo
+ * acumulado histórico.
+ */
+function agruparCasosComissoes(protocolos: ProtocoloComissoesInput[]) {
+  const grupos = criarGruposDeCaso()
+  for (const p of protocolos) {
+    grupos.find(noProtocolo(p.id))
+    for (const cid of (p.contratos || []).filter(Boolean)) {
+      grupos.unir(noProtocolo(p.id), noContrato(String(cid)))
+    }
+    if (p.caso_origem) grupos.unir(noProtocolo(p.id), noProtocolo(String(p.caso_origem)))
+    if (p.protocolo_anterior) {
+      grupos.unir(noProtocolo(p.id), noProtocolo(String(p.protocolo_anterior)))
+    }
+    if (Array.isArray(p.caso_continuacoes)) {
+      for (const id of p.caso_continuacoes) {
+        if (id) grupos.unir(noProtocolo(p.id), noProtocolo(String(id)))
+      }
+    }
+  }
+  return grupos
+}
+
+/**
  * Apura a comissão PRELIMINAR de UMA competência (mes 1-12, ano).
  * `contratos` e `tiposAcaoPorId` alimentam a detecção de ambiguidade fone+tipo.
  * Função pura: nenhum dado é gravado ou alterado.
@@ -254,22 +299,7 @@ export function apurarComissoes(
 
   // Agrupamento de CASOS — GLOBAL, sobre todos os protocolos (antes do recorte
   // por competência). Vínculos: contrato relacionado e cadeia de continuidade.
-  const grupos = criarGruposDeCaso()
-  for (const p of protocolos) {
-    grupos.find(noProtocolo(p.id))
-    for (const cid of (p.contratos || []).filter(Boolean)) {
-      grupos.unir(noProtocolo(p.id), noContrato(String(cid)))
-    }
-    if (p.caso_origem) grupos.unir(noProtocolo(p.id), noProtocolo(String(p.caso_origem)))
-    if (p.protocolo_anterior) {
-      grupos.unir(noProtocolo(p.id), noProtocolo(String(p.protocolo_anterior)))
-    }
-    if (Array.isArray(p.caso_continuacoes)) {
-      for (const id of p.caso_continuacoes) {
-        if (id) grupos.unir(noProtocolo(p.id), noProtocolo(String(id)))
-      }
-    }
-  }
+  const grupos = agruparCasosComissoes(protocolos)
   const grupoDe = (p: ProtocoloComissoesInput) => grupos.find(noProtocolo(p.id))
 
   // Liberação comissionada de cada caso: a 1ª elegível (entre TODAS as
@@ -427,23 +457,19 @@ export function apurarComissoes(
   const casosElegiveis = casos.filter((c) => c.situacao === 'elegivel')
   const quantidadeElegivel = casosElegiveis.length
 
-  // Valores por colaborador — quantidade de casos é CONJUNTA; os valores por
-  // colaborador são apenas informativos (total = 50 básico / 70 potencial por caso).
+  // DISTRIBUIÇÃO FIXA (Build D): cada caso elegível gera automaticamente Bia 20,
+  // Nayara 20, Kaique 10 e Nataly 20 potencial. O campo Responsável NÃO interfere
+  // no cálculo nem na distribuição — a lista por colaborador é informativa.
   const porColab = new Map<string, ColaboradorComissoes>()
-  for (const c of casosElegiveis) {
-    const key = normalizeText(c.responsavelNome)
-    const atual = porColab.get(c.responsavelNome) || {
-      nome: c.responsavelNome,
-      casos: 0,
-      valorBasico: 0,
-      valorPotencial: 0,
-      condicionadoMeta: false,
-    }
-    atual.casos += 1
-    atual.valorBasico += VALOR_BASICO_POR_COLABORADOR[key] ?? 0
-    atual.valorPotencial += VALOR_POTENCIAL_POR_COLABORADOR[key] ?? 0
-    if (key === COLABORADOR_CONDICIONADO_META) atual.condicionadoMeta = true
-    porColab.set(c.responsavelNome, atual)
+  for (const [nomeExibido, valorBasico] of Object.entries(VALOR_BASICO_POR_COLABORADOR)) {
+    porColab.set(nomeExibido, {
+      nome: nomeExibido,
+      casos: quantidadeElegivel,
+      valorBasico: quantidadeElegivel * valorBasico,
+      valorPotencial:
+        quantidadeElegivel * (VALOR_POTENCIAL_POR_COLABORADOR[nomeExibido] ?? valorBasico),
+      condicionadoMeta: normalizeText(nomeExibido) === COLABORADOR_CONDICIONADO_META,
+    })
   }
 
   return {
@@ -456,6 +482,44 @@ export function apurarComissoes(
     quantidadeElegivel,
     totalBasico: quantidadeElegivel * TOTAL_BASICO_POR_CASO,
     totalPotencial: quantidadeElegivel * TOTAL_POTENCIAL_POR_CASO,
-    colaboradores: Array.from(porColab.values()).sort((a, b) => b.casos - a.casos),
+    colaboradores: Array.from(porColab.values()),
+  }
+}
+
+/**
+ * ACUMULADO HISTÓRICO (Build D) — função PURA: soma TODAS as competências sobre
+ * o mesmo agrupamento global da apuração mensal. Cada caso entra UMA única vez
+ * (a 1ª liberação elegível por dcalculo); continuações em outros meses/anos não
+ * duplicam. Competência exclusivamente por dcalculo — nunca dprotocolo,
+ * dcontrato ou created. R. Docs suspenso não contabiliza. Não usa a soma das
+ * apurações mensais: soma direto sobre o mapa de casos, sem competências
+ * duplicadas.
+ */
+export function acumuladoComissoes(
+  protocolos: ProtocoloComissoesInput[],
+  contratos: ContratoComissoesInput[],
+): AcumuladoComissoes {
+  const contratosPorId = new Map<string, ContratoComissoesInput>(contratos.map((c) => [c.id, c]))
+  const grupos = agruparCasosComissoes(protocolos)
+  const grupoDe = (p: ProtocoloComissoesInput) => grupos.find(noProtocolo(p.id))
+
+  // 1ª liberação elegível de cada caso — a MESMA regra da apuração mensal.
+  const comissionadoPorCaso = new Map<string, ProtocoloComissoesInput>()
+  for (const p of protocolos) {
+    if (!elegivelParaComissao(p, contratosPorId)) continue
+    const raiz = grupoDe(p)
+    const atual = comissionadoPorCaso.get(raiz)
+    if (!atual || chaveOrdem(p) < chaveOrdem(atual)) comissionadoPorCaso.set(raiz, p)
+  }
+
+  const casos = comissionadoPorCaso.size
+  return {
+    casosElegiveis: casos,
+    totalBasico: casos * TOTAL_BASICO_POR_CASO,
+    totalPotencial: casos * TOTAL_POTENCIAL_POR_CASO,
+    bia: casos * VALOR_BASICO_POR_COLABORADOR['Bia'],
+    nayara: casos * VALOR_BASICO_POR_COLABORADOR['Nayara'],
+    kaique: casos * VALOR_BASICO_POR_COLABORADOR['Kaique'],
+    natalyPotencial: casos * VALOR_BASICO_POR_COLABORADOR['Nataly'],
   }
 }
