@@ -317,8 +317,11 @@ export function ProtocoloDialog({
   // prefill da ação "Abrir em Protocolo" — nesse caso quem preenche é o effect
   // de prefill acima (contratos=[contratoId] no save, nautos/valor/dcontrato em
   // branco); preencher aqui também zeraria o prefill (ordem de effects).
+  // Também NÃO roda no modo "Novo protocolo do mesmo caso" — quem preenche é o
+  // effect de continuidade acima; resetar aqui apagaria os dados herdados do
+  // protocolo original (corrige v0.0.1125).
   useEffect(() => {
-    if (open && !privacyOn && !prefill) {
+    if (open && !privacyOn && !prefill && !modoMesmoCaso) {
       setDuplicateWarning(null)
       loadTiposAcao()
       loadResponsaveis()
@@ -498,23 +501,27 @@ export function ProtocoloDialog({
           return
         }
       }
-      if (modoMesmoCaso) return
-      try {
-        const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
-        const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
+      // No modo continuidade o aviso de nome duplicado é pulado (o hook
+      // servidor permite via exceção de caso_origem) — mas o fluxo segue
+      // normalmente até o createProtocolo (corrige v0.0.1125).
+      if (!modoMesmoCaso) {
+        try {
+          const normalizedInput = removeAccents(values['nome'].toLowerCase().trim())
+          const existing = await pb.collection('protocolo').getFullList({ fields: 'id,nome' })
 
-        const duplicate = existing.find((c: any) => {
-          if (item && c['id'] === item['id']) return false
-          const normalizedExisting = removeAccents(c['nome'].toLowerCase().trim())
-          return normalizedExisting === normalizedInput
-        })
+          const duplicate = existing.find((c: any) => {
+            if (item && c['id'] === item['id']) return false
+            const normalizedExisting = removeAccents(c['nome'].toLowerCase().trim())
+            return normalizedExisting === normalizedInput
+          })
 
-        if (duplicate) {
-          setDuplicateWarning(duplicate['nome'])
-          return
+          if (duplicate) {
+            setDuplicateWarning(duplicate['nome'])
+            return
+          }
+        } catch (err) {
+          console.error(err)
         }
-      } catch (err) {
-        console.error(err)
       }
     }
 
