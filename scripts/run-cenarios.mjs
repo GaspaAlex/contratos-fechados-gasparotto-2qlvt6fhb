@@ -69,7 +69,9 @@ function rewriteSpec(spec, fromRel) {
   }
   targetRel = targetRel.replace(/\.ts$/, '')
   const outName = OUT_NAME(targetRel + '.ts')
-  if (!FILES.some((f) => OUT_NAME(f) === outName)) return null
+  // Rewrites que apontam para um arquivo STUBADO não são descartadas: o stub é
+  // materializado no OUT_DIR com o mesmo OUT_NAME (mesma assinatura de export).
+  if (!FILES.some((f) => OUT_NAME(f) === outName) && !STUB_FILES[targetRel + '.ts']) return null
   return './' + outName
 }
 
@@ -92,8 +94,13 @@ mkdirSync(OUT_DIR, { recursive: true })
 for (const rel of FILES) {
   writeFileSync(join(OUT_DIR, OUT_NAME(rel)), transpile(rel))
 }
+for (const rel of Object.keys(STUB_FILES)) {
+  writeFileSync(join(OUT_DIR, OUT_NAME(rel)), transpile(rel))
+}
 
 const entry = `
+import { writeFileSync } from 'node:fs'
+const RESULT_PATH = ${JSON.stringify(RESULT_PATH)}
 import { runCenariosComissoes } from './${OUT_NAME('src/lib/comissoes.cenarios.ts')}'
 import { runCenariosIndicadores } from './${OUT_NAME('src/lib/protocoloIndicadores.cenarios.ts')}'
 

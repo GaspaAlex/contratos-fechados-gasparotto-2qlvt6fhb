@@ -1,7 +1,143 @@
 {
-  "executadoEm": "2026-11-26T09:08:57.921Z",
-  "resultados": {
-    "executadoEm": "2026-11-26T09:08:44.413Z",
-    "resultados": []
-  }
+  "executadoEm": "2026-11-26T09:11:48.825Z",
+  "resultados": [
+    {
+      "suite": "COMISSOES",
+      "cenario": "A caso único gera 1 comissão",
+      "ok": true,
+      "detalhe": "elegíveis=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "B continuação em outro mês não gera nova",
+      "ok": true,
+      "detalhe": "nov=1 dez=0 dup=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "C continuação em outro ano não gera nova",
+      "ok": true,
+      "detalhe": "elegíveis=0"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "D administrativo→judicial não duplica",
+      "ok": true,
+      "detalhe": "elegíveis=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "E novo ajuizamento após extinção não duplica",
+      "ok": true,
+      "detalhe": "elegíveis=0"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "F contratos distintos do mesmo cliente independentes",
+      "ok": true,
+      "detalhe": "elegíveis=2"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "G R. Docs suspenso não conta como comissão",
+      "ok": true,
+      "detalhe": "suspenso-sozinho=0 suspensos=1 comR.Docs-com-p1=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "G ao sair de R. Docs disputa a primeira liberação",
+      "ok": true,
+      "detalhe": "dez=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "H formulário herda dcontrato",
+      "ok": null,
+      "detalhe": "verificação manual — efeito de prefill em ProtocoloDialogs.tsx (linha ~230)"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "I dcalculo vazio na continuação não gera comissão",
+      "ok": true,
+      "detalhe": "elegíveis=1"
+    },
+    {
+      "suite": "COMISSOES",
+      "cenario": "J indicadores financeiros inalterados",
+      "ok": null,
+      "detalhe": "verificação manual — este build não altera projeção/ticket/distribuição"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "A",
+      "ok": true,
+      "detalhe": "1 caso, 1 oportunidade, honorários 30.000 (30%), ticket 30.000 — obtido: 1 ação(ões), R$ 30000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "B",
+      "ok": true,
+      "detalhe": "cadeia req→judicial: 1 oportunidade pela judicial vigente (R$ 30.000, não 54.000) — obtido: 1 ação(ões), R$ 30000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "C",
+      "ok": true,
+      "detalhe": "vigente = p2 (último da cadeia, mesmo com dprotocolo anterior): 1 ação, R$ 36.000 — obtido: 1 ação(ões), R$ 36000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "D",
+      "ok": true,
+      "detalhe": "anterior Improcedente + continuação ativa: 1 oportunidade pela vigente — obtido: 1 ação(ões), R$ 30000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "E",
+      "ok": true,
+      "detalhe": "vigente Improcedente: 0 ação, R$ 0, ticket 0, caso marcado como decisão desfavorável — obtido: 0 ação(ões), R$ 0, ticket 0"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "F",
+      "ok": true,
+      "detalhe": "vigente R. Docs: 0 ação, R$ 0, ticket 0, caso marcado como suspenso — obtido: 0 ação(ões), R$ 0, ticket 0"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "G",
+      "ok": true,
+      "detalhe": "continuação sem valor: 1 ação ativa, R$ 0 (não presume valor da anterior), ticket 0 — obtido: 1 ação(ões), R$ 0, sem valor: 1"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "H",
+      "ok": true,
+      "detalhe": "2 contratos distintos: 2 oportunidades independentes, R$ 60.000 — obtido: 2 ação(ões), R$ 60000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "I",
+      "ok": true,
+      "detalhe": "sem relation e sem cadeia: 2 casos independentes mesmo com mesmo nome/fone — obtido: 2 ação(ões)"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "J",
+      "ok": true,
+      "detalhe": "nenhuma oportunidade ativa: tudo zerado, ticket 0 (sem divisão inválida) — obtido: 0 ação(ões), R$ 0, ticket 0"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "K",
+      "ok": true,
+      "detalhe": "cadeia de 3: só a vigente (p3, Calculado) conta — 1 ação, R$ 30.000 — obtido: 1 ação(ões), R$ 30000"
+    },
+    {
+      "suite": "INDICADORES",
+      "cenario": "P",
+      "ok": true,
+      "detalhe": "parceiro na vigente: 15% (R$ 15.000) — obtido: R$ 15000"
+    }
+  ]
 }

@@ -340,13 +340,16 @@ export function calcularIndicadoresFinanceiros(
     const vigente = movimentacaoVigente(validos)
     if (!vigente) continue // dados incompletos: nenhum registro do caso é usado
 
+    // R. Docs (suspensão) e decisão desfavorável são checadas ANTES do status
+    // ativo: 'R. Docs' não está em STATUS_ATIVOS_PROJECAO, mas deve ser
+    // contabilizado como caso suspenso (não como caso encerrado/genérico).
+    if (vigente.status === STATUS_SUSPENSO_PROJECAO) {
+      casosSuspensos += 1 // R. Docs: suspensão — sem oportunidade ativa enquanto durar
+      continue
+    }
     if (!STATUS_ATIVOS_SET.has(vigente.status || '')) continue
     if (DECISOES_SEM_PROJECAO_SET.has(String(vigente.decisao || ''))) {
       casosDecisaoDesfavoravel += 1
-      continue
-    }
-    if (vigente.status === STATUS_SUSPENSO_PROJECAO) {
-      casosSuspensos += 1 // R. Docs: suspensão — sem oportunidade ativa enquanto durar
       continue
     }
     if (!isOportunidadeAtiva(vigente, contratosPorId)) continue
