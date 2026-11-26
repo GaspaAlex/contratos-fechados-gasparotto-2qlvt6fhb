@@ -11,7 +11,7 @@
  * este componente é exclusivamente presentacional.
  */
 import { useState } from 'react'
-import { CheckCircle2, HelpCircle, Settings2, XCircle } from 'lucide-react'
+import { CheckCircle2, HelpCircle, Printer, Settings2, XCircle } from 'lucide-react'
 import {
   Accordion,
   AccordionContent,
@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { formatCurrency } from '@/lib/formatters'
 import { formatDateBR } from '@/services/leadsAuxAcidente'
+import { imprimirRelatorioComissoes } from '@/components/protocolo/impressaoComissoes'
 import type { ApuracaoCardComissoes } from '@/lib/apuracaoCard'
 import { ROTULO_CONTINUACAO_SEM_COMISSAO, type CasoComissoes } from '@/lib/comissoes'
 
@@ -152,6 +153,22 @@ export function ComissoesDetalheDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* IMPRESSÃO / PDF — abre a impressão do navegador com o RELATÓRIO DE
+              COMISSÕES da competência selecionada (mesmos valores do card). */}
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1.5 px-2 text-[11px] text-[#78818E] hover:bg-[#C9922A]/10 hover:text-[#C9922A]"
+              onClick={() => imprimirRelatorioComissoes(card)}
+              aria-label="Imprimir ou salvar em PDF o relatório de comissões da competência"
+            >
+              <Printer className="h-3.5 w-3.5" aria-hidden />
+              Imprimir / Salvar PDF
+            </Button>
+          </div>
+
           {/* RESUMO DA COMPETÊNCIA */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <MiniStat label="Casos elegíveis" value={String(apuracao.quantidadeElegivel)} />
