@@ -1,5 +1,5 @@
 /**
- * FUNÇÃO PURA — AURAÇÃO DINÂMICA DO CARD DE COMISSÕES (Build F2)
+ * FUNÇÃO PURA — APURAÇÃO DINÂMICA DO CARD DE COMISSÕES (Build F2)
  * ===============================================================
  * Junta as peças já existentes (SEM duplicar cálculo):
  *   - apurarComissoes (src/lib/comissoes.ts): casos únicos elegíveis por

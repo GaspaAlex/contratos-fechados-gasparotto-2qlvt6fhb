@@ -522,7 +522,8 @@ export function runCenariosColaboradores(): ResultadoCenario[] {
       'H dcalculo em nov com dprotocolo em dez → comissão na competência nov/2026',
       `elegíveis=${r.apuracao.quantidadeElegivel} em ${r.apuracao.competencia}; linhas=${r.linhas.map((l) => `${l.nome}=${l.valorConfirmado}`).join(',')}; total=${fmtBRL(r.totalCompetencia)} (potencial ${fmtBRL(r.totalPotencial)}, meta ${r.meta?.situacaoMeta})`,
       r.apuracao.quantidadeElegivel === 1 &&
-        r.apuracao.competencia === '2026-11' &&
+        // Formato de exibição real de apurarComissoes: "Nov 2026" (comissoes.ts:287).
+        r.apuracao.competencia === 'Nov 2026' &&
         // Meta 1 com 1 contrato ativo = atingida → condicionada (Nataly) INTEGRA.
         r.meta?.situacaoMeta === 'atingida' &&
         r.totalPotencial === 70 &&
