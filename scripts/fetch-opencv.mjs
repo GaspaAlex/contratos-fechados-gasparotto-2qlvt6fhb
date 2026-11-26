@@ -129,11 +129,26 @@ async function ensureOpenCv() {
   }
 }
 
+// ---------------------------------------------------------------------
+// QA — cenários de comissões e indicadores financeiros (execução REAL).
+// Este script é o `prebuild` do projeto: além da sua função original
+// (garantir o OpenCV.js), executa os cenários simulados em memória
+// (comissões A–J e indicadores A–K) e GRAVA a evidência em
+// scripts/cenarios-result.json. Um cenário reprovado FALHA o build
+// (exit 1), então o QA da plataforma não deixa passar silenciosamente.
+// NÃO acessa o banco e NÃO altera registros (prévia e produção
+// compartilham o MESMO banco) — tudo em memória.
+// ---------------------------------------------------------------------
+async function runCenarios() {
+  await import('./run-cenarios.mjs')
+}
+
 ensureOpenCv()
+  .then(runCenarios)
   .then(() => {
     process.exit(0)
   })
   .catch((err) => {
-    console.error(err)
+    console.error('[fetch-opencv+cenarios]', err)
     process.exit(1)
   })

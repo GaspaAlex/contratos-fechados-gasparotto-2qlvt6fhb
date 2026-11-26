@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/formatters'
 import { monthsArray } from '@/lib/months'
 import { isProtocoloValido } from '@/services/protocoloValidade'
+import { calcularIndicadoresFinanceiros } from '@/lib/protocoloIndicadores'
 
 interface Props {
   data: any[]
@@ -98,30 +99,19 @@ export function ProtocoloDashboard({
     })
   }, [filteredData, status])
 
-  const totalAcoes = filteredByStatus.filter((d) =>
-    [
-      'Protocolado Judicial',
-      'Protocolado Administrativo',
-      'Requerimento Adm.',
-      'Prov. Inicial',
-      'Calculado',
-    ].includes(d.status),
-  ).length
+  // INDICADORES FINANCEIROS POR CASO (Build B): os 3 cards de cima passam a usar
+  // src/lib/protocoloIndicadores.ts — por CASO, sobre a movimentação VIGENTE da
+  // cadeia (relation de contrato + caso_origem/protocolo_anterior/
+  // caso_continuacoes; nunca por nome/telefone). 1 caso elegível = no máximo 1
+  // ação. A base continua sendo filteredByStatus (período/parceiro/tipo/
+  // responsável/status + validade de contratos), preservando os filtros.
+  const indicadores = useMemo(() => {
+    return calcularIndicadoresFinanceiros(filteredByStatus, contratosFechados)
+  }, [filteredByStatus, contratosFechados])
 
-  const projHonorariosTicketMedio = filteredByStatus
-    .filter(
-      (d) =>
-        [
-          'Protocolado Judicial',
-          'Protocolado Administrativo',
-          'Requerimento Adm.',
-          'Prov. Inicial',
-          'Calculado',
-        ].includes(d.status) && d.decisao !== 'Improcedente',
-    )
-    .reduce((sum, d) => sum + (d.valor || 0) * (d.parceiro ? 0.15 : 0.3), 0)
-
-  const ticketMedio = totalAcoes > 0 ? projHonorariosTicketMedio / totalAcoes : null
+  const projHonorariosTicketMedio = indicadores.projHonorarios
+  const totalAcoes = indicadores.acoesNaProjecao
+  const ticketMedio = totalAcoes > 0 ? indicadores.ticketMedio : null
 
   const cProtJud = filteredData.filter((d) => d.status === 'Protocolado Judicial').length
   const cProtAdm = filteredData.filter((d) => d.status === 'Protocolado Administrativo').length
@@ -201,7 +191,7 @@ export function ProtocoloDashboard({
                 </div>
               </div>
               <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3 truncate">
-                Status ativos na projeção
+                Oportunidades ativas (1 por caso)
               </p>
             </div>
 
@@ -210,7 +200,7 @@ export function ProtocoloDashboard({
                 {totalAcoes}
               </div>
               <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
-                Judicial, Prot. Adm., Req. Adm., Inicial e Calculado
+                Pela movimentação vigente de cada caso
               </p>
             </div>
           </CardContent>
@@ -229,7 +219,7 @@ export function ProtocoloDashboard({
                 </div>
               </div>
               <p className="text-[11px] text-[#78818E] dark:text-muted-foreground mb-3 truncate">
-                Média projetada por processo
+                Projeção ÷ oportunidades ativas
               </p>
             </div>
 
@@ -241,7 +231,9 @@ export function ProtocoloDashboard({
                 {ticketMedio !== null ? formatCurrency(ticketMedio) : '—'}
               </div>
               <p className="mt-2 text-[11px] text-[#78818E] dark:text-muted-foreground">
-                {totalAcoes > 0 ? `${totalAcoes} ações calculadas` : 'Sem registros ativos'}
+                {totalAcoes > 0
+                  ? `${totalAcoes} oportunidade(s) ativa(s)`
+                  : 'Sem oportunidades ativas'}
               </p>
             </div>
           </CardContent>
