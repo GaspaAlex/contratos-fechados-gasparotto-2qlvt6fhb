@@ -34,6 +34,8 @@ const FILES = [
   'src/lib/comissoes.cenarios.ts',
   'src/lib/comissoesColaboradores.ts',
   'src/lib/comissoesColaboradores.cenarios.ts',
+  'src/lib/apuracaoCard.ts',
+  'src/lib/equipePadrao.ts',
   'src/lib/protocoloIndicadores.ts',
   'src/lib/protocoloIndicadores.cenarios.ts',
 ]

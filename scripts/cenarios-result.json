@@ -1,383 +1,416 @@
-{
-  "executadoEm": "2026-11-26T13:19:27.473Z",
-  "resultados": {
-    "executadoEm": "2026-11-26T13:19:19.492Z",
-    "resultados": {
-      "executadoEm": "2026-11-26T12:43:40.831Z",
-      "resultados": [
-        {
-          "suite": "COMISSOES",
-          "cenario": "A caso único gera 1 comissão",
-          "ok": true,
-          "detalhe": "elegíveis=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "B continuação em outro mês não gera nova",
-          "ok": true,
-          "detalhe": "nov=1 dez=0 dup=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "C continuação em outro ano não gera nova",
-          "ok": true,
-          "detalhe": "elegíveis=0"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D administrativo→judicial não duplica",
-          "ok": true,
-          "detalhe": "elegíveis=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E novo ajuizamento após extinção não duplica",
-          "ok": true,
-          "detalhe": "elegíveis=0"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "F contratos distintos do mesmo cliente independentes",
-          "ok": true,
-          "detalhe": "elegíveis=2"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "G R. Docs suspenso não conta como comissão",
-          "ok": true,
-          "detalhe": "suspenso-sozinho=0 suspensos=1 comR.Docs-com-p1=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "G ao sair de R. Docs disputa a primeira liberação",
-          "ok": true,
-          "detalhe": "dez=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "H formulário herda dcontrato",
-          "ok": null,
-          "detalhe": "verificação manual — efeito de prefill em ProtocoloDialogs.tsx (linha ~230)"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "I dcalculo vazio na continuação não gera comissão",
-          "ok": true,
-          "detalhe": "elegíveis=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "J indicadores financeiros inalterados",
-          "ok": null,
-          "detalhe": "verificação manual — este build não altera projeção/ticket/distribuição"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-A 100 casos independentes → distribuição fixa",
-          "ok": true,
-          "detalhe": "mensal=100 acum=100 basico=5000 bia=2000 nayara=2000 kaique=1000 nataly=2000"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-B continuação em outro mês → comissão única no acumulado",
-          "ok": true,
-          "detalhe": "acum=1 basico=50 dezElegiveis=0"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-C continuação em outro ano → comissão única no acumulado",
-          "ok": true,
-          "detalhe": "acum=1 basico=50 2027Elegiveis=0"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-D R. Docs sem liberação elegível não contabiliza",
-          "ok": true,
-          "detalhe": "mensal=0 acum=0 basico=0"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-E dois contratos independentes → duas comissões",
-          "ok": true,
-          "detalhe": "mensal=2 acum=2"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-F responsável não interfere nos valores",
-          "ok": true,
-          "detalhe": "acum invariante=true bia=20 nayara=20 kaique=10 nataly=20"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-G Nataly potencial fora do total básico",
-          "ok": true,
-          "detalhe": "basico=50 nataly=20 potencial=70"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "D-H consistência mensal × acumulada",
-          "ok": true,
-          "detalhe": "somaMensal=150 acumulado=150 casos=3"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-A meta 50 com 52 ativos e 25 casos → Nataly R$ 500, total R$ 1.750",
-          "ok": true,
-          "detalhe": "ativos=52 situação=atingida Nataly=R$ 500 básico=R$ 1.250 total=R$ 1.750"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-B meta 50 com 43 ativos → Nataly R$ 0, total R$ 1.250",
-          "ok": true,
-          "detalhe": "ativos=43 situação=nao atingida Nataly incluída=R$ 0 total=R$ 1.250"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-C meta não definida → Nataly fora do total",
-          "ok": true,
-          "detalhe": "situação=nao definida Nataly incluída=R$ 0 total=R$ 1.250"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-D contratos arquivados não contam na meta",
-          "ok": true,
-          "detalhe": "ativos=1 (3 no mês, 2 arquivados) situação=nao atingida"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-E R. Docs conta na meta comercial mas sem comissão",
-          "ok": true,
-          "detalhe": "meta: ativos=2 situação=atingida; comissão: elegíveis=0 suspensos=1"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-F dcontrato novembro conta na meta de novembro",
-          "ok": true,
-          "detalhe": "nov ativos=1 (atingida) · dez ativos=0 (nao atingida)"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-G dcalculo novembro → comissão em novembro",
-          "ok": true,
-          "detalhe": "nov elegíveis=1 · dez elegíveis=0 (dup=1) · básico nov=R$ 50"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-H metas independentes nov=50 / dez=60",
-          "ok": true,
-          "detalhe": "nov ativos=50 (atingida) · dez ativos=59 (nao atingida)"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-I mesmo cliente, contratos distintos → contagem individual",
-          "ok": true,
-          "detalhe": "ativos=2 situação=atingida total=R$ 140"
-        },
-        {
-          "suite": "COMISSOES",
-          "cenario": "E-J nenhum caso elegível → total R$ 0",
-          "ok": true,
-          "detalhe": "meta atingida com 60 ativos, porém total=R$ 0"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "A",
-          "ok": true,
-          "detalhe": "1 caso, 1 oportunidade, honorários 30.000 (30%), ticket 30.000 — obtido: 1 ação(ões), R$ 30000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "B",
-          "ok": true,
-          "detalhe": "cadeia req→judicial: 1 oportunidade pela judicial vigente (R$ 30.000, não 54.000) — obtido: 1 ação(ões), R$ 30000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "C",
-          "ok": true,
-          "detalhe": "vigente = p2 (último da cadeia, mesmo com dprotocolo anterior): 1 ação, R$ 36.000 — obtido: 1 ação(ões), R$ 36000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "D",
-          "ok": true,
-          "detalhe": "anterior Improcedente + continuação ativa: 1 oportunidade pela vigente — obtido: 1 ação(ões), R$ 30000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "E",
-          "ok": true,
-          "detalhe": "vigente Improcedente: 0 ação, R$ 0, ticket 0, caso marcado como decisão desfavorável — obtido: 0 ação(ões), R$ 0, ticket 0"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "F",
-          "ok": true,
-          "detalhe": "vigente R. Docs: 0 ação, R$ 0, ticket 0, caso marcado como suspenso — obtido: 0 ação(ões), R$ 0, ticket 0"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "G",
-          "ok": true,
-          "detalhe": "continuação sem valor: 1 ação ativa, R$ 0 (não presume valor da anterior), ticket 0 — obtido: 1 ação(ões), R$ 0, sem valor: 1"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "H",
-          "ok": true,
-          "detalhe": "2 contratos distintos: 2 oportunidades independentes, R$ 60.000 — obtido: 2 ação(ões), R$ 60000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "I",
-          "ok": true,
-          "detalhe": "sem relation e sem cadeia: 2 casos independentes mesmo com mesmo nome/fone — obtido: 2 ação(ões)"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "J",
-          "ok": true,
-          "detalhe": "nenhuma oportunidade ativa: tudo zerado, ticket 0 (sem divisão inválida) — obtido: 0 ação(ões), R$ 0, ticket 0"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "K",
-          "ok": true,
-          "detalhe": "cadeia de 3: só a vigente (p3, Calculado) conta — 1 ação, R$ 30.000 — obtido: 1 ação(ões), R$ 30000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "P",
-          "ok": true,
-          "detalhe": "parceiro na vigente: 15% (R$ 15.000) — obtido: R$ 15000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "C1",
-          "ok": true,
-          "detalhe": "extinta (Calculado) + novo ajuizamento ativo: a vigente é a nova — 1 ação, R$ 36.000, ticket 36.000 — obtido: 1 ação(ões), R$ 36000, ticket 36000"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "C2",
-          "ok": true,
-          "detalhe": "anterior Procedente + vigente extinta: 0 ação, R$ 0 (sem recuperar a anterior) — obtido: 0 ação(ões), R$ 0, ticket 0"
-        },
-        {
-          "suite": "INDICADORES",
-          "cenario": "C3",
-          "ok": true,
-          "detalhe": "vigente extinta: decisão desfavorável=1, suspenso=0, sem valor=0, 0 ação, R$ 0 — obtido: desfavorável=1, suspenso=0, sem valor=0"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-A Novo colaborador com vigência futura não paga em competências anteriores",
-          "ok": true,
-          "detalhe": "2026-12: 0 linha(s); 2027-01: 20/caso"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-B R$20→R$25: nov/dez continuam R$20 e jan usa R$25 (sem recálculo retroativo)",
-          "ok": true,
-          "detalhe": "nov: 20 (60 confirmado); dez: 20 (60 confirmado); jan: 25 (75 confirmado)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-C Desativação não apaga comissões históricas (regra vigente permanece paga)",
-          "ok": true,
-          "detalhe": "nov/2026 com ativo=false hoje: 20 (60 confirmado)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-D Reativação em competência posterior volta a pagar pela nova regra",
-          "ok": true,
-          "detalhe": "fev/2027: 20 (60 confirmado)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-E Modalidade fixa integra o total mesmo com meta não atingida",
-          "ok": true,
-          "detalhe": "meta não atingida, total confirmado: 60"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-F Condicionada à meta ATINGIDA integra o total confirmado",
-          "ok": true,
-          "detalhe": "total confirmado: 60"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-G Condicionada à meta NÃO atingida não integra o confirmado (fica potencial)",
-          "ok": true,
-          "detalhe": "confirmado: 0; potencial: 60"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-H Condicionada com meta NÃO DEFINIDA não integra o confirmado",
-          "ok": true,
-          "detalhe": "confirmado: 0; potencial: 60"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-I Regras consecutivas sem sobreposição resolvem cada competência",
-          "ok": true,
-          "detalhe": "nov: 20; mar: 25; abr: 30"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-J Regras sobrepostas do mesmo colaborador são RECUSADAS (sem sobreposição é aceita)",
-          "ok": true,
-          "detalhe": "início dentro: recusada; período englobando: recusada; sequencial: aceita; futura sobre ABERTA: recusada"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-K Vigência sem data final permanece em vigor em qualquer competência futura",
-          "ok": true,
-          "detalhe": "jun/2027: 20 (60 confirmado); jan/2028: 20 (60 confirmado)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-L Competência anterior ao início da participação não paga",
-          "ok": true,
-          "detalhe": "dez/2026 com regra iniciando 2027-01: 0 linha(s)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-M Distribuição independente do campo Responsável (só casos elegíveis × valor)",
-          "ok": true,
-          "detalhe": "4 casos → 80 (sem uso de responsável)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-N Inativo HOJE mantém comissão válida em competência histórica com regra vigente",
-          "ok": true,
-          "detalhe": "dez/2026 (hoje mar/2027, inativo): 20 (60 confirmado)"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-O Competência anterior a 2026-11 está fora do novo controle",
-          "ok": true,
-          "detalhe": "out/2026: 0 linha(s); validação: Competência anterior a nov/2026 está fora do novo controle de comissões por colaborador."
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-P Comissão única por caso preservada (2 casos × 2 colaboradores, sem duplicar caso)",
-          "ok": true,
-          "detalhe": "2 casos → Bia 40 + Nayara 40 = 80"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-R1 resolverRegrasVigentes: empate resolvido pela regra de MAIOR início vigente",
-          "ok": true,
-          "detalhe": "jan/2027 → r2; dez/2026 → r1"
-        },
-        {
-          "suite": "COMISSOES_F",
-          "cenario": "F-R2 Helpers de competência: anterior/seguinte corretos na virada do ano",
-          "ok": true,
-          "detalhe": "2027-01←2026-12→2027-01 ok"
-        }
-      ]
-    }
+[
+  {
+    "suite": "COMISSOES",
+    "cenario": "A caso único gera 1 comissão",
+    "ok": true,
+    "detalhe": "elegíveis=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "B continuação em outro mês não gera nova",
+    "ok": true,
+    "detalhe": "nov=1 dez=0 dup=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "C continuação em outro ano não gera nova",
+    "ok": true,
+    "detalhe": "elegíveis=0"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D administrativo→judicial não duplica",
+    "ok": true,
+    "detalhe": "elegíveis=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E novo ajuizamento após extinção não duplica",
+    "ok": true,
+    "detalhe": "elegíveis=0"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "F contratos distintos do mesmo cliente independentes",
+    "ok": true,
+    "detalhe": "elegíveis=2"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "G R. Docs suspenso não conta como comissão",
+    "ok": true,
+    "detalhe": "suspenso-sozinho=0 suspensos=1 comR.Docs-com-p1=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "G ao sair de R. Docs disputa a primeira liberação",
+    "ok": true,
+    "detalhe": "dez=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "H formulário herda dcontrato",
+    "ok": null,
+    "detalhe": "verificação manual — efeito de prefill em ProtocoloDialogs.tsx (linha ~230)"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "I dcalculo vazio na continuação não gera comissão",
+    "ok": true,
+    "detalhe": "elegíveis=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "J indicadores financeiros inalterados",
+    "ok": null,
+    "detalhe": "verificação manual — este build não altera projeção/ticket/distribuição"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-A 100 casos independentes → distribuição fixa",
+    "ok": true,
+    "detalhe": "mensal=100 acum=100 basico=5000 bia=2000 nayara=2000 kaique=1000 nataly=2000"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-B continuação em outro mês → comissão única no acumulado",
+    "ok": true,
+    "detalhe": "acum=1 basico=50 dezElegiveis=0"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-C continuação em outro ano → comissão única no acumulado",
+    "ok": true,
+    "detalhe": "acum=1 basico=50 2027Elegiveis=0"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-D R. Docs sem liberação elegível não contabiliza",
+    "ok": true,
+    "detalhe": "mensal=0 acum=0 basico=0"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-E dois contratos independentes → duas comissões",
+    "ok": true,
+    "detalhe": "mensal=2 acum=2"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-F responsável não interfere nos valores",
+    "ok": true,
+    "detalhe": "acum invariante=true bia=20 nayara=20 kaique=10 nataly=20"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-G Nataly potencial fora do total básico",
+    "ok": true,
+    "detalhe": "basico=50 nataly=20 potencial=70"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "D-H consistência mensal × acumulada",
+    "ok": true,
+    "detalhe": "somaMensal=150 acumulado=150 casos=3"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-A meta 50 com 52 ativos e 25 casos → Nataly R$ 500, total R$ 1.750",
+    "ok": true,
+    "detalhe": "ativos=52 situação=atingida Nataly=R$ 500 básico=R$ 1.250 total=R$ 1.750"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-B meta 50 com 43 ativos → Nataly R$ 0, total R$ 1.250",
+    "ok": true,
+    "detalhe": "ativos=43 situação=nao atingida Nataly incluída=R$ 0 total=R$ 1.250"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-C meta não definida → Nataly fora do total",
+    "ok": true,
+    "detalhe": "situação=nao definida Nataly incluída=R$ 0 total=R$ 1.250"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-D contratos arquivados não contam na meta",
+    "ok": true,
+    "detalhe": "ativos=1 (3 no mês, 2 arquivados) situação=nao atingida"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-E R. Docs conta na meta comercial mas sem comissão",
+    "ok": true,
+    "detalhe": "meta: ativos=2 situação=atingida; comissão: elegíveis=0 suspensos=1"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-F dcontrato novembro conta na meta de novembro",
+    "ok": true,
+    "detalhe": "nov ativos=1 (atingida) · dez ativos=0 (nao atingida)"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-G dcalculo novembro → comissão em novembro",
+    "ok": true,
+    "detalhe": "nov elegíveis=1 · dez elegíveis=0 (dup=1) · básico nov=R$ 50"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-H metas independentes nov=50 / dez=60",
+    "ok": true,
+    "detalhe": "nov ativos=50 (atingida) · dez ativos=59 (nao atingida)"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-I mesmo cliente, contratos distintos → contagem individual",
+    "ok": true,
+    "detalhe": "ativos=2 situação=atingida total=R$ 140"
+  },
+  {
+    "suite": "COMISSOES",
+    "cenario": "E-J nenhum caso elegível → total R$ 0",
+    "ok": true,
+    "detalhe": "meta atingida com 60 ativos, porém total=R$ 0"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "A",
+    "ok": true,
+    "detalhe": "1 caso, 1 oportunidade, honorários 30.000 (30%), ticket 30.000 — obtido: 1 ação(ões), R$ 30000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "B",
+    "ok": true,
+    "detalhe": "cadeia req→judicial: 1 oportunidade pela judicial vigente (R$ 30.000, não 54.000) — obtido: 1 ação(ões), R$ 30000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "C",
+    "ok": true,
+    "detalhe": "vigente = p2 (último da cadeia, mesmo com dprotocolo anterior): 1 ação, R$ 36.000 — obtido: 1 ação(ões), R$ 36000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "D",
+    "ok": true,
+    "detalhe": "anterior Improcedente + continuação ativa: 1 oportunidade pela vigente — obtido: 1 ação(ões), R$ 30000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "E",
+    "ok": true,
+    "detalhe": "vigente Improcedente: 0 ação, R$ 0, ticket 0, caso marcado como decisão desfavorável — obtido: 0 ação(ões), R$ 0, ticket 0"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "F",
+    "ok": true,
+    "detalhe": "vigente R. Docs: 0 ação, R$ 0, ticket 0, caso marcado como suspenso — obtido: 0 ação(ões), R$ 0, ticket 0"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "G",
+    "ok": true,
+    "detalhe": "continuação sem valor: 1 ação ativa, R$ 0 (não presume valor da anterior), ticket 0 — obtido: 1 ação(ões), R$ 0, sem valor: 1"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "H",
+    "ok": true,
+    "detalhe": "2 contratos distintos: 2 oportunidades independentes, R$ 60.000 — obtido: 2 ação(ões), R$ 60000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "I",
+    "ok": true,
+    "detalhe": "sem relation e sem cadeia: 2 casos independentes mesmo com mesmo nome/fone — obtido: 2 ação(ões)"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "J",
+    "ok": true,
+    "detalhe": "nenhuma oportunidade ativa: tudo zerado, ticket 0 (sem divisão inválida) — obtido: 0 ação(ões), R$ 0, ticket 0"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "K",
+    "ok": true,
+    "detalhe": "cadeia de 3: só a vigente (p3, Calculado) conta — 1 ação, R$ 30.000 — obtido: 1 ação(ões), R$ 30000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "P",
+    "ok": true,
+    "detalhe": "parceiro na vigente: 15% (R$ 15.000) — obtido: R$ 15000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "C1",
+    "ok": true,
+    "detalhe": "extinta (Calculado) + novo ajuizamento ativo: a vigente é a nova — 1 ação, R$ 36.000, ticket 36.000 — obtido: 1 ação(ões), R$ 36000, ticket 36000"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "C2",
+    "ok": true,
+    "detalhe": "anterior Procedente + vigente extinta: 0 ação, R$ 0 (sem recuperar a anterior) — obtido: 0 ação(ões), R$ 0, ticket 0"
+  },
+  {
+    "suite": "INDICADORES",
+    "cenario": "C3",
+    "ok": true,
+    "detalhe": "vigente extinta: decisão desfavorável=1, suspenso=0, sem valor=0, 0 ação, R$ 0 — obtido: desfavorável=1, suspenso=0, sem valor=0"
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-A Novo colaborador com vigência futura não paga em competências anteriores",
+    "detalhe": "2026-12: 1 regra(s) vigente(s); 2027-01: 1 regra(s); nov/2026: 0 linha(s)",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-B R$20→R$25: fallback nov R$150 (3 casos × 50), dez sem caso, jan sem regra (histórico imutável)",
+    "detalhe": "nov: 150 (fallback); dez: 0 (sem dcalculo em dez); jan: fallback, 0 linha(s)",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-C vigência encerrada em 2026-12 não vale em 2027-01",
+    "detalhe": "dez: 20/caso; jan: 30/caso",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-D regra mais recente prevalece durante a vigência; depois volta a anterior",
+    "detalhe": "nov: 20; dez: 25; jan: 20",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-E inativo: competência corrente/histórica paga; competência futura não",
+    "detalhe": "nov: 40 confirmado; dez: motivo=Colaborador inativo — participação encerrada para competências futuras",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-F início anterior a nov/2026 é recusado",
+    "detalhe": "Competência anterior a nov/2026 está fora do novo controle de comissões por colaborador.",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-G vigencia_fim anterior ao início é recusado",
+    "detalhe": "Vigência inválida: o encerramento (2026-10) não pode ser anterior ao início (2026-11).",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-H sobreposição de vigências é recusada",
+    "detalhe": "Conflito de vigência: já existe regra sobreposta para este colaborador (2026-11 a em vigor). Para alterar valores futuros, feche a vigência anterior (vigencia_fim) e crie uma NOVA regra.",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-I regra iniciada: mudar valor é recusado; adiantar fim é permitido",
+    "detalhe": "valor: recusado; fim: recusado",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F-J regra futura válida é aceita",
+    "detalhe": "válida",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "A equipe padrão → 4 linhas com valores por caso corretos",
+    "detalhe": "Bia=20 (fixa); Kaique=10 (fixa); Nataly=20 (condicionada_meta); Nayara=20 (fixa)",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "B 25 casos + meta atingida → Bia 500, Nayara 500, Kaique 250, Nataly 500; TOTAL R$ 1.750",
+    "detalhe": "Bia=500 Nayara=500 Kaique=250 Nataly=500 total=R$ 1.750,00 ativos=50/—",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "C 25 casos + meta não atingida → Nataly R$ 0, TOTAL R$ 1.250",
+    "detalhe": "Nataly=0 (motivo: Condicionada à meta — meta não atingida); total=R$ 1.250,00",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "D meta não definida → Nataly R$ 0 fora do total; TOTAL R$ 1.250",
+    "detalhe": "situação=nao definida; Nataly=0; total=R$ 1.250,00",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "E novo colaborador com vigência 2027-01 não aparece em nov/2026",
+    "detalhe": "linhas nov=Bia, Kaique, Nataly, Nayara",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "F alteração de valor 2027-01: nov/2026 continua R$ 20/caso (sem retroatividade)",
+    "detalhe": "Bia nov=20/caso; Bia jan=30/caso",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "G desativação preserva competência corrente (nov/2026 continua pago)",
+    "detalhe": "Bia nov=500 confirmado (integra=true)",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "H dcalculo em nov com dprotocolo em dez → comissão na competência nov/2026",
+    "detalhe": "elegíveis=1 em Nov 2026; linhas=Bia=20,Kaique=10,Nataly=20,Nayara=20; total=R$ 70,00 (potencial R$ 70,00, meta atingida)",
+    "ok": false
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "I continuação em dez/2026 não gera nova comissão (caso único, 1ª liberação)",
+    "detalhe": "nov: elegíveis=1, dup=0; dez: elegíveis=0, dup=1",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "J R. Docs suspenso na comissão; contrato ativo conta na meta",
+    "detalhe": "elegíveis=0; suspensos=1; meta=atingida (1 ativos); total=R$ 0,00",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "K equipe padrão 2× → nada a gravar na 2ª execução (idempotente)",
+    "detalhe": "1º plano: criar 4 colaborador(es): Bia, Nayara, Kaique, Nataly; 2º plano: já configurado(s): Bia, Nayara, Kaique, Nataly",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "L configuração parcial → modo dinâmico incompleto, sem fallback",
+    "detalhe": "modo=dinamico; estado=completa; avisos=0; linhas=Bia; total=R$ 500,00",
+    "ok": false
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "M cadastro vazio → fallback com aviso explícito (não silencioso)",
+    "detalhe": "modo=fallback; estado=sem cadastro; aviso=\"Nenhum colaborador comissionado cadastrado — usando a distri…\"",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "N total = soma das comissões incluídas (meta não definida: sem Nataly)",
+    "detalhe": "soma linhas=R$ 1.250,00; total=R$ 1.250,00; potencial=R$ 1.750,00",
+    "ok": true
+  },
+  {
+    "suite": "COMISSOES_F",
+    "cenario": "O out/2026 fora do novo controle → fallback, sem meta e sem linhas dinâmicas",
+    "detalhe": "modo=fallback; noControle=false; meta=null; linhas=0",
+    "ok": true
   }
-}
+]

@@ -81,7 +81,7 @@ export function apurarCardComissoes(params: {
     competenciaDeMesAno(new Date().getMonth() + 1, new Date().getFullYear())
   const noControle = competencia >= COMPETENCIA_INICIO_CONTROLE
 
-  const apuracao = apurarComissoes(protocolos, contratos, mes, ano, meses, tiposAcaoPorId)
+  const apuracao = apurarComissoes(protocolos, contratos, mes, ano, [...meses], tiposAcaoPorId)
 
   const meta = noControle
     ? calcularMetaComissoes({
