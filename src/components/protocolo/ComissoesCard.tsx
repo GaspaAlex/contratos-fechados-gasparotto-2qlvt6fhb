@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { HandCoins, Info, Search } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { GestaoComissoesArea } from '@/components/protocolo/gestao/GestaoComissoesArea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -117,6 +119,8 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
   const [mes, setMes] = useState(String(now.getMonth() + 1))
   const [ano, setAno] = useState(String(now.getFullYear()))
   const [open, setOpen] = useState(false)
+  const { user } = useAuth()
+  const isGestor = user?.perfil === 'gestor'
 
   const apuracao: ApuracaoComissoes = useMemo(
     () =>
@@ -401,6 +405,17 @@ export function ComissoesCard({ protocolos, contratos, tiposAcaoPorId }: Props) 
                 Correspondências por telefone+tipo ambíguas não são fundidas.
               </span>
             </p>
+
+            {isGestor && (
+              <GestaoComissoesArea
+                mes={parseInt(mes, 10)}
+                ano={parseInt(ano, 10)}
+                competenciaAtual={`${ano}-${String(mes).padStart(2, '0')}`}
+                onMetaSalvaNoRosto={() => {
+                  /* rosto do card fica igual — a meta salva aparece ao reabrir */
+                }}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
