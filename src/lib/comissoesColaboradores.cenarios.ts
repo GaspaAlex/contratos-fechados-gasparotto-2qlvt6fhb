@@ -401,7 +401,7 @@ export function runCenariosColaboradores(): ResultadoCenario[] {
       })
     push(
       'B 25 casos + meta atingida → Bia 500, Nayara 500, Kaique 250, Nataly 500; TOTAL R$ 1.750',
-      `Bia=${r.linhas.find((l) => l.nome === 'Bia')?.valorConfirmado} Nayara=${r.linhas.find((l) => l.nome === 'Nayara')?.valorConfirmado} Kaique=${r.linhas.find((l) => l.nome === 'Kaique')?.valorConfirmado} Nataly=${r.linhas.find((l) => l.nome === 'Nataly')?.valorConfirmado} total=${fmtBRL(r.totalCompetencia)} ativos=${r.meta?.contratosAtivos}/${r.metaCadastrada ?? '—'}`,
+      `Bia=${r.linhas.find((l) => l.nome === 'Bia')?.valorConfirmado} Nayara=${r.linhas.find((l) => l.nome === 'Nayara')?.valorConfirmado} Kaique=${r.linhas.find((l) => l.nome === 'Kaique')?.valorConfirmado} Nataly=${r.linhas.find((l) => l.nome === 'Nataly')?.valorConfirmado} total=${fmtBRL(r.totalCompetencia)} ativos=${r.meta?.contratosAtivos}/${r.meta?.metaConfigurada ?? '—'}`,
       linhasOk &&
         r.totalCompetencia === 1750 &&
         r.modo === 'dinamico' &&
@@ -523,8 +523,10 @@ export function runCenariosColaboradores(): ResultadoCenario[] {
       `elegíveis=${r.apuracao.quantidadeElegivel} em ${r.apuracao.competencia}; linhas=${r.linhas.map((l) => `${l.nome}=${l.valorConfirmado}`).join(',')}; total=${fmtBRL(r.totalCompetencia)} (potencial ${fmtBRL(r.totalPotencial)}, meta ${r.meta?.situacaoMeta})`,
       r.apuracao.quantidadeElegivel === 1 &&
         r.apuracao.competencia === '2026-11' &&
+        // Meta 1 com 1 contrato ativo = atingida → condicionada (Nataly) INTEGRA.
+        r.meta?.situacaoMeta === 'atingida' &&
         r.totalPotencial === 70 &&
-        r.totalCompetencia === 50,
+        r.totalCompetencia === 70,
     )
   }
 
@@ -624,8 +626,12 @@ export function runCenariosColaboradores(): ResultadoCenario[] {
 
   // L — configuração parcial não é completada pelo fallback.
   {
-    // Só Bia cadastrada: modo dinâmico com estado INCOMPLETO — sem fallback.
-    const r = card({ colaboradores: [COLABORADORES_PADRAO()[0]], regras: [REGRAS_PADRAO()[0]] })
+    // Bia E Nayara cadastradas, mas só Bia com regra vigente: modo dinâmico com
+    // estado INCOMPLETO — sem fallback, Nayara fica de fora (sem valor antigo).
+    const r = card({
+      colaboradores: [COLABORADORES_PADRAO()[0], COLABORADORES_PADRAO()[1]],
+      regras: [REGRAS_PADRAO()[0]],
+    })
     push(
       'L configuração parcial → modo dinâmico incompleto, sem fallback',
       `modo=${r.modo}; estado=${r.estadoConfiguracao}; avisos=${r.avisos.length}; linhas=${r.linhas.map((l) => l.nome).join(',')}; total=${fmtBRL(r.totalCompetencia)}`,
@@ -633,6 +639,7 @@ export function runCenariosColaboradores(): ResultadoCenario[] {
         r.estadoConfiguracao === 'incompleta' &&
         r.avisos.length > 0 &&
         r.linhas.length === 1 &&
+        r.linhas[0].nome === 'Bia' &&
         r.totalCompetencia === 500,
     )
   }

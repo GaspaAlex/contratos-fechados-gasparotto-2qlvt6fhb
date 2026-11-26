@@ -309,7 +309,7 @@ export function runCenariosColaboradores() {
                 const l = r.linhas.find((x) => x.nome === e.nome);
                 return l && l.valorConfirmado === e.v && l.integraTotal;
             });
-        push('B 25 casos + meta atingida → Bia 500, Nayara 500, Kaique 250, Nataly 500; TOTAL R$ 1.750', `Bia=${r.linhas.find((l) => l.nome === 'Bia')?.valorConfirmado} Nayara=${r.linhas.find((l) => l.nome === 'Nayara')?.valorConfirmado} Kaique=${r.linhas.find((l) => l.nome === 'Kaique')?.valorConfirmado} Nataly=${r.linhas.find((l) => l.nome === 'Nataly')?.valorConfirmado} total=${fmtBRL(r.totalCompetencia)} ativos=${r.meta?.contratosAtivos}/${r.metaCadastrada ?? '—'}`, linhasOk &&
+        push('B 25 casos + meta atingida → Bia 500, Nayara 500, Kaique 250, Nataly 500; TOTAL R$ 1.750', `Bia=${r.linhas.find((l) => l.nome === 'Bia')?.valorConfirmado} Nayara=${r.linhas.find((l) => l.nome === 'Nayara')?.valorConfirmado} Kaique=${r.linhas.find((l) => l.nome === 'Kaique')?.valorConfirmado} Nataly=${r.linhas.find((l) => l.nome === 'Nataly')?.valorConfirmado} total=${fmtBRL(r.totalCompetencia)} ativos=${r.meta?.contratosAtivos}/${r.meta?.metaConfigurada ?? '—'}`, linhasOk &&
             r.totalCompetencia === 1750 &&
             r.modo === 'dinamico' &&
             r.meta?.situacaoMeta === 'atingida');

@@ -332,7 +332,7 @@
   {
     "suite": "COMISSOES_F",
     "cenario": "B 25 casos + meta atingida → Bia 500, Nayara 500, Kaique 250, Nataly 500; TOTAL R$ 1.750",
-    "detalhe": "Bia=500 Nayara=500 Kaique=250 Nataly=500 total=R$ 1.750,00 ativos=50/—",
+    "detalhe": "Bia=500 Nayara=500 Kaique=250 Nataly=500 total=R$ 1.750,00 ativos=50/50",
     "ok": true
   },
   {
