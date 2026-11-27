@@ -41,7 +41,9 @@ import {
   getLancamentos,
   obterOuCriarContracheque,
 } from '@/services/ccContracheques'
-import FormLancamento, { type FormLancamentoValores } from '@/components/contracheques/FormLancamento'
+import FormLancamento, {
+  type FormLancamentoValores,
+} from '@/components/contracheques/FormLancamento'
 
 // ——— Tipos ———————————————————————————————————————————————————————————————
 export interface LinhaLancamento {
@@ -81,8 +83,10 @@ const NATUREZAS_DESCONTO = [
   'Outros descontos',
 ]
 
-/** Linha da tela → entrada do serviço (valor em reais, float). */
+/** Linha da tela → entrada do serviço (valor em reais, float). O id é
+ * PRESERVADO: o plano de sincronização casa tela↔banco por identidade. */
 const paraEntrada = (l: LinhaLancamento) => ({
+  id: l.id ?? undefined,
   natureza_tipo: l.natureza_tipo,
   natureza: l.natureza,
   descricao: l.descricao || l.natureza || 'Lançamento',
@@ -131,10 +135,12 @@ export default function ContrachequeMensal({
     ;(async () => {
       try {
         const record = await obterOuCriarContracheque({
-          colaboradorId,
+          funcionarioId: colaboradorId,
+          funcionarioNome: colaboradorNome,
           mes,
           ano,
-          salarioBase: salarioBase ?? undefined,
+          salarioBase: salarioBase ? salarioBase.valor : 0,
+          salarioNaoCadastrado: !salarioBase,
         })
         if (!vivo) return
         setContrachequeId(record.id)
@@ -173,18 +179,13 @@ export default function ContrachequeMensal({
       valor: deCentavos(l.valorCentavos),
     }))
     const base =
-      salarioCentavosGravado !== null
-        ? { valor: salarioCentavosGravado / 100 }
-        : salarioBase
+      salarioCentavosGravado !== null ? { valor: salarioCentavosGravado / 100 } : salarioBase
     return calcularDemonstrativo(base, entradas)
   }, [linhas, salarioBase, salarioCentavosGravado])
 
   // ——— Aviso de alterações não salvas ————————————————————————————————————
   const haAlteracoesNaoSalvas = useMemo(() => {
-    const plano = planejarSyncLancamentos(
-      linhas.map(paraEntrada),
-      banco.map(paraEntrada),
-    )
+    const plano = planejarSyncLancamentos(linhas.map(paraEntrada), banco.map(paraEntrada))
     return plano.criar.length + plano.atualizar.length + plano.excluir.length > 0
   }, [linhas, banco])
 
@@ -244,10 +245,7 @@ export default function ContrachequeMensal({
     }
     setSalvando(true)
     try {
-      const plano = planejarSyncLancamentos(
-        linhas.map(paraEntrada),
-        banco.map(paraEntrada),
-      )
+      const plano = planejarSyncLancamentos(linhas.map(paraEntrada), banco.map(paraEntrada))
       for (const l of plano.excluir) {
         await excluirLancamento(l.id)
       }
@@ -353,8 +351,16 @@ export default function ContrachequeMensal({
 
           {/* Totais */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <TotalBox rotulo="Total de vencimentos" centavos={calculo.totalVencimentosCentavos} destaque />
-            <TotalBox rotulo="Total de descontos" centavos={calculo.totalDescontosCentavos} negativo />
+            <TotalBox
+              rotulo="Total de vencimentos"
+              centavos={calculo.totalVencimentosCentavos}
+              destaque
+            />
+            <TotalBox
+              rotulo="Total de descontos"
+              centavos={calculo.totalDescontosCentavos}
+              negativo
+            />
             <TotalBox rotulo="Líquido" centavos={calculo.liquidoCentavos} destaque />
           </div>
           {calculo.duplicados.length > 0 && (
@@ -420,9 +426,7 @@ function SecaoLancamentos({
   onCancelarEdicao,
 }: SecaoProps) {
   const rotuloTipo = tipo === 'vencimento' ? 'Vencimento' : 'Desconto'
-  const doTipo = linhas
-    .map((l, i) => ({ l, i }))
-    .filter(({ l }) => l.natureza_tipo === tipo)
+  const doTipo = linhas.map((l, i) => ({ l, i })).filter(({ l }) => l.natureza_tipo === tipo)
 
   return (
     <section aria-label={titulo} className="space-y-2">
@@ -546,12 +550,7 @@ function TotalBox({
   negativo?: boolean
 }) {
   return (
-    <div
-      className={cn(
-        'rounded-lg border px-3 py-2',
-        destaque && 'bg-muted/50',
-      )}
-    >
+    <div className={cn('rounded-lg border px-3 py-2', destaque && 'bg-muted/50')}>
       <p className="text-xs text-muted-foreground">{rotulo}</p>
       <p className={cn('text-lg font-semibold tabular-nums', negativo && 'text-destructive')}>
         {formatarCentavos(centavos)}
@@ -559,6 +558,3 @@ function TotalBox({
     </div>
   )
 }
-
-// re-export para uso do pai (nada aqui toca o banco diretamente)
-export { pb as _pbNaoUsado }

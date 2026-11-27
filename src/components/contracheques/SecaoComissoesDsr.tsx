@@ -118,8 +118,7 @@ export default function SecaoComissoesDsr({
   })()
 
   const temComissaoManual =
-    estado.ativa &&
-    avisos.some((a) => a.tipo === 'comissao_manual' && a.bloqueiaComissaoAutomatica)
+    estado.ativa && avisos.some((a) => a.tipo === 'comissao_manual' && a.bloqueiaComissaoAutomatica)
 
   const conferirManual = (bloqueio: boolean) => {
     const l = lancamentos.find((x) => /comiss/i.test(`${x.natureza} ${x.descricao}`))
@@ -299,7 +298,9 @@ export default function SecaoComissoesDsr({
             <div className="flex items-center justify-between rounded-md border p-2.5">
               <span className="text-sm">Comissão + DSR</span>
               <span className="text-sm font-bold">
-                {comissaoCalculada === null ? '—' : formatarCentavos(comissaoCalculada + dsrExibido)}
+                {comissaoCalculada === null
+                  ? '—'
+                  : formatarCentavos(comissaoCalculada + dsrExibido)}
               </span>
             </div>
           </div>
@@ -331,7 +332,9 @@ export default function SecaoComissoesDsr({
           </div>
           <div className="flex items-center justify-between rounded-md border p-2.5">
             <span className="text-sm">DSR gravado</span>
-            <span className="text-sm font-bold">{formatarCentavos(snapshotGravado.dsrCentavos)}</span>
+            <span className="text-sm font-bold">
+              {formatarCentavos(snapshotGravado.dsrCentavos)}
+            </span>
           </div>
         </div>
       )}

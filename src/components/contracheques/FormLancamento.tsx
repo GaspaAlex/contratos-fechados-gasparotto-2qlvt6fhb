@@ -183,7 +183,11 @@ export default function FormLancamento({
         </div>
         <div className="flex gap-1">
           <Button type="submit" size="sm" className="h-9" aria-label="Confirmar lançamento">
-            {inicial ? <Save className="h-3.5 w-3.5" aria-hidden /> : <Plus className="h-3.5 w-3.5" aria-hidden />}
+            {inicial ? (
+              <Save className="h-3.5 w-3.5" aria-hidden />
+            ) : (
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+            )}
           </Button>
           <Button
             type="button"

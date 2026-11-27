@@ -13,10 +13,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { getFeriadosCC } from '@/services/ccFeriados'
-import {
-  calcularCalendarioCompetencia,
-  type ConfigDiasCompetencia,
-} from '@/lib/ccComissaoDsr'
+import { calcularCalendarioCompetencia, type ConfigDiasCompetencia } from '@/lib/ccComissaoDsr'
 
 interface EstadoCalendario {
   diasUteis: number
@@ -40,14 +37,10 @@ export function calcularComConfig(
   return { diasUteis: cal.diasUteis, diasRepouso: cal.diasRepouso, fracaoDsr }
 }
 
-export function useComissaoDsr(
-  funcionarioId: string,
-  mes: number,
-  ano: number,
-): EstadoCalendario {
-  const [feriados, setFeriados] = useState<
-    Awaited<ReturnType<typeof getFeriadosCC>> | undefined
-  >(undefined)
+export function useComissaoDsr(funcionarioId: string, mes: number, ano: number): EstadoCalendario {
+  const [feriados, setFeriados] = useState<Awaited<ReturnType<typeof getFeriadosCC>> | undefined>(
+    undefined,
+  )
 
   useEffect(() => {
     let ativo = true

@@ -127,7 +127,10 @@ export const OPCAO_NATUREZA_CUSTOM = '__personalizada__'
 
 /** Dígito a dígito: mantém só números, limita a 11 dígitos (≤ R$ 999.999.999,99). */
 export function digitosDeValor(texto: string): string {
-  return (texto || '').replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 11)
+  return (texto || '')
+    .replace(/\D/g, '')
+    .replace(/^0+(?=\d)/, '')
+    .slice(0, 11)
 }
 
 /** Centavos inteiros → "R$ 1.234,56" (mesma formatação da máscara). */

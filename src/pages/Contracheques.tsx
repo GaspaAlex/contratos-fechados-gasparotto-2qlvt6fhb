@@ -17,6 +17,11 @@
  *
  * A autorização de verdade é o BACKEND: as regras de API de cc_salarios
  * recusam qualquer outro usuário (403/404). Aqui a guarda é presentacional.
+ *
+ * Build C2-A: além das vigências salariais (C1), a página mantém os seletores
+ * de COLABORADOR, MÊS e ANO e alimenta o ContrachequeMensal com o salário
+ * vigente NA COMPETÊNCIA e o snapshot gravado no demonstrativo (nunca
+ * substituído silenciosamente por mudança de cadastro).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BadgeDollarSign, CalendarDays, Loader2, Plus, ShieldAlert, UserCog, X } from 'lucide-react'
@@ -26,6 +31,15 @@ import GerenciarParticipantesDialog from '@/components/contracheques/GerenciarPa
 import ContrachequeMensal from '@/components/contracheques/ContrachequeMensal'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { salarioVigenteNaCompetencia } from '@/lib/ccContracheque'
+import { buscarContracheque } from '@/services/ccContracheques'
 import {
   Dialog,
   DialogContent,
@@ -54,6 +68,21 @@ import {
   type ParticipanteResolvido,
 } from '@/services/ccParticipantes'
 
+const MESES_NOMES = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+]
+
 const HOJE_YMD = () => {
   const d = new Date()
   return (
@@ -81,6 +110,75 @@ export default function Contracheques() {
   const [funcionarios, setFuncionarios] = useState<ParticipanteResolvido[]>([])
   const [salarios, setSalarios] = useState<SalarioRecord[]>([])
   const [dialogParticipantes, setDialogParticipantes] = useState(false)
+
+  // ——— Seleção do contracheque mensal (C2-A) ————————————————————————————
+  const agora = new Date()
+  const [selColaborador, setSelColaborador] = useState('')
+  const [selMes, setSelMes] = useState(agora.getMonth() + 1)
+  const [selAno, setSelAno] = useState(agora.getFullYear())
+  const [snapshotCentavos, setSnapshotCentavos] = useState<number | null>(null)
+
+  // Colaborador padrão: o primeiro participante, uma única vez após a carga.
+  useEffect(() => {
+    if (!selColaborador && funcionarios.length > 0) {
+      const primeiro = funcionarios[0]
+      setSelColaborador(primeiro.funcionarioId ?? primeiro.colaboradorId ?? '')
+    }
+  }, [funcionarios, selColaborador])
+
+  // Snapshot do salário-base gravado no demonstrativo (quando já existe
+  // rascunho). null = não há demonstrativo salvo (ou salário não cadastrado
+  // gravado) — o componente usa então a vigência da competência.
+  useEffect(() => {
+    let vivo = true
+    setSnapshotCentavos(null)
+    if (!selColaborador) return
+    ;(async () => {
+      try {
+        const rec = await buscarContracheque(selColaborador, selMes, selAno)
+        if (!vivo) return
+        if (rec && !rec.salario_nao_cadastrado) {
+          setSnapshotCentavos(Math.round(Number(rec.salario_base || 0) * 100))
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    })()
+    return () => {
+      vivo = false
+    }
+  }, [selColaborador, selMes, selAno])
+
+  const recarregarSnapshot = useCallback(() => {
+    if (!selColaborador) return
+    ;(async () => {
+      try {
+        const rec = await buscarContracheque(selColaborador, selMes, selAno)
+        if (rec && !rec.salario_nao_cadastrado) {
+          setSnapshotCentavos(Math.round(Number(rec.salario_base || 0) * 100))
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    })()
+  }, [selColaborador, selMes, selAno])
+
+  const salarioVigente = useMemo(() => {
+    if (!selColaborador) return null
+    return salarioVigenteNaCompetencia(salarios, selColaborador, selMes, selAno) ?? null
+  }, [salarios, selColaborador, selMes, selAno])
+
+  const colaboradorNome = useMemo(() => {
+    const f = funcionarios.find(
+      (x) => (x.funcionarioId ?? x.colaboradorId ?? '') === selColaborador,
+    )
+    return f?.nome ?? ''
+  }, [funcionarios, selColaborador])
+
+  const anosDisponiveis = useMemo(() => {
+    const atual = new Date().getFullYear()
+    return [atual - 1, atual, atual + 1]
+  }, [])
 
   // Formulário de cadastro de vigência
   const [dialogFuncionario, setDialogFuncionario] = useState<FuncionarioCC | null>(null)
@@ -373,8 +471,87 @@ export default function Contracheques() {
         </div>
       )}
 
-      {/* Contracheque mensal (Build C2): seleção + demonstrativo + rascunhos */}
-      <ContrachequeMensal funcionarios={funcionarios} salarios={salarios} />
+      {/* Contracheque mensal (C2-A): seleção + demonstrativo + rascunhos */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Competência do contracheque</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="cc-sel-colaborador">Colaborador</Label>
+            <Select
+              value={selColaborador}
+              onValueChange={(v) => setSelColaborador(v)}
+              disabled={funcionarios.length === 0}
+            >
+              <SelectTrigger id="cc-sel-colaborador">
+                <SelectValue placeholder="Selecione…" />
+              </SelectTrigger>
+              <SelectContent>
+                {funcionarios.map((f) => {
+                  const id = f.funcionarioId ?? f.colaboradorId ?? ''
+                  return (
+                    <SelectItem key={f.vinculoId} value={id}>
+                      {f.nome}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cc-sel-mes">Mês</Label>
+            <Select value={String(selMes)} onValueChange={(v) => setSelMes(Number(v))}>
+              <SelectTrigger id="cc-sel-mes">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MESES_NOMES.map((nome, idx) => (
+                  <SelectItem key={idx + 1} value={String(idx + 1)}>
+                    {nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cc-sel-ano">Ano</Label>
+            <Select value={String(selAno)} onValueChange={(v) => setSelAno(Number(v))}>
+              <SelectTrigger id="cc-sel-ano">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {anosDisponiveis.map((a) => (
+                  <SelectItem key={a} value={String(a)}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {selColaborador ? (
+        <ContrachequeMensal
+          key={`${selColaborador}-${selAno}-${selMes}`}
+          colaboradorId={selColaborador}
+          colaboradorNome={colaboradorNome}
+          mes={selMes}
+          ano={selAno}
+          salarioBase={salarioVigente ? { valor: salarioVigente.valor } : null}
+          salarioCentavosGravado={snapshotCentavos}
+          lancamentosRecordKey={0}
+          onLancamentosAlterados={recarregarSnapshot}
+        />
+      ) : (
+        !carregando &&
+        !erro && (
+          <p className="text-sm text-[#78818E] dark:text-muted-foreground">
+            Selecione um colaborador para montar o contracheque da competência.
+          </p>
+        )
+      )}
 
       {/* Dialog: gerenciar participantes (seleção privada do módulo) */}
       <GerenciarParticipantesDialog

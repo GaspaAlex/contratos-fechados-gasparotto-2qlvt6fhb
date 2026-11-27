@@ -8,55 +8,55 @@
  * GARANTIA DE NÃO-DUPLICIDADE: obterOuCriarContracheque consulta antes de
  * criar (mesmo padrão C1). O índice único no banco é a última defesa.
  *
-* Build C3-B: ContrachequeRecord carrega os campos do snapshot de comissão/DSR
-* criados pela migration 0117 (comissao_* / dsr_*, em REAIS no banco) e
-* LancamentoRecord expõe a `origem` ('manual' | 'comissao' | 'dsr_comissao').
-*
+ * Build C3-B: ContrachequeRecord carrega os campos do snapshot de comissão/DSR
+ * criados pela migration 0117 (comissao_* / dsr_*, em REAIS no banco) e
+ * LancamentoRecord expõe a `origem` ('manual' | 'comissao' | 'dsr_comissao').
+ *
  * Nenhuma operação de fechamento/pagamento é implementada neste build.
  */
 import pb from '@/lib/pocketbase/client'
 
 export interface ContrachequeRecord {
- id: string
- funcionario_id: string
- funcionario_nome: string
- competencia_mes: number
- competencia_ano: number
- tipo: 'folha'
- status: 'rascunho' | 'fechado' | 'pago'
- salario_base: number
- salario_nao_cadastrado: boolean
- observacoes: string
- created: string
- updated: string
- /** Campos do snapshot de comissão/DSR (migration 0117) — reais no banco. */
- comissao_ativa?: boolean
- comissao_modalidade?: string
- comissao_qtd_casos?: number
- comissao_valor_caso?: number
- comissao_valor_direto?: number
- comissao_total?: number
- dsr_dias_uteis?: number
- dsr_dias_repouso?: number
- dsr_ajustado?: boolean
- dsr_motivo_ajuste?: string
- dsr_calendario_dias_uteis?: number
- dsr_calendario_dias_repouso?: number
- dsr_total?: number
- expand?: Record<string, unknown>
+  id: string
+  funcionario_id: string
+  funcionario_nome: string
+  competencia_mes: number
+  competencia_ano: number
+  tipo: 'folha'
+  status: 'rascunho' | 'fechado' | 'pago'
+  salario_base: number
+  salario_nao_cadastrado: boolean
+  observacoes: string
+  created: string
+  updated: string
+  /** Campos do snapshot de comissão/DSR (migration 0117) — reais no banco. */
+  comissao_ativa?: boolean
+  comissao_modalidade?: string
+  comissao_qtd_casos?: number
+  comissao_valor_caso?: number
+  comissao_valor_direto?: number
+  comissao_total?: number
+  dsr_dias_uteis?: number
+  dsr_dias_repouso?: number
+  dsr_ajustado?: boolean
+  dsr_motivo_ajuste?: string
+  dsr_calendario_dias_uteis?: number
+  dsr_calendario_dias_repouso?: number
+  dsr_total?: number
+  expand?: Record<string, unknown>
 }
 
 export interface LancamentoRecord {
- id: string
- contracheque: string
- natureza_tipo: 'vencimento' | 'desconto'
- natureza: string
- descricao: string
- valor: number
- /** 'manual' (padrão), 'comissao' ou 'dsr_comissao' (rubricas calculadas). */
- origem?: string
- created: string
- updated: string
+  id: string
+  contracheque: string
+  natureza_tipo: 'vencimento' | 'desconto'
+  natureza: string
+  descricao: string
+  valor: number
+  /** 'manual' (padrão), 'comissao' ou 'dsr_comissao' (rubricas calculadas). */
+  origem?: string
+  created: string
+  updated: string
 }
 
 export interface NovoContrachequeInput {
@@ -152,7 +152,7 @@ export async function adicionarLancamento(
     natureza: string
     descricao: string
     valor: number
-   origem?: string
+    origem?: string
   },
 ): Promise<LancamentoRecord> {
   return (await pb.collection('cc_lancamentos').create({
@@ -161,7 +161,7 @@ export async function adicionarLancamento(
     natureza: dados.natureza,
     descricao: dados.descricao,
     valor: dados.valor,
-   origem: dados.origem || 'manual',
+    origem: dados.origem || 'manual',
   })) as unknown as LancamentoRecord
 }
 
@@ -182,27 +182,27 @@ export async function excluirLancamento(lancamentoId: string): Promise<void> {
 }
 
 /**
-* Grava o snapshot de comissão/DSR (campos da migration 0117) no
-* demonstrativo. Chamado somente pela sincronização da seção Comissões e DSR —
-* nunca sobrescreve nada silenciosamente em outro fluxo.
-*/
+ * Grava o snapshot de comissão/DSR (campos da migration 0117) no
+ * demonstrativo. Chamado somente pela sincronização da seção Comissões e DSR —
+ * nunca sobrescreve nada silenciosamente em outro fluxo.
+ */
 export async function atualizarSnapshotComissao(
- contrachequeId: string,
- campos: {
-   comissao_ativa: boolean
-   comissao_modalidade: string
-   comissao_qtd_casos: number
-   comissao_valor_caso: number
-   comissao_valor_direto: number
-   comissao_total: number
-   dsr_dias_uteis: number
-   dsr_dias_repouso: number
-   dsr_ajustado: boolean
-   dsr_motivo_ajuste: string
-   dsr_calendario_dias_uteis: number
-   dsr_calendario_dias_repouso: number
-   dsr_total: number
- },
+  contrachequeId: string,
+  campos: {
+    comissao_ativa: boolean
+    comissao_modalidade: string
+    comissao_qtd_casos: number
+    comissao_valor_caso: number
+    comissao_valor_direto: number
+    comissao_total: number
+    dsr_dias_uteis: number
+    dsr_dias_repouso: number
+    dsr_ajustado: boolean
+    dsr_motivo_ajuste: string
+    dsr_calendario_dias_uteis: number
+    dsr_calendario_dias_repouso: number
+    dsr_total: number
+  },
 ): Promise<void> {
- await pb.collection('cc_contracheques').update(contrachequeId, { ...campos })
+  await pb.collection('cc_contracheques').update(contrachequeId, { ...campos })
 }
