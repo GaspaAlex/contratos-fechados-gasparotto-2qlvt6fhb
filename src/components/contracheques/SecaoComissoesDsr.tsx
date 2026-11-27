@@ -29,7 +29,14 @@ import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { formatarCentavos } from '@/lib/ccContracheque'
 import { CONFIG_PADRAO_DIAS, type SnapshotComissaoDsr } from '@/lib/ccComissaoDsr'
-import { useComissaoDsr, type AvisoComissao } from './useComissaoDsr'
+import { useComissaoDsr } from './useComissaoDsr'
+
+/** Aviso exibido na seção (bloqueio por comissão manual etc.). */
+interface AvisoComissaoLocal {
+  tipo: string
+  mensagem: string
+  bloqueiaComissaoAutomatica?: boolean
+}
 
 const MESES = [
   'Janeiro',
@@ -58,7 +65,7 @@ interface Props {
   onSalvar: (funcionarioId: string, mes: number, ano: number) => Promise<boolean>
   salvando: boolean
   /** Avisos que a seção deve mostrar (bloqueio por comissão manual etc.). */
-  avisos: AvisoComissao[]
+  avisos: AvisoComissaoLocal[]
   /** Estado de UI do formulário (controlado pelo pai, sobrevive à recarga). */
   estado: import('@/lib/ccComissaoDsrIntegracao').EstadoComissaoUI
   setEstado: (e: import('@/lib/ccComissaoDsrIntegracao').EstadoComissaoUI) => void
@@ -118,7 +125,8 @@ export default function SecaoComissoesDsr({
   })()
 
   const temComissaoManual =
-    estado.ativa && avisos.some((a) => a.tipo === 'comissao_manual' && a.bloqueiaComissaoAutomatica)
+    estado.ativa &&
+    avisos.some((a) => a.tipo === 'comissao_manual' && a.bloqueiaComissaoAutomatica === true)
 
   const conferirManual = (bloqueio: boolean) => {
     const l = lancamentos.find((x) => /comiss/i.test(`${x.natureza} ${x.descricao}`))
@@ -279,13 +287,6 @@ export default function SecaoComissoesDsr({
               não são úteis. Feriados cadastrados, quando existirem, também entram no calendário.
             </p>
           </div>
-
-          {/* Ajuste manual de dias (fora do escopo reduzido — oculto) */}
-          {false && (
-            <fieldset className="space-y-2">
-              <legend className="text-xs font-semibold mb-1">Ajuste manual dos dias</legend>
-            </fieldset>
-          )}
 
           {/* Conferência */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
