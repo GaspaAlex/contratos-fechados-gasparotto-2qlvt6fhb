@@ -6,13 +6,18 @@
  *
  * • Valor: máscara monetária em CENTAVOS (dígito a dígito, sem vírgula
  *   digitada). Internamente o campo guarda só DÍGITOS; a exibição formata
- *   "37449" → "R$ 374,49". O valor gravado é sempre em centavos inteiros —
- *   nunca reinterpreta um valor já salvo (abrir edição mostra o valor real
- *   formatado, ex.: "R$ 37.449,00").
+ *   "37449" → "374,49" (SEM o prefixo "R$ " dentro do campo — mesmo padrão
+ *   do "Valor da Causa" do Protocolo). O valor gravado é sempre em centavos
+ *   inteiros — nunca reinterpreta um valor já salvo (abrir edição mostra o
+ *   valor real formatado, ex.: "37.449,00").
  * • Natureza: as opções existentes + "Natureza personalizada", que abre um
  *   campo de texto livre (ex.: DSR, INSS, Desconto iPhone, Empréstimo
  *   salarial ou qualquer outra rubrica). A distinção vencimento/desconto é
  *   preservada (o tipo é fixado por quem usa o componente).
+ *   O select NUNCA exibe uma opção que não esteja no estado: ao adicionar o
+ *   estado já nasce com a primeira opção; ao editar nasce com a natureza
+ *   gravada. O texto da natureza personalizada vive em estado PRÓPRIO —
+ *   alternar para "Natureza personalizada" não apaga o nome já informado.
  */
 import { useEffect, useRef, useState } from 'react'
 import { Plus, Save, X } from 'lucide-react'
@@ -27,12 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  centavosParaMascara,
-  mascaraCentavos,
-  mascaraParaCentavos,
-  validarLancamento,
-} from '@/lib/ccContracheque'
+import { digitosDeValor, mascaraParaCentavos, validarLancamento } from '@/lib/ccContracheque'
 
 export const NATUREZA_CUSTOM = 'Natureza personalizada'
 
@@ -42,6 +42,20 @@ export interface FormLancamentoValores {
   descricao: string
   /** Valor em CENTAVOS inteiros. */
   valorCentavos: number
+}
+
+/** Centavos → "1.234,56" (máscara do campo, SEM o símbolo "R$"). */
+const centavosParaTexto = (centavos: number): string =>
+  (centavos / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+/** Texto digitado → máscara sem símbolo ("37449" → "374,49"). */
+const mascaraSemSimbolo = (texto: string): string => {
+  const digitos = digitosDeValor(texto)
+  if (!digitos) return ''
+  return centavosParaTexto(parseInt(digitos, 10))
 }
 
 interface Props {
@@ -63,11 +77,15 @@ export default function FormLancamento({
   onConfirmar,
   onCancelar,
 }: Props) {
-  const [natureza, setNatureza] = useState('')
+  // Adicionar: nasce com a PRIMEIRA opção da lista (o select nunca exibe algo
+  // que não está no estado). Edição: o useEffect abaixo sobrepõe com a gravada.
+  const [natureza, setNatureza] = useState(naturezas[0] ?? '')
+  // Texto da natureza personalizada — estado SEPARADO do select.
+  const [naturezaCustomTexto, setNaturezaCustomTexto] = useState('')
   const [naturezaCustom, setNaturezaCustom] = useState(false)
   const [descricao, setDescricao] = useState('')
-  // O estado do campo é o TEXTO mascarado ("R$ 374,49"); os dígitos são a
-  // fonte da verdade (máscara em centavos — ver ccContracheque.ts).
+  // O estado do campo é o TEXTO mascarado ("374,49"); os dígitos são a fonte
+  // da verdade (máscara em centavos — ver ccContracheque.ts).
   const [valorTexto, setValorTexto] = useState('')
 
   const inputValorRef = useRef<HTMLInputElement>(null)
@@ -76,10 +94,12 @@ export default function FormLancamento({
   // Estado inicial — preenchido UMA vez (edição começa do valor salvo real).
   useEffect(() => {
     if (inicial) {
-      setNatureza(inicial.natureza)
-      setNaturezaCustom(!!inicial.natureza && !naturezas.includes(inicial.natureza))
+      const naLista = naturezas.includes(inicial.natureza)
+      setNatureza(naLista ? inicial.natureza : '')
+      setNaturezaCustom(!naLista)
+      setNaturezaCustomTexto(!naLista ? inicial.natureza : '')
       setDescricao(inicial.descricao || '')
-      setValorTexto(centavosParaMascara(inicial.valorCentavos))
+      setValorTexto(centavosParaTexto(inicial.valorCentavos))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -91,7 +111,7 @@ export default function FormLancamento({
   const centavos = mascaraParaCentavos(valorTexto)
 
   const confirmar = () => {
-    const naturezaFinal = naturezaCustom ? natureza.trim() : natureza
+    const naturezaFinal = naturezaCustom ? naturezaCustomTexto.trim() : natureza
     if (!naturezaFinal) {
       toast({
         title: 'Lançamento inválido',
@@ -144,11 +164,11 @@ export default function FormLancamento({
             Natureza
           </Label>
           <Select
-            value={naturezaCustom ? NATUREZA_CUSTOM : natureza || naturezas[0]}
+            value={naturezaCustom ? NATUREZA_CUSTOM : natureza}
             onValueChange={(v) => {
               if (v === NATUREZA_CUSTOM) {
+                // Alternar para "personalizada" PRESERVA o texto já digitado.
                 setNaturezaCustom(true)
-                setNatureza('')
               } else {
                 setNaturezaCustom(false)
                 setNatureza(v)
@@ -176,9 +196,9 @@ export default function FormLancamento({
             id="cc-form-valor"
             ref={inputValorRef}
             inputMode="numeric"
-            placeholder="R$ 0,00"
+            placeholder="0,00"
             value={valorTexto}
-            onChange={(e) => setValorTexto(mascaraCentavos(e.target.value))}
+            onChange={(e) => setValorTexto(mascaraSemSimbolo(e.target.value))}
           />
         </div>
         <div className="flex gap-1">
@@ -209,8 +229,8 @@ export default function FormLancamento({
             </Label>
             <Input
               id="cc-form-natureza-custom"
-              value={natureza}
-              onChange={(e) => setNatureza(e.target.value)}
+              value={naturezaCustomTexto}
+              onChange={(e) => setNaturezaCustomTexto(e.target.value)}
               maxLength={120}
               placeholder="Ex.: DSR, INSS, Desconto iPhone, Empréstimo salarial…"
             />

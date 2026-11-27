@@ -20,7 +20,7 @@
  * manuais; descontos = manuais; líquido = vencimentos − descontos.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { Loader2, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -505,7 +505,7 @@ function SecaoLancamentos({
                 aria-label={`Editar ${l.natureza}`}
                 disabled={editandoKey !== null || adicionarAberto}
               >
-                Editar
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
               </Button>
               <Button
                 type="button"
