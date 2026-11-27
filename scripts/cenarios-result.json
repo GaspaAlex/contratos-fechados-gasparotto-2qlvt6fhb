@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-27T14:50:34.570Z",
+  "executadoEm": "2026-11-27T16:19:37.212Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -683,6 +683,120 @@
       "suite": "CONTRACHEQUES_C2",
       "cenario": "C2-14 chave de competência e fim de mês corretos (ano bissexto incluso)",
       "detalhe": "chave: 2026-03; fim fev/2028: 2028-02-29",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-1 OUTUBRO/2026 (calendário real: 26 úteis, 5 repouso): 44 × R$ 20 = R$ 880,00 → DSR R$ 169,23",
+      "detalhe": "úteis: 26; repouso: 5; comissão: R$ 880,00; DSR: R$ 169,23",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-2 NOVEMBRO/2026 (calendário real: 23 úteis, 7 repouso; 15/11 domingo+feriado 1×): 44 × R$ 20 → DSR R$ 267,83",
+      "detalhe": "úteis: 23; repouso: 7; comissão: R$ 880,00; DSR: R$ 267,83",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-2b 15/11/2026 é domingo E feriado nacional, marcado repouso (não duplicado)",
+      "detalhe": "diaSemana: 0 (0=domingo); feriado: Feriado nacional; util: false; repouso: true",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-3 DSR sobre dias informados (26 úteis / 5 repouso): R$ 880,00 → R$ 169,23",
+      "detalhe": "fração: 5/26; DSR: R$ 169,23",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-4 comissão zero → DSR zero (inclui 0 casos × valor)",
+      "detalhe": "DSR direto: 0; snapshot (0 casos): 0",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-5 modalidade valor_direto (R$ 880,00) = modalidade casos (44 × R$ 20,00)",
+      "detalhe": "casos: 88000; direto: 88000",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-6 feriado cadastrado em dia útil (07/10/2026) remove 1 dia útil",
+      "detalhe": "sem cadastro: 26 úteis; com cadastro: 25 úteis / 6 repouso",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-7 feriado duplicado no cadastro (07/10 duas vezes) remove só 1 dia útil",
+      "detalhe": "úteis: 25; repouso: 6",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-8 feriado cadastrado em domingo (04/10/2026) NÃO duplica o repouso",
+      "detalhe": "sem cadastro: 26/5; com cadastro: 26/5",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-9 mudar a quantidade (44→50 casos) recalcula comissão e DSR em cadeia",
+      "detalhe": "antes: R$ 880,00 / DSR R$ 169,23; depois: R$ 1000,00 / DSR R$ 192,31",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-10 mudar o valor unitário (R$ 20,00→25,50) recalcula comissão e DSR em cadeia",
+      "detalhe": "antes: R$ 880,00; depois: R$ 1122,00 / DSR R$ 215,77",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-11 entradas inválidas recusadas (NaN, negativos, qtd fracionária, modalidade desconhecida)",
+      "detalhe": "6/6 recusadas; modalidade inválida: recusada",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-12 arredondamento half-up em centavos (3333 / 6667 / 1 / conversão 2001)",
+      "detalhe": "1/3: 3333; 2/3: 6667; meio centavo: 1; reaisParaCentavos(20,005): 2001",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-13 mesma comissão em meses diferentes → DSRs diferentes (calendários independentes)",
+      "detalhe": "out: 26/5 → R$ 169,23; nov: 23/7 → R$ 267,83",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-14 ajuste manual justificado (24/7) sobrescreve o calendário (26/5) e grava o motivo",
+      "detalhe": "úteis: 24 (calendário: 26); repouso: 7 (calendário: 5); motivo: Fechado na quinta pelo recesso do escritório",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-15 ajuste manual sem motivo (ou motivo < 3 caracteres) é recusado",
+      "detalhe": "sem motivo: recusado — O ajuste manual dos dias exige um motivo (mín. 3 caracteres).; motivo curto: recusado",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-16 sem comissão informada: snapshot ok, DSR zero, nenhuma rubrica planejada",
+      "detalhe": "comissaoAtiva: false; DSR: 0; comissao.acao: nada; dsr.acao: nada",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-17 plano de lançamentos: cria quando vazio, atualiza quando já existe, detecta manual e pede decisão",
+      "detalhe": "a: criar/true; b: atualizar (ids l1/l2); c: precisaDecisao=true, acoes nada/nada",
+      "ok": true
+    },
+    {
+      "suite": "COMISSAO_DSR",
+      "cenario": "C3-18 mapa de feriados de nov/2026 completo (02, 15, 20) sem duplicidade; 15/11 = domingo",
+      "detalhe": "feriados: 2026-11-02, 2026-11-15, 2026-11-20; diaSemana(15/11): 0",
       "ok": true
     }
   ]

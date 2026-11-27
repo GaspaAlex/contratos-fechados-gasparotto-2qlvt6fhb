@@ -107,7 +107,10 @@ export interface ConfigDiasCompetencia {
   feriadosCadastrados: FeriadoCadastrado[]
 }
 
-export const CONFIG_PADRAO_DIAS: ConfigDiasCompetencia = { sabadoUtil: true, feriadosCadastrados: [] }
+export const CONFIG_PADRAO_DIAS: ConfigDiasCompetencia = {
+  sabadoUtil: true,
+  feriadosCadastrados: [],
+}
 
 /** 'YYYY-MM-DD' local (sem UTC) para dia/mês/ano — nunca new Date(yyyy, m, d) serializado errado. */
 export function paraYMD(ano: number, mes: number, dia: number): string {
@@ -166,7 +169,13 @@ export interface CalendarioCompetencia {
   /** Dias de repouso (domingos + sábados não úteis, sem feriado contado neles). */
   diasRepouso: number
   /** Detalhamento por dia — para conferência na tela. */
-  detalhe: Array<{ ymd: string; diaSemana: number; util: boolean; repouso: boolean; feriado?: string }>
+  detalhe: Array<{
+    ymd: string
+    diaSemana: number
+    util: boolean
+    repouso: boolean
+    feriado?: string
+  }>
 }
 
 /**
@@ -246,7 +255,11 @@ export function calcularComissao(entrada: EntradaComissao): ResultadoComissao {
       return { ok: false, erro: 'Quantidade de casos inválida.', totalCentavos: 0 }
     }
     if (!Number.isInteger(qtd)) {
-      return { ok: false, erro: 'A quantidade de casos deve ser um número inteiro.', totalCentavos: 0 }
+      return {
+        ok: false,
+        erro: 'A quantidade de casos deve ser um número inteiro.',
+        totalCentavos: 0,
+      }
     }
     if (!Number.isFinite(valorCaso) || valorCaso < 0) {
       return { ok: false, erro: 'Valor por caso inválido.', totalCentavos: 0 }
@@ -310,7 +323,12 @@ export function calcularDSR(entrada: EntradaDSR): ResultadoDSR {
   if (!Number.isInteger(comissaoCentavos) || comissaoCentavos < 0) {
     return { ok: false, erro: 'Comissão inválida.', dsrCentavos: 0, fracao: '—' }
   }
-  if (!Number.isInteger(diasUteis) || !Number.isInteger(diasRepouso) || diasUteis < 0 || diasRepouso < 0) {
+  if (
+    !Number.isInteger(diasUteis) ||
+    !Number.isInteger(diasRepouso) ||
+    diasUteis < 0 ||
+    diasRepouso < 0
+  ) {
     return { ok: false, erro: 'Dias de úteis/repouso inválidos.', dsrCentavos: 0, fracao: '—' }
   }
   if (comissaoCentavos === 0) {
@@ -424,8 +442,10 @@ export function calcularSnapshotComissaoDsr(entrada: EntradaSnapshot): {
     comissaoAtiva = true
     modalidade = entrada.comissao.modalidade
     qtdCasos = rc.qtdCasos
-    valorCaso = rc.valorCasoCentavos !== undefined ? centavosParaReais(rc.valorCasoCentavos) : undefined
-    valorDireto = rc.valorDiretoCentavos !== undefined ? centavosParaReais(rc.valorDiretoCentavos) : undefined
+    valorCaso =
+      rc.valorCasoCentavos !== undefined ? centavosParaReais(rc.valorCasoCentavos) : undefined
+    valorDireto =
+      rc.valorDiretoCentavos !== undefined ? centavosParaReais(rc.valorDiretoCentavos) : undefined
     comissaoTotalCentavos = rc.totalCentavos
   }
 
@@ -457,6 +477,7 @@ export function calcularSnapshotComissaoDsr(entrada: EntradaSnapshot): {
       dsrCentavos,
       fracaoDsr,
     },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -483,7 +504,9 @@ export interface LancamentoExistente {
  * natureza vencimento, descrição canônica contendo "comiss"). Nunca altera,
  * converte ou apaga nada — só DETECTA; a decisão é do usuário.
  */
-export function detectarComissaoManual(lancamentos: LancamentoExistente[]): LancamentoExistente | null {
+export function detectarComissaoManual(
+  lancamentos: LancamentoExistente[],
+): LancamentoExistente | null {
   for (const l of lancamentos) {
     if (l.origem && l.origem !== 'manual') continue
     if (l.natureza_tipo !== 'vencimento') continue
@@ -510,7 +533,8 @@ export function planejarLancamentosComissaoDsr(
   dsr: { acao: 'criar' | 'atualizar' | 'nada'; id?: string; valorCentavos: number }
 } {
   const manual = detectarComissaoManual(existentes)
-  const precisaDecisao = manual !== null && snapshot.comissaoAtiva && snapshot.comissaoTotalCentavos > 0
+  const precisaDecisao =
+    manual !== null && snapshot.comissaoAtiva && snapshot.comissaoTotalCentavos > 0
 
   const achComissao = existentes.find((l) => l.origem === 'comissao')
   const achDsr = existentes.find((l) => l.origem === 'dsr_comissao')
@@ -520,16 +544,21 @@ export function planejarLancamentosComissaoDsr(
 
   const comissao = (() => {
     if (!snapshot.comissaoAtiva || valorComissao <= 0) {
-      return achComissao ? { acao: 'atualizar' as const, id: achComissao.id, valorCentavos: 0 } : { acao: 'nada' as const, valorCentavos: 0 }
+      return achComissao
+        ? { acao: 'atualizar' as const, id: achComissao.id, valorCentavos: 0 }
+        : { acao: 'nada' as const, valorCentavos: 0 }
     }
     if (precisaDecisao) return { acao: 'nada' as const, valorCentavos: valorComissao }
-    if (achComissao) return { acao: 'atualizar' as const, id: achComissao.id, valorCentavos: valorComissao }
+    if (achComissao)
+      return { acao: 'atualizar' as const, id: achComissao.id, valorCentavos: valorComissao }
     return { acao: 'criar' as const, valorCentavos: valorComissao }
   })()
 
   const dsr = (() => {
     if (!snapshot.comissaoAtiva || valorDsr <= 0) {
-      return achDsr ? { acao: 'atualizar' as const, id: achDsr.id, valorCentavos: 0 } : { acao: 'nada' as const, valorCentavos: 0 }
+      return achDsr
+        ? { acao: 'atualizar' as const, id: achDsr.id, valorCentavos: 0 }
+        : { acao: 'nada' as const, valorCentavos: 0 }
     }
     if (precisaDecisao) return { acao: 'nada' as const, valorCentavos: valorDsr }
     if (achDsr) return { acao: 'atualizar' as const, id: achDsr.id, valorCentavos: valorDsr }
