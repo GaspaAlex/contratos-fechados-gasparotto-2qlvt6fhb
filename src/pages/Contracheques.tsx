@@ -49,8 +49,7 @@ import {
   type SalarioRecord,
 } from '@/services/ccSalarios'
 import {
-  getParticipantes,
-  resolverParticipantesAtivos,
+  listarParticipantesResolvidos,
   type ParticipanteResolvido,
 } from '@/services/ccParticipantes'
 
@@ -96,8 +95,8 @@ export default function Contracheques() {
     setCarregando(true)
     setErro(null)
     try {
-      const [parts, sals] = await Promise.all([getParticipantes(), getSalarios()])
-      setFuncionarios(resolverParticipantesAtivos(parts))
+      const [parts, sals] = await Promise.all([listarParticipantesResolvidos(), getSalarios()])
+      setFuncionarios(parts)
       setSalarios(sals)
     } catch (e) {
       console.error(e)
@@ -280,8 +279,9 @@ export default function Contracheques() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 items-start">
           {funcionarios.map((f) => {
-            const lista = salariosPorFuncionario.get(f.funcionarioId) ?? []
-            const emVigor = vigenciaEmVigor(salarios, f.funcionarioId)
+            const funcId = f.funcionarioId ?? f.colaboradorId ?? ''
+            const lista = salariosPorFuncionario.get(funcId) ?? []
+            const emVigor = vigenciaEmVigor(salarios, funcId)
             return (
               <Card key={f.vinculoId}>
                 <CardHeader className="pb-3">
@@ -355,7 +355,7 @@ export default function Contracheques() {
                     size="sm"
                     variant="outline"
                     className="w-full"
-                    onClick={() => iniciarCadastro({ id: f.funcionarioId, nome: f.nome })}
+                    onClick={() => iniciarCadastro({ id: funcId, nome: f.nome, ativo: true })}
                   >
                     <Plus className="h-4 w-4 mr-1" aria-hidden /> Cadastrar salário
                   </Button>

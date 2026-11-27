@@ -86,7 +86,7 @@ export function runCenariosParticipantes(): Array<{
 
   // 3. Dedupe do cadastro — formulário "+ Cadastrar novo colaborador"
   const cad = (nome: string, cols: ColaboradorMini[] = COLS) =>
-    planejarCadastroColaborador({ nome }, VINCULOS, FUNC, cols)
+    planejarCadastroColaborador(nome, VINCULOS, FUNC, cols)
 
   const p1 = cad('Nayara Vitória de Morais')
   add('nome já participante ativo → existente_ativo (nada é criado)', p1.acao === 'existente_ativo')

@@ -80,7 +80,7 @@ export function resolverParticipantesAtivos(
   const porIdColab = new Map(colaboradores.map((c) => [c.id, c]))
   const vistos = new Set<string>() // nomes canônicos já exibidos (dedupe)
   return vinculos
-    .map((v) => {
+    .map((v): ParticipanteResolvido | null => {
       if (v.ativo && v.funcionario && porId.has(v.funcionario)) {
         const f = porId.get(v.funcionario)!
         return {
@@ -162,9 +162,12 @@ export function planejarRetiradaParticipante(
  * A comparação usa canonicalizarNome (sem acento/caixa/espaços extras), então
  * "Nataly Tayna  Silva" e "nataly tayna figueiredo da silva" colidem.
  * Nome vazio → 'invalido' (o formulário deve tratar antes de gravar).
- * Nomes MUITO próximos (um contém o outro, mesmo nome sem acento) geram
- * 'aviso_aproximado' — o dialog mostra o aviso e exige confirmação explícita
- * para gravar um cadastro novo (o usuário decide; nada é criado sozinho).
+ * Nomes MUITO próximos geram 'aviso_aproximado' — o dialog mostra o aviso e
+ * exige confirmação explícita para gravar um cadastro novo (o usuário decide;
+ * nada é criado sozinho). "Próximo" = todos os tokens do nome MENOR aparecem
+ * no maior ("Nataly Silva" ⊂ "Nataly Tayna Figueiredo da Silva"), o que pega
+ * abreviações e nomes incompletos sem confundir "João Silva" com
+ * "Nataly … da Silva" (o token "joão" impede o falso positivo).
  */
 export type PlanoCadastroColaborador = {
   acao:
@@ -261,7 +264,17 @@ export function planejarCadastroColaborador(
   ]
   for (const t of todosNomes) {
     const chaveT = canonicalizarNome(t.nome)
-    if (chaveT && (chaveT.includes(chave) || chave.includes(chaveT))) {
+    if (!chaveT) continue
+    // Substring direta OU todos os tokens do nome menor presentes no maior
+    // ("Nataly Silva" ⊂ "Nataly Tayna Figueiredo da Silva" → aviso). Um único
+    // token diferente (ex. "João" em "João Silva" vs "Maria da Silva") já
+    // impede o aviso — nomes realmente distintos passam direto.
+    const tokensA = chave.split(' ').filter(Boolean)
+    const tokensB = chaveT.split(' ').filter(Boolean)
+    const [menor, maior] =
+      tokensA.length <= tokensB.length ? [tokensA, tokensB] : [tokensB, tokensA]
+    const todosContidos = menor.every((tk) => maior.includes(tk))
+    if (chaveT.includes(chave) || chave.includes(chaveT) || todosContidos) {
       return { acao: 'aviso_aproximado', nomeConflito: t.nome }
     }
   }
