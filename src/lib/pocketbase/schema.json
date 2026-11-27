@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T12:03:19.014Z",
+  "generatedAt": "2026-11-27T12:50:23.041Z",
   "collections": [
     {
       "name": "users",
@@ -2412,7 +2412,7 @@
         {
           "name": "funcionario",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "funcionarios"
         },
@@ -2441,11 +2441,68 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "colaborador",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "cc_colaboradores"
         }
       ],
       "indexes": [
-        "CREATE UNIQUE INDEX idx_cc_participantes_funcionario ON cc_participantes (funcionario)",
-        "CREATE INDEX idx_cc_participantes_ativo ON cc_participantes (ativo)"
+        "CREATE INDEX idx_cc_participantes_ativo ON cc_participantes (ativo)",
+        "CREATE UNIQUE INDEX idx_cc_participantes_funcionario_preenchido ON cc_participantes (funcionario) WHERE funcionario IS NOT NULL AND funcionario != \"\""
+      ]
+    },
+    {
+      "name": "cc_colaboradores",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "view": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "create": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "update": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "delete": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "origem",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["manual"]
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_cc_colaboradores_nome ON cc_colaboradores (nome COLLATE NOCASE)",
+        "CREATE INDEX idx_cc_colaboradores_ativo ON cc_colaboradores (ativo)"
       ]
     }
   ]

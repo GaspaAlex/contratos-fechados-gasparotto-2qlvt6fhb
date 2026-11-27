@@ -11,7 +11,8 @@
  * formulário simples de cadastro de vigência (valor + início), histórico de
  * vigências por funcionário e encerramento de vigência. A seleção de quem
  * participa fica no dialog discreto "Gerenciar participantes" (o Cartão de
- * Ponto e a collection funcionarios não são alterados). SEM cálculos de
+ * Ponto e a collection funcionarios não são alterados). NÃO exibe situação
+ * do Cartão de Ponto nos cartões (removido no Build C1-B). SEM cálculos de
  * contracheque (virão em builds futuros) e SEM dados fictícios.
  *
  * A autorização de verdade é o BACKEND: as regras de API de cc_salarios
@@ -297,9 +298,6 @@ export default function Contracheques() {
                       </span>
                     )}
                   </CardTitle>
-                  <p className="text-xs text-[#78818E] dark:text-muted-foreground">
-                    {f.ativoNoCartao ? 'Ativo' : 'Inativo'} no Cartão de Ponto
-                  </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="space-y-1.5">
@@ -357,14 +355,7 @@ export default function Contracheques() {
                     size="sm"
                     variant="outline"
                     className="w-full"
-                    onClick={() =>
-                      iniciarCadastro({
-                        id: f.funcionarioId,
-                        nome: f.nome,
-                        ativo: f.ativoNoCartao,
-                        perfil: f.perfil,
-                      })
-                    }
+                    onClick={() => iniciarCadastro({ id: f.funcionarioId, nome: f.nome })}
                   >
                     <Plus className="h-4 w-4 mr-1" aria-hidden /> Cadastrar salário
                   </Button>

@@ -1,140 +1,157 @@
 /**
- * CENÁRIOS — PARTICIPANTES DO MÓDULO CONTRACHEQUES (Build C1-A)
+ * CENÁRIOS — CONTRACHEQUES_P (participantes + cadastro próprio, Build C1-B)
  * ========================================================================
- * Executados DE VERDADE pelo runner (scripts/run-cenarios.mjs, suíte
- * CONTRACHEQUES_P), sobre as funções puras de src/lib/ccParticipantes.ts —
- * sem banco, sem rede, determinísticos.
- *
- * Cobre os requisitos do usuário:
- * 1. A listagem mostra SOMENTE os participantes com vínculo ativo (os demais
- *    funcionários do Cartão de Ponto não aparecem).
- * 2. "Adicionar" é idempotente: reativa vínculo inativo, nunca duplica.
- * 3. RETIRAR participante = desativação — nunca sugere delete; histórico
- *    salarial preservado por construção (nada aqui apaga salário).
+ * Executa em MEMÓRIA as regras puras de participantes (sem tocar na base
+ * real — prévia e produção compartilham o mesmo banco, nada é gravado):
+ * listagem (ativos, dos dois tipos de vínculo), retirada/reativação,
+ * dedupe de cadastro (exato, sem acento/caixa/espaços, aproximação), caso
+ * do registro antigo duplicado da Nataly e independência do Cartão de Ponto.
  */
 import {
   planejarAdicaoParticipante,
+  planejarCadastroColaborador,
   planejarRetiradaParticipante,
   resolverParticipantesAtivos,
+  validarCadastroColaborador,
+  canonicalizarNome,
+  type ColaboradorMini,
   type FuncionarioMini,
   type ParticipanteVinculo,
-} from '@/lib/ccParticipantes'
+} from './ccParticipantes'
 
-export interface ResultadoCenario {
-  suite: string
+/** Massa de teste em memória — os 4 participantes reais + massa auxiliar. */
+const FUNC: FuncionarioMini[] = [
+  { id: 'func-nataly', nome: 'Nataly Tayna Figueiredo da Silva', ativo: true },
+  // Registro antigo duplicado da Nataly (sem user_id), como no banco real:
+  { id: 'func-nataly-antigo', nome: 'Nataly Tayna Figueiredo da Silva', ativo: false },
+  { id: 'func-nayara', nome: 'Nayara Vitória de Morais', ativo: true },
+  { id: 'func-kaique', nome: 'Kaique Gotardo de Carvalho dos Santos', ativo: true },
+  { id: 'func-beatriz', nome: 'Beatriz Yumi Aizawa Yamashita', ativo: true },
+  { id: 'func-alex', nome: 'Alex Gasparotto', ativo: true, perfil: 'admin' },
+]
+
+const VINCULOS: ParticipanteVinculo[] = [
+  { id: 'v1', funcionario: 'func-nataly', ativo: true },
+  { id: 'v2', funcionario: 'func-nayara', ativo: true },
+  { id: 'v3', funcionario: 'func-kaique', ativo: true },
+  { id: 'v4', funcionario: 'func-beatriz', ativo: true },
+]
+
+const COLS: ColaboradorMini[] = []
+
+export function runCenariosParticipantes(): Array<{
   cenario: string
-  ok: boolean | null
   detalhe: string
-}
+  ok: boolean | null
+}> {
+  const resultados: Array<{ cenario: string; detalhe: string; ok: boolean | null }> = []
+  const add = (cenario: string, ok: boolean, detalhe = '') =>
+    resultados.push({ cenario, detalhe, ok })
 
-const AUTORIZADOS: FuncionarioMini[] = [
-  { id: 'g58j7rgfn66kw18', nome: 'Nataly Tayna Figueiredo da Silva', ativo: true },
-  { id: '61n9us4w9eu8j11', nome: 'Nayara Vitória de Morais', ativo: true },
-  { id: 'ds27l78xotgofm1', nome: 'Kaique Gotardo de Carvalho dos Santos', ativo: true },
-  { id: '8fg62tcjfnds7kv', nome: 'Beatriz Yumi Aizawa Yamashita', ativo: true },
-]
-
-// Outros funcionários do Cartão de Ponto (existem no banco real) — têm que
-// ficar FORA da listagem da aba e INTACTOS no Cartão de Ponto.
-const OUTROS: FuncionarioMini[] = [
-  { id: 'out1', nome: 'Outro Funcionário A', ativo: true },
-  { id: 'out2', nome: 'Outro Funcionário B', ativo: true },
-]
-
-const baseVinculos = (): ParticipanteVinculo[] =>
-  AUTORIZADOS.map((f, i) => ({ id: 'v' + i, funcionario: f.id, ativo: true }))
-
-const res = (cenario: string, ok: boolean, detalhe: string): ResultadoCenario => ({
-  suite: 'CONTRACHEQUES_P',
-  cenario,
-  ok,
-  detalhe,
-})
-
-export function runCenariosParticipantes(): ResultadoCenario[] {
-  const resultados: ResultadoCenario[] = []
-  const check = (cenario: string, cond: boolean, detalhe: string) =>
-    resultados.push(res(cenario, cond, detalhe))
-
-  // 1) Listagem mostra somente os 4 autorizados, ordenados por nome
-  const listagem = resolverParticipantesAtivos(baseVinculos(), [...AUTORIZADOS, ...OUTROS])
-  check(
-    'Listagem exclusiva dos 4 participantes',
-    listagem.length === 4 &&
-      listagem.every((p) => AUTORIZADOS.some((f) => f.id === p.funcionarioId)) &&
-      listagem.every((p) => !OUTROS.some((o) => o.id === p.funcionarioId)),
-    'listagem=' + listagem.map((p) => p.nome).join(' | '),
+  // 1. Quatro participantes atuais na listagem (preservados)
+  const res = resolverParticipantesAtivos(VINCULOS, FUNC, COLS)
+  add(
+    'quatro participantes ativos aparecem na listagem',
+    res.length === 4 &&
+      res.map((r) => r.nome).join('|') ===
+        'Beatriz Yumi Aizawa Yamashita|Kaique Gotardo de Carvalho dos Santos|Nataly Tayna Figueiredo da Silva|Nayara Vitória de Morais',
+    res.map((r) => r.nome).join(' / '),
   )
 
-  // 2) Ordenação alfabética pt-BR
-  check(
-    'Ordenação por nome',
-    listagem[0].nome.startsWith('Beatriz') &&
-      listagem[2].nome.startsWith('Nataly') &&
-      listagem[3].nome.startsWith('Nayara'),
-    'primeiro=' + listagem[0]?.nome + ' · último=' + listagem[3]?.nome,
+  // 2. Retirada = desativação (histórico preservado); reativação sem duplicar
+  const planoRet = planejarRetiradaParticipante(VINCULOS, 'func-nayara')
+  add(
+    'retirada planeja desativar o vínculo (nunca excluir)',
+    planoRet.acao === 'desativar' && planoRet.vinculoId === 'v2',
+  )
+  const aposRetirada = VINCULOS.map((v) =>
+    v.id === planoRet.vinculoId ? { ...v, ativo: false } : v,
+  )
+  add('vínculo retirado permanece na coleção (histórico preservado)', aposRetirada.length === 4)
+  add(
+    'participante retirado sai da listagem',
+    resolverParticipantesAtivos(aposRetirada, FUNC, COLS).length === 3,
+  )
+  const planoRe = planejarAdicaoParticipante(aposRetirada, 'func-nayara')
+  add(
+    'readicionar quem foi retirado REATIVA o mesmo vínculo (sem duplicar)',
+    planoRe.acao === 'reativar' && planoRe.vinculoId === 'v2',
+  )
+  const reativado = resolverParticipantesAtivos(
+    aposRetirada.map((v) => (v.funcionario === 'func-nayara' ? { ...v, ativo: true } : v)),
+    FUNC,
+    COLS,
+  )
+  add('após reativação, os 4 participantes voltam', reativado.length === 4)
+
+  // 3. Dedupe do cadastro — formulário "+ Cadastrar novo colaborador"
+  const cad = (nome: string, cols: ColaboradorMini[] = COLS) =>
+    planejarCadastroColaborador({ nome }, VINCULOS, FUNC, cols)
+
+  const p1 = cad('Nayara Vitória de Morais')
+  add('nome já participante ativo → existente_ativo (nada é criado)', p1.acao === 'existente_ativo')
+  const p2 = cad('nayara vitoria de morais')
+  add(
+    'mesmo nome sem acento/caixa colide (dedupe)',
+    p2.acao === 'existente_ativo' && p2.nomeConflito === 'Nayara Vitória de Morais',
+  )
+  const p3 = cad('  Nayara   Vitória de Morais  ')
+  add('espaços extras não enganam o dedupe', p3.acao === 'existente_ativo')
+  const p4 = cad('Nataly Tayna Figueiredo da Silva')
+  add(
+    'Nataly ativa não gera segunda participação',
+    p4.acao === 'existente_ativo' && p4.funcionarioId === 'func-nataly',
+  )
+  const p5 = cad('Nataly Silva')
+  add('nome aproximado → aviso_aproximado (nada é criado sozinho)', p5.acao === 'aviso_aproximado')
+  const p6 = cad('Maria Clara Souza')
+  add('nome inédito → criar cadastro próprio (cc_colaboradores)', p6.acao === 'criar')
+  const p7 = cad('João')
+  add('nome sem sobrenome é recusado (invalido)', p7.acao === 'invalido')
+  add('validação devolve mensagem clara', validarCadastroColaborador('João') !== null)
+  add('nome vazio é recusado', validarCadastroColaborador('   ') !== null)
+  const p8 = cad('Alex Gasparotto')
+  add(
+    'funcionário do Cartão de Ponto sem vínculo → reusar_funcionario (não duplica pessoa)',
+    p8.acao === 'reusar_funcionario' && p8.funcionarioId === 'func-alex',
+  )
+  const p9 = cad('Pedro Souza', COLS.concat([{ id: 'col-1', nome: 'Pedro Souza', ativo: true }]))
+  add('colaborador próprio sem vínculo → reusar_cadastro', p9.acao === 'reusar_cadastro')
+  const p10 = cad('Nayara Vitória de Morais', COLS)
+  add(
+    'homônimo com vínculo ativo não sugere reusar cadastro nem criar outro',
+    p10.acao === 'existente_ativo',
   )
 
-  // 3) Vínculo inativo não aparece, mas não é apagado
-  const comInativo: ParticipanteVinculo[] = [
-    ...baseVinculos(),
-    { id: 'vx', funcionario: 'out1', ativo: false },
-  ]
-  const listagem2 = resolverParticipantesAtivos(comInativo, [...AUTORIZADOS, ...OUTROS])
-  check(
-    'Vínculo inativo fica fora da listagem',
-    listagem2.length === 4 && !listagem2.some((p) => p.funcionarioId === 'out1'),
-    'count=' + listagem2.length,
+  // 4. Cadastro próprio independente do Cartão de Ponto
+  const vinculoNovo: ParticipanteVinculo = { id: 'v-novo', colaborador: 'col-maria', ativo: true }
+  const resolvido = resolverParticipantesAtivos([...VINCULOS, vinculoNovo], FUNC, [
+    { id: 'col-maria', nome: 'Maria Clara Souza', ativo: true },
+  ])
+  const maria = resolvido.find((r) => r.nome === 'Maria Clara Souza')
+  add('colaborador próprio (sem Cartão de Ponto) aparece na listagem', !!maria)
+  add(
+    'colaborador próprio não depende de existir em funcionarios',
+    !!maria && maria.colaboradorId === 'col-maria' && !maria.funcionarioId,
+  )
+  add('Cartão de Ponto intocado: 6 funcionários na massa', FUNC.length === 6)
+
+  // 5. Registro antigo duplicado da Nataly não gera segunda participação
+  const rDup = resolverParticipantesAtivos(
+    [...VINCULOS, { id: 'v-dup', funcionario: 'func-nataly-antigo', ativo: true }],
+    FUNC,
+    COLS,
+  )
+  add(
+    'registro duplicado da Nataly não provoca segunda participação',
+    rDup.filter((x) => x.nome.includes('Nataly')).length === 1,
+    `${rDup.filter((x) => x.nome.includes('Nataly')).length} Nataly na listagem`,
   )
 
-  // 4) Adicionar é idempotente em cada estado
-  const p1 = planejarAdicaoParticipante(baseVinculos(), 'out1')
-  check('Adicionar sem vínculo sugere criar', p1.acao === 'criar', JSON.stringify(p1))
-
-  const comInativoOut1: ParticipanteVinculo[] = [
-    ...baseVinculos(),
-    { id: 'vx1', funcionario: 'out1', ativo: false },
-  ]
-  const p2 = planejarAdicaoParticipante(comInativoOut1, 'out1')
-  check(
-    'Adicionar funcionário retirado sugere REATIVAR (sem duplicar)',
-    p2.acao === 'reativar' && p2.vinculoId === 'vx1',
-    JSON.stringify(p2),
-  )
-
-  const p3 = planejarAdicaoParticipante(baseVinculos(), '61n9us4w9eu8j11')
-  check(
-    'Adicionar já ativo é "nada" (idempotente)',
-    p3.acao === 'nada' && p3.vinculoId === 'v1',
-    JSON.stringify(p3),
-  )
-
-  // 5) Retirada é desativação — nunca delete; histórico preservado
-  const r1 = planejarRetiradaParticipante(baseVinculos(), '8fg62tcjfnds7kv')
-  check(
-    'Retirar participante ativo sugere DESATIVAR vínculo',
-    r1.acao === 'desativar' && r1.vinculoId === 'v3',
-    JSON.stringify(r1),
-  )
-  const r2 = planejarRetiradaParticipante(comInativoOut1, 'out1')
-  check(
-    'Retirar já inativo é "nada" (idempotente)',
-    r2.acao === 'nada' && r2.vinculoId === 'vx1',
-    JSON.stringify(r2),
-  )
-  const r3 = planejarRetiradaParticipante([], 'out2')
-  check('Retirar sem vínculo é "nada"', r3.acao === 'nada' && !r3.vinculoId, JSON.stringify(r3))
-
-  // 6) Funcionário inativo no Cartão de Ponto continua aparecendo se tem
-  //    vínculo ativo (a seleção é independente da situação do Cartão)
-  const funcInativoCartao: FuncionarioMini[] = [
-    { id: '61n9us4w9eu8j11', nome: 'Nayara Vitória de Morais', ativo: false },
-  ]
-  const listagem3 = resolverParticipantesAtivos(baseVinculos(), funcInativoCartao)
-  check(
-    'Vínculo ativo mantém funcionário na listagem mesmo se inativo no Cartão',
-    listagem3.length === 1 && listagem3[0].ativoNoCartao === false,
-    'ativoNoCartao=' + listagem3[0]?.ativoNoCartao,
+  // 6. Canonicalização usada pelo dedupe
+  add(
+    'canonicalizarNome remove acento/caixa/espaços extras',
+    canonicalizarNome('  Átila  da  SILVA ') === 'atila da silva',
   )
 
   return resultados
