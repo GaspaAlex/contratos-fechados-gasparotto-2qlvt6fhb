@@ -122,6 +122,105 @@ export interface DemonstrativoCalculado {
   duplicados: string[] // natureza+descrição duplicadas (aviso, não bloqueio)
 }
 
+/** Opção do select de natureza que abre o campo de texto livre (C2-A). */
+export const OPCAO_NATUREZA_CUSTOM = '__personalizada__'
+
+/** Dígito a dígito: mantém só números, limita a 11 dígitos (≤ R$ 999.999.999,99). */
+export function digitosDeValor(texto: string): string {
+  return (texto || '').replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 11)
+}
+
+/** Centavos inteiros → "R$ 1.234,56" (mesma formatação da máscara). */
+export function formatarMascara(centavos: number): string {
+  return formatarCentavos(centavos)
+}
+
+/**
+ * MÁSCARA MONETÁRIA EM CENTAVOS (C2-A): o campo guarda só DÍGITOS; a cada
+ * dígito o valor desloca em centavos. "1" → "0,01"; "16923" → "169,23";
+ * "37449" → "374,49"; "88000" → "880,00". Sem vírgula digitada pelo usuário.
+ */
+export function mascaraCentavos(texto: string): string {
+  const digitos = digitosDeValor(texto)
+  if (!digitos) return ''
+  const centavos = parseInt(digitos, 10)
+  return formatarMascara(centavos)
+}
+
+/** Texto mascarado ("R$ 374,49") → centavos inteiros (null se vazio/inválido). */
+export function mascaraParaCentavos(texto: string): number | null {
+  const digitos = digitosDeValor(texto)
+  if (!digitos) return null
+  const centavos = parseInt(digitos, 10)
+  return Number.isFinite(centavos) && centavos >= 0 ? centavos : null
+}
+
+/**
+ * Texto gravado no banco (reais, ex. 37449) → texto inicial da máscara.
+ * NUNCA interpreta o valor gravado como dígitos de digitação: devolve o valor
+ * real formatado ("R$ 37.449,00"). Só a edição expressa do proprietário troca
+ * o valor — e ela começa do valor salvo, não de dígitos reinterpretados.
+ */
+export function centavosParaMascara(centavos: number): string {
+  return formatarMascara(Math.round(centavos))
+}
+
+/**
+ * PLANEJADOR DA SINCRONIZAÇÃO (C2-A): compara o estado da TELA (rascunho
+ * local) com os registros ATUAIS do banco e devolve as operações exatas —
+ * cria, atualiza (só quando algo mudou de verdade) e exclui por id.
+ * Assinatura = tipo+natureza+descrição+valor: evita update desnecessário e
+ * impede criar duas vezes o mesmo lançamento em salvamentos repetidos.
+ */
+export interface PlanoSyncLancamentos {
+  criar: Omit<LancamentoInput, 'id'>[]
+  atualizar: { id: string; dados: Omit<LancamentoInput, 'id'> }[]
+  excluir: { id: string }[]
+}
+
+export function planejarSyncLancamentos(
+  naTela: LancamentoInput[],
+  noBanco: LancamentoInput[],
+): PlanoSyncLancamentos {
+  const bancoPorId = new Map(noBanco.filter((r) => r.id).map((r) => [r.id!, r]))
+  const plano: PlanoSyncLancamentos = { criar: [], atualizar: [], excluir: [] }
+
+  const usados = new Set<string>()
+  for (const l of naTela) {
+    if (l.id && bancoPorId.has(l.id)) {
+      const rec = bancoPorId.get(l.id)!
+      if (
+        rec.natureza_tipo !== l.natureza_tipo ||
+        (rec.natureza || '') !== (l.natureza || '') ||
+        rec.descricao !== l.descricao ||
+        (paraCentavos(Number(rec.valor)) ?? -1) !== (paraCentavos(Number(l.valor)) ?? -1)
+      ) {
+        plano.atualizar.push({
+          id: l.id,
+          dados: {
+            natureza_tipo: l.natureza_tipo,
+            natureza: l.natureza,
+            descricao: l.descricao,
+            valor: l.valor,
+          },
+        })
+      }
+      usados.add(l.id)
+    } else {
+      plano.criar.push({
+        natureza_tipo: l.natureza_tipo,
+        natureza: l.natureza,
+        descricao: l.descricao,
+        valor: l.valor,
+      })
+    }
+  }
+  for (const rec of noBanco) {
+    if (rec.id && !usados.has(rec.id)) plano.excluir.push({ id: rec.id })
+  }
+  return plano
+}
+
 /** Valida um lançamento manual (mensagem de erro ou null). */
 export function validarLancamento(l: LancamentoInput): string | null {
   if (!l.natureza || !l.natureza.trim()) {
