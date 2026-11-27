@@ -41,6 +41,8 @@ const FILES = [
   'src/lib/ccSalarios.cenarios.ts',
   'src/lib/ccParticipantes.ts',
   'src/lib/ccParticipantes.cenarios.ts',
+  'src/lib/ccContracheque.ts',
+  'src/lib/ccContracheque.cenarios.ts',
 ]
 
 // Stub do cliente PocketBase: comissoes.ts importa 2 helpers puros de
@@ -114,6 +116,7 @@ import { runCenariosIndicadores } from './${OUT_NAME('src/lib/protocoloIndicador
 import { runCenariosColaboradores } from './${OUT_NAME('src/lib/comissoesColaboradores.cenarios.ts')}'
 import { runCenariosContracheques } from './${OUT_NAME('src/lib/ccSalarios.cenarios.ts')}'
 import { runCenariosParticipantes } from './${OUT_NAME('src/lib/ccParticipantes.cenarios.ts')}'
+import { runCenariosContrachequeMensal } from './${OUT_NAME('src/lib/ccContracheque.cenarios.ts')}'
 
 const falhas = []
 const resultados = []
@@ -123,6 +126,7 @@ for (const [suite, run] of [
   ['COMISSOES_F', runCenariosColaboradores],
   ['CONTRACHEQUES_C1', runCenariosContracheques],
   ['CONTRACHEQUES_P', runCenariosParticipantes],
+  ['CONTRACHEQUES_C2', runCenariosContrachequeMensal],
 ]) {
   for (const r of run()) {
     resultados.push({ suite, ...r })

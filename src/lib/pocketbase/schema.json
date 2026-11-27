@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T12:50:23.041Z",
+  "generatedAt": "2026-11-27T13:11:41.372Z",
   "collections": [
     {
       "name": "users",
@@ -2504,6 +2504,154 @@
         "CREATE UNIQUE INDEX idx_cc_colaboradores_nome ON cc_colaboradores (nome COLLATE NOCASE)",
         "CREATE INDEX idx_cc_colaboradores_ativo ON cc_colaboradores (ativo)"
       ]
+    },
+    {
+      "name": "cc_contracheques",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "view": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "create": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "update": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "delete": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')"
+      },
+      "fields": [
+        {
+          "name": "funcionario_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "funcionario_nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "competencia_mes",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "competencia_ano",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tipo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["folha"]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["rascunho", "fechado", "pago"]
+        },
+        {
+          "name": "salario_base",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "salario_nao_cadastrado",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_cc_contracheques_folha ON cc_contracheques (funcionario_id, competencia_mes, competencia_ano, tipo)",
+        "CREATE INDEX idx_cc_contracheques_funcionario ON cc_contracheques (funcionario_id)",
+        "CREATE INDEX idx_cc_contracheques_competencia ON cc_contracheques (competencia_ano, competencia_mes)"
+      ]
+    },
+    {
+      "name": "cc_lancamentos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "view": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "create": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "update": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "delete": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')"
+      },
+      "fields": [
+        {
+          "name": "contracheque",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "cc_contracheques"
+        },
+        {
+          "name": "natureza_tipo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["vencimento", "desconto"]
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "natureza",
+          "type": "text",
+          "required": false,
+          "system": false
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_cc_lancamentos_contracheque ON cc_lancamentos (contracheque)"]
     }
   ]
 }

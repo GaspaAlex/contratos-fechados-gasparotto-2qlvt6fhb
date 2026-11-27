@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-27T12:56:54.192Z",
+  "executadoEm": "2026-11-27T13:15:46.164Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -599,6 +599,90 @@
       "suite": "CONTRACHEQUES_P",
       "cenario": "canonicalizarNome remove acento/caixa/espaços extras",
       "detalhe": "",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-1 salário vigente em nov/2026 = 1.800,00 (vigência aberta de 2026-06-01)",
+      "detalhe": "encontrado: 1800",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-2 competência mar/2026 usa o salário HISTÓRICO (1.500,00, não o atual)",
+      "detalhe": "encontrado: 1500",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-3 competência dez/2025 (antes do histórico) → salário não cadastrado",
+      "detalhe": "sem salário — aviso exibido",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-4 aumento em 15/03/2026: competência mar/2026 usa a vigência mais recente (2.200,00)",
+      "detalhe": "encontrado: 2200",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-5 total de vencimentos = 1.800 + 350 + 725,40 = 2.875,40",
+      "detalhe": "total: 287540 centavos",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-6 descontos 300+150,50 = 450,50; líquido = 2.000 − 450,50 = 1.549,50",
+      "detalhe": "descontos: 45050; líquido: 154950",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-7 edição (350→500) e remoção do desconto recalculam totais imediatamente",
+      "detalhe": "antes 215000/10000; após edição 230000/10000; após remoção 230000/0",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-8 sem salário na competência: rascunho salvo como incompleto (flag gravada)",
+      "detalhe": "salario_base: 0; flag salario_nao_cadastrado: true; status: rascunho",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-9 precisão monetária em centavos: 0,10 + 0,20 = 0,30 exato",
+      "detalhe": "total: 30 centavos",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-10 duplicidade acidental detectada (Gratificação 350 × 2) e sinalizada",
+      "detalhe": "duplicado sinalizado: Gratificação",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-11 lançamentos inválidos recusados: NaN, zero, sem natureza e negativo",
+      "detalhe": "NaN: recusado; zero: recusado; sem natureza: recusado; negativo: recusado",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-12 salvar repetidamente abre o MESMO demonstrativo (um por colaborador/competência)",
+      "detalhe": "primeiro: demo1; segundo: demo1",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-13 demonstrativo salvo PRESERVA o salário-base gravado (não troca silenciosamente)",
+      "detalhe": "gravado: 150000 centavos; cadastro hoje indicaria: 2500",
+      "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_C2",
+      "cenario": "C2-14 chave de competência e fim de mês corretos (ano bissexto incluso)",
+      "detalhe": "chave: 2026-03; fim fev/2028: 2028-02-29",
       "ok": true
     }
   ]

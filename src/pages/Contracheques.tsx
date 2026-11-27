@@ -23,6 +23,7 @@ import { BadgeDollarSign, CalendarDays, Loader2, Plus, ShieldAlert, UserCog, X }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import GerenciarParticipantesDialog from '@/components/contracheques/GerenciarParticipantesDialog'
+import ContrachequeMensal from '@/components/contracheques/ContrachequeMensal'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -371,6 +372,9 @@ export default function Contracheques() {
           )}
         </div>
       )}
+
+      {/* Contracheque mensal (Build C2): seleção + demonstrativo + rascunhos */}
+      <ContrachequeMensal funcionarios={funcionarios} salarios={salarios} />
 
       {/* Dialog: gerenciar participantes (seleção privada do módulo) */}
       <GerenciarParticipantesDialog
