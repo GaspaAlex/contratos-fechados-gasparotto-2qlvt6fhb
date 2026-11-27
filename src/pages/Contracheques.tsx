@@ -6,19 +6,22 @@
  * outro usuário (incluindo outros gestores) recebe a mensagem de bloqueio,
  * sem nenhum dado na tela.
  *
- * Conteúdo: lista dos funcionários do Cartão de Ponto com indicação de
- * salário cadastrado (em vigor) ou não, formulário simples de cadastro de
- * vigência (valor + início), histórico de vigências por funcionário e
- * encerramento de vigência. SEM cálculos de contracheque (virão em builds
- * futuros) e SEM dados fictícios.
+ * Conteúdo: lista dos PARTICIPANTES do módulo (collection cc_participantes,
+ * Build C1-A) com indicação de salário cadastrado (em vigor) ou não,
+ * formulário simples de cadastro de vigência (valor + início), histórico de
+ * vigências por funcionário e encerramento de vigência. A seleção de quem
+ * participa fica no dialog discreto "Gerenciar participantes" (o Cartão de
+ * Ponto e a collection funcionarios não são alterados). SEM cálculos de
+ * contracheque (virão em builds futuros) e SEM dados fictícios.
  *
  * A autorização de verdade é o BACKEND: as regras de API de cc_salarios
  * recusam qualquer outro usuário (403/404). Aqui a guarda é presentacional.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { BadgeDollarSign, CalendarDays, Loader2, Plus, ShieldAlert, X } from 'lucide-react'
+import { BadgeDollarSign, CalendarDays, Loader2, Plus, ShieldAlert, UserCog, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import GerenciarParticipantesDialog from '@/components/contracheques/GerenciarParticipantesDialog'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -39,12 +42,16 @@ import {
   encerrarSalario,
   excluirSalario,
   formatarSalario,
-  getFuncionariosCC,
   getSalarios,
   vigenciaEmVigor,
   type FuncionarioCC,
   type SalarioRecord,
 } from '@/services/ccSalarios'
+import {
+  getParticipantes,
+  resolverParticipantesAtivos,
+  type ParticipanteResolvido,
+} from '@/services/ccParticipantes'
 
 const HOJE_YMD = () => {
   const d = new Date()
@@ -70,8 +77,9 @@ export default function Contracheques() {
 
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
-  const [funcionarios, setFuncionarios] = useState<FuncionarioCC[]>([])
+  const [funcionarios, setFuncionarios] = useState<ParticipanteResolvido[]>([])
   const [salarios, setSalarios] = useState<SalarioRecord[]>([])
+  const [dialogParticipantes, setDialogParticipantes] = useState(false)
 
   // Formulário de cadastro de vigência
   const [dialogFuncionario, setDialogFuncionario] = useState<FuncionarioCC | null>(null)
@@ -87,8 +95,8 @@ export default function Contracheques() {
     setCarregando(true)
     setErro(null)
     try {
-      const [fns, sals] = await Promise.all([getFuncionariosCC(), getSalarios()])
-      setFuncionarios(fns)
+      const [parts, sals] = await Promise.all([getParticipantes(), getSalarios()])
+      setFuncionarios(resolverParticipantesAtivos(parts))
       setSalarios(sals)
     } catch (e) {
       console.error(e)
@@ -246,9 +254,13 @@ export default function Contracheques() {
             Contracheques
           </h1>
           <p className="text-sm text-[#78818E] dark:text-muted-foreground">
-            Vigências salariais dos colaboradores do Cartão de Ponto. Área exclusiva do escritório.
+            Vigências salariais dos participantes do módulo. Área exclusiva do escritório.
           </p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setDialogParticipantes(true)}>
+          <UserCog className="h-4 w-4 mr-1.5" aria-hidden />
+          Gerenciar participantes
+        </Button>
       </div>
 
       {carregando ? (
@@ -267,10 +279,10 @@ export default function Contracheques() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 items-start">
           {funcionarios.map((f) => {
-            const lista = salariosPorFuncionario.get(f.id) ?? []
-            const emVigor = vigenciaEmVigor(salarios, f.id)
+            const lista = salariosPorFuncionario.get(f.funcionarioId) ?? []
+            const emVigor = vigenciaEmVigor(salarios, f.funcionarioId)
             return (
-              <Card key={f.id}>
+              <Card key={f.vinculoId}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-start justify-between gap-2">
                     <span>{f.nome}</span>
@@ -286,7 +298,7 @@ export default function Contracheques() {
                     )}
                   </CardTitle>
                   <p className="text-xs text-[#78818E] dark:text-muted-foreground">
-                    {f.ativo ? 'Ativo' : 'Inativo'} no Cartão de Ponto
+                    {f.ativoNoCartao ? 'Ativo' : 'Inativo'} no Cartão de Ponto
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -345,7 +357,14 @@ export default function Contracheques() {
                     size="sm"
                     variant="outline"
                     className="w-full"
-                    onClick={() => iniciarCadastro(f)}
+                    onClick={() =>
+                      iniciarCadastro({
+                        id: f.funcionarioId,
+                        nome: f.nome,
+                        ativo: f.ativoNoCartao,
+                        perfil: f.perfil,
+                      })
+                    }
                   >
                     <Plus className="h-4 w-4 mr-1" aria-hidden /> Cadastrar salário
                   </Button>
@@ -355,11 +374,19 @@ export default function Contracheques() {
           })}
           {funcionarios.length === 0 && (
             <p className="text-sm text-[#78818E] dark:text-muted-foreground md:col-span-2 xl:col-span-3">
-              Nenhum funcionário cadastrado no Cartão de Ponto.
+              Nenhum participante no módulo. Use “Gerenciar participantes” para incluir quem deve
+              aparecer aqui (o Cartão de Ponto não é alterado).
             </p>
           )}
         </div>
       )}
+
+      {/* Dialog: gerenciar participantes (seleção privada do módulo) */}
+      <GerenciarParticipantesDialog
+        open={dialogParticipantes}
+        onOpenChange={setDialogParticipantes}
+        onChanged={() => void carregar()}
+      />
 
       {/* Dialog: cadastro de vigência salarial */}
       <Dialog open={!!dialogFuncionario} onOpenChange={(o) => !o && setDialogFuncionario(null)}>

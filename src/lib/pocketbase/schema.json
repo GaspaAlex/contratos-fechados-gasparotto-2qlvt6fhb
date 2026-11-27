@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T11:34:34.841Z",
+  "generatedAt": "2026-11-27T12:03:19.014Z",
   "collections": [
     {
       "name": "users",
@@ -2396,6 +2396,56 @@
       "indexes": [
         "CREATE UNIQUE INDEX idx_cc_salarios_funcionario_inicio ON cc_salarios (funcionario, vigencia_inicio)",
         "CREATE INDEX idx_cc_salarios_funcionario ON cc_salarios (funcionario)"
+      ]
+    },
+    {
+      "name": "cc_participantes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "view": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "create": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "update": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')",
+        "delete": "@request.auth.id != '' && (@request.auth.id = 'yxubawrt8aser8k' || @request.auth.email = 'escritorio@advocaciagasparotto.com.br')"
+      },
+      "fields": [
+        {
+          "name": "funcionario",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "funcionarios"
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_cc_participantes_funcionario ON cc_participantes (funcionario)",
+        "CREATE INDEX idx_cc_participantes_ativo ON cc_participantes (ativo)"
       ]
     }
   ]

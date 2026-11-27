@@ -1,5 +1,5 @@
 {
-  "executadoEm": "2026-11-27T11:37:35.858Z",
+  "executadoEm": "2026-11-27T12:09:58.574Z",
   "resultados": [
     {
       "suite": "COMISSOES",
@@ -462,6 +462,66 @@
       "cenario": "CC-H vigência futura: encerramento permitido e sobreposição real recusada",
       "detalhe": "encerrar: permitido; sobrepor (f7, 2026-12-15 dentro de 2026-12-01→em vigor): recusada",
       "ok": true
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Listagem exclusiva dos 4 participantes",
+      "ok": true,
+      "detalhe": "listagem=Beatriz Yumi Aizawa Yamashita | Kaique Gotardo de Carvalho dos Santos | Nataly Tayna Figueiredo da Silva | Nayara Vitória de Morais"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Ordenação por nome",
+      "ok": true,
+      "detalhe": "primeiro=Beatriz Yumi Aizawa Yamashita · último=Nayara Vitória de Morais"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Vínculo inativo fica fora da listagem",
+      "ok": true,
+      "detalhe": "count=4"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Adicionar sem vínculo sugere criar",
+      "ok": true,
+      "detalhe": "{\"acao\":\"criar\"}"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Adicionar funcionário retirado sugere REATIVAR (sem duplicar)",
+      "ok": true,
+      "detalhe": "{\"acao\":\"reativar\",\"vinculoId\":\"vx1\"}"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Adicionar já ativo é \"nada\" (idempotente)",
+      "ok": true,
+      "detalhe": "{\"acao\":\"nada\",\"vinculoId\":\"v1\"}"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Retirar participante ativo sugere DESATIVAR vínculo",
+      "ok": true,
+      "detalhe": "{\"acao\":\"desativar\",\"vinculoId\":\"v3\"}"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Retirar já inativo é \"nada\" (idempotente)",
+      "ok": true,
+      "detalhe": "{\"acao\":\"nada\",\"vinculoId\":\"vx1\"}"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Retirar sem vínculo é \"nada\"",
+      "ok": true,
+      "detalhe": "{\"acao\":\"nada\"}"
+    },
+    {
+      "suite": "CONTRACHEQUES_P",
+      "cenario": "Vínculo ativo mantém funcionário na listagem mesmo se inativo no Cartão",
+      "ok": true,
+      "detalhe": "ativoNoCartao=false"
     }
   ]
 }
