@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   EyeOff,
+  ReceiptText,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
@@ -48,6 +49,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { usePrivacyMode } from '@/lib/privacyMode'
+import { verificarAcessoContracheques, type VereditoContracheques } from '@/lib/contrachequesAuth'
 
 const SIDEBAR_PREFS_KEY = 'gasparotto_sidebar_expanded_sections'
 
@@ -58,6 +60,9 @@ export default function Layout() {
   const { enabled: privacyOn, toggle: togglePrivacy } = usePrivacyMode()
   const { user } = useAuth()
   const isGestor = user?.perfil === 'gestor'
+  const vereditoCC: VereditoContracheques = verificarAcessoContracheques(
+    user as { id?: string; email?: string } | null,
+  )
   const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -100,7 +105,14 @@ export default function Layout() {
           { name: 'Cartão de Ponto', path: '/gestao/ponto', icon: Clock },
           { name: 'Funcionários', path: '/gestao/funcionarios', icon: Users },
           { name: 'Responsáveis', path: '/gestao/responsaveis', icon: UserCog },
-        ].filter((item) => item.path !== '/gestao/funcionarios' || isGestor),
+          // Contracheques: exclusivo da conta do escritório (Build C1) —
+          // nem outros gestores veem a aba.
+          { name: 'Contracheques', path: '/contracheques', icon: ReceiptText },
+        ].filter(
+          (item) =>
+            (item.path !== '/gestao/funcionarios' || isGestor) &&
+            (item.path !== '/contracheques' || vereditoCC === 'autorizado'),
+        ),
       },
       {
         id: 'ferramentas',
@@ -111,7 +123,7 @@ export default function Layout() {
         ],
       },
     ],
-    [isGestor],
+    [isGestor, vereditoCC],
   )
 
   const isItemActive = useCallback(

@@ -27,6 +27,10 @@ import CartaoPonto from './pages/gestao/CartaoPonto'
 import AcessosSistemas from '@/pages/gestao/AcessosSistemas'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
+// Contracheques (Build C1): lazy — o bundle da área salarial só carrega quem
+// pode vê-la; o bloqueio em si é server-side (regras de API de cc_salarios).
+const Contracheques = lazy(() => import('./pages/Contracheques'))
+
 const FerramentasPdf = lazy(() => import('./pages/FerramentasPdf'))
 const JuntarPdf = lazy(() => import('./pages/ferramentas-pdf/JuntarPdf'))
 const DividirPdf = lazy(() => import('./pages/ferramentas-pdf/DividirPdf'))
@@ -55,6 +59,20 @@ const App = () => (
                     <Route path="/leads" element={<LeadsCampanha />} />
                     <Route path="/leads-registro" element={<LeadsRegistro />} />
                     <Route path="/leads-auxilio-acidente" element={<LeadsAuxAcidente />} />
+                    <Route
+                      path="/contracheques"
+                      element={
+                        <Suspense
+                          fallback={
+                            <div className="p-8 text-sm text-muted-foreground">
+                              Carregando Contracheques...
+                            </div>
+                          }
+                        >
+                          <Contracheques />
+                        </Suspense>
+                      }
+                    />
                     <Route path="/gestao/ponto" element={<Ponto />} />
                     <Route path="/gestao/ponto/registrar" element={<BaterPonto />} />
                     <Route path="/gestao/ponto/dashboard" element={<DashboardPonto />} />
