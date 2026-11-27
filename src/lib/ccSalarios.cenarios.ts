@@ -3,7 +3,8 @@
  * ========================================================================
  * Função PURA executada de verdade no prebuild (scripts/run-cenarios.mjs).
  * Nada toca o banco — espelha, em memória, as regras do hook
- * pocketbase/hooks/cc_salarios_vigencias.js:
+ * pocketbase/hooks/cc_salarios_vigencias.js (que consulta o banco JÁ
+ * FILTRANDO por funcionário — a sobreposição só existe no MESMO funcionário):
  *
  *   CC-A  vigências subsequentes coexistem (fim da 1ª = véspera do início da 2ª)
  *   CC-B  sobreposição parcial entre vigências é RECUSADA
@@ -11,7 +12,9 @@
  *   CC-D  fim anterior ao início é RECUSADO (vigência incompatível)
  *   CC-E  histórico imutável: vigência em vigor só permite encerrar (adiantar fim)
  *   CC-F  salários no mesmo funcionário com meses distintos sem sobreposição OK
- *   CC-G  vigências de funcionários DIFERENTES nunca conflitam
+ *   CC-G  vigências de funcionários DIFERENTES nunca conflitam (mesma data)
+ *   CC-H  update de vigência NÃO iniciada continua sujeito à sobreposição
+ *         (janela entre gravar o salário futuro e o início da vigência)
  *
  * A coleção cc_salarios NÃO é tocada (prévia e produção compartilham o banco);
  * nenhum salário fictício é gravado — os records aqui são criados e avaliados
@@ -59,7 +62,9 @@ export function validarVigenciaIsolada(v: {
 /**
  * Espelho do teste de sobreposição do hook cc_salarios (datas inclusivas;
  * vigência sem fim = aberta até 9999-12-31). Recebe as vigências JÁ
- * gravadas do funcionário + a candidata; devolve null se aceita.
+ * gravadas do MESMO funcionário + a candidata; devolve null se aceita.
+ * (A função também ignora registros de OUTRO funcionário — mesma regra do
+ * hook, que consulta o banco já filtrando por `funcionario`.)
  */
 export function validarSobreposicao(
   vigenciasExistentes: SalarioRecord[],
@@ -70,6 +75,9 @@ export function validarSobreposicao(
   const fimA = fim === '' ? '9999-12-31' : fim
   for (const outra of vigenciasExistentes) {
     if (outra.id === candidata.id) continue // o hook exclui o próprio id
+    // Regra (igual ao hook): a sobreposição só é avaliada entre vigências do
+    // MESMO funcionário — funcionários diferentes nunca conflitam.
+    if (outra.funcionario !== candidata.funcionario) continue
     const outraInicio = dataYMD(outra.vigencia_inicio)
     const outraFim = dataYMD(outra.vigencia_fim)
     const fimB = outraFim === '' ? '9999-12-31' : outraFim
@@ -131,7 +139,7 @@ export function runCenariosContracheques(): ResultadoCenario[] {
     )
   }
 
-  // CC-B — sobreposição parcial é RECUSADA.
+  // CC-B — sobreposição parcial é RECUSADA (mesmo funcionário).
   {
     const existentes: SalarioRecord[] = [
       {
@@ -157,7 +165,7 @@ export function runCenariosContracheques(): ResultadoCenario[] {
     )
   }
 
-  // CC-C — vigência aberta conflita com qualquer nova posterior.
+  // CC-C — vigência aberta conflita com qualquer nova posterior (mesmo funcionário).
   {
     const existentes: SalarioRecord[] = [
       { id: 's1', funcionario: 'f2', valor: 3000, vigencia_inicio: '2026-03-01', vigencia_fim: '' },
@@ -234,7 +242,8 @@ export function runCenariosContracheques(): ResultadoCenario[] {
     )
   }
 
-  // CC-G — funcionários diferentes nunca conflitam.
+  // CC-G — funcionários diferentes nunca conflitam (usuário: A e B podem
+  // começar no mesmo dia; só o MESMO funcionário tem vigência única).
   {
     const existentes: SalarioRecord[] = [
       { id: 's1', funcionario: 'f5', valor: 2000, vigencia_inicio: '2026-01-01', vigencia_fim: '' },
@@ -251,6 +260,33 @@ export function runCenariosContracheques(): ResultadoCenario[] {
       'CC-G funcionários diferentes com vigência idêntica não conflitam',
       err ? `recusada: ${err.slice(0, 60)}…` : 'aceita',
       err === null,
+    )
+  }
+
+  // CC-H — update de vigência NÃO iniciada (salário futuro gravado): pode
+  // encerrar (adiantar fim) e continua sujeito à sobreposição.
+  {
+    const original: SalarioRecord = {
+      id: 's1',
+      funcionario: 'f7',
+      valor: 1800,
+      vigencia_inicio: '2026-12-01',
+      vigencia_fim: '',
+    }
+    const encerrando: SalarioRecord = { ...original, vigencia_fim: '2026-12-31' }
+    const errEncerrar = validarUpdateHistorico(original, encerrando)
+    const sobreposta: SalarioRecord = {
+      id: 's2',
+      funcionario: 'f7',
+      valor: 1900,
+      vigencia_inicio: '2026-12-15',
+      vigencia_fim: '',
+    }
+    const errSobreposicao = validarSobreposicao([original], sobreposta)
+    push(
+      'CC-H vigência futura: encerramento permitido e sobreposição real recusada',
+      `encerrar: ${errEncerrar === null ? 'permitido' : 'recusado'}; sobrepor (f7, 2026-12-15 dentro de 2026-12-01→em vigor): ${errSobreposicao !== null ? 'recusada' : 'ACEITA (não deveria!)'}`,
+      errEncerrar === null && errSobreposicao !== null,
     )
   }
 
